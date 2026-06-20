@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Barlow',system-ui,sans-serif;background:#eef2f4;color:#142029;-webkit-font-smoothing:antialiased}
+  ::-webkit-scrollbar{height:10px;width:10px}
+  ::-webkit-scrollbar-thumb{background:#c3ced5;border-radius:6px}
+  @media print{.no-print{display:none!important}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;flex-direction:column;background:#eef2f4">
+
+  <!-- ============ INNLOGGING ============ -->
+  <sc-if value="{{ loginActive }}" hint-placeholder-val="">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#0c2436 0%,#103244 100%)">
+    <div style="width:100%;max-width:380px;background:#fff;border-radius:18px;box-shadow:0 30px 70px rgba(0,0,0,0.35);overflow:hidden">
+      <div style="padding:28px 28px 20px;text-align:center;border-bottom:1px solid #eef2f4">
+        <img src="assets/mekk-logo.png" alt="MEKK Ølen" style="width:58px;height:58px;border-radius:12px;display:block;margin:0 auto 12px">
+        <div style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:21px;letter-spacing:0.4px">MEKK ØLEN</div>
+        <div style="font-size:12px;color:#7e93a0;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;margin-top:2px">Vakt &amp; timestyring</div>
+      </div>
+
+      <sc-if value="{{ loginHarPick }}" hint-placeholder-val="">
+      <div style="padding:24px 28px 26px">
+        <button onClick="{{ onLoginBack }}" style="display:flex;align-items:center;gap:6px;border:none;background:none;cursor:pointer;color:#7e93a0;font-family:'Barlow';font-size:13px;font-weight:600;margin-bottom:14px">‹ Byt brukar</button>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:13px">
+          <div style="width:54px;height:54px;border-radius:50%;background:{{ loginFarge }};display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:#fff">{{ loginInit }}</div>
+          <div style="text-align:center;line-height:1.2">
+            <div style="font-size:17px;font-weight:600">{{ loginNavn }}</div>
+            <div style="font-size:12.5px;color:#7e93a0">Tast inn PIN</div>
+          </div>
+          <div style="display:flex;gap:13px;margin:6px 0 4px">
+            <sc-for list="{{ pinDots }}" as="p" hint-placeholder-count="4">
+              <span style="width:14px;height:14px;border-radius:50%;border:2px solid {{ p.fyltKant }};background:{{ p.fyltBg }}"></span>
+            </sc-for>
+          </div>
+          <sc-if value="{{ loginFeil }}" hint-placeholder-val="">
+            <div style="font-size:13px;color:#c0392b;font-weight:600">Feil PIN — prøv igjen</div>
+          </sc-if>
+          <div style="display:grid;grid-template-columns:repeat(3,64px);gap:11px;margin-top:6px">
+            <sc-for list="{{ padKeys }}" as="k" hint-placeholder-count="9">
+              <button onClick="{{ k.onPress }}" style="height:56px;border:1px solid #e1e8ec;background:#f7f9fb;border-radius:12px;cursor:pointer;font-family:'JetBrains Mono';font-size:21px;font-weight:600;color:#142029" style-hover="background:#e7f6f8;border-color:#1597a8">{{ k.d }}</button>
+            </sc-for>
+            <div></div>
+            <button onClick="{{ onPpress0 }}" style="height:56px;border:1px solid #e1e8ec;background:#f7f9fb;border-radius:12px;cursor:pointer;font-family:'JetBrains Mono';font-size:21px;font-weight:600;color:#142029" style-hover="background:#e7f6f8;border-color:#1597a8">0</button>
+            <button onClick="{{ onPinDel }}" style="height:56px;border:1px solid #e1e8ec;background:#fff;border-radius:12px;cursor:pointer;font-size:19px;color:#7e93a0">⌫</button>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ loginVelg }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:22px 24px 26px">
+        <div style="font-size:13px;color:#7e93a0;font-weight:600;text-align:center;margin-bottom:14px">Vel kven du er</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ loginUsers }}" as="u" hint-placeholder-count="3">
+            <button onClick="{{ u.onPick }}" style="display:flex;align-items:center;gap:13px;padding:12px 14px;border:1px solid #e1e8ec;background:#fff;border-radius:12px;cursor:pointer;text-align:left" style-hover="border-color:#1597a8;background:#f7fafb">
+              <div style="flex:none;width:42px;height:42px;border-radius:50%;background:{{ u.farge }};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff">{{ u.init }}</div>
+              <div style="line-height:1.25">
+                <div style="font-size:15.5px;font-weight:600">{{ u.navn }}</div>
+                <div style="font-size:12.5px;color:#7e93a0">{{ u.rolle }}</div>
+              </div>
+              <span style="margin-left:auto;color:#c3ced5;font-size:18px">›</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="margin-top:16px;padding:10px 13px;background:#f3f7f8;border-radius:9px;font-size:11.5px;color:#93a1ab;line-height:1.4;text-align:center">Demo-PIN: Sander 1234 · Georg 2222 · Christian 3333. Bør endrast før reell bruk.</div>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ appReady }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;flex-direction:column;min-height:100vh">
+  <header class="no-print" style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding:12px 28px;background:#0c2436;color:#eef4f6;border-bottom:3px solid #1597a8">
+    <div style="display:flex;align-items:center;gap:13px">
+      <img src="assets/mekk-logo.png" alt="MEKK Ølen" style="width:46px;height:46px;border-radius:8px;display:block">
+      <div style="line-height:1.1">
+        <div style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:18px;letter-spacing:0.4px">MEKK ØLEN</div>
+        <div style="font-size:11px;color:#7e93a0;font-weight:500;letter-spacing:0.5px;text-transform:uppercase">Vakt &amp; timestyring</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div style="width:32px;height:32px;border-radius:50%;background:{{ megFarge }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff">{{ megInit }}</div>
+        <div style="line-height:1.1">
+          <div style="font-size:13px;font-weight:600">{{ megNavn }}</div>
+          <div style="font-size:11px;color:#7e93a0">{{ megRolle }}</div>
+        </div>
+      </div>
+      <button onClick="{{ onLogout }}" title="Logg ut" style="display:flex;align-items:center;gap:6px;padding:7px 12px;background:#16303f;color:#9fb3bf;border:1px solid #21465a;border-radius:8px;cursor:pointer;font-family:'Barlow';font-size:12.5px;font-weight:600">Logg ut</button>
+    </div>
+  </header>
+
+  <nav class="no-print" style="display:flex;align-items:stretch;gap:2px;padding:0 28px;background:#0c2436;overflow-x:auto">
+    <sc-for list="{{ nav }}" as="item" hint-placeholder-count="5">
+      <button onClick="{{ item.onClick }}" style="display:flex;align-items:center;gap:9px;padding:13px 18px;background:transparent;border:none;border-bottom:3px solid {{ item.border }};color:{{ item.color }};font-family:'Barlow';font-size:14px;font-weight:600;cursor:pointer;letter-spacing:0.2px;white-space:nowrap">
+        <span>{{ item.label }}</span>
+        <sc-if value="{{ item.badge }}" hint-placeholder-val="">
+          <span style="display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;background:{{ item.badgeBg }};color:#fff;border-radius:10px;font-size:11px;font-weight:700;font-family:'JetBrains Mono'">{{ item.badge }}</span>
+        </sc-if>
+      </button>
+    </sc-for>
+  </nav>
+
+  <main style="flex:1;padding:24px 28px 44px;max-width:1380px;width:100%;margin:0 auto">
+
+    <!-- ============ DASHBORD ============ -->
+    <sc-if value="{{ isDashbord }}" hint-placeholder-val="{{ true }}">
+    <section>
+      <div style="margin-bottom:18px">
+        <h1 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:28px;letter-spacing:-0.2px">Oversikt</h1>
+        <p style="font-size:14px;color:#566570;margin-top:3px">{{ dashDato }} — velkomen tilbake, {{ megNavn }}.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px">
+        <sc-for list="{{ dashKort }}" as="k" hint-placeholder-count="4">
+          <div onClick="{{ k.onClick }}" style="background:#fff;border:1px solid #dbe3e8;border-left:4px solid {{ k.farge }};border-radius:12px;padding:16px 18px;cursor:pointer;box-shadow:0 1px 2px rgba(20,40,55,0.04)" style-hover="border-color:#1597a8">
+            <div style="font-size:12px;color:#6e7d88;font-weight:600;letter-spacing:0.3px;text-transform:uppercase">{{ k.label }}</div>
+            <div style="font-family:'JetBrains Mono';font-size:32px;font-weight:600;margin-top:6px;color:{{ k.farge }}">{{ k.verdi }}</div>
+            <div style="font-size:12.5px;color:#7e93a0;margin-top:2px">{{ k.sub }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:16px">
+        <div style="background:#fff;border:1px solid #dbe3e8;border-radius:12px;padding:18px 20px">
+          <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:17px;margin-bottom:14px">Kven jobbar i dag</h2>
+          <div style="display:flex;flex-direction:column;gap:11px">
+            <sc-for list="{{ jobbarIdag }}" as="j" hint-placeholder-count="2">
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid #eef2f4;border-radius:10px">
+                <div style="flex:none;width:38px;height:38px;border-radius:50%;background:{{ j.farge }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">{{ j.init }}</div>
+                <div style="flex:1;line-height:1.2">
+                  <div style="font-size:15px;font-weight:600">{{ j.navn }}</div>
+                  <div style="font-size:12px;color:#7e93a0;font-weight:600">{{ j.skift }}</div>
+                </div>
+                <span style="font-family:'JetBrains Mono';font-size:15px;font-weight:600;color:{{ j.skiftFarge }}">{{ j.tid }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ ingenIdag }}" hint-placeholder-val="">
+              <div style="padding:20px;text-align:center;color:#a6b2bb;font-size:13px;border:1.5px dashed #d2dde3;border-radius:10px">Ingen vakter registrert i dag (stengt / helg)</div>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="background:#fff;border:1px solid #dbe3e8;border-radius:12px;padding:18px 20px">
+            <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:17px;margin-bottom:14px">Timar denne veka</h2>
+            <div style="display:flex;flex-direction:column;gap:13px">
+              <sc-for list="{{ dashTimar }}" as="t" hint-placeholder-count="3">
+                <div>
+                  <div style="display:flex;align-items:center;gap:9px;margin-bottom:5px">
+                    <div style="flex:none;width:24px;height:24px;border-radius:50%;background:{{ t.farge }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">{{ t.init }}</div>
+                    <span style="font-size:13.5px;font-weight:600">{{ t.navn }}</span>
+                    <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:13.5px;font-weight:600;color:#374651">{{ t.timar }}</span>
+                  </div>
+                  <div style="height:7px;background:#eef2f4;border-radius:4px;overflow:hidden">
+                    <div style="height:100%;width:{{ t.pct }}%;background:{{ t.farge }};border-radius:4px"></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="background:#0c2436;color:#eef4f6;border-radius:12px;padding:18px 20px">
+            <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:17px;margin-bottom:13px">Ferie &amp; fri på trappene</h2>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ dashFerie }}" as="f" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:11px">
+                  <div style="flex:none;width:28px;height:28px;border-radius:50%;background:{{ f.farge }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">{{ f.init }}</div>
+                  <span style="flex:1;font-size:13px;color:#bcc9d1"><b style="color:#eef4f6">{{ f.navn }}</b> — {{ f.tekst }}</span>
+                  <span style="font-size:10.5px;font-weight:700;color:{{ f.typeFarge }};background:{{ f.typeBg }};padding:2px 8px;border-radius:6px;text-transform:uppercase">{{ f.type }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    </sc-if>
+
+    <!-- ============ TIMELISTE ============ -->
+    <sc-if value="{{ isTimeliste }}" hint-placeholder-val="{{ true }}">
+    <section>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:16px;flex-wrap:wrap">
+        <div>
+          <h1 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:28px;letter-spacing:-0.2px">Timeliste</h1>
+          <p style="font-size:14px;color:#566570;margin-top:3px">Klikk ein dag for å føre eller endre timar. Alt lagrast automatisk.</p>
+        </div>
+        <div class="no-print" style="display:flex;align-items:center;gap:9px">
+          <div style="display:flex;background:#fff;border:1px solid #d6dfe4;border-radius:9px;padding:3px">
+            <button onClick="{{ onModeVeke }}" style="padding:7px 16px;border:none;border-radius:7px;background:{{ vekeBtnBg }};color:{{ vekeBtnFg }};font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">Veke</button>
+            <button onClick="{{ onModeManad }}" style="padding:7px 16px;border:none;border-radius:7px;background:{{ manadBtnBg }};color:{{ manadBtnFg }};font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">Månad</button>
+          </div>
+          <button onClick="{{ onLonn }}" title="Lastar ned lønnsgrunnlag (godkjende timar) for valt månad" style="padding:9px 14px;background:#e7f6f8;color:#11788a;border:1px solid #cfe6ea;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">⤓ Lønnsfil</button>
+          <button onClick="{{ onCsv }}" style="padding:9px 14px;background:#fff;color:#142029;border:1px solid #d6dfe4;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">CSV (veke)</button>
+          <button onClick="{{ onPdf }}" style="padding:9px 14px;background:#fff;color:#142029;border:1px solid #d6dfe4;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">PDF</button>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <button onClick="{{ onPrev }}" class="no-print" style="width:36px;height:36px;border:1px solid #d6dfe4;background:#fff;border-radius:9px;cursor:pointer;font-size:16px;color:#374651;display:flex;align-items:center;justify-content:center">‹</button>
+        <div style="display:flex;align-items:baseline;gap:11px;min-width:300px">
+          <span style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:21px">{{ periodTittel }}</span>
+          <span style="font-family:'JetBrains Mono';font-size:13px;color:#7e93a0">{{ periodUnder }}</span>
+        </div>
+        <button onClick="{{ onNext }}" class="no-print" style="width:36px;height:36px;border:1px solid #d6dfe4;background:#fff;border-radius:9px;cursor:pointer;font-size:16px;color:#374651;display:flex;align-items:center;justify-content:center">›</button>
+        <button onClick="{{ onToday }}" class="no-print" style="margin-left:2px;padding:8px 14px;border:1px solid #d6dfe4;background:#fff;border-radius:9px;cursor:pointer;font-family:'Barlow';font-size:13px;font-weight:600;color:#374651">I dag</button>
+      </div>
+
+      <sc-if value="{{ isVeke }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <sc-if value="{{ harVentar }}" hint-placeholder-val="">
+          <div class="no-print" style="display:flex;align-items:center;gap:13px;background:#fff7e8;border:1px solid #f3dca6;border-radius:10px;padding:11px 16px;margin-bottom:14px">
+            <span style="width:9px;height:9px;border-radius:50%;background:#d8920f;flex:none"></span>
+            <span style="font-size:13.5px;color:#7a5a12;font-weight:600">{{ ventarTekst }}</span>
+            <button onClick="{{ onApproveAll }}" style="margin-left:auto;padding:7px 14px;background:#1597a8;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">Godkjenn heile veka</button>
+          </div>
+        </sc-if>
+
+        <div style="background:#fff;border:1px solid #dbe3e8;border-radius:13px;overflow:hidden;box-shadow:0 1px 3px rgba(20,40,55,0.05)">
+          <div style="display:grid;grid-template-columns:200px repeat(6, minmax(78px,1fr)) 96px 124px;align-items:center;background:#f3f7f8;border-bottom:1px solid #dbe3e8">
+            <div style="padding:12px 16px;font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.7px;text-transform:uppercase">Tilsett</div>
+            <sc-for list="{{ dager }}" as="d" hint-placeholder-count="6">
+              <div style="padding:12px 6px;text-align:center;line-height:1.2;background:{{ d.headBg }}">
+                <div style="font-size:11px;font-weight:700;color:#566570;letter-spacing:0.6px">{{ d.kort }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:11px;color:#93a1ab;margin-top:1px">{{ d.dnum }}</div>
+              </div>
+            </sc-for>
+            <div style="padding:12px 8px;text-align:right;font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.6px;text-transform:uppercase">Sum</div>
+            <div style="padding:12px 12px 12px 8px;text-align:right;font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.6px;text-transform:uppercase">Løn</div>
+          </div>
+
+          <sc-for list="{{ rows }}" as="row" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:200px repeat(6, minmax(78px,1fr)) 96px 124px;align-items:stretch;border-bottom:1px solid #eef2f4">
+              <div style="display:flex;align-items:center;gap:11px;padding:13px 16px">
+                <div style="flex:none;width:34px;height:34px;border-radius:50%;background:{{ row.farge }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff">{{ row.init }}</div>
+                <div style="line-height:1.15;min-width:0">
+                  <div style="font-size:14px;font-weight:600">{{ row.navn }}</div>
+                  <div style="font-size:12px;color:#7e93a0">{{ row.rolle }}</div>
+                </div>
+              </div>
+              <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="6">
+                <div onClick="{{ cell.onClick }}" title="{{ cell.tip }}" style="margin:6px 3px;border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px;background:{{ cell.bg }};border:1px solid {{ cell.line }}" style-hover="border-color:#1597a8">
+                  <span style="font-family:'JetBrains Mono';font-size:15px;font-weight:600;color:{{ cell.tekstFarge }}">{{ cell.timarTekst }}</span>
+                  <sc-if value="{{ cell.hasEntry }}" hint-placeholder-val="">
+                    <span style="display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:{{ cell.statusFarge }}"></span><span style="font-size:10px;color:#93a1ab;font-family:'JetBrains Mono'">{{ cell.tidTekst }}</span></span>
+                  </sc-if>
+                </div>
+              </sc-for>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding:6px 8px">
+                <span style="font-family:'JetBrains Mono';font-size:16px;font-weight:600">{{ row.sumTekst }}</span>
+                <span style="font-size:10.5px;color:{{ row.overtidFarge }};font-weight:600">{{ row.overtidTekst }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding:6px 12px 6px 8px">
+                <span style="font-family:'JetBrains Mono';font-size:14px;font-weight:600;color:#142029">{{ row.lonnTekst }}</span>
+                <span style="font-size:10.5px;color:#93a1ab">{{ row.satsTekst }}</span>
+              </div>
+            </div>
+          </sc-for>
+
+          <div style="display:grid;grid-template-columns:200px repeat(6, minmax(78px,1fr)) 96px 124px;align-items:center;background:#0c2436;color:#eef4f6">
+            <div style="padding:13px 16px;font-size:13px;font-weight:700;letter-spacing:0.3px">Sum</div>
+            <sc-for list="{{ dagSummer }}" as="ds" hint-placeholder-count="6">
+              <div style="padding:13px 6px;text-align:center;font-family:'JetBrains Mono';font-size:13px;font-weight:500;color:#bcc9d1">{{ ds }}</div>
+            </sc-for>
+            <div style="padding:13px 8px;text-align:right;font-family:'JetBrains Mono';font-size:16px;font-weight:600">{{ totalTimar }}</div>
+            <div style="padding:13px 12px 13px 8px;text-align:right;font-family:'JetBrains Mono';font-size:14px;font-weight:600;color:#5fc8d6">{{ totalLonn }}</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:22px;margin-top:13px;flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:7px;font-size:13px;color:#566570"><span style="width:9px;height:9px;border-radius:50%;background:#2f9e6f"></span>Godkjent</span>
+          <span style="display:flex;align-items:center;gap:7px;font-size:13px;color:#566570"><span style="width:9px;height:9px;border-radius:50%;background:#d8920f"></span>Ventar</span>
+          <span style="margin-left:auto;font-size:12px;color:#93a1ab">Normaltid 37,5 t/veke · overtid utover dette</span>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isManad }}" hint-placeholder-val="">
+      <div>
+        <div style="background:#fff;border:1px solid #dbe3e8;border-radius:13px;overflow:hidden;box-shadow:0 1px 3px rgba(20,40,55,0.05)">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);background:#f3f7f8;border-bottom:1px solid #dbe3e8">
+            <sc-for list="{{ ukedager }}" as="u" hint-placeholder-count="7">
+              <div style="padding:11px 6px;text-align:center;font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.6px">{{ u }}</div>
+            </sc-for>
+          </div>
+          <sc-for list="{{ monthWeeks }}" as="week" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid #eef2f4">
+              <sc-for list="{{ week.days }}" as="c" hint-placeholder-count="7">
+                <div onClick="{{ c.onClick }}" style="min-height:96px;border-left:1px solid #eef2f4;padding:7px 8px;cursor:{{ c.cursor }};background:{{ c.bg }};display:flex;flex-direction:column;gap:5px">
+                  <div style="display:flex;align-items:center;justify-content:space-between">
+                    <span style="font-family:'JetBrains Mono';font-size:13px;font-weight:600;color:{{ c.numFarge }}">{{ c.dnum }}</span>
+                    <sc-if value="{{ c.harTimar }}" hint-placeholder-val="">
+                      <span style="font-family:'JetBrains Mono';font-size:12px;font-weight:600;color:#1597a8">{{ c.totTekst }}</span>
+                    </sc-if>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <sc-for list="{{ c.bits }}" as="b" hint-placeholder-count="0">
+                      <div style="display:flex;align-items:center;gap:5px">
+                        <span style="width:7px;height:7px;border-radius:2px;background:{{ b.farge }};flex:none"></span>
+                        <span style="font-size:11px;color:#566570;font-family:'JetBrains Mono'">{{ b.tekst }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px">
+          <sc-for list="{{ manadKort }}" as="k" hint-placeholder-count="3">
+            <div style="background:#fff;border:1px solid #dbe3e8;border-radius:12px;padding:16px 18px">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px">
+                <div style="width:32px;height:32px;border-radius:50%;background:{{ k.farge }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff">{{ k.init }}</div>
+                <span style="font-size:15px;font-weight:600">{{ k.navn }}</span>
+              </div>
+              <div style="display:flex;align-items:flex-end;justify-content:space-between">
+                <div>
+                  <div style="font-size:11px;color:#7e93a0;font-weight:600;letter-spacing:0.4px;text-transform:uppercase">Timar</div>
+                  <div style="font-family:'JetBrains Mono';font-size:23px;font-weight:600;margin-top:2px">{{ k.timar }}</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:11px;color:#7e93a0;font-weight:600;letter-spacing:0.4px;text-transform:uppercase">Løn månad</div>
+                  <div style="font-family:'JetBrains Mono';font-size:18px;font-weight:600;margin-top:2px;color:#1597a8">{{ k.lonn }}</div>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+    </section>
+    </sc-if>
+
+    <!-- ============ VAKTPLAN ============ -->
+    <sc-if value="{{ isVaktplan }}" hint-placeholder-val="">
+    <section>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:16px;flex-wrap:wrap">
+        <div>
+          <h1 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:28px;letter-spacing:-0.2px">Vaktplan</h1>
+          <p style="font-size:14px;color:#566570;margin-top:3px">Dra ei vakt til ein annan dag for å flytte han. Bruk ⇄ for å be om bytte. Ope man–fre 09–18, laurdag 09–16.</p>
+        </div>
+        <button onClick="{{ onFillWeek }}" class="no-print" style="display:flex;align-items:center;gap:7px;padding:9px 15px;background:#fff;color:#11788a;border:1px solid #cfe6ea;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">↻ Fyll frå standardveke</button>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <button onClick="{{ onVpPrev }}" class="no-print" style="width:36px;height:36px;border:1px solid #d6dfe4;background:#fff;border-radius:9px;cursor:pointer;font-size:16px;color:#374651;display:flex;align-items:center;justify-content:center">‹</button>
+        <div style="display:flex;align-items:baseline;gap:11px;min-width:300px">
+          <span style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:21px">{{ vpTittel }}</span>
+          <span style="font-family:'JetBrains Mono';font-size:13px;color:#7e93a0">{{ vpUnder }}</span>
+        </div>
+        <button onClick="{{ onVpNext }}" class="no-print" style="width:36px;height:36px;border:1px solid #d6dfe4;background:#fff;border-radius:9px;cursor:pointer;font-size:16px;color:#374651;display:flex;align-items:center;justify-content:center">›</button>
+        <button onClick="{{ onVpToday }}" class="no-print" style="margin-left:2px;padding:8px 14px;border:1px solid #d6dfe4;background:#fff;border-radius:9px;cursor:pointer;font-family:'Barlow';font-size:13px;font-weight:600;color:#374651">Denne veka</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;align-items:start">
+        <sc-for list="{{ vDager }}" as="d" hint-placeholder-count="6">
+          <div onDragOver="{{ d.onDragOver }}" onDrop="{{ d.onDrop }}" style="background:#fff;border:1px solid #dbe3e8;border-radius:11px;min-height:300px;display:flex;flex-direction:column;overflow:hidden">
+            <div style="padding:11px 13px;border-bottom:1px solid #eef2f4;background:{{ d.headBg }}">
+              <div style="display:flex;align-items:baseline;justify-content:space-between">
+                <span style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:15px">{{ d.kort }} <span style="font-family:'JetBrains Mono';font-size:12px;font-weight:500;color:#93a1ab">{{ d.dnum }}</span></span>
+                <span style="font-family:'JetBrains Mono';font-size:11px;color:#93a1ab">{{ d.open }}</span>
+              </div>
+            </div>
+            <div style="padding:10px;display:flex;flex-direction:column;gap:9px;flex:1">
+              <sc-for list="{{ d.shifts }}" as="s" hint-placeholder-count="1">
+                <div draggable="true" onDragStart="{{ s.onDragStart }}" onClick="{{ s.onEdit }}" title="Klikk for å endre vakta" style="background:#fff;border:1px solid #e1e8ec;border-left:4px solid {{ s.farge }};border-radius:8px;padding:10px 11px;cursor:grab;box-shadow:0 1px 2px rgba(20,40,55,0.05)" style-hover="border-color:#1597a8">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <div style="flex:none;width:24px;height:24px;border-radius:50%;background:{{ s.avatarFarge }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">{{ s.init }}</div>
+                    <span style="font-size:13px;font-weight:600">{{ s.navn }}</span>
+                    <button onClick="{{ s.onSwap }}" class="no-print" title="Be om bytte" style="margin-left:auto;width:24px;height:24px;border:1px solid #e1e8ec;background:#f7f9fb;border-radius:6px;cursor:pointer;color:#6a5acd;font-size:13px;line-height:1">⇄</button>
+                  </div>
+                  <div style="font-family:'JetBrains Mono';font-size:13px;font-weight:500;color:#142029">{{ s.tid }}</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px">
+                    <span style="font-size:11px;font-weight:600;color:#566570;background:#eef2f4;padding:2px 7px;border-radius:5px">{{ s.skift }}</span>
+                    <span style="font-family:'JetBrains Mono';font-size:11px;color:#93a1ab">{{ s.varar }}</span>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ d.tom }}" hint-placeholder-val="">
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;border:1.5px dashed #d2dde3;border-radius:8px;min-height:60px;color:#a6b2bb;font-size:12px;font-weight:600">Ingen vakt</div>
+              </sc-if>
+              <button onClick="{{ d.onAddShift }}" class="no-print" style="margin-top:auto;padding:8px;border:1px dashed #cfe6ea;background:#f7fbfc;color:#11788a;border-radius:8px;cursor:pointer;font-family:'Barlow';font-size:12.5px;font-weight:600">+ vakt</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ swapListe }}" hint-placeholder-val="">
+      <div class="no-print" style="margin-top:20px;background:#f4f1fc;border:1px solid #ddd3f3;border-radius:12px;padding:16px 18px">
+        <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:16px;margin-bottom:12px;color:#4a3a8c">Bytteønske som ventar</h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ swapListe }}" as="sw" hint-placeholder-count="1">
+            <div style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e6def7;border-radius:10px;padding:11px 14px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <div style="width:28px;height:28px;border-radius:50%;background:{{ sw.fraFarge }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">{{ sw.fraInit }}</div>
+                <span style="color:#6a5acd;font-size:15px">→</span>
+                <div style="width:28px;height:28px;border-radius:50%;background:{{ sw.tilFarge }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">{{ sw.tilInit }}</div>
+              </div>
+              <div style="flex:1;line-height:1.25">
+                <div style="font-size:13.5px;font-weight:600"><b>{{ sw.fraNavn }}</b> vil byte vakta si til <b>{{ sw.tilNavn }}</b></div>
+                <div style="font-size:12px;color:#7e93a0;font-family:'JetBrains Mono'">{{ sw.dag }} · {{ sw.tid }}</div>
+              </div>
+              <button onClick="{{ sw.onDecline }}" style="padding:8px 13px;background:#fff;color:#c0392b;border:1px solid #ecc9c2;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">Avvis</button>
+              <button onClick="{{ sw.onApprove }}" style="padding:8px 15px;background:#6a5acd;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">Godkjenn bytte</button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div style="background:#fff;border:1px solid #dbe3e8;border-radius:11px;padding:18px 20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px">
+            <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:17px">Ferie &amp; fri</h2>
+            <button onClick="{{ onNewFerie }}" class="no-print" style="display:flex;align-items:center;gap:6px;padding:7px 13px;background:#1597a8;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">+ Legg til</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ ferieListe }}" as="f" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:12px;padding:9px 11px;border:1px solid #eef2f4;border-radius:9px">
+                <div style="flex:none;width:32px;height:32px;border-radius:50%;background:{{ f.farge }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">{{ f.init }}</div>
+                <div style="flex:1;line-height:1.25;min-width:0">
+                  <span style="font-size:14px;font-weight:600">{{ f.navn }}</span>
+                  <span style="font-size:13px;color:#566570"> — {{ f.tekst }}</span>
+                </div>
+                <span style="font-size:11px;font-weight:700;color:{{ f.typeFarge }};background:{{ f.typeBg }};padding:3px 9px;border-radius:6px;letter-spacing:0.4px;text-transform:uppercase">{{ f.type }}</span>
+                <button onClick="{{ f.onEdit }}" class="no-print" style="flex:none;width:28px;height:28px;border:1px solid #d6dfe4;background:#fff;border-radius:7px;cursor:pointer;color:#566570;font-size:13px">✎</button>
+              </div>
+            </sc-for>
+            <sc-if value="{{ ingenFerie }}" hint-placeholder-val="">
+              <div style="padding:18px;text-align:center;color:#a6b2bb;font-size:13px;border:1.5px dashed #d2dde3;border-radius:9px">Ingen ferie eller fri registrert</div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="background:#0c2436;color:#eef4f6;border-radius:11px;padding:18px 20px">
+          <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:17px;margin-bottom:13px">Bemanningsregel</h2>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:13px;color:#bcc9d1;line-height:1.4">
+            <li style="display:flex;gap:9px"><span style="color:#5fc8d6;font-weight:700">·</span><span><b style="color:#eef4f6">Sander</b> opnar måndag–fredag, jobbar til 15:00.</span></li>
+            <li style="display:flex;gap:9px"><span style="color:#5fc8d6;font-weight:700">·</span><span><b style="color:#eef4f6">Georg</b> fast tysdag + torsdag.</span></li>
+            <li style="display:flex;gap:9px"><span style="color:#5fc8d6;font-weight:700">·</span><span><b style="color:#eef4f6">Christian</b> fast måndag + onsdag.</span></li>
+            <li style="display:flex;gap:9px"><span style="color:#5fc8d6;font-weight:700">·</span><span>Annankvar helg: den eine tek fredag, den andre laurdag.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    </sc-if>
+
+    <!-- ============ OPPGÅVER ============ -->
+    <sc-if value="{{ isOppgaver }}" hint-placeholder-val="">
+    <section>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:18px;flex-wrap:wrap">
+        <div>
+          <h1 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:28px;letter-spacing:-0.2px">Oppgåver</h1>
+          <p style="font-size:14px;color:#566570;margin-top:3px">Dra ei oppgåve til ein tilsett for å fordele han, eller klikk for å endre. Ufordelte ligg lengst til venstre.</p>
+        </div>
+        <button onClick="{{ onNewTask }}" class="no-print" style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:#1597a8;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">+ Ny oppgåve</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start">
+        <sc-for list="{{ kolonnar }}" as="k" hint-placeholder-count="4">
+          <div onDragOver="{{ k.onDragOver }}" onDrop="{{ k.onDrop }}" style="background:#fff;border:1px solid #dbe3e8;border-radius:11px;min-height:340px;display:flex;flex-direction:column;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid #eef2f4;background:#f3f7f8">
+              <span style="width:11px;height:11px;border-radius:50%;background:{{ k.farge }}"></span>
+              <span style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:15px">{{ k.tittel }}</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:12px;font-weight:500;color:#93a1ab;background:#fff;border:1px solid #e1e8ec;border-radius:11px;padding:1px 8px">{{ k.antal }}</span>
+            </div>
+            <div style="padding:11px;display:flex;flex-direction:column;gap:10px;flex:1">
+              <sc-for list="{{ k.tasks }}" as="t" hint-placeholder-count="2">
+                <div draggable="true" onDragStart="{{ t.onDragStart }}" onClick="{{ t.onEdit }}" title="Klikk for å endre" style="background:#fff;border:1px solid #e1e8ec;border-left:4px solid {{ t.kantFarge }};border-radius:8px;padding:11px 12px;cursor:grab;box-shadow:0 1px 2px rgba(20,40,55,0.05)" style-hover="border-color:#1597a8">
+                  <div style="font-size:14px;font-weight:600;line-height:1.25;margin-bottom:4px">{{ t.tittel }}</div>
+                  <div style="font-size:12px;color:#7e93a0;line-height:1.3;margin-bottom:9px">{{ t.detalj }}</div>
+                  <span style="display:inline-block;font-size:11px;font-weight:700;color:{{ t.prioFg }};background:{{ t.prioBg }};padding:3px 9px;border-radius:6px;letter-spacing:0.3px;text-transform:uppercase">{{ t.prioTekst }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ k.erUfordelt }}" hint-placeholder-val="">
+                <div style="margin-top:auto;padding-top:6px;font-size:11px;color:#a6b2bb;text-align:center;font-weight:500">Dra herfrå til ein tilsett →</div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+    </sc-if>
+
+    <!-- ============ BESTILLINGAR ============ -->
+    <sc-if value="{{ isBestilling }}" hint-placeholder-val="">
+    <section>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:16px;flex-wrap:wrap">
+        <div>
+          <h1 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:28px;letter-spacing:-0.2px">Kundebestillingar</h1>
+          <p style="font-size:14px;color:#566570;margin-top:3px">Varer tinga for kundar. Klikk ei rad for å endre, eller flytt status framover.</p>
+        </div>
+        <button onClick="{{ onNewOrder }}" class="no-print" style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:#1597a8;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">+ Ny bestilling</button>
+      </div>
+
+      <div class="no-print" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <sc-for list="{{ orderFilters }}" as="of" hint-placeholder-count="5">
+          <button onClick="{{ of.onClick }}" style="display:flex;align-items:center;gap:7px;padding:7px 14px;border:1px solid {{ of.kant }};background:{{ of.bg }};color:{{ of.fg }};border-radius:20px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">{{ of.label }}<span style="font-family:'JetBrains Mono';font-size:11px;opacity:0.7">{{ of.antal }}</span></button>
+        </sc-for>
+      </div>
+
+      <div style="background:#fff;border:1px solid #dbe3e8;border-radius:13px;overflow:hidden;box-shadow:0 1px 3px rgba(20,40,55,0.05)">
+        <div style="display:grid;grid-template-columns:1.4fr 1.6fr 1fr 110px 70px 150px 78px;align-items:center;background:#f3f7f8;border-bottom:1px solid #dbe3e8">
+          <div style="padding:12px 16px;font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.6px;text-transform:uppercase">Kunde</div>
+          <div style="padding:12px 8px;font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.6px;text-transform:uppercase">Vare</div>
+          <div style="padding:12px 8px;font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.6px;text-transform:uppercase">Varenr</div>
+          <div style="padding:12px 8px;font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.6px;text-transform:uppercase">Bestilt</div>
+          <div style="padding:12px 8px;text-align:center;font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.6px;text-transform:uppercase">Antal</div>
+          <div style="padding:12px 8px;font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.6px;text-transform:uppercase">Status</div>
+          <div></div>
+        </div>
+
+        <sc-for list="{{ orders }}" as="o" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:1.4fr 1.6fr 1fr 110px 70px 150px 78px;align-items:center;border-bottom:1px solid #eef2f4;cursor:pointer" style-hover="background:#f7fafb" onClick="{{ o.onEdit }}">
+            <div style="padding:13px 16px;min-width:0">
+              <div style="font-size:14px;font-weight:600">{{ o.kunde }}</div>
+              <div style="font-size:12px;color:#93a1ab;font-family:'JetBrains Mono'">{{ o.telefon }}</div>
+            </div>
+            <div style="padding:13px 8px;min-width:0">
+              <div style="font-size:14px;font-weight:500">{{ o.vare }}</div>
+              <div style="font-size:12px;color:#93a1ab">{{ o.leverandor }}</div>
+            </div>
+            <div style="padding:13px 8px;font-family:'JetBrains Mono';font-size:13px;color:#374651">{{ o.varenr }}</div>
+            <div style="padding:13px 8px;font-family:'JetBrains Mono';font-size:13px;color:#566570">{{ o.datoTekst }}</div>
+            <div style="padding:13px 8px;text-align:center;font-family:'JetBrains Mono';font-size:14px;font-weight:600">{{ o.antal }}</div>
+            <div style="padding:13px 8px">
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:{{ o.statusFg }};background:{{ o.statusBg }};padding:4px 10px;border-radius:20px"><span style="width:7px;height:7px;border-radius:50%;background:{{ o.statusFg }}"></span>{{ o.statusTekst }}</span>
+            </div>
+            <div style="padding:13px 8px 13px 0;display:flex;justify-content:center;gap:6px" class="no-print">
+              <sc-if value="{{ o.kanVarsle }}" hint-placeholder-val="">
+                <button onClick="{{ o.onNotify }}" title="Varsle kunde" style="width:28px;height:28px;border:1px solid {{ o.varselKant }};background:{{ o.varselBg }};border-radius:7px;cursor:pointer;color:{{ o.varselFg }};font-size:13px">🔔</button>
+              </sc-if>
+              <sc-if value="{{ o.kanFram }}" hint-placeholder-val="">
+                <button onClick="{{ o.onAdvance }}" title="{{ o.framTip }}" style="width:28px;height:28px;border:1px solid #cfe6ea;background:#e7f6f8;border-radius:7px;cursor:pointer;color:#11788a;font-size:14px;font-weight:700">→</button>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+
+        <sc-if value="{{ ingenOrders }}" hint-placeholder-val="">
+          <div style="padding:34px;text-align:center;color:#a6b2bb;font-size:14px">Ingen bestillingar i denne visninga</div>
+        </sc-if>
+      </div>
+    </section>
+    </sc-if>
+
+    <!-- ============ DOKUMENT ============ -->
+    <sc-if value="{{ isDokument }}" hint-placeholder-val="">
+    <section>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:16px;flex-wrap:wrap">
+        <div>
+          <h1 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:28px;letter-spacing:-0.2px">Dokument</h1>
+          <p style="font-size:14px;color:#566570;margin-top:3px">Rutinar, avtalar og skjema for butikken. Klikk eit kort for å opne eller endre.</p>
+        </div>
+        <button onClick="{{ onNewDoc }}" class="no-print" style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:#1597a8;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">+ Nytt dokument</button>
+      </div>
+
+      <div class="no-print" style="display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+        <sc-for list="{{ docFilters }}" as="df" hint-placeholder-count="5">
+          <button onClick="{{ df.onClick }}" style="padding:7px 14px;border:1px solid {{ df.kant }};background:{{ df.bg }};color:{{ df.fg }};border-radius:20px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">{{ df.label }}</button>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start">
+        <sc-for list="{{ docs }}" as="doc" hint-placeholder-count="6">
+          <div onClick="{{ doc.onEdit }}" style="background:#fff;border:1px solid #dbe3e8;border-radius:12px;padding:16px;cursor:pointer;display:flex;gap:13px;box-shadow:0 1px 2px rgba(20,40,55,0.04)" style-hover="border-color:#1597a8">
+            <div style="flex:none;width:42px;height:42px;border-radius:9px;background:{{ doc.ikonBg }};display:flex;align-items:center;justify-content:center;font-size:18px">{{ doc.ikon }}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:15px;font-weight:600;line-height:1.25">{{ doc.tittel }}</div>
+              <div style="font-size:12.5px;color:#7e93a0;line-height:1.3;margin-top:3px">{{ doc.notat }}</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:11px">
+                <span style="font-size:11px;font-weight:700;color:{{ doc.katFg }};background:{{ doc.katBg }};padding:3px 9px;border-radius:6px;letter-spacing:0.3px;text-transform:uppercase">{{ doc.kategori }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:11px;color:#93a1ab">{{ doc.datoTekst }}</span>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ ingenDocs }}" hint-placeholder-val="">
+          <div style="grid-column:1 / -1;padding:34px;text-align:center;color:#a6b2bb;font-size:14px;background:#fff;border:1.5px dashed #d2dde3;border-radius:12px">Ingen dokument i denne kategorien</div>
+        </sc-if>
+      </div>
+    </section>
+    </sc-if>
+
+  </main>
+
+  <!-- ============ TIME-MODAL ============ -->
+  <sc-if value="{{ editingOpen }}" hint-placeholder-val="">
+    <div onClick="{{ onClose }}" class="no-print" style="position:fixed;inset:0;background:rgba(12,36,54,0.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px">
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,0.3);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid #eef2f4">
+          <div style="flex:none;width:38px;height:38px;border-radius:50%;background:{{ editing.farge }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff">{{ editing.init }}</div>
+          <div style="line-height:1.2">
+            <div style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:18px">{{ editing.ansattNavn }}</div>
+            <div style="font-size:13px;color:#7e93a0">{{ editing.datoTekst }}</div>
+          </div>
+          <button onClick="{{ onClose }}" style="margin-left:auto;width:30px;height:30px;border:none;background:#eef2f4;border-radius:7px;cursor:pointer;font-size:16px;color:#566570">✕</button>
+        </div>
+        <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Start</span>
+              <input type="time" value="{{ editing.start }}" onChange="{{ onStart }}" style="padding:9px 10px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'JetBrains Mono';font-size:14px;color:#142029">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Slutt</span>
+              <input type="time" value="{{ editing.slutt }}" onChange="{{ onSlutt }}" style="padding:9px 10px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'JetBrains Mono';font-size:14px;color:#142029">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Pause</span>
+              <input type="number" min="0" step="5" value="{{ editing.pause }}" onChange="{{ onPause }}" style="padding:9px 10px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'JetBrains Mono';font-size:14px;color:#142029">
+            </label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:#e7f6f8;border:1px solid #cfe6ea;border-radius:9px;padding:11px 15px">
+            <span style="font-size:13px;font-weight:600;color:#374651">Arbeidstid</span>
+            <span style="font-family:'JetBrains Mono';font-size:18px;font-weight:600;color:#11788a">{{ editing.timarTekst }} t</span>
+          </div>
+          <button onClick="{{ onToggleGodkjend }}" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid {{ editing.godkjKant }};background:{{ editing.godkjBg }};border-radius:9px;cursor:pointer;text-align:left">
+            <span style="flex:none;width:20px;height:20px;border-radius:6px;border:2px solid {{ editing.godkjMark }};background:{{ editing.godkjFill }};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700">{{ editing.godkjHake }}</span>
+            <span style="font-size:13.5px;font-weight:600;color:{{ editing.godkjTekstFarge }}">{{ editing.godkjLabel }}</span>
+          </button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 22px;border-top:1px solid #eef2f4;background:#f7f9fb">
+          <sc-if value="{{ editing.kanSlette }}" hint-placeholder-val="">
+            <button onClick="{{ onDelete }}" style="padding:10px 14px;background:#fff;color:#c0392b;border:1px solid #ecc9c2;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">Slett</button>
+          </sc-if>
+          <button onClick="{{ onClose }}" style="margin-left:auto;padding:10px 16px;background:#fff;color:#142029;border:1px solid #d6dfe4;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:600;cursor:pointer">Avbryt</button>
+          <button onClick="{{ onSave }}" style="padding:10px 22px;background:#1597a8;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:700;cursor:pointer">Lagre</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ FERIE-MODAL ============ -->
+  <sc-if value="{{ ferieOpen }}" hint-placeholder-val="">
+    <div onClick="{{ onCloseFerie }}" class="no-print" style="position:fixed;inset:0;background:rgba(12,36,54,0.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px">
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,0.3);overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #eef2f4">
+          <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:18px">{{ ferieTittel }}</h2>
+          <button onClick="{{ onCloseFerie }}" style="width:30px;height:30px;border:none;background:#eef2f4;border-radius:7px;cursor:pointer;font-size:16px;color:#566570">✕</button>
+        </div>
+        <div style="padding:20px 22px;display:flex;flex-direction:column;gap:15px">
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Tilsett</span>
+            <select value="{{ ferieEdit.ansatt }}" onChange="{{ onFerieAnsatt }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+              <sc-for list="{{ ansattOptions }}" as="a" hint-placeholder-count="3">
+                <option value="{{ a.id }}">{{ a.navn }}</option>
+              </sc-for>
+            </select>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Type</span>
+            <select value="{{ ferieEdit.type }}" onChange="{{ onFerieType }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+              <option value="Ferie">Ferie</option>
+              <option value="Fri">Fri / avspasering</option>
+              <option value="Kurs">Kurs</option>
+              <option value="Sjukmeld">Sjukmelding</option>
+            </select>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Periode / merknad</span>
+            <input type="text" value="{{ ferieEdit.tekst }}" onChange="{{ onFerieTekst }}" placeholder="t.d. veke 28–30, eller fredag 27.06" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+          </label>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 22px;border-top:1px solid #eef2f4;background:#f7f9fb">
+          <sc-if value="{{ ferieEdit.kanSlette }}" hint-placeholder-val="">
+            <button onClick="{{ onDeleteFerie }}" style="padding:10px 14px;background:#fff;color:#c0392b;border:1px solid #ecc9c2;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">Slett</button>
+          </sc-if>
+          <button onClick="{{ onCloseFerie }}" style="margin-left:auto;padding:10px 16px;background:#fff;color:#142029;border:1px solid #d6dfe4;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:600;cursor:pointer">Avbryt</button>
+          <button onClick="{{ onSaveFerie }}" style="padding:10px 22px;background:#1597a8;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:700;cursor:pointer">Lagre</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ BESTILLING-MODAL ============ -->
+  <sc-if value="{{ orderOpen }}" hint-placeholder-val="">
+    <div onClick="{{ onCloseOrder }}" class="no-print" style="position:fixed;inset:0;background:rgba(12,36,54,0.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px">
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:460px;box-shadow:0 24px 60px rgba(0,0,0,0.3);overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #eef2f4">
+          <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:18px">{{ orderTittel }}</h2>
+          <button onClick="{{ onCloseOrder }}" style="width:30px;height:30px;border:none;background:#eef2f4;border-radius:7px;cursor:pointer;font-size:16px;color:#566570">✕</button>
+        </div>
+        <div style="padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Kundenamn</span>
+              <input type="text" value="{{ orderEdit.kunde }}" onChange="{{ onOrderKunde }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Telefon</span>
+              <input type="text" value="{{ orderEdit.telefon }}" onChange="{{ onOrderTlf }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'JetBrains Mono';font-size:14px;color:#142029">
+            </label>
+          </div>
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Varenamn</span>
+            <input type="text" value="{{ orderEdit.vare }}" onChange="{{ onOrderVare }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+          </label>
+          <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:13px">
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Leverandør</span>
+              <input type="text" value="{{ orderEdit.leverandor }}" onChange="{{ onOrderLev }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Varenr</span>
+              <input type="text" value="{{ orderEdit.varenr }}" onChange="{{ onOrderVarenr }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'JetBrains Mono';font-size:14px;color:#142029">
+            </label>
+          </div>
+          <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:13px">
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Bestillingsdato</span>
+              <input type="date" value="{{ orderEdit.dato }}" onChange="{{ onOrderDato }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'JetBrains Mono';font-size:14px;color:#142029">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Antal</span>
+              <input type="number" min="1" step="1" value="{{ orderEdit.antal }}" onChange="{{ onOrderAntal }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'JetBrains Mono';font-size:14px;color:#142029">
+            </label>
+          </div>
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Status</span>
+            <select value="{{ orderEdit.status }}" onChange="{{ onOrderStatus }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+              <option value="ny">Ny – ikkje tinga</option>
+              <option value="tinga">Tinga frå leverandør</option>
+              <option value="komen">Komen i butikk</option>
+              <option value="henta">Henta av kunde</option>
+            </select>
+          </label>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 22px;border-top:1px solid #eef2f4;background:#f7f9fb">
+          <sc-if value="{{ orderEdit.kanSlette }}" hint-placeholder-val="">
+            <button onClick="{{ onDeleteOrder }}" style="padding:10px 14px;background:#fff;color:#c0392b;border:1px solid #ecc9c2;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">Slett</button>
+          </sc-if>
+          <button onClick="{{ onCloseOrder }}" style="margin-left:auto;padding:10px 16px;background:#fff;color:#142029;border:1px solid #d6dfe4;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:600;cursor:pointer">Avbryt</button>
+          <button onClick="{{ onSaveOrder }}" style="padding:10px 22px;background:#1597a8;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:700;cursor:pointer">Lagre</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ DOKUMENT-MODAL ============ -->
+  <sc-if value="{{ docOpen }}" hint-placeholder-val="">
+    <div onClick="{{ onCloseDoc }}" class="no-print" style="position:fixed;inset:0;background:rgba(12,36,54,0.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px">
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:430px;box-shadow:0 24px 60px rgba(0,0,0,0.3);overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #eef2f4">
+          <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:18px">{{ docTittel }}</h2>
+          <button onClick="{{ onCloseDoc }}" style="width:30px;height:30px;border:none;background:#eef2f4;border-radius:7px;cursor:pointer;font-size:16px;color:#566570">✕</button>
+        </div>
+        <div style="padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Tittel</span>
+            <input type="text" value="{{ docEdit.tittel }}" onChange="{{ onDocTittel }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Kategori</span>
+            <select value="{{ docEdit.kategori }}" onChange="{{ onDocKat }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+              <option value="HMS">HMS</option>
+              <option value="Rutine">Rutine</option>
+              <option value="Avtale">Avtale</option>
+              <option value="Skjema">Skjema</option>
+              <option value="Anna">Anna</option>
+            </select>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Notat</span>
+            <textarea onChange="{{ onDocNotat }}" rows="3" value="{{ docEdit.notat }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029;resize:vertical"></textarea>
+          </label>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 22px;border-top:1px solid #eef2f4;background:#f7f9fb">
+          <sc-if value="{{ docEdit.kanSlette }}" hint-placeholder-val="">
+            <button onClick="{{ onDeleteDoc }}" style="padding:10px 14px;background:#fff;color:#c0392b;border:1px solid #ecc9c2;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">Slett</button>
+          </sc-if>
+          <button onClick="{{ onCloseDoc }}" style="margin-left:auto;padding:10px 16px;background:#fff;color:#142029;border:1px solid #d6dfe4;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:600;cursor:pointer">Avbryt</button>
+          <button onClick="{{ onSaveDoc }}" style="padding:10px 22px;background:#1597a8;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:700;cursor:pointer">Lagre</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ SKIFT-BYTTE-MODAL ============ -->
+  <sc-if value="{{ swapOpen }}" hint-placeholder-val="">
+    <div onClick="{{ onCloseSwap }}" class="no-print" style="position:fixed;inset:0;background:rgba(12,36,54,0.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px">
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,0.3);overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #eef2f4">
+          <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:18px">Be om vaktbytte</h2>
+          <button onClick="{{ onCloseSwap }}" style="width:30px;height:30px;border:none;background:#eef2f4;border-radius:7px;cursor:pointer;font-size:16px;color:#566570">✕</button>
+        </div>
+        <div style="padding:20px 22px;display:flex;flex-direction:column;gap:15px">
+          <div style="background:#f4f1fc;border:1px solid #ddd3f3;border-radius:9px;padding:12px 15px">
+            <div style="font-size:12px;color:#6a5acd;font-weight:700;letter-spacing:0.3px;text-transform:uppercase">Vakt</div>
+            <div style="font-size:14px;font-weight:600;margin-top:3px">{{ swapEdit.fraNavn }} — {{ swapEdit.dagTekst }}</div>
+          </div>
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Byte til</span>
+            <select value="{{ swapEdit.til }}" onChange="{{ onSwapTil }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+              <sc-for list="{{ swapEdit.valg }}" as="a" hint-placeholder-count="2">
+                <option value="{{ a.id }}">{{ a.navn }}</option>
+              </sc-for>
+            </select>
+          </label>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 22px;border-top:1px solid #eef2f4;background:#f7f9fb">
+          <button onClick="{{ onCloseSwap }}" style="margin-left:auto;padding:10px 16px;background:#fff;color:#142029;border:1px solid #d6dfe4;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:600;cursor:pointer">Avbryt</button>
+          <button onClick="{{ onSaveSwap }}" style="padding:10px 20px;background:#6a5acd;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:700;cursor:pointer">Send forespurnad</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ KUNDE-VARSEL-MODAL ============ -->
+  <sc-if value="{{ notifyOpen }}" hint-placeholder-val="">
+    <div onClick="{{ onCloseNotify }}" class="no-print" style="position:fixed;inset:0;background:rgba(12,36,54,0.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px">
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:460px;box-shadow:0 24px 60px rgba(0,0,0,0.3);overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #eef2f4">
+          <div style="line-height:1.2">
+            <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:18px">Varsle kunde</h2>
+            <div style="font-size:13px;color:#7e93a0">{{ notify.kunde }} · {{ notify.telefon }}</div>
+          </div>
+          <button onClick="{{ onCloseNotify }}" style="width:30px;height:30px;border:none;background:#eef2f4;border-radius:7px;cursor:pointer;font-size:16px;color:#566570">✕</button>
+        </div>
+        <div style="padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <sc-if value="{{ notify.alleredeVarsla }}" hint-placeholder-val="">
+            <div style="display:flex;align-items:center;gap:9px;background:#e8f5ee;border:1px solid #cce6d6;border-radius:9px;padding:9px 13px;font-size:13px;color:#2f7a55;font-weight:600">✓ {{ notify.varslaTekst }}</div>
+          </sc-if>
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Melding (SMS-mal)</span>
+            <textarea readOnly rows="5" value="{{ notify.tekst }}" style="padding:11px 13px;border:1px solid #d6dfe4;border-radius:8px;background:#f7f9fb;font-family:'Barlow';font-size:13.5px;line-height:1.5;color:#374651;resize:vertical"></textarea>
+          </label>
+          <button onClick="{{ notify.onCopy }}" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;background:#fff;color:#11788a;border:1px solid #cfe6ea;border-radius:9px;cursor:pointer;font-family:'Barlow';font-size:14px;font-weight:600">⧉ Kopier melding</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 22px;border-top:1px solid #eef2f4;background:#f7f9fb">
+          <button onClick="{{ onCloseNotify }}" style="margin-left:auto;padding:10px 16px;background:#fff;color:#142029;border:1px solid #d6dfe4;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:600;cursor:pointer">Lukk</button>
+          <button onClick="{{ onMarkVarsla }}" style="padding:10px 20px;background:#1597a8;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:700;cursor:pointer">Marker som varsla</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ VAKT-MODAL ============ -->
+  <sc-if value="{{ shiftOpen }}" hint-placeholder-val="">
+    <div onClick="{{ onCloseShift }}" class="no-print" style="position:fixed;inset:0;background:rgba(12,36,54,0.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px">
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,0.3);overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #eef2f4">
+          <div style="line-height:1.2">
+            <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:18px">{{ shiftTittel }}</h2>
+            <div style="font-size:13px;color:#7e93a0">{{ shiftDato }}</div>
+          </div>
+          <button onClick="{{ onCloseShift }}" style="width:30px;height:30px;border:none;background:#eef2f4;border-radius:7px;cursor:pointer;font-size:16px;color:#566570">✕</button>
+        </div>
+        <div style="padding:20px 22px;display:flex;flex-direction:column;gap:15px">
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Tilsett</span>
+            <select value="{{ shiftEdit.ansatt }}" onChange="{{ onShiftAnsatt }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+              <sc-for list="{{ ansattOptions }}" as="a" hint-placeholder-count="3">
+                <option value="{{ a.id }}">{{ a.navn }}</option>
+              </sc-for>
+            </select>
+          </label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Start</span>
+              <input type="time" value="{{ shiftEdit.start }}" onChange="{{ onShiftStart }}" style="padding:9px 10px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'JetBrains Mono';font-size:14px;color:#142029">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Slutt</span>
+              <input type="time" value="{{ shiftEdit.slutt }}" onChange="{{ onShiftSlutt }}" style="padding:9px 10px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'JetBrains Mono';font-size:14px;color:#142029">
+            </label>
+          </div>
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Skift-type</span>
+            <select value="{{ shiftEdit.skift }}" onChange="{{ onShiftSkift }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+              <sc-for list="{{ skiftValg }}" as="sv" hint-placeholder-count="4">
+                <option value="{{ sv }}">{{ sv }}</option>
+              </sc-for>
+            </select>
+          </label>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:#e7f6f8;border:1px solid #cfe6ea;border-radius:9px;padding:11px 15px">
+            <span style="font-size:13px;font-weight:600;color:#374651">Lengd</span>
+            <span style="font-family:'JetBrains Mono';font-size:17px;font-weight:600;color:#11788a">{{ shiftEdit.varar }}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 22px;border-top:1px solid #eef2f4;background:#f7f9fb">
+          <sc-if value="{{ shiftEdit.kanSlette }}" hint-placeholder-val="">
+            <button onClick="{{ onDeleteShift }}" style="padding:10px 14px;background:#fff;color:#c0392b;border:1px solid #ecc9c2;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">Slett</button>
+          </sc-if>
+          <button onClick="{{ onCloseShift }}" style="margin-left:auto;padding:10px 16px;background:#fff;color:#142029;border:1px solid #d6dfe4;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:600;cursor:pointer">Avbryt</button>
+          <button onClick="{{ onSaveShift }}" style="padding:10px 22px;background:#1597a8;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:700;cursor:pointer">Lagre</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ OPPGÅVE-MODAL ============ -->
+  <sc-if value="{{ taskOpen }}" hint-placeholder-val="">
+    <div onClick="{{ onCloseTask }}" class="no-print" style="position:fixed;inset:0;background:rgba(12,36,54,0.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px">
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:430px;box-shadow:0 24px 60px rgba(0,0,0,0.3);overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #eef2f4">
+          <h2 style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:18px">{{ taskTittel }}</h2>
+          <button onClick="{{ onCloseTask }}" style="width:30px;height:30px;border:none;background:#eef2f4;border-radius:7px;cursor:pointer;font-size:16px;color:#566570">✕</button>
+        </div>
+        <div style="padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Oppgåve</span>
+            <input type="text" value="{{ taskEdit.tittel }}" onChange="{{ onTaskTittel }}" placeholder="t.d. Montere sykkel" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Detalj</span>
+            <input type="text" value="{{ taskEdit.detalj }}" onChange="{{ onTaskDetalj }}" placeholder="kort beskriving" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+          </label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Prioritet</span>
+              <select value="{{ taskEdit.prioritet }}" onChange="{{ onTaskPrio }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+                <option value="høg">Høg</option>
+                <option value="medium">Medium</option>
+                <option value="låg">Låg</option>
+              </select>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:#6e7d88;letter-spacing:0.4px;text-transform:uppercase">Tilordna</span>
+              <select value="{{ taskEdit.ansatt }}" onChange="{{ onTaskAnsatt }}" style="padding:9px 11px;border:1px solid #d6dfe4;border-radius:8px;background:#fff;font-family:'Barlow';font-size:14px;color:#142029">
+                <option value="ufordelt">Ufordelt</option>
+                <sc-for list="{{ ansattOptions }}" as="a" hint-placeholder-count="3">
+                  <option value="{{ a.id }}">{{ a.navn }}</option>
+                </sc-for>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 22px;border-top:1px solid #eef2f4;background:#f7f9fb">
+          <sc-if value="{{ taskEdit.kanSlette }}" hint-placeholder-val="">
+            <button onClick="{{ onDeleteTask }}" style="padding:10px 14px;background:#fff;color:#c0392b;border:1px solid #ecc9c2;border-radius:8px;font-family:'Barlow';font-size:13px;font-weight:600;cursor:pointer">Slett</button>
+          </sc-if>
+          <button onClick="{{ onCloseTask }}" style="margin-left:auto;padding:10px 16px;background:#fff;color:#142029;border:1px solid #d6dfe4;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:600;cursor:pointer">Avbryt</button>
+          <button onClick="{{ onSaveTask }}" style="padding:10px 22px;background:#1597a8;color:#fff;border:none;border-radius:8px;font-family:'Barlow';font-size:14px;font-weight:700;cursor:pointer">Lagre</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  ANSATTE = [
+    { id:'sander',    navn:'Sander',    rolle:'Dagleg leiar', lonn:'fast', sats:0,   farge:'#11788a', init:'SA', pin:'1234' },
+    { id:'georg',     navn:'Georg',     rolle:'Selgar',       lonn:'time', sats:164, farge:'#e08a1e', init:'GE', pin:'2222' },
+    { id:'christian', navn:'Christian', rolle:'Selgar',       lonn:'time', sats:133, farge:'#2f9e6f', init:'CH', pin:'3333' },
+  ];
+  MND = ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
+  UKE_KORT = ['MÅN','TYS','ONS','TOR','FRE','LAU','SØN'];
+  UKE_FULL = ['måndag','tysdag','onsdag','torsdag','fredag','laurdag','søndag'];
+  DAG_IDX = { man:0, tir:1, ons:2, tor:3, fre:4, lau:5 };
+  SKIFT_FARGE = { 'Formiddag':'#1597a8', 'Heildag':'#2f9e6f', 'Kveld':'#e08a1e', 'Laurdag':'#6a5acd' };
+  SHIFT_TEMPLATE = [
+    { ansatt:'sander', dag:'man', start:'09:00', slutt:'15:00', skift:'Formiddag' },
+    { ansatt:'sander', dag:'tir', start:'09:00', slutt:'15:00', skift:'Formiddag' },
+    { ansatt:'sander', dag:'ons', start:'09:00', slutt:'15:00', skift:'Formiddag' },
+    { ansatt:'sander', dag:'tor', start:'09:00', slutt:'15:00', skift:'Formiddag' },
+    { ansatt:'sander', dag:'fre', start:'09:00', slutt:'15:00', skift:'Formiddag' },
+    { ansatt:'christian', dag:'man', start:'09:00', slutt:'18:00', skift:'Heildag' },
+    { ansatt:'christian', dag:'ons', start:'09:00', slutt:'18:00', skift:'Heildag' },
+    { ansatt:'christian', dag:'lau', start:'09:00', slutt:'16:00', skift:'Laurdag' },
+    { ansatt:'georg', dag:'tir', start:'09:00', slutt:'18:00', skift:'Heildag' },
+    { ansatt:'georg', dag:'tor', start:'09:00', slutt:'18:00', skift:'Heildag' },
+    { ansatt:'georg', dag:'fre', start:'09:00', slutt:'18:00', skift:'Kveld' },
+  ];
+
+  FERIE_TYPE = {
+    'Ferie':    { fg:'#11788a', bg:'#e7f6f8' },
+    'Fri':      { fg:'#2f9e6f', bg:'#e8f5ee' },
+    'Kurs':     { fg:'#b07b1a', bg:'#fdf2e0' },
+    'Sjukmeld': { fg:'#c0392b', bg:'#fbe9e4' },
+  };
+  ORDER_FLOW = ['ny','tinga','komen','henta'];
+  ORDER_STATUS = {
+    'ny':    { tekst:'Ny',          fg:'#6e7d88', bg:'#eef2f4', neste:'Marker tinga' },
+    'tinga': { tekst:'Tinga',       fg:'#b07b1a', bg:'#fdf2e0', neste:'Komen i butikk' },
+    'komen': { tekst:'Komen',       fg:'#11788a', bg:'#e7f6f8', neste:'Marker henta' },
+    'henta': { tekst:'Henta',       fg:'#2f9e6f', bg:'#e8f5ee', neste:'' },
+  };
+  DOC_KAT = {
+    'HMS':    { fg:'#c0392b', bg:'#fbe9e4', ikon:'🛟', ikonBg:'#fbe9e4' },
+    'Rutine': { fg:'#11788a', bg:'#e7f6f8', ikon:'📋', ikonBg:'#e7f6f8' },
+    'Avtale': { fg:'#6a5acd', bg:'#eee9fb', ikon:'📝', ikonBg:'#eee9fb' },
+    'Skjema': { fg:'#b07b1a', bg:'#fdf2e0', ikon:'🗂', ikonBg:'#fdf2e0' },
+    'Anna':   { fg:'#6e7d88', bg:'#eef2f4', ikon:'📄', ikonBg:'#eef2f4' },
+  };
+
+  state = {
+    view: 'dashbord',
+    tlMode: 'veke',
+    weekStart: '2026-06-15',
+    vpWeek: '2026-06-15',
+    monthAnchor: '2026-06',
+    orderFilter: 'aktive',
+    docFilter: 'Alle',
+    editing: null,
+    ferieEdit: null,
+    orderEdit: null,
+    docEdit: null,
+    swapEdit: null,
+    shiftEdit: null,
+    taskEdit: null,
+    notifyId: null,
+    user: null,
+    loginPick: null,
+    loginPin: '',
+    loginFeil: false,
+    swaps: [
+      { id:'sw1', shiftId:'sh-2026-06-20-christian', fra:'christian', til:'georg', dag:'laurdag 20.06', tid:'09:00–16:00', status:'pending' },
+    ],
+    entries: [
+      { id:'a1', ansatt:'sander', date:'2026-06-08', start:'09:00', slutt:'15:00', pause:30, status:'godkjent' },
+      { id:'a2', ansatt:'sander', date:'2026-06-09', start:'09:00', slutt:'15:00', pause:30, status:'godkjent' },
+      { id:'a3', ansatt:'sander', date:'2026-06-10', start:'09:00', slutt:'15:00', pause:30, status:'godkjent' },
+      { id:'a4', ansatt:'sander', date:'2026-06-11', start:'09:00', slutt:'15:00', pause:30, status:'godkjent' },
+      { id:'a5', ansatt:'sander', date:'2026-06-12', start:'09:00', slutt:'15:00', pause:30, status:'godkjent' },
+      { id:'a6', ansatt:'christian', date:'2026-06-08', start:'09:00', slutt:'18:00', pause:30, status:'godkjent' },
+      { id:'a7', ansatt:'christian', date:'2026-06-10', start:'09:00', slutt:'18:00', pause:30, status:'godkjent' },
+      { id:'a8', ansatt:'christian', date:'2026-06-12', start:'09:00', slutt:'18:00', pause:30, status:'godkjent' },
+      { id:'a9', ansatt:'georg', date:'2026-06-09', start:'09:00', slutt:'18:00', pause:30, status:'godkjent' },
+      { id:'a10', ansatt:'georg', date:'2026-06-11', start:'09:00', slutt:'18:00', pause:30, status:'godkjent' },
+      { id:'a11', ansatt:'georg', date:'2026-06-13', start:'09:00', slutt:'16:00', pause:30, status:'godkjent' },
+      { id:'b1', ansatt:'sander', date:'2026-06-15', start:'09:00', slutt:'15:00', pause:30, status:'godkjent' },
+      { id:'b2', ansatt:'sander', date:'2026-06-16', start:'09:00', slutt:'15:00', pause:30, status:'godkjent' },
+      { id:'b3', ansatt:'sander', date:'2026-06-17', start:'09:00', slutt:'15:00', pause:30, status:'godkjent' },
+      { id:'b4', ansatt:'sander', date:'2026-06-18', start:'09:00', slutt:'15:00', pause:30, status:'godkjent' },
+      { id:'b5', ansatt:'sander', date:'2026-06-19', start:'09:00', slutt:'15:00', pause:30, status:'venter' },
+      { id:'b6', ansatt:'christian', date:'2026-06-15', start:'09:00', slutt:'18:00', pause:30, status:'godkjent' },
+      { id:'b7', ansatt:'christian', date:'2026-06-17', start:'09:00', slutt:'18:00', pause:30, status:'godkjent' },
+      { id:'b8', ansatt:'christian', date:'2026-06-20', start:'09:00', slutt:'16:00', pause:30, status:'venter' },
+      { id:'b9', ansatt:'georg', date:'2026-06-16', start:'09:00', slutt:'18:00', pause:30, status:'godkjent' },
+      { id:'b10', ansatt:'georg', date:'2026-06-18', start:'09:00', slutt:'18:00', pause:30, status:'godkjent' },
+      { id:'b11', ansatt:'georg', date:'2026-06-19', start:'09:00', slutt:'18:00', pause:30, status:'venter' },
+    ],
+    shifts: [
+      { id:'sh-2026-06-15-sander', ansatt:'sander', date:'2026-06-15', start:'09:00', slutt:'15:00', skift:'Formiddag' },
+      { id:'sh-2026-06-16-sander', ansatt:'sander', date:'2026-06-16', start:'09:00', slutt:'15:00', skift:'Formiddag' },
+      { id:'sh-2026-06-17-sander', ansatt:'sander', date:'2026-06-17', start:'09:00', slutt:'15:00', skift:'Formiddag' },
+      { id:'sh-2026-06-18-sander', ansatt:'sander', date:'2026-06-18', start:'09:00', slutt:'15:00', skift:'Formiddag' },
+      { id:'sh-2026-06-19-sander', ansatt:'sander', date:'2026-06-19', start:'09:00', slutt:'15:00', skift:'Formiddag' },
+      { id:'sh-2026-06-15-christian', ansatt:'christian', date:'2026-06-15', start:'09:00', slutt:'18:00', skift:'Heildag' },
+      { id:'sh-2026-06-17-christian', ansatt:'christian', date:'2026-06-17', start:'09:00', slutt:'18:00', skift:'Heildag' },
+      { id:'sh-2026-06-20-christian', ansatt:'christian', date:'2026-06-20', start:'09:00', slutt:'16:00', skift:'Laurdag' },
+      { id:'sh-2026-06-16-georg', ansatt:'georg', date:'2026-06-16', start:'09:00', slutt:'18:00', skift:'Heildag' },
+      { id:'sh-2026-06-18-georg', ansatt:'georg', date:'2026-06-18', start:'09:00', slutt:'18:00', skift:'Heildag' },
+      { id:'sh-2026-06-19-georg', ansatt:'georg', date:'2026-06-19', start:'09:00', slutt:'18:00', skift:'Kveld' },
+    ],
+    ferie: [
+      { id:'f1', ansatt:'georg', tekst:'Ferie veke 28–30', type:'Ferie' },
+      { id:'f2', ansatt:'christian', tekst:'Avspasering fredag 27.06', type:'Fri' },
+      { id:'f3', ansatt:'sander', tekst:'Leiarkurs torsdag 25.06 (halv dag)', type:'Kurs' },
+    ],
+    tasks: [
+      { id:'t1', tittel:'Kapping av trelast – kunde', detalj:'Bestilling #1042, 12 bord', prioritet:'høg', ansatt:'georg' },
+      { id:'t2', tittel:'Fylle på skruer og festemiddel', detalj:'Hyllene tomme for treskruar', prioritet:'medium', ansatt:'christian' },
+      { id:'t3', tittel:'Telje opp måling & lakk', detalj:'Lagerteljing månadleg', prioritet:'låg', ansatt:'ufordelt' },
+      { id:'t4', tittel:'Bestille meir batteri til drill', detalj:'Tomt for Makita 18V', prioritet:'høg', ansatt:'ufordelt' },
+      { id:'t5', tittel:'Rigge kampanje hageutstyr', detalj:'Grill, hagemøblar fram', prioritet:'medium', ansatt:'sander' },
+      { id:'t6', tittel:'Vask av butikkgolv', detalj:'Før helg', prioritet:'låg', ansatt:'christian' },
+      { id:'t7', tittel:'Oppdatere prisar i kassa', detalj:'Nye verktøyprisar', prioritet:'medium', ansatt:'ufordelt' },
+      { id:'t8', tittel:'Pant & søppel ut', detalj:'Dagleg rutine', prioritet:'låg', ansatt:'georg' },
+    ],
+    orders: [
+      { id:'o1', kunde:'Kåre Vik',        telefon:'920 11 234', vare:'Bosch GSB 18V slagdrill', leverandor:'Bosch', varenr:'06019J1000', dato:'2026-06-16', antal:1, status:'tinga', varsla:null },
+      { id:'o2', kunde:'Ølen Bygg AS',    telefon:'53 76 50 00', vare:'Konstruksjonsvirke 48x198', leverandor:'Moelven', varenr:'KV-48198', dato:'2026-06-15', antal:80, status:'komen', varsla:null },
+      { id:'o3', kunde:'Marit Haugland',  telefon:'481 22 901', vare:'Jøtul vedomn F 602', leverandor:'Jøtul', varenr:'JF602-BK', dato:'2026-06-12', antal:1, status:'ny', varsla:null },
+      { id:'o4', kunde:'Tønnevik Gard',   telefon:'911 45 778', vare:'Gjerdenetting 1,2m (rull)', leverandor:'Tata Steel', varenr:'GN-120-25', dato:'2026-06-10', antal:4, status:'henta', varsla:'2026-06-12' },
+      { id:'o5', kunde:'Solveig Eide',    telefon:'995 33 110', vare:'Jordfeilbrytar 2-pol 40A', leverandor:'ABB', varenr:'2CSF204101', dato:'2026-06-18', antal:2, status:'tinga', varsla:null },
+    ],
+    docs: [
+      { id:'d1', tittel:'HMS-handbok MEKK Ølen', kategori:'HMS', notat:'Internkontroll, vernerunde og avvik.', dato:'2026-01-10' },
+      { id:'d2', tittel:'Opningsrutine butikk', kategori:'Rutine', notat:'Kasse, alarm, lys og skilt om morgonen.', dato:'2025-11-02' },
+      { id:'d3', tittel:'Stengerutine', kategori:'Rutine', notat:'Kasseoppgjer, lås og alarm ved stenging.', dato:'2025-11-02' },
+      { id:'d4', tittel:'Leverandøravtale Bosch', kategori:'Avtale', notat:'Innkjøpsvilkår og rabattsatsar 2026.', dato:'2026-02-20' },
+      { id:'d5', tittel:'Skjema – vareretur', kategori:'Skjema', notat:'Fyllast ut ved retur/reklamasjon.', dato:'2025-09-15' },
+      { id:'d6', tittel:'Branninstruks', kategori:'HMS', notat:'Rømmingsvegar, sløkkjeutstyr, møtestad.', dato:'2025-12-01' },
+    ],
+  };
+
+  STORAGE = 'mekk-olen-timeliste-v5';
+  LOGIN_KEY = 'mekk-olen-login';
+
+  // --- innlogging ---
+  pickUser = (id) => () => this.setState({ loginPick:id, loginPin:'', loginFeil:false });
+  loginBack = () => this.setState({ loginPick:null, loginPin:'', loginFeil:false });
+  pressPin = (d) => () => this.setState(s => { if(s.loginPin.length>=4) return {}; const np=s.loginPin+d; if(np.length===4) setTimeout(()=>this.tryLogin(),120); return { loginPin:np, loginFeil:false }; });
+  pinDel = () => this.setState(s=>({ loginPin:s.loginPin.slice(0,-1), loginFeil:false }));
+  tryLogin = () => { const s=this.state; const a=this.ANSATTE.find(x=>x.id===s.loginPick); if(a && s.loginPin===a.pin){ try{ localStorage.setItem(this.LOGIN_KEY, a.id); }catch(e){} this.setState({ user:a.id, loginPick:null, loginPin:'', loginFeil:false, view:'dashbord' }); } else { this.setState({ loginFeil:true, loginPin:'' }); } };
+  logout = () => { try{ localStorage.removeItem(this.LOGIN_KEY); }catch(e){} this.setState({ user:null, loginPick:null, loginPin:'' }); };
+
+  componentDidMount() {
+    try {
+      const raw = localStorage.getItem(this.STORAGE);
+      if (raw) {
+        const d = JSON.parse(raw);
+        const upd = {};
+        ['entries','shifts','ferie','tasks','orders','docs','swaps'].forEach(k => { if (Array.isArray(d[k])) upd[k] = d[k]; });
+        // migrasjon: gamle dag-baserte vakter → dato i veke 25, og fjern duplikat
+        if (Array.isArray(upd.shifts)) {
+          const seen = {};
+          upd.shifts = upd.shifts
+            .map(s => s.date ? s : { ...s, date: this.addDays('2026-06-15', this.DAG_IDX[s.dag] ?? 0) })
+            .filter(s => { const k = s.ansatt+'|'+s.date+'|'+s.start; if (seen[k]) return false; seen[k]=1; return true; });
+        }
+        if (Array.isArray(upd.orders)) upd.orders = upd.orders.map(o => ('varsla' in o) ? o : { ...o, varsla:null });
+        if (Object.keys(upd).length) this.setState(upd);
+      }
+    } catch (e) {}
+    try { const u = localStorage.getItem(this.LOGIN_KEY); if (u && this.ANSATTE.some(a=>a.id===u)) this.setState({ user:u }); } catch (e) {}
+  }
+  componentDidUpdate() {
+    const snap = JSON.stringify({ entries:this.state.entries, shifts:this.state.shifts, ferie:this.state.ferie, tasks:this.state.tasks, orders:this.state.orders, docs:this.state.docs, swaps:this.state.swaps });
+    if (snap !== this._last) { this._last = snap; try { localStorage.setItem(this.STORAGE, snap); } catch (e) {} }
+  }
+
+  pad = (n) => String(n).padStart(2,'0');
+  ymd = (d) => d.getFullYear()+'-'+this.pad(d.getMonth()+1)+'-'+this.pad(d.getDate());
+  parse = (s) => { const p=s.split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); };
+  addDays = (s, n) => { const d=this.parse(s); d.setDate(d.getDate()+n); return this.ymd(d); };
+  weekdayIdx = (s) => (this.parse(s).getDay()+6)%7;
+  mondayOf = (s) => this.addDays(s, -this.weekdayIdx(s));
+  isoWeek = (s) => { const d=this.parse(s); const t=new Date(d.getFullYear(),d.getMonth(),d.getDate()); t.setDate(t.getDate()+3-((t.getDay()+6)%7)); const w1=new Date(t.getFullYear(),0,4); return 1+Math.round(((t-w1)/86400000-3+((w1.getDay()+6)%7))/7); };
+  today = () => this.ymd(new Date());
+
+  mins = (t) => { const p=(t||'0:0').split(':'); return (+p[0])*60+(+p[1]); };
+  dur  = (a,b) => (this.mins(b)-this.mins(a))/60;
+  timar = (e) => e ? Math.max(0,(this.mins(e.slutt)-this.mins(e.start)-(e.pause||0))/60) : 0;
+  fmt = (n) => (Math.round(n*4)/4).toString().replace('.',',');
+  fmtKr = (n) => Math.round(n).toLocaleString('nb-NO')+' kr';
+  ansatt = (id) => this.ANSATTE.find(a=>a.id===id) || {navn:'',farge:'#999',init:'?'};
+  statusFarge = (s) => s==='godkjent' ? '#2f9e6f' : '#d8920f';
+  datoKort = (s) => { if(!s) return ''; const d=this.parse(s); return d.getDate()+'. '+this.MND[d.getMonth()].slice(0,3); };
+
+  setView = (v) => () => this.setState({ view:v });
+  setMode = (m) => () => this.setState({ tlMode:m });
+  prevPeriod = () => this.setState(s => s.tlMode==='veke' ? { weekStart: this.addDays(s.weekStart,-7) } : { monthAnchor: this.shiftMonth(s.monthAnchor,-1) });
+  nextPeriod = () => this.setState(s => s.tlMode==='veke' ? { weekStart: this.addDays(s.weekStart,7) } : { monthAnchor: this.shiftMonth(s.monthAnchor,1) });
+  shiftMonth = (a, n) => { let [y,m]=a.split('-').map(Number); m=m-1+n; y+=Math.floor(m/12); m=((m%12)+12)%12; return y+'-'+this.pad(m+1); };
+  goToday = () => { const t=this.today(); this.setState({ weekStart:this.mondayOf(t), monthAnchor:t.slice(0,7), tlMode:'veke' }); };
+  goToWeekOf = (date) => () => this.setState({ weekStart:this.mondayOf(date), tlMode:'veke' });
+
+  weekDates = (ws) => [0,1,2,3,4,5].map(i=>this.addDays(ws,i));
+
+  // --- time entry editing ---
+  openEdit = (ansatt, date) => () => { const e=this.state.entries.find(x=>x.ansatt===ansatt && x.date===date); this.setState({ editing: e?{...e}:{ id:null, ansatt, date, start:'09:00', slutt:'17:00', pause:30, status:'venter' } }); };
+  setEdit = (f) => (e) => { const v=e&&e.target?e.target.value:e; this.setState(s=>({ editing:{...s.editing,[f]:v} })); };
+  toggleGodkjend = () => this.setState(s=>({ editing:{...s.editing, status: s.editing.status==='godkjent'?'venter':'godkjent'} }));
+  saveEdit = () => { const ed=this.state.editing; if(!ed||this.mins(ed.slutt)<=this.mins(ed.start)) return; const entry={ id: ed.id||('e'+Date.now()), ansatt:ed.ansatt, date:ed.date, start:ed.start, slutt:ed.slutt, pause:Number(ed.pause)||0, status:ed.status }; let entries=this.state.entries.slice(); let i= ed.id? entries.findIndex(x=>x.id===ed.id) : entries.findIndex(x=>x.ansatt===entry.ansatt&&x.date===entry.date); if(i>=0) entries[i]=entry; else entries.push(entry); this.setState({ entries, editing:null }); };
+  deleteEdit = () => { const ed=this.state.editing; if(!ed) return; this.setState({ entries:this.state.entries.filter(x=> ed.id? x.id!==ed.id : !(x.ansatt===ed.ansatt&&x.date===ed.date)), editing:null }); };
+  closeEdit = () => this.setState({ editing:null });
+  approveAll = (dates) => () => this.setState(s=>({ entries: s.entries.map(e => dates.includes(e.date)&&e.status==='venter' ? {...e,status:'godkjent'} : e) }));
+
+  moveTask = (id, ansatt) => this.setState(s=>({ tasks: s.tasks.map(x=>x.id===id?{...x,ansatt}:x) }));
+
+  // --- vaktplan (dato-styrt) ---
+  vpPrev = () => this.setState(s=>({ vpWeek: this.addDays(s.vpWeek,-7) }));
+  vpNext = () => this.setState(s=>({ vpWeek: this.addDays(s.vpWeek,7) }));
+  vpToday = () => this.setState({ vpWeek: this.mondayOf(this.today()) });
+  moveShiftDate = (id, date) => this.setState(s=>({ shifts: s.shifts.map(x=>x.id===id?{...x,date}:x) }));
+  fillWeek = () => this.setState(s=>{
+    const shifts=s.shifts.slice();
+    this.SHIFT_TEMPLATE.forEach(t=>{
+      const date=this.addDays(s.vpWeek, this.DAG_IDX[t.dag]);
+      if(!shifts.some(x=>x.ansatt===t.ansatt && x.date===date)) shifts.push({ id:'sh-'+date+'-'+t.ansatt+'-'+Math.random().toString(36).slice(2,6), ansatt:t.ansatt, date, start:t.start, slutt:t.slutt, skift:t.skift });
+    });
+    return { shifts };
+  });
+
+  // --- vakt: legg til / endre / slett ---
+  SKIFT_VALG = ['Formiddag','Heildag','Kveld','Laurdag'];
+  newShift = (date) => () => this.setState({ shiftEdit:{ id:null, ansatt:'sander', date, start:'09:00', slutt:'17:00', skift:'Heildag' } });
+  openShift = (id) => (ev) => { if(ev&&ev.stopPropagation) ev.stopPropagation(); const sh=this.state.shifts.find(x=>x.id===id); if(sh) this.setState({ shiftEdit:{...sh} }); };
+  setShift = (f) => (e) => { const v=e&&e.target?e.target.value:e; this.setState(s=>({ shiftEdit:{...s.shiftEdit,[f]:v} })); };
+  saveShift = () => { const ed=this.state.shiftEdit; if(!ed||this.mins(ed.slutt)<=this.mins(ed.start)) return; const sh={ id:ed.id||('sh-'+ed.date+'-'+ed.ansatt+'-'+Math.random().toString(36).slice(2,6)), ansatt:ed.ansatt, date:ed.date, start:ed.start, slutt:ed.slutt, skift:ed.skift }; let shifts=this.state.shifts.slice(); const i=ed.id?shifts.findIndex(x=>x.id===ed.id):-1; if(i>=0) shifts[i]=sh; else shifts.push(sh); this.setState({ shifts, shiftEdit:null }); };
+  deleteShift = () => { const ed=this.state.shiftEdit; if(!ed) return; this.setState({ shifts:this.state.shifts.filter(x=>x.id!==ed.id), shiftEdit:null }); };
+  closeShift = () => this.setState({ shiftEdit:null });
+
+  // --- oppgåve: legg til / endre / slett ---
+  newTask = () => this.setState({ taskEdit:{ id:null, tittel:'', detalj:'', prioritet:'medium', ansatt:'ufordelt' } });
+  openTask = (id) => () => { const t=this.state.tasks.find(x=>x.id===id); if(t) this.setState({ taskEdit:{...t} }); };
+  setTask = (f) => (e) => { const v=e&&e.target?e.target.value:e; this.setState(s=>({ taskEdit:{...s.taskEdit,[f]:v} })); };
+  saveTask = () => { const ed=this.state.taskEdit; if(!ed||!ed.tittel.trim()) return; const t={ id:ed.id||('t'+Date.now()), tittel:ed.tittel.trim(), detalj:ed.detalj, prioritet:ed.prioritet, ansatt:ed.ansatt }; let tasks=this.state.tasks.slice(); const i=ed.id?tasks.findIndex(x=>x.id===ed.id):-1; if(i>=0) tasks[i]=t; else tasks.push(t); this.setState({ tasks, taskEdit:null }); };
+  deleteTask = () => { const ed=this.state.taskEdit; if(!ed) return; this.setState({ tasks:this.state.tasks.filter(x=>x.id!==ed.id), taskEdit:null }); };
+  closeTask = () => this.setState({ taskEdit:null });
+
+  // --- skift-bytte ---
+  openSwap = (shiftId) => (ev) => { if(ev&&ev.stopPropagation) ev.stopPropagation(); const sh=this.state.shifts.find(x=>x.id===shiftId); if(!sh) return; const andre=this.ANSATTE.find(a=>a.id!==sh.ansatt); this.setState({ swapEdit:{ shiftId, fra:sh.ansatt, til:andre?andre.id:sh.ansatt } }); };
+  setSwapTil = (e) => { const v=e&&e.target?e.target.value:e; this.setState(s=>({ swapEdit:{...s.swapEdit, til:v} })); };
+  saveSwap = () => { const sw=this.state.swapEdit; if(!sw||sw.til===sw.fra) { this.setState({ swapEdit:null }); return; } const sh=this.state.shifts.find(x=>x.id===sw.shiftId); if(!sh){ this.setState({ swapEdit:null }); return; } const wi=this.weekdayIdx(sh.date); const d=this.parse(sh.date); const req={ id:'sw'+Date.now(), shiftId:sw.shiftId, fra:sw.fra, til:sw.til, dag:this.UKE_FULL[wi]+' '+d.getDate()+'.'+this.pad(d.getMonth()+1), tid:sh.start+'–'+sh.slutt, status:'pending' }; this.setState(s=>({ swaps:[...s.swaps, req], swapEdit:null })); };
+  closeSwap = () => this.setState({ swapEdit:null });
+  approveSwap = (id) => () => this.setState(s=>{ const req=s.swaps.find(x=>x.id===id); if(!req) return {}; return { shifts: s.shifts.map(x=>x.id===req.shiftId?{...x, ansatt:req.til}:x), swaps: s.swaps.map(x=>x.id===id?{...x,status:'godkjent'}:x) }; });
+  declineSwap = (id) => () => this.setState(s=>({ swaps: s.swaps.map(x=>x.id===id?{...x,status:'avvist'}:x) }));
+  clearSwap = (id) => () => this.setState(s=>({ swaps: s.swaps.filter(x=>x.id!==id) }));
+
+  // --- kunde-varsel ---
+  openNotify = (id) => (ev) => { if(ev&&ev.stopPropagation) ev.stopPropagation(); this.setState({ notifyId:id }); };
+  closeNotify = () => this.setState({ notifyId:null });
+  markVarsla = () => this.setState(s=>({ orders: s.orders.map(o=>o.id===s.notifyId?{...o, varsla:this.today()}:o), notifyId:null }));
+  copyNotify = (tekst) => () => { try { navigator.clipboard.writeText(tekst); } catch(e){} };
+
+  // --- ferie editing ---
+  newFerie = () => this.setState({ ferieEdit:{ id:null, ansatt:'sander', type:'Ferie', tekst:'' } });
+  openFerie = (id) => () => { const f=this.state.ferie.find(x=>x.id===id); if(f) this.setState({ ferieEdit:{...f} }); };
+  setFerie = (f) => (e) => { const v=e&&e.target?e.target.value:e; this.setState(s=>({ ferieEdit:{...s.ferieEdit,[f]:v} })); };
+  saveFerie = () => { const ed=this.state.ferieEdit; if(!ed||!ed.tekst.trim()) return; const f={ id:ed.id||('f'+Date.now()), ansatt:ed.ansatt, type:ed.type, tekst:ed.tekst.trim() }; let ferie=this.state.ferie.slice(); const i=ed.id?ferie.findIndex(x=>x.id===ed.id):-1; if(i>=0) ferie[i]=f; else ferie.push(f); this.setState({ ferie, ferieEdit:null }); };
+  deleteFerie = () => { const ed=this.state.ferieEdit; if(!ed) return; this.setState({ ferie:this.state.ferie.filter(x=>x.id!==ed.id), ferieEdit:null }); };
+  closeFerie = () => this.setState({ ferieEdit:null });
+
+  // --- order editing ---
+  setOrderFilter = (f) => () => this.setState({ orderFilter:f });
+  newOrder = () => this.setState({ orderEdit:{ id:null, kunde:'', telefon:'', vare:'', leverandor:'', varenr:'', dato:this.today(), antal:1, status:'ny' } });
+  openOrder = (id) => () => { const o=this.state.orders.find(x=>x.id===id); if(o) this.setState({ orderEdit:{...o} }); };
+  setOrder = (f) => (e) => { const v=e&&e.target?e.target.value:e; this.setState(s=>({ orderEdit:{...s.orderEdit,[f]:v} })); };
+  saveOrder = () => { const ed=this.state.orderEdit; if(!ed||!ed.kunde.trim()) return; const o={ id:ed.id||('o'+Date.now()), kunde:ed.kunde.trim(), telefon:ed.telefon, vare:ed.vare, leverandor:ed.leverandor, varenr:ed.varenr, dato:ed.dato, antal:Number(ed.antal)||1, status:ed.status }; let orders=this.state.orders.slice(); const i=ed.id?orders.findIndex(x=>x.id===ed.id):-1; if(i>=0) orders[i]=o; else orders.unshift(o); this.setState({ orders, orderEdit:null }); };
+  deleteOrder = () => { const ed=this.state.orderEdit; if(!ed) return; this.setState({ orders:this.state.orders.filter(x=>x.id!==ed.id), orderEdit:null }); };
+  closeOrder = () => this.setState({ orderEdit:null });
+  advanceOrder = (id) => (ev) => { if(ev&&ev.stopPropagation) ev.stopPropagation(); this.setState(s=>({ orders: s.orders.map(o=>{ if(o.id!==id) return o; const i=this.ORDER_FLOW.indexOf(o.status); return i<this.ORDER_FLOW.length-1 ? {...o, status:this.ORDER_FLOW[i+1]} : o; }) })); };
+
+  // --- doc editing ---
+  setDocFilter = (f) => () => this.setState({ docFilter:f });
+  newDoc = () => this.setState({ docEdit:{ id:null, tittel:'', kategori:'Rutine', notat:'', dato:this.today() } });
+  openDoc = (id) => () => { const d=this.state.docs.find(x=>x.id===id); if(d) this.setState({ docEdit:{...d} }); };
+  setDoc = (f) => (e) => { const v=e&&e.target?e.target.value:e; this.setState(s=>({ docEdit:{...s.docEdit,[f]:v} })); };
+  saveDoc = () => { const ed=this.state.docEdit; if(!ed||!ed.tittel.trim()) return; const d={ id:ed.id||('d'+Date.now()), tittel:ed.tittel.trim(), kategori:ed.kategori, notat:ed.notat, dato:ed.dato||this.today() }; let docs=this.state.docs.slice(); const i=ed.id?docs.findIndex(x=>x.id===ed.id):-1; if(i>=0) docs[i]=d; else docs.unshift(d); this.setState({ docs, docEdit:null }); };
+  deleteDoc = () => { const ed=this.state.docEdit; if(!ed) return; this.setState({ docs:this.state.docs.filter(x=>x.id!==ed.id), docEdit:null }); };
+  closeDoc = () => this.setState({ docEdit:null });
+
+  exportCsv = () => {
+    const dates=this.weekDates(this.state.weekStart);
+    const rows=[['Tilsett','Dato','Start','Slutt','Pause(min)','Timar','Status']];
+    dates.forEach(dt => this.ANSATTE.forEach(a=>{ const e=this.state.entries.find(x=>x.ansatt===a.id&&x.date===dt); if(e) rows.push([a.navn,dt,e.start,e.slutt,e.pause,this.fmt(this.timar(e)),e.status]); }));
+    const csv='\uFEFF'+rows.map(r=>r.join(';')).join('\n'); const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='mekk-olen-timeliste-veke'+this.isoWeek(this.state.weekStart)+'.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+  };
+  exportPdf = () => window.print();
+
+  // Lønnsfil for inneverande månad — per tilsett, klar for rekneskap/lønn
+  exportLonn = () => {
+    const anchor = this.state.monthAnchor;
+    const [my,mm] = anchor.split('-').map(Number);
+    const inMonth = (dt) => dt.slice(0,7)===anchor;
+    const rows=[['Tilsett','Maaned','Timar','Sats (kr/t)','Brutto (kr)','Lonstype']];
+    this.ANSATTE.forEach(a=>{
+      const tot=this.state.entries.filter(e=>e.ansatt===a.id && inMonth(e.date) && e.status==='godkjent').reduce((acc,e)=>acc+this.timar(e),0);
+      const brutto = a.lonn==='time' ? Math.round(tot*a.sats) : '';
+      rows.push([a.navn, this.MND[mm-1]+' '+my, this.fmt(tot), a.lonn==='time'?a.sats:'', brutto, a.lonn==='time'?'Timeløn':'Fastløn']);
+    });
+    rows.push([]);
+    rows.push(['Berre godkjende timar er tatt med.','','','','','']);
+    const csv='\uFEFF'+rows.map(r=>r.join(';')).join('\n'); const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='mekk-olen-lonn-'+anchor+'.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+  };
+
+  renderVals() {
+    const S=this.state, td=this.today();
+
+    // ---- innlogging ----
+    const loggedIn = !!S.user && this.ANSATTE.some(a=>a.id===S.user);
+    const meg = this.ansatt(S.user);
+    const loginUsers = this.ANSATTE.map(a=>({ id:a.id, navn:a.navn, rolle:a.rolle, init:a.init, farge:a.farge, onPick:this.pickUser(a.id) }));
+    const lp = S.loginPick ? this.ansatt(S.loginPick) : null;
+    const pinDots = [0,1,2,3].map(i=>{ const f = i < S.loginPin.length; return { fyltKant: f?'#1597a8':'#c3ced5', fyltBg: f?'#1597a8':'transparent' }; });
+    const loginVelg = !loggedIn && !lp;
+    const padKeys = ['1','2','3','4','5','6','7','8','9'].map(d=>({ d, onPress:this.pressPin(d) }));
+
+    const pendingSwaps=S.swaps.filter(x=>x.status==='pending').length;
+    const nav=[
+      {key:'dashbord', label:'Oversikt'},
+      {key:'timeliste',label:'Timeliste'},
+      {key:'vaktplan', label:'Vaktplan'},
+      {key:'oppgaver', label:'Oppgåver'},
+      {key:'bestilling',label:'Bestillingar'},
+      {key:'dokument', label:'Dokument'},
+    ].map(n=>{
+      const active=S.view===n.key; let badge=0, badgeBg='#1597a8';
+      if(n.key==='timeliste') badge=S.entries.filter(e=>this.weekDates(S.weekStart).includes(e.date)&&e.status==='venter').length;
+      if(n.key==='vaktplan'){ badge=pendingSwaps; badgeBg='#6a5acd'; }
+      if(n.key==='oppgaver'){ badge=S.tasks.filter(t=>t.ansatt==='ufordelt').length; badgeBg='#7e93a0'; }
+      if(n.key==='bestilling'){ badge=S.orders.filter(o=>o.status==='komen'&&!o.varsla).length; badgeBg='#e08a1e'; }
+      return {...n, onClick:this.setView(n.key), border:active?'#1597a8':'transparent', color:active?'#fff':'#7e93a0', badge:badge||'', badgeBg};
+    });
+
+    const isVeke=S.tlMode==='veke', isManad=S.tlMode==='manad';
+    const wdates=this.weekDates(S.weekStart); const last=wdates[5];
+    let periodTittel, periodUnder;
+    if(isVeke){ periodTittel='Veke '+this.isoWeek(S.weekStart); const d0=this.parse(S.weekStart), d1=this.parse(last); periodUnder=d0.getDate()+'.–'+d1.getDate()+'. '+this.MND[d1.getMonth()]+' '+d1.getFullYear(); }
+    else { const [my,mm]=S.monthAnchor.split('-').map(Number); periodTittel=this.MND[mm-1].charAt(0).toUpperCase()+this.MND[mm-1].slice(1); periodUnder=''+my; }
+
+    const dager=wdates.map(dt=>{ const d=this.parse(dt); const wi=this.weekdayIdx(dt); return { kort:this.UKE_KORT[wi], dnum:d.getDate()+'.', headBg: dt===td?'#e7f6f8':'transparent' }; });
+    const dagSum={}; wdates.forEach(dt=>dagSum[dt]=0); let totalTimar=0, totalLonn=0;
+    const rows=this.ANSATTE.map(a=>{
+      let sum=0;
+      const cells=wdates.map(dt=>{ const e=S.entries.find(x=>x.ansatt===a.id&&x.date===dt); const t=this.timar(e); if(e){ sum+=t; dagSum[dt]+=t; }
+        return { onClick:this.openEdit(a.id,dt), hasEntry:!!e, timarTekst:e?this.fmt(t):'+', tekstFarge:e?'#142029':'#c3ced5', tidTekst:e?(e.start+'–'+e.slutt):'', statusFarge:e?this.statusFarge(e.status):'#ccc', bg:e?'#fff':'#fafcfc', line:e?'#e1e8ec':'#eef2f4', tip:a.navn+' '+dt }; });
+      const overtid=Math.max(0,sum-37.5); totalTimar+=sum; const lonn=a.lonn==='time'?sum*a.sats:0; totalLonn+=lonn;
+      return { navn:a.navn, rolle:a.rolle, init:a.init, farge:a.farge, cells, sumTekst:this.fmt(sum)+' t', overtidTekst:overtid>0?('+'+this.fmt(overtid)+' t ot'):'normaltid', overtidFarge:overtid>0?'#c0392b':'#93a1ab', lonnTekst:a.lonn==='time'?this.fmtKr(lonn):'Fastløn', satsTekst:a.lonn==='time'?(a.sats+' kr/t'):'månadsløn' };
+    });
+    const dagSummer=wdates.map(dt=>dagSum[dt]>0?this.fmt(dagSum[dt]):'–');
+    const ventarN=S.entries.filter(e=>wdates.includes(e.date)&&e.status==='venter').length;
+
+    const [my,mm]=S.monthAnchor.split('-').map(Number);
+    const firstOfMonth=my+'-'+this.pad(mm)+'-01'; const gridStart=this.mondayOf(firstOfMonth);
+    const monthWeeks=[]; let cur=gridStart;
+    for(let w=0;w<6;w++){ const days=[];
+      for(let i=0;i<7;i++){ const d=this.parse(cur); const inMonth=(d.getMonth()===mm-1); const wi=this.weekdayIdx(cur); const sun=(wi===6);
+        const de=S.entries.filter(e=>e.date===cur); const tot=de.reduce((acc,e)=>acc+this.timar(e),0);
+        const bits=de.sort((a,b)=>this.mins(a.start)-this.mins(b.start)).map(e=>{ const an=this.ansatt(e.ansatt); return { farge:an.farge, tekst:an.init+' '+this.fmt(this.timar(e)) }; });
+        days.push({ dnum:d.getDate(), inMonth, harTimar:tot>0, totTekst:this.fmt(tot)+'t', bits, numFarge:!inMonth?'#c3ced5':(cur===td?'#1597a8':'#142029'), bg:!inMonth?'#fafcfc':(sun?'#f3f7f8':(cur===td?'#e7f6f8':'#fff')), cursor:sun?'default':'pointer', onClick:sun?(()=>{}):this.goToWeekOf(cur) });
+        cur=this.addDays(cur,1);
+      }
+      monthWeeks.push({days}); if(this.parse(cur).getMonth()!==mm-1 && this.weekdayIdx(cur)===0) break;
+    }
+    const inMonthDate=(dt)=>dt.slice(0,7)===S.monthAnchor;
+    const manadKort=this.ANSATTE.map(a=>{ const es=S.entries.filter(e=>e.ansatt===a.id&&inMonthDate(e.date)); const tot=es.reduce((acc,e)=>acc+this.timar(e),0); return { navn:a.navn, init:a.init, farge:a.farge, timar:this.fmt(tot)+' t', lonn:a.lonn==='time'?this.fmtKr(tot*a.sats):'Fastløn' }; });
+
+    const DAGER=[{key:'man',kort:'MÅN',open:'09–18'},{key:'tir',kort:'TYS',open:'09–18'},{key:'ons',kort:'ONS',open:'09–18'},{key:'tor',kort:'TOR',open:'09–18'},{key:'fre',kort:'FRE',open:'09–18'},{key:'lau',kort:'LAU',open:'09–16'}];
+    const vpDates=this.weekDates(S.vpWeek);
+    const vp0=this.parse(S.vpWeek), vp1=this.parse(vpDates[5]);
+    const vpTittel='Veke '+this.isoWeek(S.vpWeek);
+    const vpUnder=vp0.getDate()+'.–'+vp1.getDate()+'. '+this.MND[vp1.getMonth()]+' '+vp1.getFullYear();
+    const vDager=DAGER.map((d,i)=>{ const date=vpDates[i]; const dd=this.parse(date);
+      const shifts=S.shifts.filter(s=>s.date===date).sort((x,y)=>this.mins(x.start)-this.mins(y.start)).map(s=>{ const a=this.ansatt(s.ansatt); return { id:s.id, navn:a.navn, init:a.init, farge:this.SKIFT_FARGE[s.skift]||a.farge, avatarFarge:a.farge, skift:s.skift, tid:s.start+'–'+s.slutt, varar:this.fmt(this.dur(s.start,s.slutt))+' t', onDragStart:(ev)=>{ this.dragShift=s.id; if(ev.dataTransfer)ev.dataTransfer.effectAllowed='move'; }, onSwap:this.openSwap(s.id), onEdit:this.openShift(s.id) }; });
+      return {...d, dnum:dd.getDate()+'.', erIdag:date===td, headBg:date===td?'#e7f6f8':'#f3f7f8', shifts, tom:shifts.length===0, onAddShift:this.newShift(date), onDragOver:(ev)=>ev.preventDefault(), onDrop:(ev)=>{ ev.preventDefault(); if(this.dragShift){ this.moveShiftDate(this.dragShift,date); this.dragShift=null; } } }; });
+
+    const swapListe=S.swaps.filter(x=>x.status==='pending').map(x=>{ const fra=this.ansatt(x.fra), til=this.ansatt(x.til); return { id:x.id, fraNavn:fra.navn, fraInit:fra.init, fraFarge:fra.farge, tilNavn:til.navn, tilInit:til.init, tilFarge:til.farge, dag:x.dag, tid:x.tid, onApprove:this.approveSwap(x.id), onDecline:this.declineSwap(x.id) }; });
+    const swapHistorikk=S.swaps.filter(x=>x.status!=='pending').map(x=>{ const fra=this.ansatt(x.fra), til=this.ansatt(x.til); const god=x.status==='godkjent'; return { id:x.id, tekst:fra.navn+' → '+til.navn+', '+x.dag, status: god?'Godkjent':'Avvist', statusFarge: god?'#2f9e6f':'#c0392b', onClear:this.clearSwap(x.id) }; });
+    const ingenSwap=swapListe.length===0;
+    const se=S.swapEdit; let swapEdit=null;
+    if(se){ const sh=S.shifts.find(x=>x.id===se.shiftId); const fra=this.ansatt(se.fra); const dd=sh?this.parse(sh.date):null; swapEdit={ ...se, fraNavn:fra.navn, dagTekst: sh?(this.UKE_FULL[this.weekdayIdx(sh.date)]+' '+dd.getDate()+'. '+this.MND[dd.getMonth()]+', '+sh.start+'–'+sh.slutt):'', valg:this.ANSATTE.filter(a=>a.id!==se.fra) }; }
+
+    const ferieListe=S.ferie.map(f=>{ const a=this.ansatt(f.ansatt); const ty=this.FERIE_TYPE[f.type]||this.FERIE_TYPE['Ferie']; return { navn:a.navn, init:a.init, farge:a.farge, tekst:f.tekst, type:f.type, typeFarge:ty.fg, typeBg:ty.bg, onEdit:this.openFerie(f.id) }; });
+
+    const prio={'høg':{bg:'#fbe9e4',fg:'#c0392b',tekst:'Høg'},'medium':{bg:'#fdf2e0',fg:'#b07b1a',tekst:'Medium'},'låg':{bg:'#eef0ee',fg:'#6b7368',tekst:'Låg'}};
+    const kolDef=[{id:'ufordelt',tittel:'Ufordelt',farge:'#9aa4b2'},...this.ANSATTE.map(a=>({id:a.id,tittel:a.navn,farge:a.farge}))];
+    const kolonnar=kolDef.map(k=>{ const tasks=S.tasks.filter(t=>t.ansatt===k.id).map(t=>{ const p=prio[t.prioritet]||prio['låg']; return {...t, prioBg:p.bg, prioFg:p.fg, prioTekst:p.tekst, onEdit:this.openTask(t.id), kantFarge:k.farge, onDragStart:(ev)=>{ this.dragTask=t.id; if(ev.dataTransfer)ev.dataTransfer.effectAllowed='move'; } }; }); return {...k, tasks, antal:tasks.length, erUfordelt:k.id==='ufordelt', onDragOver:(ev)=>ev.preventDefault(), onDrop:(ev)=>{ ev.preventDefault(); if(this.dragTask){ this.moveTask(this.dragTask,k.id); this.dragTask=null; } } }; });
+
+    // orders
+    const ofDefs=[{key:'aktive',label:'Aktive'},{key:'ny',label:'Ny'},{key:'tinga',label:'Tinga'},{key:'komen',label:'Komen'},{key:'henta',label:'Henta'}];
+    const matchOrder=(o)=> S.orderFilter==='aktive' ? o.status!=='henta' : o.status===S.orderFilter;
+    const orderFilters=ofDefs.map(f=>{ const active=S.orderFilter===f.key; const antal= f.key==='aktive'?S.orders.filter(o=>o.status!=='henta').length:S.orders.filter(o=>o.status===f.key).length; return { label:f.label, antal, onClick:this.setOrderFilter(f.key), bg:active?'#1597a8':'#fff', fg:active?'#fff':'#566570', kant:active?'#1597a8':'#d6dfe4' }; });
+    const orders=S.orders.filter(matchOrder).sort((a,b)=>this.ORDER_FLOW.indexOf(a.status)-this.ORDER_FLOW.indexOf(b.status) || (a.dato<b.dato?-1:1)).map(o=>{ const st=this.ORDER_STATUS[o.status]; const idx=this.ORDER_FLOW.indexOf(o.status); return { kunde:o.kunde, telefon:o.telefon, vare:o.vare, leverandor:o.leverandor, varenr:o.varenr, datoTekst:this.datoKort(o.dato), antal:o.antal, statusTekst:st.tekst, statusFg:st.fg, statusBg:st.bg, kanFram:idx<this.ORDER_FLOW.length-1, framTip:st.neste, kanVarsle:o.status==='komen', erVarsla:!!o.varsla, varselBg:o.varsla?'#e8f5ee':'#fdf2e0', varselKant:o.varsla?'#cce6d6':'#f3dca6', varselFg:o.varsla?'#2f9e6f':'#b07b1a', onEdit:this.openOrder(o.id), onAdvance:this.advanceOrder(o.id), onNotify:this.openNotify(o.id) }; });
+    const ingenOrders=orders.length===0;
+
+    // kunde-varsel
+    let notify=null;
+    if(S.notifyId){ const o=S.orders.find(x=>x.id===S.notifyId);
+      if(o){ const tekst='Hei '+o.kunde+'! Varen din "'+o.vare+'"'+(o.antal>1?(' ('+o.antal+' stk)'):'')+' er no komen i butikk og klar for henting hos MEKK Ølen. Opningstider: man–fre 09–18, laurdag 09–16. Helsing MEKK Ølen, tlf 53 76 50 00.';
+        notify={ id:o.id, kunde:o.kunde, telefon:o.telefon, vare:o.vare, tekst, alleredeVarsla:!!o.varsla, varslaTekst:o.varsla?('Sist varsla '+this.datoKort(o.varsla)):'', onCopy:this.copyNotify(tekst) };
+      }
+    }
+
+    // docs
+    const dfDefs=['Alle','HMS','Rutine','Avtale','Skjema','Anna'];
+    const docFilters=dfDefs.map(k=>{ const active=S.docFilter===k; return { label:k, onClick:this.setDocFilter(k), bg:active?'#1597a8':'#fff', fg:active?'#fff':'#566570', kant:active?'#1597a8':'#d6dfe4' }; });
+    const docs=S.docs.filter(d=>S.docFilter==='Alle'||d.kategori===S.docFilter).map(d=>{ const k=this.DOC_KAT[d.kategori]||this.DOC_KAT['Anna']; return { tittel:d.tittel, notat:d.notat, kategori:d.kategori, datoTekst:this.datoKort(d.dato), katFg:k.fg, katBg:k.bg, ikon:k.ikon, ikonBg:k.ikonBg, onEdit:this.openDoc(d.id) }; });
+    const ingenDocs=docs.length===0;
+
+    // ---- dashbord ----
+    const tdD=this.parse(td); const tdWi=this.weekdayIdx(td);
+    const dashDato=this.UKE_FULL[tdWi].charAt(0).toUpperCase()+this.UKE_FULL[tdWi].slice(1)+' '+tdD.getDate()+'. '+this.MND[tdD.getMonth()];
+    const jobbarIdag=S.shifts.filter(s=>s.date===td).sort((x,y)=>this.mins(x.start)-this.mins(y.start)).map(s=>{ const a=this.ansatt(s.ansatt); return { navn:a.navn, init:a.init, farge:a.farge, tid:s.start+'–'+s.slutt, skift:s.skift, skiftFarge:this.SKIFT_FARGE[s.skift]||a.farge }; });
+    const ingenIdag=jobbarIdag.length===0;
+    const dwStart=this.mondayOf(td); const dwDates=this.weekDates(dwStart);
+    const dashTimar=this.ANSATTE.map(a=>{ const tot=S.entries.filter(e=>e.ansatt===a.id&&dwDates.includes(e.date)).reduce((acc,e)=>acc+this.timar(e),0); return { navn:a.navn, init:a.init, farge:a.farge, timar:this.fmt(tot)+' t', pct:Math.min(100, Math.round(tot/37.5*100)) }; });
+    const komenIkkjeVarsla=S.orders.filter(o=>o.status==='komen'&&!o.varsla).length;
+    const aktiveBestill=S.orders.filter(o=>o.status!=='henta').length;
+    const ufordelteN=S.tasks.filter(t=>t.ansatt==='ufordelt').length;
+    const dashVentar=S.entries.filter(e=>dwDates.includes(e.date)&&e.status==='venter').length;
+    const dashKort=[
+      { label:'Aktive bestillingar', verdi:aktiveBestill, sub:komenIkkjeVarsla>0?(komenIkkjeVarsla+' klar – ikkje varsla'):'alle varsla', farge:'#e08a1e', onClick:this.setView('bestilling') },
+      { label:'Ventande timar', verdi:dashVentar, sub:dashVentar>0?'treng godkjenning':'alt godkjent', farge:'#d8920f', onClick:this.setView('timeliste') },
+      { label:'Ufordelte oppgåver', verdi:ufordelteN, sub:'i kø', farge:'#7e93a0', onClick:this.setView('oppgaver') },
+      { label:'Bytteønske', verdi:pendingSwaps, sub:pendingSwaps>0?'ventar svar':'ingen', farge:'#6a5acd', onClick:this.setView('vaktplan') },
+    ];
+    const dashFerie=S.ferie.slice(0,4).map(f=>{ const a=this.ansatt(f.ansatt); const ty=this.FERIE_TYPE[f.type]||this.FERIE_TYPE['Ferie']; return { navn:a.navn, init:a.init, farge:a.farge, tekst:f.tekst, type:f.type, typeFarge:ty.fg, typeBg:ty.bg }; });
+
+    // time modal
+    const ed=S.editing; let editing=null;
+    if(ed){ const a=this.ansatt(ed.ansatt); const d=this.parse(ed.date); const wi=this.weekdayIdx(ed.date); const god=ed.status==='godkjent';
+      editing={ ...ed, init:a.init, farge:a.farge, ansattNavn:a.navn, datoTekst:this.UKE_FULL[wi].charAt(0).toUpperCase()+this.UKE_FULL[wi].slice(1)+' '+d.getDate()+'. '+this.MND[d.getMonth()], timarTekst:this.fmt(this.timar(ed)), kanSlette:!!ed.id, godkjLabel:god?'Godkjend':'Ventar på godkjenning', godkjHake:god?'✓':'', godkjFill:god?'#2f9e6f':'transparent', godkjMark:god?'#2f9e6f':'#c3ced5', godkjBg:god?'#e8f5ee':'#fff', godkjKant:god?'#cce6d6':'#d6dfe4', godkjTekstFarge:god?'#2f7a55':'#566570' };
+    }
+    // ferie modal
+    const fe=S.ferieEdit; let ferieEdit=null, ferieTittel='';
+    if(fe){ ferieEdit={...fe, kanSlette:!!fe.id}; ferieTittel=fe.id?'Endre ferie/fri':'Ny ferie/fri'; }
+    // order modal
+    const oe=S.orderEdit; let orderEdit=null, orderTittel='';
+    if(oe){ orderEdit={...oe, kanSlette:!!oe.id}; orderTittel=oe.id?'Endre bestilling':'Ny bestilling'; }
+    // doc modal
+    const dde=S.docEdit; let docEdit=null, docTittel='';
+    if(dde){ docEdit={...dde, kanSlette:!!dde.id}; docTittel=dde.id?'Endre dokument':'Nytt dokument'; }
+    // shift modal
+    const she=S.shiftEdit; let shiftEdit=null, shiftTittel='', shiftDato='';
+    if(she){ const dd=this.parse(she.date); const wi=this.weekdayIdx(she.date); shiftEdit={...she, kanSlette:!!she.id, varar:this.fmt(this.dur(she.start,she.slutt))+' t' }; shiftTittel=she.id?'Endre vakt':'Ny vakt'; shiftDato=this.UKE_FULL[wi].charAt(0).toUpperCase()+this.UKE_FULL[wi].slice(1)+' '+dd.getDate()+'. '+this.MND[dd.getMonth()]; }
+    // task modal
+    const tke=S.taskEdit; let taskEdit=null, taskTittel='';
+    if(tke){ taskEdit={...tke, kanSlette:!!tke.id}; taskTittel=tke.id?'Endre oppgåve':'Ny oppgåve'; }
+
+    return {
+      // innlogging
+      loginActive:!loggedIn, appReady:loggedIn, loginVelg, loginUsers, loginHarPick:!!lp, loginNavn:lp?lp.navn:'', loginInit:lp?lp.init:'', loginFarge:lp?lp.farge:'#11788a', loginRolle:lp?lp.rolle:'', pinDots, padKeys, loginFeil:S.loginFeil, onLoginBack:this.loginBack, onPinDel:this.pinDel, onPpress0:this.pressPin('0'),
+      megNavn:meg.navn, megRolle:meg.rolle, megInit:meg.init, megFarge:meg.farge, onLogout:this.logout,
+      isDashbord:S.view==='dashbord', isTimeliste:S.view==='timeliste', isVaktplan:S.view==='vaktplan', isOppgaver:S.view==='oppgaver', isBestilling:S.view==='bestilling', isDokument:S.view==='dokument',
+      dashDato, jobbarIdag, ingenIdag, dashTimar, dashKort, dashFerie,
+      nav, isVeke, isManad,
+      vekeBtnBg:isVeke?'#1597a8':'transparent', vekeBtnFg:isVeke?'#fff':'#566570', manadBtnBg:isManad?'#1597a8':'transparent', manadBtnFg:isManad?'#fff':'#566570',
+      periodTittel, periodUnder, onPrev:this.prevPeriod, onNext:this.nextPeriod, onToday:this.goToday, onModeVeke:this.setMode('veke'), onModeManad:this.setMode('manad'),
+      dager, rows, dagSummer, totalTimar:this.fmt(totalTimar)+' t', totalLonn:this.fmtKr(totalLonn),
+      harVentar:ventarN>0, ventarTekst:ventarN+' føring'+(ventarN===1?'':'ar')+' ventar på godkjenning denne veka', onApproveAll:this.approveAll(wdates),
+      ukedager:['MÅN','TYS','ONS','TOR','FRE','LAU','SØN'], monthWeeks, manadKort,
+      vDager, vpTittel, vpUnder, onVpPrev:this.vpPrev, onVpNext:this.vpNext, onVpToday:this.vpToday, onFillWeek:this.fillWeek,
+      ferieListe, ingenFerie:ferieListe.length===0, onNewFerie:this.newFerie,
+      swapListe, swapHistorikk, ingenSwap, swapEdit, swapOpen:!!swapEdit, onSaveSwap:this.saveSwap, onCloseSwap:this.closeSwap, onSwapTil:this.setSwapTil,
+      kolonnar, onNewTask:this.newTask,
+      shiftEdit, shiftOpen:!!shiftEdit, shiftTittel, shiftDato, skiftValg:this.SKIFT_VALG, onSaveShift:this.saveShift, onCloseShift:this.closeShift, onDeleteShift:this.deleteShift, onShiftAnsatt:this.setShift('ansatt'), onShiftStart:this.setShift('start'), onShiftSlutt:this.setShift('slutt'), onShiftSkift:this.setShift('skift'),
+      taskEdit, taskOpen:!!taskEdit, taskTittel, onSaveTask:this.saveTask, onCloseTask:this.closeTask, onDeleteTask:this.deleteTask, onTaskTittel:this.setTask('tittel'), onTaskDetalj:this.setTask('detalj'), onTaskPrio:this.setTask('prioritet'), onTaskAnsatt:this.setTask('ansatt'),
+      orderFilters, orders, ingenOrders, onNewOrder:this.newOrder,
+      onLonn:this.exportLonn,
+      notify, notifyOpen:!!notify, onCloseNotify:this.closeNotify, onMarkVarsla:this.markVarsla,
+      docFilters, docs, ingenDocs, onNewDoc:this.newDoc,
+      onCsv:this.exportCsv, onPdf:this.exportPdf,
+      editing, editingOpen:!!editing, onSave:this.saveEdit, onClose:this.closeEdit, onDelete:this.deleteEdit, onToggleGodkjend:this.toggleGodkjend, onStart:this.setEdit('start'), onSlutt:this.setEdit('slutt'), onPause:this.setEdit('pause'),
+      ferieEdit, ferieOpen:!!ferieEdit, ferieTittel, ansattOptions:this.ANSATTE, onSaveFerie:this.saveFerie, onCloseFerie:this.closeFerie, onDeleteFerie:this.deleteFerie, onFerieAnsatt:this.setFerie('ansatt'), onFerieType:this.setFerie('type'), onFerieTekst:this.setFerie('tekst'),
+      orderEdit, orderOpen:!!orderEdit, orderTittel, onSaveOrder:this.saveOrder, onCloseOrder:this.closeOrder, onDeleteOrder:this.deleteOrder, onOrderKunde:this.setOrder('kunde'), onOrderTlf:this.setOrder('telefon'), onOrderVare:this.setOrder('vare'), onOrderLev:this.setOrder('leverandor'), onOrderVarenr:this.setOrder('varenr'), onOrderDato:this.setOrder('dato'), onOrderAntal:this.setOrder('antal'), onOrderStatus:this.setOrder('status'),
+      docEdit, docOpen:!!docEdit, docTittel, onSaveDoc:this.saveDoc, onCloseDoc:this.closeDoc, onDeleteDoc:this.deleteDoc, onDocTittel:this.setDoc('tittel'), onDocKat:this.setDoc('kategori'), onDocNotat:this.setDoc('notat'),
+    };
+  }
+}
+</script>
+</body>
+</html>
