@@ -103,3 +103,8 @@ begin
     );
   end loop;
 end $$;
+
+-- RLS policies alone don't grant table access — Postgres still requires the
+-- underlying GRANTs, separate from row-level security.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on time_entries, shifts, shift_swaps, ferie, tasks, orders, docs to authenticated;
