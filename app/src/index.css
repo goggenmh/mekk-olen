@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  min-height: 100%;
+}
+
+body {
+  font-family: 'Barlow', system-ui, sans-serif;
+  background: #eef2f4;
+  color: #142029;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c3ced5;
+  border-radius: 6px;
+}
+
+button {
+  font-family: inherit;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

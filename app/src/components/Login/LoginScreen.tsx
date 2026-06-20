@@ -1,0 +1,108 @@
+import { useAuth } from '../../context/AuthContext';
+import { ANSATTE } from '../../constants';
+
+const PAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+export function LoginScreen() {
+  const { pick, pin, feil, pickUser, back, pressDigit, backspace } = useAuth();
+
+  return (
+    <div
+      style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+        background: 'linear-gradient(160deg,#0c2436 0%,#103244 100%)',
+      }}
+    >
+      <div style={{ width: '100%', maxWidth: 380, background: '#fff', borderRadius: 18, boxShadow: '0 30px 70px rgba(0,0,0,0.35)', overflow: 'hidden' }}>
+        <div style={{ padding: '28px 28px 20px', textAlign: 'center', borderBottom: '1px solid #eef2f4' }}>
+          <img src="/assets/mekk-logo.png" alt="MEKK Ølen" style={{ width: 58, height: 58, borderRadius: 12, display: 'block', margin: '0 auto 12px' }} />
+          <div style={{ fontFamily: "'Barlow Semi Condensed'", fontWeight: 700, fontSize: 21, letterSpacing: '0.4px' }}>MEKK ØLEN</div>
+          <div style={{ fontSize: 12, color: '#7e93a0', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', marginTop: 2 }}>
+            Vakt &amp; timestyring
+          </div>
+        </div>
+
+        {pick ? (
+          <div style={{ padding: '24px 28px 26px' }}>
+            <button
+              onClick={back}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: '#7e93a0', fontFamily: "'Barlow'", fontSize: 13, fontWeight: 600, marginBottom: 14 }}
+            >
+              ‹ Byt brukar
+            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 13 }}>
+              <div style={{ width: 54, height: 54, borderRadius: '50%', background: pick.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, fontWeight: 700, color: '#fff' }}>
+                {pick.init}
+              </div>
+              <div style={{ textAlign: 'center', lineHeight: 1.2 }}>
+                <div style={{ fontSize: 17, fontWeight: 600 }}>{pick.navn}</div>
+                <div style={{ fontSize: 12.5, color: '#7e93a0' }}>Tast inn PIN</div>
+              </div>
+              <div style={{ display: 'flex', gap: 13, margin: '6px 0 4px' }}>
+                {[0, 1, 2, 3].map((i) => {
+                  const fylt = i < pin.length;
+                  return (
+                    <span
+                      key={i}
+                      style={{ width: 14, height: 14, borderRadius: '50%', border: `2px solid ${fylt ? '#1597a8' : '#d6dfe4'}`, background: fylt ? '#1597a8' : 'transparent' }}
+                    />
+                  );
+                })}
+              </div>
+              {feil && <div style={{ fontSize: 13, color: '#c0392b', fontWeight: 600 }}>Feil PIN — prøv igjen</div>}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,64px)', gap: 11, marginTop: 6 }}>
+                {PAD_KEYS.map((k) => (
+                  <button
+                    key={k}
+                    onClick={() => pressDigit(k)}
+                    style={{ height: 56, border: '1px solid #e1e8ec', background: '#f7f9fb', borderRadius: 12, cursor: 'pointer', fontFamily: "'JetBrains Mono'", fontSize: 21, fontWeight: 600, color: '#142029' }}
+                  >
+                    {k}
+                  </button>
+                ))}
+                <div />
+                <button
+                  onClick={() => pressDigit('0')}
+                  style={{ height: 56, border: '1px solid #e1e8ec', background: '#f7f9fb', borderRadius: 12, cursor: 'pointer', fontFamily: "'JetBrains Mono'", fontSize: 21, fontWeight: 600, color: '#142029' }}
+                >
+                  0
+                </button>
+                <button
+                  onClick={backspace}
+                  style={{ height: 56, border: '1px solid #e1e8ec', background: '#fff', borderRadius: 12, cursor: 'pointer', fontSize: 19, color: '#7e93a0' }}
+                >
+                  ⌫
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ padding: '22px 24px 26px' }}>
+            <div style={{ fontSize: 13, color: '#7e93a0', fontWeight: 600, textAlign: 'center', marginBottom: 14 }}>Vel kven du er</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {ANSATTE.map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() => pickUser(u.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px', border: '1px solid #e1e8ec', background: '#fff', borderRadius: 12, cursor: 'pointer', textAlign: 'left' }}
+                >
+                  <div style={{ flex: 'none', width: 42, height: 42, borderRadius: '50%', background: u.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#fff' }}>
+                    {u.init}
+                  </div>
+                  <div style={{ lineHeight: 1.25 }}>
+                    <div style={{ fontSize: 15.5, fontWeight: 600 }}>{u.navn}</div>
+                    <div style={{ fontSize: 12.5, color: '#7e93a0' }}>{u.rolle}</div>
+                  </div>
+                  <span style={{ marginLeft: 'auto', color: '#c3ced5', fontSize: 18 }}>›</span>
+                </button>
+              ))}
+            </div>
+            <div style={{ marginTop: 16, padding: '10px 13px', background: '#f3f7f8', borderRadius: 9, fontSize: 11.5, color: '#93a1ab', lineHeight: 1.4, textAlign: 'center' }}>
+              Demo-PIN: Sander 1234 · Georg 2222 · Christian 3333. Bør endrast før reell bruk.
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
