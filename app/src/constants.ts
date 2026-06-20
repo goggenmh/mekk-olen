@@ -24,6 +24,9 @@ export const ANSATTE: Employee[] = [
 export const findAnsatt = (id: string | null | undefined): Employee =>
   ANSATTE.find((a) => a.id === id) || { id: 'sander', navn: '', rolle: '', lonn: 'time', sats: 0, farge: '#999', init: '?', email: '' };
 
+/** Only Sander (dagleg leiar) can approve hours and approve/decline shift swaps. */
+export const canApprove = (id: EmployeeId | null | undefined): boolean => id === 'sander';
+
 export const SKIFT_FARGE: Record<string, string> = {
   Formiddag: '#1597a8',
   Heildag: '#2f9e6f',

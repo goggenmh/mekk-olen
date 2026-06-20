@@ -21,7 +21,7 @@ export function Nav({ view, setView }: { view: View; setView: (v: View) => void 
   };
 
   return (
-    <div className="no-print" style={{ display: 'flex', gap: 4, padding: '0 22px', background: '#fff', borderBottom: '1px solid #eef2f4', overflowX: 'auto' }}>
+    <div className="no-print" style={{ display: 'flex', gap: 4, padding: '0 22px', background: 'var(--surface)', borderBottom: '1px solid var(--divider)', overflowX: 'auto' }}>
       {VIEWS.map((v) => {
         const active = view === v.key;
         const badge = badges[v.key];
@@ -31,7 +31,7 @@ export function Nav({ view, setView }: { view: View; setView: (v: View) => void 
             onClick={() => setView(v.key)}
             style={{
               display: 'flex', alignItems: 'center', gap: 7, padding: '13px 16px', border: 'none', background: 'none', cursor: 'pointer',
-              fontFamily: "'Barlow'", fontSize: 13.5, fontWeight: 600, color: active ? '#11788a' : '#7e93a0',
+              fontFamily: "'Barlow'", fontSize: 13.5, fontWeight: 600, color: active ? '#11788a' : 'var(--text-muted)',
               borderBottom: active ? '2px solid #1597a8' : '2px solid transparent', whiteSpace: 'nowrap',
             }}
           >

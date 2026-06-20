@@ -65,8 +65,8 @@ export function ShiftModal({
           <input type="time" value={slutt} onChange={(e) => { setSlutt(e.target.value); setFeil(false); }} style={monoInputStyle} />
         </Field>
       </div>
-      {feil && <div style={{ fontSize: 13, color: '#c0392b', fontWeight: 600 }}>Slutt må vere etter start.</div>}
-      <div style={{ fontSize: 13, color: '#7e93a0' }}>Varer: <strong style={{ color: '#142029' }}>{varar}</strong></div>
+      {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Slutt må vere etter start.</div>}
+      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Varer: <strong style={{ color: 'var(--text)' }}>{varar}</strong></div>
     </Modal>
   );
 }

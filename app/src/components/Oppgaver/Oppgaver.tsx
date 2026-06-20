@@ -36,12 +36,12 @@ export function Oppgaver() {
               onDrop={() => {
                 if (dragTaskId.current) { moveTask(dragTaskId.current, k.id); dragTaskId.current = null; }
               }}
-              style={{ background: '#f7f9fb', border: '1px solid #e1e8ec', borderRadius: 12, padding: 10, minHeight: 300, display: 'flex', flexDirection: 'column', gap: 8 }}
+              style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 12, padding: 10, minHeight: 300, display: 'flex', flexDirection: 'column', gap: 8 }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: k.farge }} />
                 <span style={{ fontSize: 12.5, fontWeight: 700 }}>{k.tittel}</span>
-                <span style={{ fontSize: 11, color: '#a4b1ba' }}>({kolTasks.length})</span>
+                <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>({kolTasks.length})</span>
               </div>
               {kolTasks.map((t) => {
                 const p = PRIORITET[t.prioritet as Prioritet] || PRIORITET.medium;
@@ -51,10 +51,10 @@ export function Oppgaver() {
                     draggable
                     onDragStart={() => { dragTaskId.current = t.id; }}
                     onClick={() => setTaskTarget({ existing: t })}
-                    style={{ background: '#fff', border: '1px solid #e1e8ec', borderRadius: 10, padding: '10px 11px', cursor: 'grab' }}
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 11px', cursor: 'grab' }}
                   >
                     <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{t.tittel}</div>
-                    {t.detalj && <div style={{ fontSize: 11.5, color: '#7e93a0', marginBottom: 6 }}>{t.detalj}</div>}
+                    {t.detalj && <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginBottom: 6 }}>{t.detalj}</div>}
                     <span style={{ fontSize: 10.5, fontWeight: 700, color: p.fg, background: p.bg, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' }}>{p.tekst}</span>
                   </div>
                 );

@@ -61,20 +61,20 @@ export function TimeEntryModal({
       <Field label="Pause (minutt)">
         <input type="number" min={0} step={5} value={pause} onChange={(e) => setPause(Number(e.target.value))} style={inputStyle} />
       </Field>
-      {feil && <div style={{ fontSize: 13, color: '#c0392b', fontWeight: 600 }}>Slutt må vere etter start.</div>}
-      <div style={{ fontSize: 13, color: '#7e93a0' }}>Varer: <strong style={{ color: '#142029' }}>{varar} t</strong></div>
+      {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Slutt må vere etter start.</div>}
+      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Varer: <strong style={{ color: 'var(--text)' }}>{varar} t</strong></div>
 
       <button
         onClick={() => setStatus(godkjent ? 'venter' : 'godkjent')}
         style={{
           display: 'flex', alignItems: 'center', gap: 9, padding: '10px 13px', borderRadius: 9, cursor: 'pointer', textAlign: 'left',
-          border: `1px solid ${godkjent ? '#bfe3cd' : '#e1e8ec'}`, background: godkjent ? '#e8f5ee' : '#f7f9fb',
+          border: `1px solid ${godkjent ? '#bfe3cd' : 'var(--border)'}`, background: godkjent ? '#e8f5ee' : 'var(--surface-alt)',
         }}
       >
-        <span style={{ width: 18, height: 18, borderRadius: 5, border: `2px solid ${godkjent ? '#2f9e6f' : '#c3ced5'}`, background: godkjent ? '#2f9e6f' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12 }}>
+        <span style={{ width: 18, height: 18, borderRadius: 5, border: `2px solid ${godkjent ? '#2f9e6f' : 'var(--text-faint2)'}`, background: godkjent ? '#2f9e6f' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12 }}>
           {godkjent ? '✓' : ''}
         </span>
-        <span style={{ fontSize: 13.5, fontWeight: 600, color: godkjent ? '#2f9e6f' : '#566570' }}>{godkjent ? 'Godkjent' : 'Ventar på godkjenning'}</span>
+        <span style={{ fontSize: 13.5, fontWeight: 600, color: godkjent ? '#2f9e6f' : 'var(--text-secondary)' }}>{godkjent ? 'Godkjent' : 'Ventar på godkjenning'}</span>
       </button>
     </Modal>
   );

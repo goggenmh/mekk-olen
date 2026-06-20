@@ -28,7 +28,7 @@ export function SwapModal({ shift, onClose }: { shift: Shift; onClose: () => voi
       subtitle={`${dag} · ${tid}`}
       footer={<><CancelButton onClick={onClose} /><SaveButton onClick={save}>Send bytteønske</SaveButton></>}
     >
-      <div style={{ fontSize: 13, color: '#7e93a0' }}>Frå: <strong style={{ color: '#142029' }}>{fra.navn}</strong></div>
+      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Frå: <strong style={{ color: 'var(--text)' }}>{fra.navn}</strong></div>
       <Field label="Bytt til">
         <select value={til} onChange={(e) => setTil(e.target.value as Shift['ansatt'])} style={inputStyle}>
           {valg.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}

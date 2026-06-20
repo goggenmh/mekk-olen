@@ -32,8 +32,8 @@ export function Dokument() {
             key={f}
             onClick={() => setFilter(f)}
             style={{
-              padding: '7px 14px', borderRadius: 8, border: '1px solid #e1e8ec', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              background: filter === f ? '#11788a' : '#fff', color: filter === f ? '#fff' : '#566570',
+              padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+              background: filter === f ? '#11788a' : 'var(--surface)', color: filter === f ? '#fff' : 'var(--text-secondary)',
             }}
           >
             {f}
@@ -48,19 +48,30 @@ export function Dokument() {
             <div
               key={d.id}
               onClick={() => setDocTarget(d)}
-              style={{ background: '#fff', border: '1px solid #e1e8ec', borderRadius: 12, padding: '14px 16px', cursor: 'pointer' }}
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', cursor: 'pointer' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
                 <span style={{ fontSize: 18 }}>{k.ikon}</span>
                 <span style={{ fontSize: 10.5, fontWeight: 700, color: k.fg, background: k.bg, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' }}>{d.kategori}</span>
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{d.tittel}</div>
-              {d.notat && <div style={{ fontSize: 12, color: '#7e93a0', marginBottom: 6, lineHeight: 1.4 }}>{d.notat}</div>}
-              <div style={{ fontSize: 11, color: '#a4b1ba' }}>{datoKort(d.dato)}</div>
+              {d.notat && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6, lineHeight: 1.4 }}>{d.notat}</div>}
+              <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{datoKort(d.dato)}</div>
+              {d.fil_url && (
+                <a
+                  href={d.fil_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: '#11788a', marginTop: 6 }}
+                >
+                  📎 {d.fil_namn}
+                </a>
+              )}
             </div>
           );
         })}
-        {filtered.length === 0 && <div style={{ fontSize: 13, color: '#7e93a0' }}>Ingen dokument.</div>}
+        {filtered.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen dokument.</div>}
       </div>
 
       {docTarget && <DocModal existing={docTarget === 'new' ? undefined : docTarget} onClose={() => setDocTarget(null)} />}

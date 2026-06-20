@@ -48,8 +48,8 @@ export function Bestillinger() {
             key={f.key}
             onClick={() => setFilter(f.key)}
             style={{
-              padding: '7px 14px', borderRadius: 8, border: '1px solid #e1e8ec', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              background: filter === f.key ? '#11788a' : '#fff', color: filter === f.key ? '#fff' : '#566570',
+              padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+              background: filter === f.key ? '#11788a' : 'var(--surface)', color: filter === f.key ? '#fff' : 'var(--text-secondary)',
             }}
           >
             {f.label}
@@ -57,10 +57,10 @@ export function Bestillinger() {
         ))}
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid #e1e8ec', borderRadius: 14, overflow: 'auto' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
-            <tr style={{ background: '#f7f9fb' }}>
+            <tr style={{ background: 'var(--surface-alt)' }}>
               <th style={th}>Kunde</th>
               <th style={th}>Vare</th>
               <th style={th}>Leverandør</th>
@@ -77,7 +77,7 @@ export function Bestillinger() {
               const kanVarsle = o.status === 'komen';
               const nesteIdx = ORDER_FLOW.indexOf(o.status as typeof ORDER_FLOW[number]) + 1;
               return (
-                <tr key={o.id} style={{ borderTop: '1px solid #eef2f4' }}>
+                <tr key={o.id} style={{ borderTop: '1px solid var(--divider)' }}>
                   <td style={{ ...td, fontWeight: 600, cursor: 'pointer' }} onClick={() => setOrderTarget(o)}>{o.kunde}</td>
                   <td style={td}>{o.vare}</td>
                   <td style={td}>{o.leverandor}</td>
@@ -85,7 +85,7 @@ export function Bestillinger() {
                   <td style={td}>{o.antal}</td>
                   <td style={td}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 6, textTransform: 'uppercase' }}>{s.tekst}</span>
-                    {o.varsla && <div style={{ fontSize: 10.5, color: '#7e93a0', marginTop: 3 }}>Varsla {datoKort(o.varsla)}</div>}
+                    {o.varsla && <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 3 }}>Varsla {datoKort(o.varsla)}</div>}
                   </td>
                   <td style={{ ...td, display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                     {kanVarsle && (
@@ -99,7 +99,7 @@ export function Bestillinger() {
               );
             })}
             {filtered.length === 0 && (
-              <tr><td colSpan={7} style={{ ...td, textAlign: 'center', color: '#7e93a0' }}>Ingen bestillingar.</td></tr>
+              <tr><td colSpan={7} style={{ ...td, textAlign: 'center', color: 'var(--text-muted)' }}>Ingen bestillingar.</td></tr>
             )}
           </tbody>
         </table>
@@ -111,6 +111,6 @@ export function Bestillinger() {
   );
 }
 
-const th: CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: '#6e7d88', textTransform: 'uppercase', letterSpacing: '0.3px' };
+const th: CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px' };
 const td: CSSProperties = { padding: '10px 12px' };
 const iconBtn = (bg: string): CSSProperties => ({ width: 30, height: 30, border: 'none', background: bg, borderRadius: 8, cursor: 'pointer', fontSize: 13 });

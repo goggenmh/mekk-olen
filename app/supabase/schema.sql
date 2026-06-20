@@ -76,8 +76,23 @@ create table if not exists docs (
   tittel text not null,
   kategori text not null default 'Rutine' check (kategori in ('HMS', 'Rutine', 'Avtale', 'Skjema', 'Anna')),
   notat text not null default '',
-  dato date not null default current_date
+  dato date not null default current_date,
+  fil_url text,
+  fil_namn text
 );
+
+alter table docs add column if not exists fil_url text;
+alter table docs add column if not exists fil_namn text;
+
+-- Storage bucket for document attachments. Public so the stored fil_url
+-- can be opened directly without re-authenticating against Supabase.
+insert into storage.buckets (id, name, public)
+values ('docs', 'docs', true)
+on conflict (id) do nothing;
+
+drop policy if exists "docs_storage_all" on storage.objects;
+create policy "docs_storage_all" on storage.objects for all to authenticated
+  using (bucket_id = 'docs') with check (bucket_id = 'docs');
 
 -- ---------- RLS ----------
 -- All three employees are equally trusted staff in this shop — any logged-in

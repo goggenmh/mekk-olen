@@ -17,7 +17,7 @@ interface AppData {
 
   saveEntry: (entry: Omit<TimeEntry, 'id'> & { id?: string }) => Promise<void>;
   deleteEntry: (id: string) => Promise<void>;
-  approveAllEntries: (dates: string[]) => Promise<void>;
+  approveEmployeeEntries: (ansatt: EmployeeId, dates: string[]) => Promise<void>;
 
   saveShift: (shift: Omit<Shift, 'id'> & { id?: string }) => Promise<void>;
   deleteShift: (id: string) => Promise<void>;
@@ -42,6 +42,7 @@ interface AppData {
 
   saveDoc: (d: Omit<Doc, 'id'> & { id?: string }) => Promise<void>;
   deleteDoc: (id: string) => Promise<void>;
+  uploadDocFile: (file: File) => Promise<{ url: string; namn: string }>;
 }
 
 const AppDataContext = createContext<AppData | null>(null);
@@ -52,7 +53,7 @@ const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.
 const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst });
 const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt });
 const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla });
-const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato });
+const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -122,8 +123,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     if (err) throw err;
     setEntries((prev) => prev.filter((x) => x.id !== id));
   };
-  const approveAllEntries: AppData['approveAllEntries'] = async (dates) => {
-    const ids = entries.filter((e) => dates.includes(e.date) && e.status === 'venter').map((e) => e.id);
+  const approveEmployeeEntries: AppData['approveEmployeeEntries'] = async (ansatt, dates) => {
+    const ids = entries.filter((e) => e.ansatt === ansatt && dates.includes(e.date) && e.status === 'venter').map((e) => e.id);
     if (ids.length === 0) return;
     const { error: err } = await supabase.from('time_entries').update({ status: 'godkjent' }).in('id', ids);
     if (err) throw err;
@@ -264,11 +265,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // ---- docs ----
   const saveDoc: AppData['saveDoc'] = async (d) => {
     if (d.id) {
-      const { data, error: err } = await supabase.from('docs').update({ tittel: d.tittel, kategori: d.kategori, notat: d.notat, dato: d.dato }).eq('id', d.id).select().single();
+      const { data, error: err } = await supabase.from('docs').update({ tittel: d.tittel, kategori: d.kategori, notat: d.notat, dato: d.dato, fil_url: d.fil_url, fil_namn: d.fil_namn }).eq('id', d.id).select().single();
       if (err) throw err;
       setDocs((prev) => prev.map((x) => (x.id === d.id ? mapDoc(data) : x)));
     } else {
-      const { data, error: err } = await supabase.from('docs').insert({ tittel: d.tittel, kategori: d.kategori, notat: d.notat, dato: d.dato }).select().single();
+      const { data, error: err } = await supabase.from('docs').insert({ tittel: d.tittel, kategori: d.kategori, notat: d.notat, dato: d.dato, fil_url: d.fil_url, fil_namn: d.fil_namn }).select().single();
       if (err) throw err;
       setDocs((prev) => [mapDoc(data), ...prev]);
     }
@@ -278,17 +279,24 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     if (err) throw err;
     setDocs((prev) => prev.filter((x) => x.id !== id));
   };
+  const uploadDocFile: AppData['uploadDocFile'] = async (file) => {
+    const path = `${Date.now()}-${file.name}`;
+    const { error: err } = await supabase.storage.from('docs').upload(path, file);
+    if (err) throw err;
+    const { data } = supabase.storage.from('docs').getPublicUrl(path);
+    return { url: data.publicUrl, namn: file.name };
+  };
 
   const value = useMemo<AppData>(
     () => ({
       loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, refreshAll,
-      saveEntry, deleteEntry, approveAllEntries,
+      saveEntry, deleteEntry, approveEmployeeEntries,
       saveShift, deleteShift, moveShiftDate, fillWeek,
       createSwap, approveSwap, declineSwap,
       saveFerie, deleteFerie,
       saveTask, deleteTask, moveTask,
       saveOrder, deleteOrder, advanceOrder, markOrderVarsla,
-      saveDoc, deleteDoc,
+      saveDoc, deleteDoc, uploadDocFile,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [loading, error, entries, shifts, swaps, ferie, tasks, orders, docs]

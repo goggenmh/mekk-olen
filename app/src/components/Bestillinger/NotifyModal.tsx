@@ -27,14 +27,14 @@ export function NotifyModal({ order, onClose }: { order: Order; onClose: () => v
       subtitle={order.kunde}
       footer={<><CancelButton onClick={onClose} /><SaveButton onClick={markert}>Marker som varsla</SaveButton></>}
     >
-      <div style={{ background: '#f7f9fb', border: '1px solid #e1e8ec', borderRadius: 9, padding: 13, fontSize: 13.5, lineHeight: 1.5 }}>{tekst}</div>
+      <div style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 9, padding: 13, fontSize: 13.5, lineHeight: 1.5 }}>{tekst}</div>
       <button
         onClick={copy}
-        style={{ alignSelf: 'flex-start', padding: '8px 14px', border: '1px solid #d6dfe4', background: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#142029', cursor: 'pointer' }}
+        style={{ alignSelf: 'flex-start', padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 8, fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}
       >
         {copied ? 'Kopiert ✓' : 'Kopier tekst'}
       </button>
-      {order.varsla && <div style={{ fontSize: 12.5, color: '#7e93a0' }}>Sist varsla {datoKort(order.varsla)}</div>}
+      {order.varsla && <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Sist varsla {datoKort(order.varsla)}</div>}
     </Modal>
   );
 }

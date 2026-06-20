@@ -1,5 +1,41 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
+:root {
+  --bg: #eef2f4;
+  --surface: #ffffff;
+  --surface-alt: #f7f9fb;
+  --surface-soft: #f3f7f8;
+  --border: #e1e8ec;
+  --divider: #eef2f4;
+  --danger-border: #ecc9c2;
+  --text: #142029;
+  --text-secondary: #566570;
+  --text-muted: #7e93a0;
+  --text-label: #6e7d88;
+  --text-faint: #a4b1ba;
+  --text-faint2: #c3ced5;
+  --danger: #c0392b;
+  --modal-overlay: rgba(12, 36, 54, 0.5);
+}
+
+[data-theme='dark'] {
+  --bg: #0e1620;
+  --surface: #182230;
+  --surface-alt: #1e2a38;
+  --surface-soft: #1a2530;
+  --border: #2b3a48;
+  --divider: #25323f;
+  --danger-border: #6e3530;
+  --text: #e7edf1;
+  --text-secondary: #b7c4cc;
+  --text-muted: #8ea0aa;
+  --text-label: #9fb0b9;
+  --text-faint: #647580;
+  --text-faint2: #4d5d67;
+  --danger: #e0584a;
+  --modal-overlay: rgba(0, 0, 0, 0.6);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -12,9 +48,10 @@ html, body, #root {
 
 body {
   font-family: 'Barlow', system-ui, sans-serif;
-  background: #eef2f4;
-  color: #142029;
+  background: var(--bg);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 ::-webkit-scrollbar {
@@ -22,7 +59,7 @@ body {
   width: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c3ced5;
+  background: var(--text-faint2);
   border-radius: 6px;
 }
 

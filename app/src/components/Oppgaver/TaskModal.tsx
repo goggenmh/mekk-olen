@@ -39,7 +39,7 @@ export function TaskModal({ existing, defaultAnsatt, onClose }: { existing?: Tas
       <Field label="Tittel">
         <input value={tittel} onChange={(e) => { setTittel(e.target.value); setFeil(false); }} style={inputStyle} />
       </Field>
-      {feil && <div style={{ fontSize: 13, color: '#c0392b', fontWeight: 600 }}>Skriv inn ein tittel.</div>}
+      {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Skriv inn ein tittel.</div>}
       <Field label="Detaljer">
         <textarea value={detalj} onChange={(e) => setDetalj(e.target.value)} style={{ ...inputStyle, minHeight: 70, resize: 'vertical' }} />
       </Field>

@@ -67,4 +67,6 @@ export interface Doc {
   kategori: string;
   notat: string;
   dato: string;
+  fil_url: string | null;
+  fil_namn: string | null;
 }

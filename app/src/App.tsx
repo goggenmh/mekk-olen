@@ -26,14 +26,14 @@ function App() {
   if (!user) return <LoginScreen />;
 
   if (dataLoading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: '#7e93a0' }}>Lastar…</div>;
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Lastar…</div>;
   }
   if (error) {
-    return <div style={{ padding: 40, textAlign: 'center', color: '#c0392b' }}>Kunne ikkje laste data: {error}</div>;
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--danger)' }}>Kunne ikkje laste data: {error}</div>;
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#eef2f4' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <Header />
       <Nav view={view} setView={setView} />
       {view === 'dashbord' && <Dashboard setView={setView} />}

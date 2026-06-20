@@ -50,7 +50,7 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
           <input value={telefon} onChange={(e) => setTelefon(e.target.value)} style={inputStyle} />
         </Field>
       </div>
-      {feil && <div style={{ fontSize: 13, color: '#c0392b', fontWeight: 600 }}>Skriv inn kundenamn.</div>}
+      {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Skriv inn kundenamn.</div>}
       <Field label="Vare">
         <input value={vare} onChange={(e) => setVare(e.target.value)} style={inputStyle} />
       </Field>

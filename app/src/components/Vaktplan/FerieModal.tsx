@@ -48,7 +48,7 @@ export function FerieModal({ existing, onClose }: { existing?: Ferie; onClose: (
       <Field label="Beskrivelse">
         <input value={tekst} onChange={(e) => { setTekst(e.target.value); setFeil(false); }} style={inputStyle} placeholder="t.d. 14.–18. juli" />
       </Field>
-      {feil && <div style={{ fontSize: 13, color: '#c0392b', fontWeight: 600 }}>Skriv inn ein beskrivelse.</div>}
+      {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Skriv inn ein beskrivelse.</div>}
     </Modal>
   );
 }
