@@ -1,21 +1,24 @@
 import { useState } from 'react';
 import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
 import { useAppData } from '../../context/AppDataContext';
-import { ANSATTE, PRIORITET, type Prioritet } from '../../constants';
+import { useAnsatte } from '../../context/AnsatteContext';
+import { PRIORITET, type Prioritet } from '../../constants';
 import type { Task } from '../../types';
 
 export function TaskModal({ existing, defaultAnsatt, onClose }: { existing?: Task; defaultAnsatt?: Task['ansatt']; onClose: () => void }) {
   const { saveTask, deleteTask } = useAppData();
+  const { ansatte } = useAnsatte();
 
   const [tittel, setTittel] = useState(existing?.tittel || '');
   const [detalj, setDetalj] = useState(existing?.detalj || '');
   const [prioritet, setPrioritet] = useState<Prioritet>((existing?.prioritet as Prioritet) || 'medium');
   const [ansatt, setAnsatt] = useState<Task['ansatt']>(existing?.ansatt || defaultAnsatt || 'ufordelt');
+  const [ferdig, setFerdig] = useState(existing?.ferdig || false);
   const [feil, setFeil] = useState(false);
 
   const save = async () => {
     if (!tittel.trim()) { setFeil(true); return; }
-    await saveTask({ id: existing?.id, tittel, detalj, prioritet, ansatt });
+    await saveTask({ id: existing?.id, tittel, detalj, prioritet, ansatt, ferdig });
     onClose();
   };
 
@@ -52,10 +55,14 @@ export function TaskModal({ existing, defaultAnsatt, onClose }: { existing?: Tas
         <Field label="Tildelt">
           <select value={ansatt} onChange={(e) => setAnsatt(e.target.value as Task['ansatt'])} style={inputStyle}>
             <option value="ufordelt">Ufordelt</option>
-            {ANSATTE.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
+            {ansatte.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
           </select>
         </Field>
       </div>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+        <input type="checkbox" checked={ferdig} onChange={(e) => setFerdig(e.target.checked)} style={{ width: 18, height: 18, cursor: 'pointer' }} />
+        <span style={{ fontSize: 13.5, fontWeight: 600 }}>Fullført</span>
+      </label>
     </Modal>
   );
 }

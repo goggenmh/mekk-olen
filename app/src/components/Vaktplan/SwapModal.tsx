@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Modal, Field, inputStyle, CancelButton, SaveButton } from '../ui/Modal';
 import { useAppData } from '../../context/AppDataContext';
-import { ANSATTE, findAnsatt } from '../../constants';
+import { useAnsatte } from '../../context/AnsatteContext';
 import { UKE_FULL, weekdayIdx, parseDate, pad } from '../../lib/dates';
 import type { Shift } from '../../types';
 
 export function SwapModal({ shift, onClose }: { shift: Shift; onClose: () => void }) {
   const { createSwap } = useAppData();
-  const valg = ANSATTE.filter((a) => a.id !== shift.ansatt);
+  const { ansatte, findAnsatt } = useAnsatte();
+  const valg = ansatte.filter((a) => a.id !== shift.ansatt);
   const [til, setTil] = useState(valg[0]?.id || shift.ansatt);
 
   const d = parseDate(shift.date);

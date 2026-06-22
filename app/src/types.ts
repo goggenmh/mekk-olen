@@ -46,6 +46,7 @@ export interface Task {
   detalj: string;
   prioritet: string;
   ansatt: EmployeeId | 'ufordelt';
+  ferdig: boolean;
 }
 
 export interface Order {

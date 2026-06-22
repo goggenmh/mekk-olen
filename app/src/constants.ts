@@ -1,4 +1,4 @@
-export type EmployeeId = 'sander' | 'georg' | 'christian';
+export type EmployeeId = string;
 
 export interface Employee {
   id: EmployeeId;
@@ -10,26 +10,21 @@ export interface Employee {
   init: string;
   /** Fixed Supabase Auth identifier — see supabase/SETUP.md */
   email: string;
+  telefon: string;
+  /** Leiar sees the admin panel + Ansatte-module and can always approve hours/bytte. */
+  leder: boolean;
+  /** Soft-delete flag — inactive employees are hidden from pickers but kept for history. */
+  aktiv: boolean;
 }
 
-// Pay rates / roles are operational facts about the shop, not secrets — same as the
-// original prototype, which hardcoded them in client code too. Only the PIN/password
-// check happens server-side now (via Supabase Auth), not these values.
-export const ANSATTE: Employee[] = [
-  { id: 'sander', navn: 'Sander', rolle: 'Dagleg leiar', lonn: 'fast', sats: 0, farge: '#11788a', init: 'SA', email: 'sander@mekk-olen.internal' },
-  { id: 'georg', navn: 'Georg', rolle: 'Selgar', lonn: 'time', sats: 164, farge: '#e08a1e', init: 'GE', email: 'georg@mekk-olen.internal' },
-  { id: 'christian', navn: 'Christian', rolle: 'Selgar', lonn: 'time', sats: 133, farge: '#2f9e6f', init: 'CH', email: 'christian@mekk-olen.internal' },
+// Seed data for the dynamic `ansatte` table (see supabase/schema.sql) and a
+// fallback if that table hasn't loaded yet. The live employee list now comes
+// from AnsatteContext / useAnsatte() — see that file for findAnsatt/isLeder.
+export const DEFAULT_ANSATTE: Employee[] = [
+  { id: 'sander', navn: 'Sander', rolle: 'Dagleg leiar', lonn: 'fast', sats: 0, farge: '#11788a', init: 'SA', email: 'sander@mekk-olen.internal', telefon: '', leder: true, aktiv: true },
+  { id: 'georg', navn: 'Georg', rolle: 'Selgar', lonn: 'time', sats: 164, farge: '#e08a1e', init: 'GE', email: 'georg@mekk-olen.internal', telefon: '', leder: false, aktiv: true },
+  { id: 'christian', navn: 'Christian', rolle: 'Selgar', lonn: 'time', sats: 133, farge: '#2f9e6f', init: 'CH', email: 'christian@mekk-olen.internal', telefon: '', leder: false, aktiv: true },
 ];
-
-export const findAnsatt = (id: string | null | undefined): Employee =>
-  ANSATTE.find((a) => a.id === id) || { id: 'sander', navn: '', rolle: '', lonn: 'time', sats: 0, farge: '#999', init: '?', email: '' };
-
-/**
- * Sander is the fixed dagleg leiar — only he sees the admin panel. Whether
- * Georg/Christian can approve hours and shift swaps is delegated at runtime
- * via the `permissions` table (see canApprove in AppDataContext).
- */
-export const isLeder = (id: EmployeeId | null | undefined): boolean => id === 'sander';
 
 export const SKIFT_FARGE: Record<string, string> = {
   Formiddag: '#1597a8',

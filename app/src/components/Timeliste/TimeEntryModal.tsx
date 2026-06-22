@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Modal, Field, inputStyle, monoInputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
 import { useAppData } from '../../context/AppDataContext';
-import { findAnsatt } from '../../constants';
+import { useAnsatte } from '../../context/AnsatteContext';
 import { dur, fmt, mins } from '../../lib/dates';
 import type { TimeEntry } from '../../types';
 
@@ -13,6 +13,7 @@ export function TimeEntryModal({
   onClose: () => void;
 }) {
   const { saveEntry, deleteEntry } = useAppData();
+  const { findAnsatt } = useAnsatte();
   const existing = target.entry;
   const a = findAnsatt(target.ansatt);
 
@@ -67,11 +68,11 @@ export function TimeEntryModal({
       <button
         onClick={() => setStatus(godkjent ? 'venter' : 'godkjent')}
         style={{
-          display: 'flex', alignItems: 'center', gap: 9, padding: '10px 13px', borderRadius: 9, cursor: 'pointer', textAlign: 'left',
+          display: 'flex', alignItems: 'center', gap: 9, padding: '10px 13px', borderRadius: 12, cursor: 'pointer', textAlign: 'left',
           border: `1px solid ${godkjent ? '#bfe3cd' : 'var(--border)'}`, background: godkjent ? '#e8f5ee' : 'var(--surface-alt)',
         }}
       >
-        <span style={{ width: 18, height: 18, borderRadius: 5, border: `2px solid ${godkjent ? '#2f9e6f' : 'var(--text-faint2)'}`, background: godkjent ? '#2f9e6f' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12 }}>
+        <span style={{ width: 18, height: 18, borderRadius: 8, border: `2px solid ${godkjent ? '#2f9e6f' : 'var(--text-faint2)'}`, background: godkjent ? '#2f9e6f' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12 }}>
           {godkjent ? '✓' : ''}
         </span>
         <span style={{ fontSize: 13.5, fontWeight: 600, color: godkjent ? '#2f9e6f' : 'var(--text-secondary)' }}>{godkjent ? 'Godkjent' : 'Ventar på godkjenning'}</span>

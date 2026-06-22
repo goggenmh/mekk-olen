@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Modal, Field, inputStyle, monoInputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
 import { useAppData } from '../../context/AppDataContext';
-import { ANSATTE, SKIFT_VALG } from '../../constants';
+import { useAnsatte } from '../../context/AnsatteContext';
+import { SKIFT_VALG } from '../../constants';
 import { dur, fmt, mins } from '../../lib/dates';
 import type { Shift } from '../../types';
 
@@ -13,9 +14,10 @@ export function ShiftModal({
   onClose: () => void;
 }) {
   const { saveShift, deleteShift } = useAppData();
+  const { ansatte } = useAnsatte();
   const existing = target.shift;
 
-  const [ansatt, setAnsatt] = useState<Shift['ansatt']>(existing?.ansatt || ANSATTE[0].id);
+  const [ansatt, setAnsatt] = useState<Shift['ansatt']>(existing?.ansatt || ansatte[0]?.id || '');
   const [start, setStart] = useState(existing?.start || '09:00');
   const [slutt, setSlutt] = useState(existing?.slutt || '17:00');
   const [skift, setSkift] = useState(existing?.skift || SKIFT_VALG[0]);
@@ -49,7 +51,7 @@ export function ShiftModal({
     >
       <Field label="Tilsett">
         <select value={ansatt} onChange={(e) => setAnsatt(e.target.value as Shift['ansatt'])} style={inputStyle}>
-          {ANSATTE.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
+          {ansatte.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
         </select>
       </Field>
       <Field label="Skifttype">

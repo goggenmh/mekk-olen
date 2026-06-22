@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
 import { useAppData } from '../../context/AppDataContext';
-import { ANSATTE, FERIE_TYPER } from '../../constants';
+import { useAnsatte } from '../../context/AnsatteContext';
+import { FERIE_TYPER } from '../../constants';
 import type { Ferie } from '../../types';
 
 export function FerieModal({ existing, onClose }: { existing?: Ferie; onClose: () => void }) {
   const { saveFerie, deleteFerie } = useAppData();
+  const { ansatte } = useAnsatte();
 
-  const [ansatt, setAnsatt] = useState<Ferie['ansatt']>(existing?.ansatt || ANSATTE[0].id);
+  const [ansatt, setAnsatt] = useState<Ferie['ansatt']>(existing?.ansatt || ansatte[0]?.id || '');
   const [type, setType] = useState(existing?.type || FERIE_TYPER[0]);
   const [tekst, setTekst] = useState(existing?.tekst || '');
   const [feil, setFeil] = useState(false);
@@ -37,7 +39,7 @@ export function FerieModal({ existing, onClose }: { existing?: Ferie; onClose: (
     >
       <Field label="Tilsett">
         <select value={ansatt} onChange={(e) => setAnsatt(e.target.value as Ferie['ansatt'])} style={inputStyle}>
-          {ANSATTE.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
+          {ansatte.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
         </select>
       </Field>
       <Field label="Type">

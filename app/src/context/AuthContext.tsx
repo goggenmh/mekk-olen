@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase, pinToPassword } from '../supabaseClient';
-import { ANSATTE, findAnsatt, type Employee } from '../constants';
+import type { Employee } from '../constants';
+import { useAnsatte } from './AnsatteContext';
 
 interface AuthState {
   loading: boolean;
@@ -19,6 +20,7 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { alleAnsatte, findAnsatt } = useAnsatte();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<Employee | null>(null);
   const [pick, setPick] = useState<Employee | null>(null);
@@ -28,17 +30,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       const email = data.session?.user?.email;
-      const match = email ? ANSATTE.find((a) => a.email === email) : null;
+      const match = email ? alleAnsatte.find((a) => a.email === email) : null;
       setUser(match ?? null);
       setLoading(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       const email = session?.user?.email;
-      const match = email ? ANSATTE.find((a) => a.email === email) : null;
+      const match = email ? alleAnsatte.find((a) => a.email === email) : null;
       setUser(match ?? null);
     });
     return () => sub.subscription.unsubscribe();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alleAnsatte]);
 
   const tryLogin = async (employee: Employee, candidatePin: string) => {
     const { error } = await supabase.auth.signInWithPassword({

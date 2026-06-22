@@ -1,26 +1,28 @@
 import { useRef, useState } from 'react';
 import { useAppData } from '../../context/AppDataContext';
-import { ANSATTE, PRIORITET, type Prioritet } from '../../constants';
+import { useAnsatte } from '../../context/AnsatteContext';
+import { PRIORITET, type Prioritet } from '../../constants';
 import { TaskModal } from './TaskModal';
 import type { Task } from '../../types';
 
-const KOL_DEF: { id: Task['ansatt']; tittel: string; farge: string }[] = [
-  { id: 'ufordelt', tittel: 'Ufordelt', farge: '#9aa4b2' },
-  ...ANSATTE.map((a) => ({ id: a.id, tittel: a.navn, farge: a.farge })),
-];
-
 export function Oppgaver() {
-  const { tasks, moveTask } = useAppData();
+  const { tasks, moveTask, saveTask } = useAppData();
+  const { ansatte } = useAnsatte();
   const [taskTarget, setTaskTarget] = useState<{ existing?: Task; defaultAnsatt?: Task['ansatt'] } | null>(null);
   const dragTaskId = useRef<string | null>(null);
+
+  const KOL_DEF: { id: Task['ansatt']; tittel: string; farge: string }[] = [
+    { id: 'ufordelt', tittel: 'Ufordelt', farge: '#9aa4b2' },
+    ...ansatte.map((a) => ({ id: a.id, tittel: a.navn, farge: a.farge })),
+  ];
 
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ fontFamily: "'Barlow Semi Condensed'", fontWeight: 700, fontSize: 21 }}>Oppgåver</div>
+        <div style={{ fontFamily: "'Geist'", fontWeight: 700, fontSize: 21 }}>Oppgåver</div>
         <button
           onClick={() => setTaskTarget({})}
-          style={{ marginLeft: 'auto', padding: '9px 16px', background: '#1597a8', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           + Ny oppgåve
         </button>
@@ -36,7 +38,7 @@ export function Oppgaver() {
               onDrop={() => {
                 if (dragTaskId.current) { moveTask(dragTaskId.current, k.id); dragTaskId.current = null; }
               }}
-              style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 12, padding: 10, minHeight: 300, display: 'flex', flexDirection: 'column', gap: 8 }}
+              style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 16, padding: 10, minHeight: 300, display: 'flex', flexDirection: 'column', gap: 8 }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: k.farge }} />
@@ -50,12 +52,22 @@ export function Oppgaver() {
                     key={t.id}
                     draggable
                     onDragStart={() => { dragTaskId.current = t.id; }}
-                    onClick={() => setTaskTarget({ existing: t })}
-                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 11px', cursor: 'grab' }}
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 13, padding: '10px 11px', cursor: 'grab', opacity: t.ferdig ? 0.6 : 1 }}
                   >
-                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{t.tittel}</div>
-                    {t.detalj && <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginBottom: 6 }}>{t.detalj}</div>}
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: p.fg, background: p.bg, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' }}>{p.tekst}</span>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <input
+                        type="checkbox"
+                        checked={t.ferdig}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => saveTask({ ...t, ferdig: e.target.checked })}
+                        style={{ width: 15, height: 15, marginTop: 2, cursor: 'pointer', flex: 'none' }}
+                      />
+                      <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setTaskTarget({ existing: t })}>
+                        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, textDecoration: t.ferdig ? 'line-through' : 'none' }}>{t.tittel}</div>
+                        {t.detalj && <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginBottom: 6 }}>{t.detalj}</div>}
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: p.fg, background: p.bg, padding: '2px 8px', borderRadius: 9, textTransform: 'uppercase' }}>{p.tekst}</span>
+                      </div>
+                    </div>
                   </div>
                 );
               })}

@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
-import { ANSATTE, findAnsatt } from '../../constants';
+import { useAnsatte } from '../../context/AnsatteContext';
 import {
   weekDates, mondayOf, today, isoWeek, addDays, shiftMonth, MND,
   fmt, fmtKr, timar, UKE_KORT, parseDate, weekdayIdx,
@@ -22,6 +22,7 @@ function downloadCsv(filename: string, rows: (string | number)[][]) {
 
 export function Timeliste() {
   const { entries, approveEmployeeEntries, canApprove } = useAppData();
+  const { ansatte } = useAnsatte();
   const { user } = useAuth();
   const maaGodkjenne = canApprove(user?.id);
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
@@ -48,7 +49,7 @@ export function Timeliste() {
 
   const exportCsv = () => {
     const rows: (string | number)[][] = [['Tilsett', 'Dato', 'Start', 'Slutt', 'Pause(min)', 'Timar', 'Status']];
-    dates.forEach((dt) => ANSATTE.forEach((a) => {
+    dates.forEach((dt) => ansatte.forEach((a) => {
       const e = entries.find((x) => x.ansatt === a.id && x.date === dt);
       if (e) rows.push([a.navn, dt, e.start, e.slutt, e.pause, fmt(timar(e)), e.status]);
     }));
@@ -61,7 +62,7 @@ export function Timeliste() {
     const [my, mm] = monthAnchor.split('-').map(Number);
     const inMonth = (dt: string) => dt.slice(0, 7) === monthAnchor;
     const rows: (string | number)[][] = [['Tilsett', 'Maaned', 'Timar', 'Sats (kr/t)', 'Brutto (kr)', 'Lonstype']];
-    ANSATTE.forEach((a) => {
+    ansatte.forEach((a) => {
       const tot = entries.filter((e) => e.ansatt === a.id && inMonth(e.date) && e.status === 'godkjent').reduce((acc, e) => acc + timar(e), 0);
       const brutto = a.lonn === 'time' ? Math.round(tot * a.sats) : '';
       rows.push([a.navn, `${MND[mm - 1]} ${my}`, fmt(tot), a.lonn === 'time' ? a.sats : '', brutto, a.lonn === 'time' ? 'Timeløn' : 'Fastløn']);
@@ -74,15 +75,15 @@ export function Timeliste() {
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-        <div style={{ fontFamily: "'Barlow Semi Condensed'", fontWeight: 700, fontSize: 21 }}>Timeliste</div>
+        <div style={{ fontFamily: "'Geist'", fontWeight: 700, fontSize: 21 }}>Timeliste</div>
         <div className="no-print" style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
           {(['uke', 'manad'] as const).map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
               style={{
-                padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                background: mode === m ? '#11788a' : 'var(--surface)', color: mode === m ? '#fff' : 'var(--text-secondary)',
+                padding: '7px 14px', borderRadius: 11, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                background: mode === m ? 'var(--brand-strong)' : 'var(--surface)', color: mode === m ? '#fff' : 'var(--text-secondary)',
               }}
             >
               {m === 'uke' ? 'Veke' : 'Månad'}
@@ -142,8 +143,9 @@ function WeekTable({
   maaGodkjenne: boolean;
   onApprove: (ansatt: TimeEntry['ansatt']) => void;
 }) {
+  const { ansatte } = useAnsatte();
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'auto' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ background: 'var(--surface-alt)' }}>
@@ -157,7 +159,7 @@ function WeekTable({
           </tr>
         </thead>
         <tbody>
-          {ANSATTE.map((a) => {
+          {ansatte.map((a) => {
             const rowEntries = dates.map((d) => entries.find((e) => e.ansatt === a.id && e.date === d));
             const sum = rowEntries.reduce((acc, e) => acc + (e ? timar(e) : 0), 0);
             const overtid = sum > 37.5 ? `+${fmt(sum - 37.5)} t ot` : 'normaltid';
@@ -172,7 +174,7 @@ function WeekTable({
                     <td key={d} style={{ ...td, cursor: 'pointer' }} onClick={() => onCellClick(a.id, d, e)}>
                       {e ? (
                         <div style={{ lineHeight: 1.2 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'JetBrains Mono'", fontWeight: 600 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Geist Mono'", fontWeight: 600 }}>
                             <span style={dot(e.status === 'godkjent' ? '#2f9e6f' : '#d8920f')} />
                             {fmt(timar(e))} t
                           </div>
@@ -184,7 +186,7 @@ function WeekTable({
                     </td>
                   );
                 })}
-                <td style={{ ...td, fontFamily: "'JetBrains Mono'", fontWeight: 700 }}>
+                <td style={{ ...td, fontFamily: "'Geist Mono'", fontWeight: 700 }}>
                   {fmt(sum)} t
                   <div style={{ fontSize: 10.5, fontWeight: 600, color: sum > 37.5 ? 'var(--danger)' : 'var(--text-muted)' }}>{overtid}</div>
                 </td>
@@ -194,7 +196,7 @@ function WeekTable({
                     {ventarN > 0 && (
                       <button
                         onClick={() => onApprove(a.id)}
-                        style={{ padding: '7px 12px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        style={{ padding: '7px 12px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                       >
                         Godkjenn ({ventarN})
                       </button>
@@ -217,6 +219,7 @@ function MonthView({
   entries: TimeEntry[];
   onDayClick: (date: string) => void;
 }) {
+  const { ansatte, findAnsatt } = useAnsatte();
   const mm = Number(monthAnchor.split('-')[1]);
   const firstOfMonth = `${monthAnchor}-01`;
   const gridStart = mondayOf(firstOfMonth);
@@ -230,7 +233,7 @@ function MonthView({
 
   const inMonth = (d: string) => Number(d.split('-')[1]) === mm;
 
-  const manadKort = ANSATTE.map((a) => {
+  const manadKort = ansatte.map((a) => {
     const tot = entries.filter((e) => e.ansatt === a.id && e.date.slice(0, 7) === monthAnchor && e.status === 'godkjent').reduce((acc, e) => acc + timar(e), 0);
     const lonn = a.lonn === 'time' ? fmtKr(tot * a.sats) : 'Fastløn';
     return { a, tot, lonn };
@@ -238,7 +241,7 @@ function MonthView({
 
   return (
     <>
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: 'var(--surface-alt)' }}>
           {UKE_KORT.map((d) => <div key={d} style={{ ...th, textAlign: 'center' }}>{d}</div>)}
         </div>
@@ -276,9 +279,9 @@ function MonthView({
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14 }}>
         {manadKort.map(({ a, tot, lonn }) => (
-          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
+          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px' }}>
             <div style={{ fontSize: 13.5, fontWeight: 700 }}>{a.navn}</div>
-            <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'JetBrains Mono'", color: a.farge, marginTop: 4 }}>{fmt(tot)} t</div>
+            <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Geist Mono'", color: a.farge, marginTop: 4 }}>{fmt(tot)} t</div>
             <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>{lonn}</div>
           </div>
         ))}
@@ -287,8 +290,8 @@ function MonthView({
   );
 }
 
-const btnGhost: CSSProperties = { padding: '9px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 8, fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' };
-const navBtn: CSSProperties = { width: 32, height: 32, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 8, cursor: 'pointer', fontSize: 15, color: 'var(--text-secondary)' };
+const btnGhost: CSSProperties = { padding: '9px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' };
+const navBtn: CSSProperties = { width: 32, height: 32, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, cursor: 'pointer', fontSize: 15, color: 'var(--text-secondary)' };
 const th: CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px' };
 const td: CSSProperties = { padding: '10px 12px' };
 const dot = (color: string): CSSProperties => ({ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: color });

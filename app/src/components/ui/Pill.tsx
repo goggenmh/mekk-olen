@@ -7,7 +7,7 @@ export function Pill({ label, fg, bg }: { label: string; fg: string; bg: string 
         color: fg,
         background: bg,
         padding: '3px 9px',
-        borderRadius: 6,
+        borderRadius: 9,
         letterSpacing: '0.3px',
         textTransform: 'uppercase',
       }}

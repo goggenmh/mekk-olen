@@ -33,10 +33,10 @@ export function Bestillinger() {
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ fontFamily: "'Barlow Semi Condensed'", fontWeight: 700, fontSize: 21 }}>Bestillingar</div>
+        <div style={{ fontFamily: "'Geist'", fontWeight: 700, fontSize: 21 }}>Bestillingar</div>
         <button
           onClick={() => setOrderTarget('new')}
-          style={{ marginLeft: 'auto', padding: '9px 16px', background: '#1597a8', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           + Ny bestilling
         </button>
@@ -48,8 +48,8 @@ export function Bestillinger() {
             key={f.key}
             onClick={() => setFilter(f.key)}
             style={{
-              padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              background: filter === f.key ? '#11788a' : 'var(--surface)', color: filter === f.key ? '#fff' : 'var(--text-secondary)',
+              padding: '7px 14px', borderRadius: 11, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+              background: filter === f.key ? 'var(--brand-strong)' : 'var(--surface)', color: filter === f.key ? '#fff' : 'var(--text-secondary)',
             }}
           >
             {f.label}
@@ -57,7 +57,7 @@ export function Bestillinger() {
         ))}
       </div>
 
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'auto' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: 'var(--surface-alt)' }}>
@@ -84,7 +84,7 @@ export function Bestillinger() {
                   <td style={td}>{datoKort(o.dato)}</td>
                   <td style={td}>{o.antal}</td>
                   <td style={td}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 6, textTransform: 'uppercase' }}>{s.tekst}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 9, textTransform: 'uppercase' }}>{s.tekst}</span>
                     {o.varsla && <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 3 }}>Varsla {datoKort(o.varsla)}</div>}
                   </td>
                   <td style={{ ...td, display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
@@ -113,4 +113,4 @@ export function Bestillinger() {
 
 const th: CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px' };
 const td: CSSProperties = { padding: '10px 12px' };
-const iconBtn = (bg: string): CSSProperties => ({ width: 30, height: 30, border: 'none', background: bg, borderRadius: 8, cursor: 'pointer', fontSize: 13 });
+const iconBtn = (bg: string): CSSProperties => ({ width: 30, height: 30, border: 'none', background: bg, borderRadius: 11, cursor: 'pointer', fontSize: 13 });

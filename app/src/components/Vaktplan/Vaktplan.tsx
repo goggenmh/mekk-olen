@@ -1,7 +1,8 @@
 import { useRef, useState, type CSSProperties } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
-import { DAGER_VAKTPLAN, SKIFT_FARGE, SHIFT_TEMPLATE, findAnsatt } from '../../constants';
+import { useAnsatte } from '../../context/AnsatteContext';
+import { DAGER_VAKTPLAN, SKIFT_FARGE, SHIFT_TEMPLATE } from '../../constants';
 import { addDays, mondayOf, today, isoWeek, parseDate, DAG_IDX, shiftMonth, MND, UKE_KORT } from '../../lib/dates';
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
@@ -12,6 +13,7 @@ import type { Shift, Ferie } from '../../types';
 export function Vaktplan() {
   const { shifts, swaps, ferie, moveShiftDate, fillWeek, approveSwap, declineSwap, canApprove } = useAppData();
   const { user } = useAuth();
+  const { findAnsatt } = useAnsatte();
   const maaGodkjenne = canApprove(user?.id);
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
   const [vpWeek, setVpWeek] = useState(mondayOf(today()));
@@ -40,15 +42,15 @@ export function Vaktplan() {
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-        <div style={{ fontFamily: "'Barlow Semi Condensed'", fontWeight: 700, fontSize: 21 }}>Vaktplan</div>
+        <div style={{ fontFamily: "'Geist'", fontWeight: 700, fontSize: 21 }}>Vaktplan</div>
         <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
           {(['uke', 'manad'] as const).map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
               style={{
-                padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                background: mode === m ? '#11788a' : 'var(--surface)', color: mode === m ? '#fff' : 'var(--text-secondary)',
+                padding: '7px 14px', borderRadius: 11, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                background: mode === m ? 'var(--brand-strong)' : 'var(--surface)', color: mode === m ? '#fff' : 'var(--text-secondary)',
               }}
             >
               {m === 'uke' ? 'Veke' : 'Månad'}
@@ -79,7 +81,7 @@ export function Vaktplan() {
               onDrop={() => {
                 if (dragShiftId.current) { moveShiftDate(dragShiftId.current, d.date); dragShiftId.current = null; }
               }}
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 10, minHeight: 220, display: 'flex', flexDirection: 'column', gap: 8 }}
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 10, minHeight: 220, display: 'flex', flexDirection: 'column', gap: 8 }}
             >
               <div>
                 <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase' }}>{d.kort} {parseDate(d.date).getDate()}</div>
@@ -94,13 +96,13 @@ export function Vaktplan() {
                     draggable
                     onDragStart={() => { dragShiftId.current = s.id; }}
                     onClick={() => setShiftTarget({ date: d.date, shift: s })}
-                    style={{ background: farge, color: '#fff', borderRadius: 9, padding: '8px 9px', cursor: 'grab', fontSize: 12 }}
+                    style={{ background: farge, color: '#fff', borderRadius: 12, padding: '8px 9px', cursor: 'grab', fontSize: 12 }}
                   >
                     <div style={{ fontWeight: 700 }}>{a.navn}</div>
                     <div style={{ opacity: 0.9, fontSize: 11 }}>{s.start}–{s.slutt}</div>
                     <button
                       onClick={(e) => { e.stopPropagation(); setSwapTarget(s); }}
-                      style={{ marginTop: 4, fontSize: 10.5, background: 'rgba(255,255,255,0.22)', color: '#fff', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer' }}
+                      style={{ marginTop: 4, fontSize: 10.5, background: 'rgba(255,255,255,0.22)', color: '#fff', border: 'none', borderRadius: 9, padding: '3px 7px', cursor: 'pointer' }}
                     >
                       Bytt vakt
                     </button>
@@ -109,7 +111,7 @@ export function Vaktplan() {
               })}
               <button
                 onClick={() => setShiftTarget({ date: d.date })}
-                style={{ marginTop: 'auto', border: '1px dashed var(--border)', background: 'none', borderRadius: 8, padding: '7px 0', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ marginTop: 'auto', border: '1px dashed var(--border)', background: 'none', borderRadius: 11, padding: '7px 0', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 + vakt
               </button>
@@ -120,7 +122,7 @@ export function Vaktplan() {
       )}
 
       {pendingSwaps.length > 0 && (
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px 18px' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '16px 18px' }}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Bytteønske</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {pendingSwaps.map((s) => {
@@ -134,7 +136,7 @@ export function Vaktplan() {
                   {maaGodkjenne ? (
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
                       <button onClick={() => declineSwap(s.id)} style={{ ...btnGhost, color: 'var(--danger)' }}>Avslå</button>
-                      <button onClick={() => approveSwap(s.id)} style={{ padding: '7px 14px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Godkjenn</button>
+                      <button onClick={() => approveSwap(s.id)} style={{ padding: '7px 14px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Godkjenn</button>
                     </div>
                   ) : (
                     <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>Ventar på godkjenning</span>
@@ -146,7 +148,7 @@ export function Vaktplan() {
         </div>
       )}
 
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px 18px' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '16px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
           <div style={{ fontSize: 14, fontWeight: 700 }}>Ferie &amp; fri</div>
           <button onClick={() => setFerieTarget('new')} style={{ ...btnGhost, marginLeft: 'auto' }}>+ Legg til</button>
@@ -165,7 +167,7 @@ export function Vaktplan() {
         </div>
       </div>
 
-      <div style={{ background: '#0c2436', color: '#fff', borderRadius: 14, padding: '16px 18px' }}>
+      <div style={{ background: '#0c2436', color: '#fff', borderRadius: 18, padding: '16px 18px' }}>
         <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Bemanningsregel</div>
         <ul style={{ paddingLeft: 18, fontSize: 13, color: '#cfe0e6', lineHeight: 1.6 }}>
           <li>Minst éin tilsett på vakt i alle opningstider.</li>
@@ -189,6 +191,7 @@ function MonthView({
   shifts: Shift[];
   onDayClick: (date: string) => void;
 }) {
+  const { findAnsatt } = useAnsatte();
   const mm = Number(monthAnchor.split('-')[1]);
   const firstOfMonth = `${monthAnchor}-01`;
   const gridStart = mondayOf(firstOfMonth);
@@ -203,7 +206,7 @@ function MonthView({
   const inMonth = (d: string) => Number(d.split('-')[1]) === mm;
 
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: 'var(--surface-alt)' }}>
         {UKE_KORT.map((d) => <div key={d} style={{ ...th, textAlign: 'center' }}>{d}</div>)}
       </div>
@@ -237,6 +240,6 @@ function MonthView({
   );
 }
 
-const btnGhost: CSSProperties = { padding: '9px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 8, fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' };
-const navBtn: CSSProperties = { width: 32, height: 32, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 8, cursor: 'pointer', fontSize: 15, color: 'var(--text-secondary)' };
+const btnGhost: CSSProperties = { padding: '9px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' };
+const navBtn: CSSProperties = { width: 32, height: 32, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, cursor: 'pointer', fontSize: 15, color: 'var(--text-secondary)' };
 const th: CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px' };

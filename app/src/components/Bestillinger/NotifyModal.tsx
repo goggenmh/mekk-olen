@@ -27,10 +27,10 @@ export function NotifyModal({ order, onClose }: { order: Order; onClose: () => v
       subtitle={order.kunde}
       footer={<><CancelButton onClick={onClose} /><SaveButton onClick={markert}>Marker som varsla</SaveButton></>}
     >
-      <div style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 9, padding: 13, fontSize: 13.5, lineHeight: 1.5 }}>{tekst}</div>
+      <div style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 12, padding: 13, fontSize: 13.5, lineHeight: 1.5 }}>{tekst}</div>
       <button
         onClick={copy}
-        style={{ alignSelf: 'flex-start', padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 8, fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}
+        style={{ alignSelf: 'flex-start', padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}
       >
         {copied ? 'Kopiert ✓' : 'Kopier tekst'}
       </button>

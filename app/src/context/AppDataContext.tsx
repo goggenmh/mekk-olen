@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from '../supabaseClient';
 import type { EmployeeId } from '../constants';
+import { useAnsatte } from './AnsatteContext';
 import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Task, TimeEntry } from '../types';
 
 interface AppData {
@@ -59,13 +60,14 @@ const mapEntry = (r: any): TimeEntry => ({ id: r.id, ansatt: r.ansatt, date: r.d
 const mapShift = (r: any): Shift => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift });
 const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.fra, til: r.til, dag: r.dag, tid: r.tid, status: r.status });
 const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst });
-const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt });
+const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig });
 const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
 const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne: r.kan_godkjenne });
 const mapMelding = (r: any): Melding => ({ id: r.id, fra: r.fra, til: r.til, tekst: r.tekst, created_at: r.created_at });
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
+  const { isLeder } = useAnsatte();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [entries, setEntries] = useState<TimeEntry[]>([]);
@@ -226,11 +228,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // ---- tasks ----
   const saveTask: AppData['saveTask'] = async (t) => {
     if (t.id) {
-      const { data, error: err } = await supabase.from('tasks').update({ tittel: t.tittel, detalj: t.detalj, prioritet: t.prioritet, ansatt: t.ansatt }).eq('id', t.id).select().single();
+      const { data, error: err } = await supabase.from('tasks').update({ tittel: t.tittel, detalj: t.detalj, prioritet: t.prioritet, ansatt: t.ansatt, ferdig: t.ferdig }).eq('id', t.id).select().single();
       if (err) throw err;
       setTasks((prev) => prev.map((x) => (x.id === t.id ? mapTask(data) : x)));
     } else {
-      const { data, error: err } = await supabase.from('tasks').insert({ tittel: t.tittel, detalj: t.detalj, prioritet: t.prioritet, ansatt: t.ansatt }).select().single();
+      const { data, error: err } = await supabase.from('tasks').insert({ tittel: t.tittel, detalj: t.detalj, prioritet: t.prioritet, ansatt: t.ansatt, ferdig: t.ferdig ?? false }).select().single();
       if (err) throw err;
       setTasks((prev) => [...prev, mapTask(data)]);
     }
@@ -305,8 +307,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   // ---- permissions & delegation ----
   const canApprove: AppData['canApprove'] = useCallback(
-    (ansatt) => !!ansatt && (ansatt === 'sander' || permissions.some((p) => p.ansatt === ansatt && p.kan_godkjenne)),
-    [permissions]
+    (ansatt) => !!ansatt && (isLeder(ansatt) || permissions.some((p) => p.ansatt === ansatt && p.kan_godkjenne)),
+    [permissions, isLeder]
   );
   const setKanGodkjenne: AppData['setKanGodkjenne'] = async (ansatt, kan) => {
     const { data, error: err } = await supabase.from('permissions').upsert({ ansatt, kan_godkjenne: kan }).select().single();

@@ -1,39 +1,50 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg: #eef2f4;
+  --bg: #eef1f3;
   --surface: #ffffff;
-  --surface-alt: #f7f9fb;
-  --surface-soft: #f3f7f8;
-  --border: #e1e8ec;
-  --divider: #eef2f4;
+  --surface-alt: #f6f8fa;
+  --surface-soft: #f1f5f6;
+  --border: #e3e9ec;
+  --divider: #eef1f3;
   --danger-border: #ecc9c2;
-  --text: #142029;
-  --text-secondary: #566570;
+  --text: #15212b;
+  --text-secondary: #56656f;
   --text-muted: #7e93a0;
   --text-label: #6e7d88;
   --text-faint: #a4b1ba;
   --text-faint2: #c3ced5;
   --danger: #c0392b;
   --modal-overlay: rgba(12, 36, 54, 0.5);
+  --brand: #11788a;
+  --brand-strong: #0c5a69;
+  --brand-soft: #e7f6f8;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  color-scheme: light;
 }
 
 [data-theme='dark'] {
-  --bg: #0e1620;
+  --bg: #0c131c;
   --surface: #182230;
   --surface-alt: #1e2a38;
   --surface-soft: #1a2530;
   --border: #2b3a48;
   --divider: #25323f;
   --danger-border: #6e3530;
-  --text: #e7edf1;
-  --text-secondary: #b7c4cc;
+  --text: #eef3f6;
+  --text-secondary: #c1ccd3;
   --text-muted: #8ea0aa;
   --text-label: #9fb0b9;
   --text-faint: #647580;
   --text-faint2: #4d5d67;
   --danger: #e0584a;
   --modal-overlay: rgba(0, 0, 0, 0.6);
+  --brand: #2bb6c9;
+  --brand-strong: #5fd0df;
+  --brand-soft: #142e36;
+  color-scheme: dark;
 }
 
 * {
@@ -47,7 +58,7 @@ html, body, #root {
 }
 
 body {
-  font-family: 'Barlow', system-ui, sans-serif;
+  font-family: 'Geist', system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -60,11 +71,20 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   background: var(--text-faint2);
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 button {
   font-family: inherit;
+}
+
+input, textarea, select {
+  color-scheme: inherit;
+}
+
+input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
 }
 
 @media print {

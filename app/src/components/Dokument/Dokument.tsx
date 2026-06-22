@@ -17,10 +17,10 @@ export function Dokument() {
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ fontFamily: "'Barlow Semi Condensed'", fontWeight: 700, fontSize: 21 }}>Dokument</div>
+        <div style={{ fontFamily: "'Geist'", fontWeight: 700, fontSize: 21 }}>Dokument</div>
         <button
           onClick={() => setDocTarget('new')}
-          style={{ marginLeft: 'auto', padding: '9px 16px', background: '#1597a8', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           + Nytt dokument
         </button>
@@ -32,8 +32,8 @@ export function Dokument() {
             key={f}
             onClick={() => setFilter(f)}
             style={{
-              padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              background: filter === f ? '#11788a' : 'var(--surface)', color: filter === f ? '#fff' : 'var(--text-secondary)',
+              padding: '7px 14px', borderRadius: 11, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+              background: filter === f ? 'var(--brand-strong)' : 'var(--surface)', color: filter === f ? '#fff' : 'var(--text-secondary)',
             }}
           >
             {f}
@@ -48,11 +48,11 @@ export function Dokument() {
             <div
               key={d.id}
               onClick={() => setDocTarget(d)}
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', cursor: 'pointer' }}
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
                 <span style={{ fontSize: 18 }}>{k.ikon}</span>
-                <span style={{ fontSize: 10.5, fontWeight: 700, color: k.fg, background: k.bg, padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' }}>{d.kategori}</span>
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: k.fg, background: k.bg, padding: '2px 8px', borderRadius: 9, textTransform: 'uppercase' }}>{d.kategori}</span>
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{d.tittel}</div>
               {d.notat && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6, lineHeight: 1.4 }}>{d.notat}</div>}
@@ -63,7 +63,7 @@ export function Dokument() {
                   target="_blank"
                   rel="noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: '#11788a', marginTop: 6 }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'var(--brand-strong)', marginTop: 6 }}
                 >
                   📎 {d.fil_namn}
                 </a>
