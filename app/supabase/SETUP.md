@@ -13,18 +13,42 @@ Follow these steps once.
 
 1. Open **SQL Editor → New query** in the Supabase dashboard.
 2. Paste the contents of `supabase/schema.sql` and run it.
-   This creates the 7 tables (`time_entries`, `shifts`, `shift_swaps`, `ferie`,
-   `tasks`, `orders`, `docs`) and row-level-security policies that let any
-   logged-in employee read/write everything (matching the original prototype's
-   trust model — these three employees all trust each other with the same data).
+   This creates all the tables (`ansatte`, `time_entries`, `shifts`,
+   `shift_swaps`, `ferie`, `tasks`, `orders`, `docs`, `permissions`,
+   `meldinger`) and row-level-security policies. The script is idempotent —
+   safe to re-run any time the schema changes, since it only creates what's
+   missing and never drops existing data.
 3. Optionally also run `supabase/seed-optional.sql` to add some starter rows
    for testing. Skip it for a clean production start.
 
-## 3. Create the 3 employee logins
+This also seeds 3 starting rows into `ansatte` (Sander, Georg, Christian) so
+the app has someone to log in as on first run. Everyone after that is added
+through the app itself (see step 3a below) — there's no need to ever hand-edit
+the `ansatte` table again.
 
-The app's PIN pad is a UI layer on top of real Supabase Auth accounts. Each
-employee needs a fixed Auth user with a specific email, and a password
-derived from their PIN.
+## 3. Deploy the `ansatte-admin` Edge Function
+
+Creating a new employee, deactivating one, or resetting a PIN all need to
+create/update a real Supabase Auth account — and that requires the
+**service-role key**, which must never reach browser code. This Edge
+Function is the only place that key is used.
+
+1. In the Supabase dashboard, go to **Edge Functions → Create a new function**.
+2. Name it exactly `ansatte-admin`.
+3. Paste the full contents of `supabase/functions/ansatte-admin/index.ts` into
+   the function editor and click **Deploy**.
+4. No extra secrets to configure — `SUPABASE_URL` and
+   `SUPABASE_SERVICE_ROLE_KEY` are automatically available to every Edge
+   Function in your project.
+
+Whenever `index.ts` changes in the repo, repeat steps 2–3 (paste + deploy) to
+push the change live — there's no CLI deploy step in this workflow.
+
+## 3a. Create the 3 starting employee logins
+
+The app's PIN pad is a UI layer on top of real Supabase Auth accounts. The
+3 seeded rows from step 2 each need a matching Auth user with a specific
+email, and a password derived from their PIN.
 
 The password is **`<PIN_SALT><pin>`**, where `PIN_SALT` is the value of
 `VITE_APP_PIN_SALT` (see step 4) and `<pin>` is the 4-digit PIN they'll type
@@ -41,10 +65,15 @@ not invite-by-email), enter the email and password from the table above, and
 tick **Auto Confirm User** so they can sign in immediately without an email
 confirmation step.
 
-If you change `VITE_APP_PIN_SALT` or any employee's PIN, update the
-corresponding Auth user's password to match (**Authentication → Users →
-select user → Reset password**), and update `ANSATTE[].id`/PIN expectations
-in `src/constants.ts` if you change who exists.
+This manual step is only needed once, for these 3 bootstrap accounts. Every
+employee added afterwards (via Ansatte → "+ Ny ansatt" in the app, once step 3
+above is deployed) gets their Auth account created automatically — no
+dashboard work required.
+
+If you change `VITE_APP_PIN_SALT`, any already-created employee's PIN won't
+match anymore until it's reset — use the "Nullstill PIN" button in the
+Ansatte module (or, for the 3 bootstrap accounts before that module is wired
+up, **Authentication → Users → select user → Reset password**).
 
 **Change the demo PINs (1234 / 2222 / 3333) before real use** — they're
 intentionally simple for the design handoff and are shown on the login screen
@@ -94,5 +123,7 @@ since they're baked in at build time. Then deploy `dist/`.
   oversight.
 - There is no real-time sync between devices; refresh the page to see
   changes made by someone else.
-- Pay rates (`sats`) and roles are hardcoded in `src/constants.ts`, same as
-  the original prototype. Edit that file (and redeploy) to change them.
+- Pay rates (`sats`), roles, phone numbers and email can all be edited live
+  through the **Ansatte** module in the app — no code changes or redeploy
+  needed. `src/constants.ts` only provides the fallback defaults used the
+  very first time the `ansatte` table is seeded.
