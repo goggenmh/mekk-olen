@@ -1,7 +1,7 @@
 import { useRef, useState, type CSSProperties } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
-import { DAGER_VAKTPLAN, SKIFT_FARGE, SHIFT_TEMPLATE, findAnsatt, canApprove } from '../../constants';
+import { DAGER_VAKTPLAN, SKIFT_FARGE, SHIFT_TEMPLATE, findAnsatt } from '../../constants';
 import { addDays, mondayOf, today, isoWeek, parseDate, DAG_IDX, shiftMonth, MND, UKE_KORT } from '../../lib/dates';
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
@@ -10,7 +10,7 @@ import { Avatar } from '../ui/Avatar';
 import type { Shift, Ferie } from '../../types';
 
 export function Vaktplan() {
-  const { shifts, swaps, ferie, moveShiftDate, fillWeek, approveSwap, declineSwap } = useAppData();
+  const { shifts, swaps, ferie, moveShiftDate, fillWeek, approveSwap, declineSwap, canApprove } = useAppData();
   const { user } = useAuth();
   const maaGodkjenne = canApprove(user?.id);
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');

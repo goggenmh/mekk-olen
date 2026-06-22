@@ -1,4 +1,5 @@
 import { useAppData } from '../../context/AppDataContext';
+import { useAuth } from '../../context/AuthContext';
 import { findAnsatt } from '../../constants';
 import { FERIE_TYPE } from '../../constants';
 import { weekDates, mondayOf, today, fullDatoTekst, fmt, timar } from '../../lib/dates';
@@ -6,7 +7,9 @@ import { Avatar } from '../ui/Avatar';
 import type { View } from '../../lib/view';
 
 export function Dashboard({ setView }: { setView: (v: View) => void }) {
-  const { entries, shifts, swaps, tasks, orders, ferie } = useAppData();
+  const { entries, shifts, swaps, tasks, orders, ferie, meldinger } = useAppData();
+  const { user } = useAuth();
+  const mineMeldinger = meldinger.filter((m) => m.til === null || m.til === user?.id).slice(0, 5);
 
   const t = today();
   const weekDays = weekDates(mondayOf(t));
@@ -97,6 +100,19 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
           </div>
         </div>
       </div>
+
+      {mineMeldinger.length > 0 && (
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px 18px' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Meldingar frå leiinga</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {mineMeldinger.map((m) => (
+              <div key={m.id} style={{ border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ fontSize: 13 }}>{m.tekst}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ background: '#0c2436', color: '#fff', borderRadius: 14, padding: '16px 18px' }}>
         <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Ferie &amp; fri på trappene</div>

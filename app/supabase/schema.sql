@@ -94,6 +94,29 @@ drop policy if exists "docs_storage_all" on storage.objects;
 create policy "docs_storage_all" on storage.objects for all to authenticated
   using (bucket_id = 'docs') with check (bucket_id = 'docs');
 
+-- ---------- permissions ----------
+-- Delegated rights, set by Sander in the admin panel. Sander can always
+-- approve regardless of this table — see canApprove() in AppDataContext.
+create table if not exists permissions (
+  ansatt text primary key check (ansatt in ('sander', 'georg', 'christian')),
+  kan_godkjenne boolean not null default false
+);
+
+insert into permissions (ansatt, kan_godkjenne) values
+  ('sander', true), ('georg', false), ('christian', false)
+on conflict (ansatt) do nothing;
+
+-- ---------- meldinger ----------
+-- Notices sent by Sander to staff from the admin panel. til = null means
+-- broadcast to everyone.
+create table if not exists meldinger (
+  id uuid primary key default gen_random_uuid(),
+  fra text not null check (fra in ('sander', 'georg', 'christian')),
+  til text check (til in ('sander', 'georg', 'christian')),
+  tekst text not null,
+  created_at timestamptz not null default now()
+);
+
 -- ---------- RLS ----------
 -- All three employees are equally trusted staff in this shop — any logged-in
 -- employee can read/write everything (matches the original prototype's behaviour,
@@ -105,12 +128,14 @@ alter table ferie enable row level security;
 alter table tasks enable row level security;
 alter table orders enable row level security;
 alter table docs enable row level security;
+alter table permissions enable row level security;
+alter table meldinger enable row level security;
 
 do $$
 declare
   t text;
 begin
-  for t in select unnest(array['time_entries','shifts','shift_swaps','ferie','tasks','orders','docs']) loop
+  for t in select unnest(array['time_entries','shifts','shift_swaps','ferie','tasks','orders','docs','permissions','meldinger']) loop
     execute format('drop policy if exists "authenticated_all" on %I', t);
     execute format(
       'create policy "authenticated_all" on %I for all to authenticated using (true) with check (true)',
@@ -122,4 +147,4 @@ end $$;
 -- RLS policies alone don't grant table access — Postgres still requires the
 -- underlying GRANTs, separate from row-level security.
 grant usage on schema public to authenticated;
-grant select, insert, update, delete on time_entries, shifts, shift_swaps, ferie, tasks, orders, docs to authenticated;
+grant select, insert, update, delete on time_entries, shifts, shift_swaps, ferie, tasks, orders, docs, permissions, meldinger to authenticated;

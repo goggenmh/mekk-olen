@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
-import { ANSATTE, canApprove, findAnsatt } from '../../constants';
+import { ANSATTE, findAnsatt } from '../../constants';
 import {
   weekDates, mondayOf, today, isoWeek, addDays, shiftMonth, MND,
   fmt, fmtKr, timar, UKE_KORT, parseDate, weekdayIdx,
@@ -21,7 +21,7 @@ function downloadCsv(filename: string, rows: (string | number)[][]) {
 }
 
 export function Timeliste() {
-  const { entries, approveEmployeeEntries } = useAppData();
+  const { entries, approveEmployeeEntries, canApprove } = useAppData();
   const { user } = useAuth();
   const maaGodkjenne = canApprove(user?.id);
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');

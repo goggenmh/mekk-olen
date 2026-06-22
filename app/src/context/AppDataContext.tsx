@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from '../supabaseClient';
 import type { EmployeeId } from '../constants';
-import type { Doc, Ferie, Order, Shift, ShiftSwap, Task, TimeEntry } from '../types';
+import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Task, TimeEntry } from '../types';
 
 interface AppData {
   loading: boolean;
@@ -13,7 +13,15 @@ interface AppData {
   tasks: Task[];
   orders: Order[];
   docs: Doc[];
+  permissions: Permission[];
+  meldinger: Melding[];
   refreshAll: () => Promise<void>;
+
+  canApprove: (ansatt: EmployeeId | null | undefined) => boolean;
+  setKanGodkjenne: (ansatt: EmployeeId, kan: boolean) => Promise<void>;
+
+  sendMelding: (fra: EmployeeId, til: EmployeeId | null, tekst: string) => Promise<void>;
+  deleteMelding: (id: string) => Promise<void>;
 
   saveEntry: (entry: Omit<TimeEntry, 'id'> & { id?: string }) => Promise<void>;
   deleteEntry: (id: string) => Promise<void>;
@@ -54,6 +62,8 @@ const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type,
 const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt });
 const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
+const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne: r.kan_godkjenne });
+const mapMelding = (r: any): Melding => ({ id: r.id, fra: r.fra, til: r.til, tekst: r.tekst, created_at: r.created_at });
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -65,11 +75,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [docs, setDocs] = useState<Doc[]>([]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [meldinger, setMeldinger] = useState<Melding[]>([]);
 
   const refreshAll = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [e, s, sw, f, t, o, d] = await Promise.all([
+    const [e, s, sw, f, t, o, d, p, m] = await Promise.all([
       supabase.from('time_entries').select('*'),
       supabase.from('shifts').select('*'),
       supabase.from('shift_swaps').select('*'),
@@ -77,8 +89,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       supabase.from('tasks').select('*'),
       supabase.from('orders').select('*').order('created_at', { ascending: false }),
       supabase.from('docs').select('*').order('dato', { ascending: false }),
+      supabase.from('permissions').select('*'),
+      supabase.from('meldinger').select('*').order('created_at', { ascending: false }),
     ]);
-    const firstError = [e, s, sw, f, t, o, d].find((r) => r.error)?.error;
+    const firstError = [e, s, sw, f, t, o, d, p, m].find((r) => r.error)?.error;
     if (firstError) {
       setError(firstError.message);
     } else {
@@ -89,6 +103,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setTasks((t.data || []).map(mapTask));
       setOrders((o.data || []).map(mapOrder));
       setDocs((d.data || []).map(mapDoc));
+      setPermissions((p.data || []).map(mapPermission));
+      setMeldinger((m.data || []).map(mapMelding));
     }
     setLoading(false);
   }, []);
@@ -287,9 +303,34 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     return { url: data.publicUrl, namn: file.name };
   };
 
+  // ---- permissions & delegation ----
+  const canApprove: AppData['canApprove'] = useCallback(
+    (ansatt) => !!ansatt && (ansatt === 'sander' || permissions.some((p) => p.ansatt === ansatt && p.kan_godkjenne)),
+    [permissions]
+  );
+  const setKanGodkjenne: AppData['setKanGodkjenne'] = async (ansatt, kan) => {
+    const { data, error: err } = await supabase.from('permissions').upsert({ ansatt, kan_godkjenne: kan }).select().single();
+    if (err) throw err;
+    setPermissions((prev) => [...prev.filter((p) => p.ansatt !== ansatt), mapPermission(data)]);
+  };
+
+  // ---- meldinger ----
+  const sendMelding: AppData['sendMelding'] = async (fra, til, tekst) => {
+    const { data, error: err } = await supabase.from('meldinger').insert({ fra, til, tekst }).select().single();
+    if (err) throw err;
+    setMeldinger((prev) => [mapMelding(data), ...prev]);
+  };
+  const deleteMelding: AppData['deleteMelding'] = async (id) => {
+    const { error: err } = await supabase.from('meldinger').delete().eq('id', id);
+    if (err) throw err;
+    setMeldinger((prev) => prev.filter((x) => x.id !== id));
+  };
+
   const value = useMemo<AppData>(
     () => ({
-      loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, refreshAll,
+      loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, refreshAll,
+      canApprove, setKanGodkjenne,
+      sendMelding, deleteMelding,
       saveEntry, deleteEntry, approveEmployeeEntries,
       saveShift, deleteShift, moveShiftDate, fillWeek,
       createSwap, approveSwap, declineSwap,
@@ -299,7 +340,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveDoc, deleteDoc, uploadDocFile,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, error, entries, shifts, swaps, ferie, tasks, orders, docs]
+    [loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, canApprove]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

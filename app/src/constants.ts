@@ -24,8 +24,12 @@ export const ANSATTE: Employee[] = [
 export const findAnsatt = (id: string | null | undefined): Employee =>
   ANSATTE.find((a) => a.id === id) || { id: 'sander', navn: '', rolle: '', lonn: 'time', sats: 0, farge: '#999', init: '?', email: '' };
 
-/** Only Sander (dagleg leiar) can approve hours and approve/decline shift swaps. */
-export const canApprove = (id: EmployeeId | null | undefined): boolean => id === 'sander';
+/**
+ * Sander is the fixed dagleg leiar — only he sees the admin panel. Whether
+ * Georg/Christian can approve hours and shift swaps is delegated at runtime
+ * via the `permissions` table (see canApprove in AppDataContext).
+ */
+export const isLeder = (id: EmployeeId | null | undefined): boolean => id === 'sander';
 
 export const SKIFT_FARGE: Record<string, string> = {
   Formiddag: '#1597a8',

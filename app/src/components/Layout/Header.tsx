@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { isLeder } from '../../constants';
 import { Avatar } from '../ui/Avatar';
+import { AdminPanel } from '../Admin/AdminPanel';
 
 export function Header() {
   const { user, logout } = useAuth();
   const { dark, toggle } = useTheme();
+  const [adminOpen, setAdminOpen] = useState(false);
   if (!user) return null;
 
   return (
@@ -21,6 +25,18 @@ export function Header() {
       </div>
 
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+        {isLeder(user.id) && (
+          <button
+            onClick={() => setAdminOpen(true)}
+            title="Administrasjon"
+            style={{
+              width: 36, height: 36, border: '1px solid var(--border)', background: 'var(--surface-alt)',
+              borderRadius: 8, cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            ⚙️
+          </button>
+        )}
         <button
           onClick={toggle}
           title={dark ? 'Bytt til lys modus' : 'Bytt til mørk modus'}
@@ -46,6 +62,7 @@ export function Header() {
           Logg ut
         </button>
       </div>
+      {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
     </div>
   );
 }

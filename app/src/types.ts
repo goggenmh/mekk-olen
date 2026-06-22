@@ -70,3 +70,16 @@ export interface Doc {
   fil_url: string | null;
   fil_namn: string | null;
 }
+
+export interface Permission {
+  ansatt: EmployeeId;
+  kan_godkjenne: boolean;
+}
+
+export interface Melding {
+  id: string;
+  fra: EmployeeId;
+  til: EmployeeId | null;
+  tekst: string;
+  created_at: string;
+}
