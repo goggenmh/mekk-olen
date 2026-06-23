@@ -50,7 +50,12 @@ export function LoginScreen() {
                   );
                 })}
               </div>
-              {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Feil PIN — prøv igjen</div>}
+              {feil && (
+                <div style={{ textAlign: 'center', maxWidth: 300 }}>
+                  <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Feil PIN — prøv igjen</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, wordBreak: 'break-word' }}>({feil})</div>
+                </div>
+              )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,64px)', gap: 11, marginTop: 6 }}>
                 {PAD_KEYS.map((k) => (
                   <button

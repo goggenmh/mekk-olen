@@ -9,7 +9,7 @@ interface AuthState {
   /** The employee currently selected on the "who are you" screen, before PIN entry. */
   pick: Employee | null;
   pin: string;
-  feil: boolean;
+  feil: string | null;
   pickUser: (id: string) => void;
   back: () => void;
   pressDigit: (d: string) => void;
@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Employee | null>(null);
   const [pick, setPick] = useState<Employee | null>(null);
   const [pin, setPin] = useState('');
-  const [feil, setFeil] = useState(false);
+  const [feil, setFeil] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -49,12 +49,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: pinToPassword(candidatePin),
     });
     if (error) {
-      setFeil(true);
+      setFeil(error.message || 'Innlogging feila');
       setPin('');
     } else {
       setPick(null);
       setPin('');
-      setFeil(false);
+      setFeil(null);
     }
   };
 
@@ -68,25 +68,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       pickUser: (id: string) => {
         setPick(findAnsatt(id));
         setPin('');
-        setFeil(false);
+        setFeil(null);
       },
       back: () => {
         setPick(null);
         setPin('');
-        setFeil(false);
+        setFeil(null);
       },
       pressDigit: (d: string) => {
         if (pin.length >= 4 || !pick) return;
         const next = pin + d;
         setPin(next);
-        setFeil(false);
+        setFeil(null);
         if (next.length === 4) {
           setTimeout(() => tryLogin(pick, next), 120);
         }
       },
       backspace: () => {
         setPin((p) => p.slice(0, -1));
-        setFeil(false);
+        setFeil(null);
       },
       logout: () => {
         supabase.auth.signOut();
