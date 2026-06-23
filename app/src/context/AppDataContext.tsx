@@ -32,6 +32,7 @@ interface AppData {
   deleteShift: (id: string) => Promise<void>;
   moveShiftDate: (id: string, date: string) => Promise<void>;
   fillWeek: (template: { ansatt: EmployeeId; date: string; start: string; slutt: string; skift: string }[]) => Promise<void>;
+  addShifts: (rows: { ansatt: EmployeeId; date: string; start: string; slutt: string; skift: string }[]) => Promise<void>;
 
   createSwap: (swap: Omit<ShiftSwap, 'id' | 'status'>) => Promise<void>;
   approveSwap: (id: string) => Promise<void>;
@@ -179,6 +180,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const missing = template.filter((t) => !shifts.some((x) => x.ansatt === t.ansatt && x.date === t.date));
     if (missing.length === 0) return;
     const { data, error: err } = await supabase.from('shifts').insert(missing).select();
+    if (err) throw err;
+    setShifts((prev) => [...prev, ...(data || []).map(mapShift)]);
+  };
+  const addShifts: AppData['addShifts'] = async (rows) => {
+    const nye = rows.filter((r) => !shifts.some((x) => x.ansatt === r.ansatt && x.date === r.date && x.start === r.start && x.slutt === r.slutt));
+    if (nye.length === 0) return;
+    const { data, error: err } = await supabase.from('shifts').insert(nye).select();
     if (err) throw err;
     setShifts((prev) => [...prev, ...(data || []).map(mapShift)]);
   };
@@ -334,7 +342,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       canApprove, setKanGodkjenne,
       sendMelding, deleteMelding,
       saveEntry, deleteEntry, approveEmployeeEntries,
-      saveShift, deleteShift, moveShiftDate, fillWeek,
+      saveShift, deleteShift, moveShiftDate, fillWeek, addShifts,
       createSwap, approveSwap, declineSwap,
       saveFerie, deleteFerie,
       saveTask, deleteTask, moveTask,

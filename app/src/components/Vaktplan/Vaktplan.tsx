@@ -7,6 +7,7 @@ import { addDays, mondayOf, today, isoWeek, parseDate, DAG_IDX, shiftMonth, MND,
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
 import { FerieModal } from './FerieModal';
+import { CopyWeekModal } from './CopyWeekModal';
 import { Avatar } from '../ui/Avatar';
 import type { Shift, Ferie } from '../../types';
 
@@ -21,9 +22,11 @@ export function Vaktplan() {
   const [shiftTarget, setShiftTarget] = useState<{ date: string; shift?: Shift } | null>(null);
   const [swapTarget, setSwapTarget] = useState<Shift | null>(null);
   const [ferieTarget, setFerieTarget] = useState<Ferie | 'new' | null>(null);
+  const [copyOpen, setCopyOpen] = useState(false);
   const dragShiftId = useRef<string | null>(null);
 
   const days = DAGER_VAKTPLAN.map((d, i) => ({ ...d, date: addDays(vpWeek, i) }));
+  const ukasVakter = shifts.filter((s) => days.some((d) => d.date === s.date));
 
   const fyllVeke = () => {
     fillWeek(SHIFT_TEMPLATE.map((t) => ({ ansatt: t.ansatt, date: addDays(vpWeek, DAG_IDX[t.dag]), start: t.start, slutt: t.slutt, skift: t.skift })));
@@ -61,7 +64,12 @@ export function Vaktplan() {
         <div style={{ fontWeight: 700, fontSize: 15 }}>{periodTittel}</div>
         <button onClick={nextPeriod} style={navBtn}>›</button>
         <button onClick={goToday} style={btnGhost}>I dag</button>
-        {mode === 'uke' && <button onClick={fyllVeke} style={{ ...btnGhost, marginLeft: 'auto' }}>↻ Fyll frå standardveke</button>}
+        {mode === 'uke' && (
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <button onClick={() => setCopyOpen(true)} disabled={ukasVakter.length === 0} style={{ ...btnGhost, opacity: ukasVakter.length === 0 ? 0.5 : 1 }}>⧉ Kopier veka</button>
+            <button onClick={fyllVeke} style={btnGhost}>↻ Fyll frå standardveke</button>
+          </div>
+        )}
       </div>
 
       {mode === 'manad' ? (
@@ -182,6 +190,7 @@ export function Vaktplan() {
       {shiftTarget && <ShiftModal target={shiftTarget} onClose={() => setShiftTarget(null)} />}
       {swapTarget && <SwapModal shift={swapTarget} onClose={() => setSwapTarget(null)} />}
       {ferieTarget && <FerieModal existing={ferieTarget === 'new' ? undefined : ferieTarget} onClose={() => setFerieTarget(null)} />}
+      {copyOpen && <CopyWeekModal weekStart={vpWeek} shifts={ukasVakter} onClose={() => setCopyOpen(false)} />}
     </div>
   );
 }
