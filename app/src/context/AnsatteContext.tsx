@@ -52,7 +52,14 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
 
   const callAdmin = async (action: string, payload: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke('ansatte-admin', { body: { action, ...payload } });
-    if (error) throw error;
+    if (error) {
+      const response = (error as { context?: Response }).context;
+      if (response) {
+        const body = await response.clone().json().catch(() => null);
+        if (body?.error) throw new Error(body.error);
+      }
+      throw error;
+    }
     if (data?.error) throw new Error(data.error);
     return data;
   };
