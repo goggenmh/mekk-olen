@@ -4,6 +4,7 @@ import { ORDER_FLOW, ORDER_STATUS } from '../../constants';
 import { datoKort } from '../../lib/dates';
 import { OrderModal } from './OrderModal';
 import { NotifyModal } from './NotifyModal';
+import { Icon } from '../ui/Icon';
 import type { Order } from '../../types';
 
 const FILTERS: { key: string; label: string }[] = [
@@ -89,7 +90,7 @@ export function Bestillinger() {
                   </td>
                   <td style={{ ...td, display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                     {kanVarsle && (
-                      <button onClick={() => setNotifyTarget(o)} title="Varsle kunde" style={iconBtn(o.varsla ? '#e8f5ee' : '#fdf2e0')}>🔔</button>
+                      <button onClick={() => setNotifyTarget(o)} title="Varsle kunde" style={{ ...iconBtn(o.varsla ? '#e8f5ee' : '#fdf2e0'), display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="bell" size={15} /></button>
                     )}
                     {kanFram && (
                       <button onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])} title={s.neste} style={iconBtn('#e7f6f8')}>→</button>

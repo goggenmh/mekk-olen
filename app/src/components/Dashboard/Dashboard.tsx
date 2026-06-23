@@ -5,6 +5,7 @@ import { useAnsatte } from '../../context/AnsatteContext';
 import { FERIE_TYPE, DAGER_VAKTPLAN } from '../../constants';
 import { weekDates, mondayOf, today, fullDatoTekst, fmt, timar, UKE_FULL, weekdayIdx } from '../../lib/dates';
 import { Avatar } from '../ui/Avatar';
+import { Icon } from '../ui/Icon';
 import { TimeEntryModal } from '../Timeliste/TimeEntryModal';
 import { ShiftModal } from '../Vaktplan/ShiftModal';
 import { TaskModal } from '../Oppgaver/TaskModal';
@@ -33,10 +34,10 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const ankomneBestillingar = orders.filter((o) => o.status === 'komen' && !o.varsla);
 
   const varsler: { key: string; tekst: string; view: View }[] = [
-    ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `🔔 ${findAnsatt(s.fra).navn} ønsker å bytte vakt ${s.dag}`, view: 'vaktplan' as View })),
-    ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `🔔 ${ventandeTimar} timelister manglar godkjenning`, view: 'timeliste' as View }] : []),
-    ...ankomneBestillingar.map((o) => ({ key: `order-${o.id}`, tekst: `🔔 Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),
-    ...(ufordelteOppgaver > 0 ? [{ key: 'oppgaver', tekst: `🔔 ${ufordelteOppgaver} ufordelte oppgåver`, view: 'oppgaver' as View }] : []),
+    ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønsker å bytte vakt ${s.dag}`, view: 'vaktplan' as View })),
+    ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${ventandeTimar} timelister manglar godkjenning`, view: 'timeliste' as View }] : []),
+    ...ankomneBestillingar.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),
+    ...(ufordelteOppgaver > 0 ? [{ key: 'oppgaver', tekst: `${ufordelteOppgaver} ufordelte oppgåver`, view: 'oppgaver' as View }] : []),
   ].slice(0, 6);
 
   // ---- dagens oppgåver ----
@@ -65,10 +66,10 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const dashFerie = ferie.slice(0, 4);
 
   const hurtighandlinger = [
-    { key: 'timer', ikon: '➕', tekst: 'Registrer timer', farge: '#11788a' },
-    { key: 'vakt', ikon: '📅', tekst: 'Ny vakt', farge: '#6a5acd' },
-    { key: 'oppgave', ikon: '✅', tekst: 'Ny oppgave', farge: '#2f9e6f' },
-    { key: 'bestilling', ikon: '📦', tekst: 'Ny bestilling', farge: '#e08a1e' },
+    { key: 'timer', ikon: 'ny-timer', tekst: 'Registrer timer', farge: '#11788a' },
+    { key: 'vakt', ikon: 'ny-vakt', tekst: 'Ny vakt', farge: '#6a5acd' },
+    { key: 'oppgave', ikon: 'ny-oppgave', tekst: 'Ny oppgave', farge: '#2f9e6f' },
+    { key: 'bestilling', ikon: 'ny-bestilling', tekst: 'Ny bestilling', farge: '#e08a1e' },
   ] as const;
 
   return (
@@ -88,7 +89,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
               border: '1px solid var(--border)', borderRadius: 18, padding: '16px 18px', cursor: 'pointer',
             }}
           >
-            <span style={{ fontSize: 24, width: 42, height: 42, borderRadius: 13, background: `${h.farge}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{h.ikon}</span>
+            <span style={{ width: 42, height: 42, borderRadius: 13, background: `${h.farge}1a`, color: h.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={h.ikon} size={21} /></span>
             <span style={{ fontSize: 13.5, fontWeight: 700 }}>{h.tekst}</span>
           </button>
         ))}
@@ -102,8 +103,9 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
               <button
                 key={v.key}
                 onClick={() => setView(v.view)}
-                style={{ textAlign: 'left', padding: '10px 13px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '10px 13px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
               >
+                <span style={{ display: 'flex', color: 'var(--brand-strong)', flex: 'none' }}><Icon name="bell" size={16} /></span>
                 {v.tekst}
               </button>
             ))}
@@ -128,14 +130,14 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>I dag</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-            {dagDef && apnTid && <div style={{ fontSize: 13, display: 'flex', gap: 8 }}><span>🔓</span><span>Åpne butikk {apnTid}</span></div>}
+            {dagDef && apnTid && <div style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ display: 'flex', color: 'var(--text-muted)', flex: 'none' }}><Icon name="open" size={16} /></span><span>Åpne butikk {apnTid}</span></div>}
             {mineOppgaver.length === 0 && !dagDef && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen oppgåver i dag.</div>}
             {mineOppgaver.map((o) => (
-              <button key={o.id} onClick={() => setView('oppgaver')} style={{ fontSize: 13, display: 'flex', gap: 8, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)' }}>
-                <span>✅</span><span>{o.tittel}</span>
+              <button key={o.id} onClick={() => setView('oppgaver')} style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)' }}>
+                <span style={{ display: 'flex', color: 'var(--text-muted)', flex: 'none' }}><Icon name="oppgaver" size={16} /></span><span>{o.tittel}</span>
               </button>
             ))}
-            {dagDef && stengTid && <div style={{ fontSize: 13, display: 'flex', gap: 8 }}><span>🔒</span><span>Stenge butikk {stengTid}</span></div>}
+            {dagDef && stengTid && <div style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ display: 'flex', color: 'var(--text-muted)', flex: 'none' }}><Icon name="close" size={16} /></span><span>Stenge butikk {stengTid}</span></div>}
           </div>
         </div>
 
@@ -164,7 +166,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
               const paJobb = jobbarIdagIds.includes(a.id);
               return (
                 <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span>{paJobb ? '🟢' : '⚪'}</span>
+                  <span style={{ width: 9, height: 9, borderRadius: '50%', flex: 'none', background: paJobb ? '#2f9e6f' : 'var(--border)' }} />
                   <Avatar init={a.init} farge={a.farge} size={28} fontSize={10.5} />
                   <span style={{ fontSize: 13.5, fontWeight: 600, flex: 1 }}>{a.navn}</span>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{paJobb ? 'På jobb' : 'Fri'}</span>

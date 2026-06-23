@@ -75,11 +75,11 @@ export const ORDER_STATUS: Record<OrderStatus, { tekst: string; fg: string; bg: 
 };
 
 export const DOC_KAT: Record<string, { fg: string; bg: string; ikon: string }> = {
-  HMS: { fg: '#c0392b', bg: '#fbe9e4', ikon: '🛟' },
-  Rutine: { fg: '#11788a', bg: '#e7f6f8', ikon: '📋' },
-  Avtale: { fg: '#6a5acd', bg: '#eee9fb', ikon: '📝' },
-  Skjema: { fg: '#b07b1a', bg: '#fdf2e0', ikon: '🗂' },
-  Anna: { fg: '#6e7d88', bg: '#eef2f4', ikon: '📄' },
+  HMS: { fg: '#c0392b', bg: '#fbe9e4', ikon: 'HMS' },
+  Rutine: { fg: '#11788a', bg: '#e7f6f8', ikon: 'Rutine' },
+  Avtale: { fg: '#6a5acd', bg: '#eee9fb', ikon: 'Avtale' },
+  Skjema: { fg: '#b07b1a', bg: '#fdf2e0', ikon: 'Skjema' },
+  Anna: { fg: '#6e7d88', bg: '#eef2f4', ikon: 'Anna' },
 };
 export const DOC_KATEGORIER = ['HMS', 'Rutine', 'Avtale', 'Skjema', 'Anna'] as const;
 

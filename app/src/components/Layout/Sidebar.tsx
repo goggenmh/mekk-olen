@@ -1,6 +1,7 @@
 import { useAppData } from '../../context/AppDataContext';
 import { weekDates, mondayOf, today } from '../../lib/dates';
 import { VIEWS, type View } from '../../lib/view';
+import { Icon } from '../ui/Icon';
 
 export function Sidebar({ view, setView }: { view: View; setView: (v: View) => void }) {
   const { entries, swaps, tasks, orders } = useAppData();
@@ -47,7 +48,9 @@ export function Sidebar({ view, setView }: { view: View; setView: (v: View) => v
               background: active ? 'var(--brand-soft)' : 'transparent', color: active ? 'var(--brand-strong)' : 'var(--text-secondary)',
             }}
           >
-            <span style={{ fontSize: 15.5, width: 20, textAlign: 'center' }}>{v.ikon}</span>
+            <span style={{ width: 20, display: 'flex', justifyContent: 'center', flex: 'none' }}>
+              <Icon name={v.ikon} size={18} />
+            </span>
             <span style={{ flex: 1 }}>{v.label}</span>
             {badge && (
               <span style={{ fontSize: 10.5, fontWeight: 700, color: '#fff', background: badge.bg, borderRadius: 12, padding: '1px 7px', minWidth: 16, textAlign: 'center' }}>

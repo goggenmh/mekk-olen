@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { Avatar } from '../ui/Avatar';
+import { Icon } from '../ui/Icon';
 import { Pill } from '../ui/Pill';
 import { AnsattModal } from './AnsattModal';
 import { ResetPinModal } from './ResetPinModal';
@@ -27,9 +28,9 @@ function AnsattCard({ ansatt, onEdit, onResetPin, onToggleAktiv }: {
           {!ansatt.aktiv && <Pill label="Inaktiv" fg="#6e7d88" bg="var(--surface-alt)" />}
         </div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{ansatt.rolle}</div>
-        <div style={{ fontSize: 12, color: 'var(--text-faint)', display: 'flex', gap: 12, marginTop: 2 }}>
-          {ansatt.telefon && <span>📞 {ansatt.telefon}</span>}
-          <span>✉️ {ansatt.email}</span>
+        <div style={{ fontSize: 12, color: 'var(--text-faint)', display: 'flex', gap: 12, marginTop: 3 }}>
+          {ansatt.telefon && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="phone" size={13} /> {ansatt.telefon}</span>}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="mail" size={13} /> {ansatt.email}</span>
         </div>
       </div>
       <div style={{ display: 'flex', gap: 8, flex: 'none' }}>

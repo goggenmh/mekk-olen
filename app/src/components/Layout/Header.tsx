@@ -4,6 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { useAppData } from '../../context/AppDataContext';
 import { Avatar } from '../ui/Avatar';
+import { Icon } from '../ui/Icon';
 import { AdminPanel } from '../Admin/AdminPanel';
 import type { View } from '../../lib/view';
 
@@ -28,13 +29,13 @@ export function Header({ setView }: { setView: (v: View) => void }) {
     if (!q) return [];
     const fraAnsatte: SearchHit[] = ansatte
       .filter((a) => a.navn.toLowerCase().includes(q) || a.rolle.toLowerCase().includes(q))
-      .map((a) => ({ key: `a-${a.id}`, tittel: a.navn, sub: a.rolle, view: 'ansatte' as View, ikon: '👤' }));
+      .map((a) => ({ key: `a-${a.id}`, tittel: a.navn, sub: a.rolle, view: 'ansatte' as View, ikon: 'user' }));
     const fraDoks: SearchHit[] = docs
       .filter((d) => d.tittel.toLowerCase().includes(q))
-      .map((d) => ({ key: `d-${d.id}`, tittel: d.tittel, sub: d.kategori, view: 'dokument' as View, ikon: '📄' }));
+      .map((d) => ({ key: `d-${d.id}`, tittel: d.tittel, sub: d.kategori, view: 'dokument' as View, ikon: 'dokument' }));
     const fraOppgaver: SearchHit[] = tasks
       .filter((t) => t.tittel.toLowerCase().includes(q))
-      .map((t) => ({ key: `t-${t.id}`, tittel: t.tittel, sub: 'Oppgåve', view: 'oppgaver' as View, ikon: '✅' }));
+      .map((t) => ({ key: `t-${t.id}`, tittel: t.tittel, sub: 'Oppgåve', view: 'oppgaver' as View, ikon: 'oppgaver' }));
     return [...fraAnsatte, ...fraDoks, ...fraOppgaver].slice(0, 8);
   }, [query, ansatte, docs, tasks]);
 
@@ -74,7 +75,7 @@ export function Header({ setView }: { setView: (v: View) => void }) {
                   cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid var(--divider)',
                 }}
               >
-                <span style={{ fontSize: 15 }}>{h.ikon}</span>
+                <span style={{ display: 'flex', color: 'var(--text-muted)' }}><Icon name={h.ikon} size={16} /></span>
                 <div style={{ lineHeight: 1.2 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{h.tittel}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{h.sub}</div>
@@ -92,10 +93,10 @@ export function Header({ setView }: { setView: (v: View) => void }) {
             title="Administrasjon"
             style={{
               width: 36, height: 36, border: '1px solid var(--border)', background: 'var(--surface-alt)',
-              borderRadius: 12, cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: 12, cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            ⚙️
+            <Icon name="innstillinger" size={18} />
           </button>
         )}
         <button
@@ -103,10 +104,10 @@ export function Header({ setView }: { setView: (v: View) => void }) {
           title={dark ? 'Bytt til lys modus' : 'Bytt til mørk modus'}
           style={{
             width: 36, height: 36, border: '1px solid var(--border)', background: 'var(--surface-alt)',
-            borderRadius: 12, cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: 12, cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
-          {dark ? '☀️' : '🌙'}
+          <Icon name={dark ? 'sun' : 'moon'} size={18} />
         </button>
         <Avatar init={user.init} farge={user.farge} size={36} fontSize={13} />
         <div style={{ lineHeight: 1.2 }}>

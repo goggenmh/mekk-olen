@@ -62,7 +62,7 @@ export function Innstillinger({ setView }: { setView: (v: View) => void }) {
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>Administrasjon</div>
           <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 12 }}>
-            Delegering av godkjenning og meldingar til ansatte finn du under ⚙️-ikonet i toppmenyen.
+            Delegering av godkjenning og meldingar til ansatte finn du under tannhjul-ikonet i toppmenyen.
           </div>
           <button
             onClick={() => setView('ansatte')}

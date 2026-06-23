@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { DOC_KAT, DOC_KATEGORIER } from '../../constants';
+import { Icon } from '../ui/Icon';
 import { datoKort } from '../../lib/dates';
 import { DocModal } from './DocModal';
 import type { Doc } from '../../types';
@@ -51,7 +52,7 @@ export function Dokument() {
               style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
-                <span style={{ fontSize: 18 }}>{k.ikon}</span>
+                <span style={{ display: 'flex', color: k.fg }}><Icon name={k.ikon} size={18} /></span>
                 <span style={{ fontSize: 10.5, fontWeight: 700, color: k.fg, background: k.bg, padding: '2px 8px', borderRadius: 9, textTransform: 'uppercase' }}>{d.kategori}</span>
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{d.tittel}</div>
@@ -65,7 +66,7 @@ export function Dokument() {
                   onClick={(e) => e.stopPropagation()}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'var(--brand-strong)', marginTop: 6 }}
                 >
-                  📎 {d.fil_namn}
+                  <Icon name="paperclip" size={13} /> {d.fil_namn}
                 </a>
               )}
             </div>
