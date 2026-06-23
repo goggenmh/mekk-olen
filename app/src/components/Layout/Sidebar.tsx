@@ -3,7 +3,14 @@ import { weekDates, mondayOf, today } from '../../lib/dates';
 import { VIEWS, type View } from '../../lib/view';
 import { Icon } from '../ui/Icon';
 
-export function Sidebar({ view, setView }: { view: View; setView: (v: View) => void }) {
+export function Sidebar({
+  view, setView, open = false, onClose,
+}: {
+  view: View;
+  setView: (v: View) => void;
+  open?: boolean;
+  onClose?: () => void;
+}) {
   const { entries, swaps, tasks, orders } = useAppData();
 
   const weekDays = weekDates(mondayOf(today()));
@@ -20,13 +27,18 @@ export function Sidebar({ view, setView }: { view: View; setView: (v: View) => v
   };
 
   return (
-    <div
-      className="no-print"
-      style={{
-        width: 232, flex: 'none', display: 'flex', flexDirection: 'column', gap: 3, padding: '18px 12px',
-        background: 'var(--surface)', borderRight: '1px solid var(--divider)', height: '100vh', overflowY: 'auto',
-      }}
-    >
+    <>
+      <div
+        className={`sidebar-overlay no-print${open ? ' is-open' : ''}`}
+        onClick={onClose}
+      />
+      <div
+        className={`sidebar no-print${open ? ' is-open' : ''}`}
+        style={{
+          width: 232, flex: 'none', display: 'flex', flexDirection: 'column', gap: 3, padding: '18px 12px',
+          background: 'var(--surface)', borderRight: '1px solid var(--divider)', height: '100vh', overflowY: 'auto',
+        }}
+      >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 10px 18px' }}>
         <img src="/assets/mekk-logo.png" alt="MEKK Ølen" style={{ width: 34, height: 34, borderRadius: 11 }} />
         <div style={{ lineHeight: 1.15 }}>
@@ -41,7 +53,7 @@ export function Sidebar({ view, setView }: { view: View; setView: (v: View) => v
         return (
           <button
             key={v.key}
-            onClick={() => setView(v.key)}
+            onClick={() => { setView(v.key); onClose?.(); }}
             style={{
               display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px', border: 'none', cursor: 'pointer',
               fontFamily: "'Geist'", fontSize: 13.5, fontWeight: 600, textAlign: 'left', borderRadius: 12,
@@ -60,6 +72,7 @@ export function Sidebar({ view, setView }: { view: View; setView: (v: View) => v
           </button>
         );
       })}
-    </div>
+      </div>
+    </>
   );
 }

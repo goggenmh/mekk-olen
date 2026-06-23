@@ -19,6 +19,7 @@ function App() {
   const { loading: authLoading, user } = useAuth();
   const { loading: dataLoading, error, refreshAll } = useAppData();
   const [view, setView] = useState<View>('dashbord');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (user) refreshAll();
@@ -37,9 +38,9 @@ function App() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex' }}>
-      <Sidebar view={view} setView={setView} />
+      <Sidebar view={view} setView={setView} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <Header setView={setView} />
+        <Header setView={setView} onMenuClick={() => setSidebarOpen((v) => !v)} />
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {view === 'dashbord' && <Dashboard setView={setView} />}
           {view === 'ansatte' && <Ansatte />}

@@ -16,7 +16,7 @@ interface SearchHit {
   ikon: string;
 }
 
-export function Header({ setView }: { setView: (v: View) => void }) {
+export function Header({ setView, onMenuClick }: { setView: (v: View) => void; onMenuClick?: () => void }) {
   const { user, logout } = useAuth();
   const { dark, toggle } = useTheme();
   const { isLeder, ansatte } = useAnsatte();
@@ -49,6 +49,17 @@ export function Header({ setView }: { setView: (v: View) => void }) {
         background: 'var(--surface)', borderBottom: '1px solid var(--divider)',
       }}
     >
+      <button
+        className="hamburger-btn"
+        onClick={onMenuClick}
+        title="Meny"
+        style={{
+          width: 36, height: 36, border: '1px solid var(--border)', background: 'var(--surface-alt)',
+          borderRadius: 12, cursor: 'pointer', color: 'var(--text-secondary)', alignItems: 'center', justifyContent: 'center', flex: 'none',
+        }}
+      >
+        <Icon name="menu" size={18} />
+      </button>
       <div style={{ position: 'relative', flex: 1, maxWidth: 420 }}>
         <input
           value={query}
