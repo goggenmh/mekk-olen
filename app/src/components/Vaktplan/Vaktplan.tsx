@@ -12,7 +12,7 @@ import { Avatar } from '../ui/Avatar';
 import type { Shift, Ferie } from '../../types';
 
 export function Vaktplan() {
-  const { shifts, swaps, ferie, moveShiftDate, fillWeek, approveSwap, declineSwap, canApprove } = useAppData();
+  const { shifts, swaps, ferie, moveShiftDate, fillWeek, addShifts, approveSwap, declineSwap, canApprove } = useAppData();
   const { user } = useAuth();
   const { findAnsatt } = useAnsatte();
   const maaGodkjenne = canApprove(user?.id);
@@ -23,7 +23,16 @@ export function Vaktplan() {
   const [swapTarget, setSwapTarget] = useState<Shift | null>(null);
   const [ferieTarget, setFerieTarget] = useState<Ferie | 'new' | null>(null);
   const [copyOpen, setCopyOpen] = useState(false);
+  const [clipboard, setClipboard] = useState<{ ansatt: Shift['ansatt']; start: string; slutt: string; skift: string } | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number; date: string; shift?: Shift } | null>(null);
   const dragShiftId = useRef<string | null>(null);
+
+  const copyShift = (s: Shift) => { setClipboard({ ansatt: s.ansatt, start: s.start, slutt: s.slutt, skift: s.skift }); setMenu(null); };
+  const pasteShift = async (date: string) => {
+    if (!clipboard) return;
+    await addShifts([{ ...clipboard, date }]);
+    setMenu(null);
+  };
 
   const days = DAGER_VAKTPLAN.map((d, i) => ({ ...d, date: addDays(vpWeek, i) }));
   const ukasVakter = shifts.filter((s) => days.some((d) => d.date === s.date));
@@ -90,6 +99,7 @@ export function Vaktplan() {
               onDrop={() => {
                 if (dragShiftId.current) { moveShiftDate(dragShiftId.current, d.date); dragShiftId.current = null; }
               }}
+              onContextMenu={(e) => { e.preventDefault(); setMenu({ x: e.clientX, y: e.clientY, date: d.date }); }}
               style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 10, minHeight: 220, display: 'flex', flexDirection: 'column', gap: 8 }}
             >
               <div>
@@ -105,6 +115,7 @@ export function Vaktplan() {
                     draggable
                     onDragStart={() => { dragShiftId.current = s.id; }}
                     onClick={() => setShiftTarget({ date: d.date, shift: s })}
+                    onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setMenu({ x: e.clientX, y: e.clientY, date: d.date, shift: s }); }}
                     style={{ background: farge, color: '#fff', borderRadius: 12, padding: '8px 9px', cursor: 'grab', fontSize: 12 }}
                   >
                     <div style={{ fontWeight: 700 }}>{a.navn}</div>
@@ -191,6 +202,23 @@ export function Vaktplan() {
       {swapTarget && <SwapModal shift={swapTarget} onClose={() => setSwapTarget(null)} />}
       {ferieTarget && <FerieModal existing={ferieTarget === 'new' ? undefined : ferieTarget} onClose={() => setFerieTarget(null)} />}
       {copyOpen && <CopyWeekModal weekStart={vpWeek} shifts={ukasVakter} onClose={() => setCopyOpen(false)} />}
+
+      {menu && (
+        <>
+          <div onClick={() => setMenu(null)} onContextMenu={(e) => { e.preventDefault(); setMenu(null); }} style={{ position: 'fixed', inset: 0, zIndex: 60 }} />
+          <div
+            style={{
+              position: 'fixed', left: menu.x, top: menu.y, zIndex: 61, background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: 11, boxShadow: '0 12px 30px rgba(0,0,0,0.2)', padding: 6, display: 'flex', flexDirection: 'column', minWidth: 160,
+            }}
+          >
+            {menu.shift && (
+              <button onClick={() => copyShift(menu.shift!)} style={ctxBtn}>⧉ Kopier vakt</button>
+            )}
+            <button onClick={() => pasteShift(menu.date)} disabled={!clipboard} style={{ ...ctxBtn, opacity: clipboard ? 1 : 0.5, cursor: clipboard ? 'pointer' : 'default' }}>📋 Lim inn her</button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -254,5 +282,6 @@ function MonthView({
 }
 
 const btnGhost: CSSProperties = { padding: '9px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' };
+const ctxBtn: CSSProperties = { padding: '8px 10px', border: 'none', background: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', textAlign: 'left' };
 const navBtn: CSSProperties = { width: 32, height: 32, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, cursor: 'pointer', fontSize: 15, color: 'var(--text-secondary)' };
 const th: CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px' };
