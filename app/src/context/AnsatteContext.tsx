@@ -11,10 +11,11 @@ interface AnsatteState {
   findAnsatt: (id: EmployeeId | null | undefined) => Employee;
   isLeder: (id: EmployeeId | null | undefined) => boolean;
   refreshAnsatte: () => Promise<void>;
-  createAnsatt: (input: { navn: string; rolle: string; lonn: 'fast' | 'time'; sats: number; farge: string; init: string; telefon: string; leder: boolean; pin: string }) => Promise<void>;
+  createAnsatt: (input: { navn: string; rolle: string; lonn: 'fast' | 'time'; sats: number; farge: string; init: string; telefon: string; leder: boolean; pin: string; email?: string }) => Promise<void>;
   updateAnsatt: (id: EmployeeId, patch: Partial<Pick<Employee, 'navn' | 'rolle' | 'lonn' | 'sats' | 'farge' | 'init' | 'telefon' | 'leder'>>) => Promise<void>;
   setAktiv: (id: EmployeeId, aktiv: boolean) => Promise<void>;
   resetPin: (id: EmployeeId, pin: string) => Promise<void>;
+  updateEmail: (id: EmployeeId, email: string) => Promise<void>;
 }
 
 const AnsatteContext = createContext<AnsatteState | null>(null);
@@ -78,8 +79,13 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
     await callAdmin('resetpin', { id, password: pinToPassword(pin) });
   };
 
+  const updateEmail: AnsatteState['updateEmail'] = async (id, email) => {
+    await callAdmin('updateemail', { id, email });
+    await refreshAnsatte();
+  };
+
   const value = useMemo<AnsatteState>(
-    () => ({ loading, ansatte, alleAnsatte, findAnsatt, isLeder, refreshAnsatte, createAnsatt, updateAnsatt, setAktiv, resetPin }),
+    () => ({ loading, ansatte, alleAnsatte, findAnsatt, isLeder, refreshAnsatte, createAnsatt, updateAnsatt, setAktiv, resetPin, updateEmail }),
     [loading, ansatte, alleAnsatte, findAnsatt, isLeder, refreshAnsatte]
   );
 

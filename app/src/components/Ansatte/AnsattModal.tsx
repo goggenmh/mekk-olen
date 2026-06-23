@@ -5,12 +5,15 @@ import type { Employee } from '../../constants';
 
 const FARGAR = ['#11788a', '#e08a1e', '#2f9e6f', '#6a5acd', '#c0392b', '#b07b1a', '#9aa4b2', '#1d6fa5'];
 
+const EPOST_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function AnsattModal({ existing, onClose }: { existing?: Employee; onClose: () => void }) {
-  const { createAnsatt, updateAnsatt } = useAnsatte();
+  const { createAnsatt, updateAnsatt, updateEmail } = useAnsatte();
 
   const [navn, setNavn] = useState(existing?.navn || '');
   const [rolle, setRolle] = useState(existing?.rolle || '');
   const [telefon, setTelefon] = useState(existing?.telefon || '');
+  const [epost, setEpost] = useState(existing?.email || '');
   const [farge, setFarge] = useState(existing?.farge || FARGAR[0]);
   const [lonn, setLonn] = useState<'fast' | 'time'>(existing?.lonn || 'time');
   const [sats, setSats] = useState(existing?.sats || 0);
@@ -24,13 +27,20 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
   const save = async () => {
     if (!navn.trim()) { setFeil('Skriv inn navn.'); return; }
     if (!existing && pin.length !== 4) { setFeil('PIN må vere 4 siffer.'); return; }
+    if (epost.trim() && !EPOST_REGEX.test(epost.trim())) { setFeil('E-posten ser ikkje gyldig ut.'); return; }
     setLagrar(true);
     setFeil('');
     try {
       if (existing) {
         await updateAnsatt(existing.id, { navn: navn.trim(), rolle, telefon, farge, lonn, sats, leder, init });
+        if (epost.trim() && epost.trim() !== existing.email) {
+          await updateEmail(existing.id, epost.trim());
+        }
       } else {
-        await createAnsatt({ navn: navn.trim(), rolle, telefon, farge, lonn, sats, init, leder, pin });
+        await createAnsatt({
+          navn: navn.trim(), rolle, telefon, farge, lonn, sats, init, leder, pin,
+          ...(epost.trim() ? { email: epost.trim() } : {}),
+        });
       }
       onClose();
     } catch (e) {
@@ -44,7 +54,7 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
     <Modal
       onClose={onClose}
       title={existing ? 'Endre ansatt' : 'Ny ansatt'}
-      subtitle={existing ? existing.email : 'Lagar ny innlogging i Supabase Auth'}
+      subtitle={existing ? undefined : 'Lagar ny innlogging i Supabase Auth'}
       footer={
         <>
           <CancelButton onClick={onClose} />
@@ -60,6 +70,14 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
       </Field>
       <Field label="Telefon">
         <input value={telefon} onChange={(e) => setTelefon(e.target.value)} style={monoInputStyle} placeholder="t.d. 901 23 456" />
+      </Field>
+      <Field label="E-post (brukt til innlogging)">
+        <input
+          value={epost}
+          onChange={(e) => setEpost(e.target.value)}
+          style={monoInputStyle}
+          placeholder={existing ? existing.email : 'La stå tom for auto-generert adresse'}
+        />
       </Field>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Field label="Lønstype">

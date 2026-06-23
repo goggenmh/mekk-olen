@@ -52,9 +52,9 @@ Deno.serve(async (req) => {
     const { action } = body;
 
     if (action === 'create') {
-      const { id, navn, rolle, lonn, sats, farge, init, telefon, leder, password } = body;
+      const { id, navn, rolle, lonn, sats, farge, init, telefon, leder, password, email: customEmail } = body;
       if (!id || !navn || !password) return json({ error: 'Manglar id, navn eller passord.' }, 400);
-      const email = `${id}@mekk-olen.internal`;
+      const email = customEmail || `${id}@mekk-olen.internal`;
 
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email,
@@ -100,6 +100,27 @@ Deno.serve(async (req) => {
       if (!authUser) return json({ error: 'Fann ikkje innlogging for denne ansatte.' }, 404);
       const { error: pwErr } = await admin.auth.admin.updateUserById(authUser.id, { password });
       if (pwErr) return json({ error: pwErr.message }, 400);
+      return json({ ok: true });
+    }
+
+    if (action === 'updateemail') {
+      // Changes the address an employee's Auth login is registered under.
+      // Must update both the Auth user and the ansatte.email column together —
+      // they're required to always match, since AuthContext signs in with
+      // ansatte.email. Editing ansatte.email directly in the Supabase table
+      // editor (bypassing this) breaks login, since only the Auth side
+      // would still point at the old address.
+      const { id, email } = body;
+      if (!id || !email) return json({ error: 'Manglar id eller e-post.' }, 400);
+      const { data: target } = await admin.from('ansatte').select('email').eq('id', id).maybeSingle();
+      if (!target) return json({ error: 'Fann ikkje ansatt.' }, 404);
+      const { data: usersPage } = await admin.auth.admin.listUsers();
+      const authUser = usersPage?.users.find((u) => u.email === target.email);
+      if (!authUser) return json({ error: 'Fann ikkje innlogging for denne ansatte.' }, 404);
+      const { error: emailErr } = await admin.auth.admin.updateUserById(authUser.id, { email, email_confirm: true });
+      if (emailErr) return json({ error: emailErr.message }, 400);
+      const { error: updErr } = await admin.from('ansatte').update({ email }).eq('id', id);
+      if (updErr) return json({ error: updErr.message }, 400);
       return json({ ok: true });
     }
 
