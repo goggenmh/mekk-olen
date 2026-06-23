@@ -105,6 +105,17 @@ input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-
   overflow-x: auto;
 }
 
+.dashboard-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.dashboard-grid-2col.single-col {
+  grid-template-columns: 1fr;
+}
+
+/* Responsive layout when view mode is left on "auto" (follows real screen width) */
 @media (max-width: 880px) {
   .hamburger-btn {
     display: flex;
@@ -133,6 +144,61 @@ input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-
   }
 
   .dashboard-grid-2col {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
   }
+}
+
+/* Manual view-mode override (button in header) — wins over the media query
+   above regardless of real screen width because the [data-viewmode] selector
+   is more specific. */
+html[data-viewmode='mobile'] .hamburger-btn {
+  display: flex;
+}
+
+html[data-viewmode='mobile'] .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 110;
+  transform: translateX(-100%);
+  transition: transform 0.22s ease;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+}
+
+html[data-viewmode='mobile'] .sidebar.is-open {
+  transform: translateX(0);
+}
+
+html[data-viewmode='mobile'] .sidebar-overlay.is-open {
+  display: block;
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 16, 24, 0.45);
+  z-index: 100;
+}
+
+html[data-viewmode='mobile'] .dashboard-grid-2col {
+  grid-template-columns: 1fr;
+}
+
+html[data-viewmode='desktop'] .hamburger-btn {
+  display: none;
+}
+
+html[data-viewmode='desktop'] .sidebar {
+  position: static;
+  transform: none;
+  box-shadow: none;
+}
+
+html[data-viewmode='desktop'] .sidebar-overlay {
+  display: none;
+}
+
+html[data-viewmode='desktop'] .dashboard-grid-2col {
+  grid-template-columns: 1fr 1fr;
+}
+
+html[data-viewmode='desktop'] .dashboard-grid-2col.single-col {
+  grid-template-columns: 1fr;
 }

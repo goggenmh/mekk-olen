@@ -126,7 +126,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
       )}
 
-      <div className="dashboard-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="dashboard-grid-2col">
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>I dag</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -158,7 +158,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
       </div>
 
-      <div className="dashboard-grid-2col" style={{ display: 'grid', gridTemplateColumns: leder ? '1fr 1fr' : '1fr', gap: 16 }}>
+      <div className={`dashboard-grid-2col${leder ? '' : ' single-col'}`}>
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Ansatte</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

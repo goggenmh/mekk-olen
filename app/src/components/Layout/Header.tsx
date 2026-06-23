@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useViewMode } from '../../context/ViewModeContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { useAppData } from '../../context/AppDataContext';
 import { Avatar } from '../ui/Avatar';
@@ -19,6 +20,7 @@ interface SearchHit {
 export function Header({ setView, onMenuClick }: { setView: (v: View) => void; onMenuClick?: () => void }) {
   const { user, logout } = useAuth();
   const { dark, toggle } = useTheme();
+  const { mode: viewMode, cycle: cycleViewMode } = useViewMode();
   const { isLeder, ansatte } = useAnsatte();
   const { docs, tasks } = useAppData();
   const [adminOpen, setAdminOpen] = useState(false);
@@ -110,6 +112,20 @@ export function Header({ setView, onMenuClick }: { setView: (v: View) => void; o
             <Icon name="innstillinger" size={18} />
           </button>
         )}
+        <button
+          onClick={cycleViewMode}
+          title={
+            viewMode === 'auto' ? 'Visning: Automatisk (klikk for mobilvisning)'
+              : viewMode === 'mobile' ? 'Visning: Mobil (klikk for PC-visning)'
+              : 'Visning: PC (klikk for automatisk)'
+          }
+          style={{
+            width: 36, height: 36, border: '1px solid var(--border)', background: 'var(--surface-alt)',
+            borderRadius: 12, cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <Icon name={viewMode} size={18} />
+        </button>
         <button
           onClick={toggle}
           title={dark ? 'Bytt til lys modus' : 'Bytt til mørk modus'}
