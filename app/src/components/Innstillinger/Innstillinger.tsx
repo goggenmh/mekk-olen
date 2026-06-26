@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { Avatar } from '../ui/Avatar';
+import { pushSupported, getPushSubscription, subscribeToPush, unsubscribeFromPush } from '../../lib/push';
 import type { View } from '../../lib/view';
 
 const cardStyle = {
@@ -12,6 +14,32 @@ export function Innstillinger({ setView }: { setView: (v: View) => void }) {
   const { user } = useAuth();
   const { dark, toggle } = useTheme();
   const { isLeder } = useAnsatte();
+  const [varselPa, setVarselPa] = useState(false);
+  const [varselFeil, setVarselFeil] = useState('');
+  const [varselLastar, setVarselLastar] = useState(false);
+
+  useEffect(() => {
+    getPushSubscription().then((sub) => setVarselPa(!!sub)).catch(() => {});
+  }, []);
+
+  const toggleVarsel = async () => {
+    if (!user) return;
+    setVarselFeil('');
+    setVarselLastar(true);
+    try {
+      if (varselPa) {
+        await unsubscribeFromPush();
+        setVarselPa(false);
+      } else {
+        await subscribeToPush(user.id);
+        setVarselPa(true);
+      }
+    } catch (e) {
+      setVarselFeil(e instanceof Error ? e.message : 'Noko gikk feil.');
+    } finally {
+      setVarselLastar(false);
+    }
+  };
 
   if (!user) return null;
 
@@ -56,6 +84,33 @@ export function Innstillinger({ setView }: { setView: (v: View) => void }) {
             background: '#fff', transition: 'left 0.15s ease', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
           }} />
         </button>
+      </div>
+
+      <div style={cardStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>Varsel på telefonen</div>
+            <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
+              {pushSupported()
+                ? 'Få varsel om nye vakter, bytteønske og godkjende timar.'
+                : 'Ikkje støtta i denne nettlesaren — installer appen på telefonen først.'}
+            </div>
+          </div>
+          <button
+            onClick={toggleVarsel}
+            disabled={!pushSupported() || varselLastar}
+            style={{
+              width: 52, height: 30, borderRadius: 15, border: 'none', cursor: pushSupported() ? 'pointer' : 'default', position: 'relative',
+              background: varselPa ? 'var(--brand)' : 'var(--border)', flex: 'none', opacity: !pushSupported() || varselLastar ? 0.6 : 1,
+            }}
+          >
+            <span style={{
+              position: 'absolute', top: 3, left: varselPa ? 25 : 3, width: 24, height: 24, borderRadius: '50%',
+              background: '#fff', transition: 'left 0.15s ease', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+            }} />
+          </button>
+        </div>
+        {varselFeil && <div style={{ fontSize: 12.5, color: 'var(--danger)', fontWeight: 600, marginTop: 8 }}>{varselFeil}</div>}
       </div>
 
       {isLeder(user.id) && (

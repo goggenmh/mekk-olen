@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { supabase } from '../supabaseClient';
 import type { EmployeeId } from '../constants';
 import { useAnsatte } from './AnsatteContext';
+import { sendPush } from '../lib/push';
 import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Task, TimeEntry } from '../types';
 
 interface AppData {
@@ -68,7 +69,7 @@ const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne
 const mapMelding = (r: any): Melding => ({ id: r.id, fra: r.fra, til: r.til, tekst: r.tekst, created_at: r.created_at });
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
-  const { isLeder } = useAnsatte();
+  const { isLeder, findAnsatt, alleAnsatte } = useAnsatte();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [entries, setEntries] = useState<TimeEntry[]>([]);
@@ -148,6 +149,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { error: err } = await supabase.from('time_entries').update({ status: 'godkjent' }).in('id', ids);
     if (err) throw err;
     setEntries((prev) => prev.map((e) => (ids.includes(e.id) ? { ...e, status: 'godkjent' } : e)));
+    sendPush([ansatt], 'Timar godkjent', 'Timane dine er no godkjent.');
   };
 
   // ---- shifts ----
@@ -164,6 +166,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       }).select().single();
       if (err) throw err;
       setShifts((prev) => [...prev, mapShift(data)]);
+      sendPush([shift.ansatt], 'Ny vakt', `Du har fått ei ny vakt ${shift.date} ${shift.start}–${shift.slutt}.`);
     }
   };
   const deleteShift: AppData['deleteShift'] = async (id) => {
@@ -182,6 +185,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { data, error: err } = await supabase.from('shifts').insert(missing).select();
     if (err) throw err;
     setShifts((prev) => [...prev, ...(data || []).map(mapShift)]);
+    sendPush([...new Set(missing.map((m) => m.ansatt))], 'Nye vakter', 'Du har fått nye vakter i vaktplanen.');
   };
   const addShifts: AppData['addShifts'] = async (rows) => {
     const nye = rows.filter((r) => !shifts.some((x) => x.ansatt === r.ansatt && x.date === r.date && x.start === r.start && x.slutt === r.slutt));
@@ -189,6 +193,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { data, error: err } = await supabase.from('shifts').insert(nye).select();
     if (err) throw err;
     setShifts((prev) => [...prev, ...(data || []).map(mapShift)]);
+    sendPush([...new Set(nye.map((r) => r.ansatt))], 'Nye vakter', 'Du har fått nye vakter i vaktplanen.');
   };
 
   // ---- swaps ----
@@ -198,6 +203,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }).select().single();
     if (err) throw err;
     setSwaps((prev) => [...prev, mapSwap(data)]);
+    const ledereIds = alleAnsatte.filter((a) => a.leder && a.aktiv).map((a) => a.id);
+    sendPush([...new Set([swap.til, ...ledereIds])], 'Bytteønske', `${findAnsatt(swap.fra).navn} vil bytte vakt ${swap.dag} ${swap.tid}.`);
   };
   const approveSwap: AppData['approveSwap'] = async (id) => {
     const swap = swaps.find((x) => x.id === id);
@@ -208,11 +215,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     if (err2) throw err2;
     setShifts((prev) => prev.map((x) => (x.id === swap.shiftId ? { ...x, ansatt: swap.til } : x)));
     setSwaps((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'godkjent' } : x)));
+    sendPush([swap.fra, swap.til], 'Bytte godkjent', `Vaktbyttet ${swap.dag} ${swap.tid} er godkjent.`);
   };
   const declineSwap: AppData['declineSwap'] = async (id) => {
     const { error: err } = await supabase.from('shift_swaps').update({ status: 'avvist' }).eq('id', id);
     if (err) throw err;
     setSwaps((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'avvist' } : x)));
+    const swap = swaps.find((x) => x.id === id);
+    if (swap) sendPush([swap.fra], 'Bytte avvist', `Vaktbyttet ${swap.dag} ${swap.tid} blei ikkje godkjent.`);
   };
 
   // ---- ferie ----
