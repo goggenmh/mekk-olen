@@ -253,6 +253,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const { data, error: err } = await supabase.from('tasks').insert({ tittel: t.tittel, detalj: t.detalj, prioritet: t.prioritet, ansatt: t.ansatt, ferdig: t.ferdig ?? false }).select().single();
       if (err) throw err;
       setTasks((prev) => [...prev, mapTask(data)]);
+      if (t.ansatt !== 'ufordelt') sendPush([t.ansatt], 'Ny oppgåve', t.tittel);
     }
   };
   const deleteTask: AppData['deleteTask'] = async (id) => {
@@ -264,6 +265,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { data, error: err } = await supabase.from('tasks').update({ ansatt }).eq('id', id).select().single();
     if (err) throw err;
     setTasks((prev) => prev.map((x) => (x.id === id ? mapTask(data) : x)));
+    if (ansatt !== 'ufordelt') sendPush([ansatt], 'Ny oppgåve', mapTask(data).tittel);
   };
 
   // ---- orders ----
@@ -339,6 +341,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { data, error: err } = await supabase.from('meldinger').insert({ fra, til, tekst }).select().single();
     if (err) throw err;
     setMeldinger((prev) => [mapMelding(data), ...prev]);
+    const mottakarar = til ? [til] : alleAnsatte.filter((a) => a.aktiv && a.id !== fra).map((a) => a.id);
+    sendPush(mottakarar, `Melding frå ${findAnsatt(fra).navn}`, tekst);
   };
   const deleteMelding: AppData['deleteMelding'] = async (id) => {
     const { error: err } = await supabase.from('meldinger').delete().eq('id', id);
