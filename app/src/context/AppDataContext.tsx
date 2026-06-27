@@ -160,6 +160,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       }).eq('id', shift.id).select().single();
       if (err) throw err;
       setShifts((prev) => prev.map((x) => (x.id === shift.id ? mapShift(data) : x)));
+      sendPush([shift.ansatt], 'Vakt endra', `Vakta di ${shift.date} er no ${shift.start}–${shift.slutt}.`);
     } else {
       const { data, error: err } = await supabase.from('shifts').insert({
         ansatt: shift.ansatt, date: shift.date, start: shift.start, slutt: shift.slutt, skift: shift.skift,
@@ -177,7 +178,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const moveShiftDate: AppData['moveShiftDate'] = async (id, date) => {
     const { data, error: err } = await supabase.from('shifts').update({ date }).eq('id', id).select().single();
     if (err) throw err;
-    setShifts((prev) => prev.map((x) => (x.id === id ? mapShift(data) : x)));
+    const moved = mapShift(data);
+    setShifts((prev) => prev.map((x) => (x.id === id ? moved : x)));
+    sendPush([moved.ansatt], 'Vakt flytta', `Vakta di er no flytta til ${moved.date} ${moved.start}–${moved.slutt}.`);
   };
   const fillWeek: AppData['fillWeek'] = async (template) => {
     const missing = template.filter((t) => !shifts.some((x) => x.ansatt === t.ansatt && x.date === t.date));

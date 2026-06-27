@@ -3,14 +3,46 @@ import { useNotifications } from '../../hooks/useNotifications';
 import { Icon } from '../ui/Icon';
 import type { View } from '../../lib/view';
 
-function NotificationPanel({ onPick, onEmpty }: { onPick: (v: View) => void; onEmpty: string }) {
+const PANEL_WIDTH = 320;
+const MARGIN = 12;
+
+function useAnchoredPanel(open: boolean, triggerRef: React.RefObject<HTMLElement | null>) {
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    if (!open || !triggerRef.current) {
+      setPos(null);
+      return;
+    }
+    const place = () => {
+      const rect = triggerRef.current!.getBoundingClientRect();
+      const left = Math.min(
+        Math.max(MARGIN, rect.right - PANEL_WIDTH),
+        window.innerWidth - PANEL_WIDTH - MARGIN,
+      );
+      setPos({ top: rect.bottom + 8, left });
+    };
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [open, triggerRef]);
+
+  return pos;
+}
+
+function NotificationPanel({ pos, onPick, onEmpty }: { pos: { top: number; left: number }; onPick: (v: View) => void; onEmpty: string }) {
   const { items } = useNotifications();
   return (
     <div
       style={{
-        position: 'absolute', top: '110%', right: 0, width: 320, maxHeight: 420, overflowY: 'auto',
+        position: 'fixed', top: pos.top, left: pos.left, width: PANEL_WIDTH,
+        maxWidth: `calc(100vw - ${MARGIN * 2}px)`, maxHeight: 420, overflowY: 'auto',
         background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
-        boxShadow: '0 12px 30px rgba(0,0,0,0.15)', zIndex: 60,
+        boxShadow: '0 12px 30px rgba(0,0,0,0.15)', zIndex: 200,
       }}
     >
       {items.length === 0 ? (
@@ -39,23 +71,29 @@ function NotificationPanel({ onPick, onEmpty }: { onPick: (v: View) => void; onE
   );
 }
 
-export function NotificationBell({ setView }: { setView: (v: View) => void }) {
-  const { count } = useNotifications();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
+function useClickOutside(open: boolean, refs: React.RefObject<HTMLElement | null>[], onOutside: () => void) {
   useEffect(() => {
     if (!open) return;
     const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (refs.every((r) => r.current && !r.current.contains(e.target as Node))) onOutside();
     };
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
-  }, [open]);
+  }, [open, refs, onOutside]);
+}
+
+export function NotificationBell({ setView }: { setView: (v: View) => void }) {
+  const { count } = useNotifications();
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const pos = useAnchoredPanel(open, btnRef);
+  useClickOutside(open, [btnRef, panelRef], () => setOpen(false));
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <>
       <button
+        ref={btnRef}
         onClick={() => setOpen((o) => !o)}
         title="Varsel"
         style={{
@@ -74,33 +112,31 @@ export function NotificationBell({ setView }: { setView: (v: View) => void }) {
           </span>
         )}
       </button>
-      {open && (
-        <NotificationPanel
-          onEmpty="Ingen varsel."
-          onPick={(v) => { setView(v); setOpen(false); }}
-        />
+      {open && pos && (
+        <div ref={panelRef}>
+          <NotificationPanel
+            pos={pos}
+            onEmpty="Ingen varsel."
+            onPick={(v) => { setView(v); setOpen(false); }}
+          />
+        </div>
       )}
-    </div>
+    </>
   );
 }
 
 export function NotificationMenuItem({ setView, onNavigated }: { setView: (v: View) => void; onNavigated?: () => void }) {
   const { count } = useNotifications();
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', onClick);
-    return () => document.removeEventListener('mousedown', onClick);
-  }, [open]);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const pos = useAnchoredPanel(open, btnRef);
+  useClickOutside(open, [btnRef, panelRef], () => setOpen(false));
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <>
       <button
+        ref={btnRef}
         onClick={() => setOpen((o) => !o)}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px', border: 'none', cursor: 'pointer',
@@ -118,12 +154,15 @@ export function NotificationMenuItem({ setView, onNavigated }: { setView: (v: Vi
           </span>
         )}
       </button>
-      {open && (
-        <NotificationPanel
-          onEmpty="Ingen varsel."
-          onPick={(v) => { setView(v); setOpen(false); onNavigated?.(); }}
-        />
+      {open && pos && (
+        <div ref={panelRef}>
+          <NotificationPanel
+            pos={pos}
+            onEmpty="Ingen varsel."
+            onPick={(v) => { setView(v); setOpen(false); onNavigated?.(); }}
+          />
+        </div>
       )}
-    </div>
+    </>
   );
 }
