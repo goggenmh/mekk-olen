@@ -3,7 +3,7 @@ import { Modal, Field, inputStyle, monoInputStyle, CancelButton, SaveButton, Del
 import { useAppData } from '../../context/AppDataContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { SKIFT_VALG } from '../../constants';
-import { dur, fmt, mins } from '../../lib/dates';
+import { dur, fmt, mins, addDays } from '../../lib/dates';
 import type { Shift } from '../../types';
 
 export function ShiftModal({
@@ -13,7 +13,7 @@ export function ShiftModal({
   target: { date: string; shift?: Shift };
   onClose: () => void;
 }) {
-  const { saveShift, deleteShift } = useAppData();
+  const { saveShift, deleteShift, addShifts } = useAppData();
   const { ansatte } = useAnsatte();
   const existing = target.shift;
 
@@ -22,12 +22,21 @@ export function ShiftModal({
   const [slutt, setSlutt] = useState(existing?.slutt || '17:00');
   const [skift, setSkift] = useState(existing?.skift || SKIFT_VALG[0]);
   const [feil, setFeil] = useState(false);
+  const [gjenta, setGjenta] = useState(false);
+  const [antallVeker, setAntallVeker] = useState(4);
 
   const varar = mins(slutt) > mins(start) ? `${fmt(dur(start, slutt))} t` : '–';
 
   const save = async () => {
     if (mins(slutt) <= mins(start)) { setFeil(true); return; }
-    await saveShift({ id: existing?.id, ansatt, date: target.date, start, slutt, skift });
+    if (!existing && gjenta && antallVeker > 1) {
+      const rows = Array.from({ length: antallVeker }, (_, i) => ({
+        ansatt, date: addDays(target.date, i * 7), start, slutt, skift,
+      }));
+      await addShifts(rows);
+    } else {
+      await saveShift({ id: existing?.id, ansatt, date: target.date, start, slutt, skift });
+    }
     onClose();
   };
 
@@ -69,6 +78,27 @@ export function ShiftModal({
       </div>
       {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Slutt må vere etter start.</div>}
       <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Varer: <strong style={{ color: 'var(--text)' }}>{varar}</strong></div>
+
+      {!existing && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            <input type="checkbox" checked={gjenta} onChange={(e) => setGjenta(e.target.checked)} />
+            Gjenta same vakt vekentlig (fast vakt)
+          </label>
+          {gjenta && (
+            <Field label="Antall veker (inkl. denne)">
+              <input
+                type="number"
+                min={2}
+                max={52}
+                value={antallVeker}
+                onChange={(e) => setAntallVeker(Math.min(52, Math.max(2, Number(e.target.value) || 2)))}
+                style={monoInputStyle}
+              />
+            </Field>
+          )}
+        </div>
+      )}
     </Modal>
   );
 }

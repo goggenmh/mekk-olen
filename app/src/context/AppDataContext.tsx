@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { supabase } from '../supabaseClient';
 import type { EmployeeId } from '../constants';
 import { useAnsatte } from './AnsatteContext';
+import { sendPush } from '../lib/push';
 import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Task, TimeEntry } from '../types';
 
 interface AppData {
@@ -32,6 +33,7 @@ interface AppData {
   deleteShift: (id: string) => Promise<void>;
   moveShiftDate: (id: string, date: string) => Promise<void>;
   fillWeek: (template: { ansatt: EmployeeId; date: string; start: string; slutt: string; skift: string }[]) => Promise<void>;
+  addShifts: (rows: { ansatt: EmployeeId; date: string; start: string; slutt: string; skift: string }[]) => Promise<void>;
 
   createSwap: (swap: Omit<ShiftSwap, 'id' | 'status'>) => Promise<void>;
   approveSwap: (id: string) => Promise<void>;
@@ -67,7 +69,7 @@ const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne
 const mapMelding = (r: any): Melding => ({ id: r.id, fra: r.fra, til: r.til, tekst: r.tekst, created_at: r.created_at });
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
-  const { isLeder } = useAnsatte();
+  const { isLeder, findAnsatt, alleAnsatte } = useAnsatte();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [entries, setEntries] = useState<TimeEntry[]>([]);
@@ -147,6 +149,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { error: err } = await supabase.from('time_entries').update({ status: 'godkjent' }).in('id', ids);
     if (err) throw err;
     setEntries((prev) => prev.map((e) => (ids.includes(e.id) ? { ...e, status: 'godkjent' } : e)));
+    sendPush([ansatt], 'Timar godkjent', 'Timane dine er no godkjent.');
   };
 
   // ---- shifts ----
@@ -157,12 +160,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       }).eq('id', shift.id).select().single();
       if (err) throw err;
       setShifts((prev) => prev.map((x) => (x.id === shift.id ? mapShift(data) : x)));
+      sendPush([shift.ansatt], 'Vakt endra', `Vakta di ${shift.date} er no ${shift.start}–${shift.slutt}.`);
     } else {
       const { data, error: err } = await supabase.from('shifts').insert({
         ansatt: shift.ansatt, date: shift.date, start: shift.start, slutt: shift.slutt, skift: shift.skift,
       }).select().single();
       if (err) throw err;
       setShifts((prev) => [...prev, mapShift(data)]);
+      sendPush([shift.ansatt], 'Ny vakt', `Du har fått ei ny vakt ${shift.date} ${shift.start}–${shift.slutt}.`);
     }
   };
   const deleteShift: AppData['deleteShift'] = async (id) => {
@@ -173,7 +178,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const moveShiftDate: AppData['moveShiftDate'] = async (id, date) => {
     const { data, error: err } = await supabase.from('shifts').update({ date }).eq('id', id).select().single();
     if (err) throw err;
-    setShifts((prev) => prev.map((x) => (x.id === id ? mapShift(data) : x)));
+    const moved = mapShift(data);
+    setShifts((prev) => prev.map((x) => (x.id === id ? moved : x)));
+    sendPush([moved.ansatt], 'Vakt flytta', `Vakta di er no flytta til ${moved.date} ${moved.start}–${moved.slutt}.`);
   };
   const fillWeek: AppData['fillWeek'] = async (template) => {
     const missing = template.filter((t) => !shifts.some((x) => x.ansatt === t.ansatt && x.date === t.date));
@@ -181,6 +188,15 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { data, error: err } = await supabase.from('shifts').insert(missing).select();
     if (err) throw err;
     setShifts((prev) => [...prev, ...(data || []).map(mapShift)]);
+    sendPush([...new Set(missing.map((m) => m.ansatt))], 'Nye vakter', 'Du har fått nye vakter i vaktplanen.');
+  };
+  const addShifts: AppData['addShifts'] = async (rows) => {
+    const nye = rows.filter((r) => !shifts.some((x) => x.ansatt === r.ansatt && x.date === r.date && x.start === r.start && x.slutt === r.slutt));
+    if (nye.length === 0) return;
+    const { data, error: err } = await supabase.from('shifts').insert(nye).select();
+    if (err) throw err;
+    setShifts((prev) => [...prev, ...(data || []).map(mapShift)]);
+    sendPush([...new Set(nye.map((r) => r.ansatt))], 'Nye vakter', 'Du har fått nye vakter i vaktplanen.');
   };
 
   // ---- swaps ----
@@ -190,6 +206,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }).select().single();
     if (err) throw err;
     setSwaps((prev) => [...prev, mapSwap(data)]);
+    const ledereIds = alleAnsatte.filter((a) => a.leder && a.aktiv).map((a) => a.id);
+    sendPush([...new Set([swap.til, ...ledereIds])], 'Bytteønske', `${findAnsatt(swap.fra).navn} vil bytte vakt ${swap.dag} ${swap.tid}.`);
   };
   const approveSwap: AppData['approveSwap'] = async (id) => {
     const swap = swaps.find((x) => x.id === id);
@@ -200,11 +218,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     if (err2) throw err2;
     setShifts((prev) => prev.map((x) => (x.id === swap.shiftId ? { ...x, ansatt: swap.til } : x)));
     setSwaps((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'godkjent' } : x)));
+    sendPush([swap.fra, swap.til], 'Bytte godkjent', `Vaktbyttet ${swap.dag} ${swap.tid} er godkjent.`);
   };
   const declineSwap: AppData['declineSwap'] = async (id) => {
     const { error: err } = await supabase.from('shift_swaps').update({ status: 'avvist' }).eq('id', id);
     if (err) throw err;
     setSwaps((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'avvist' } : x)));
+    const swap = swaps.find((x) => x.id === id);
+    if (swap) sendPush([swap.fra], 'Bytte avvist', `Vaktbyttet ${swap.dag} ${swap.tid} blei ikkje godkjent.`);
   };
 
   // ---- ferie ----
@@ -235,6 +256,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const { data, error: err } = await supabase.from('tasks').insert({ tittel: t.tittel, detalj: t.detalj, prioritet: t.prioritet, ansatt: t.ansatt, ferdig: t.ferdig ?? false }).select().single();
       if (err) throw err;
       setTasks((prev) => [...prev, mapTask(data)]);
+      if (t.ansatt !== 'ufordelt') sendPush([t.ansatt], 'Ny oppgåve', t.tittel);
     }
   };
   const deleteTask: AppData['deleteTask'] = async (id) => {
@@ -246,6 +268,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { data, error: err } = await supabase.from('tasks').update({ ansatt }).eq('id', id).select().single();
     if (err) throw err;
     setTasks((prev) => prev.map((x) => (x.id === id ? mapTask(data) : x)));
+    if (ansatt !== 'ufordelt') sendPush([ansatt], 'Ny oppgåve', mapTask(data).tittel);
   };
 
   // ---- orders ----
@@ -321,6 +344,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { data, error: err } = await supabase.from('meldinger').insert({ fra, til, tekst }).select().single();
     if (err) throw err;
     setMeldinger((prev) => [mapMelding(data), ...prev]);
+    const mottakarar = til ? [til] : alleAnsatte.filter((a) => a.aktiv && a.id !== fra).map((a) => a.id);
+    sendPush(mottakarar, `Melding frå ${findAnsatt(fra).navn}`, tekst);
   };
   const deleteMelding: AppData['deleteMelding'] = async (id) => {
     const { error: err } = await supabase.from('meldinger').delete().eq('id', id);
@@ -334,7 +359,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       canApprove, setKanGodkjenne,
       sendMelding, deleteMelding,
       saveEntry, deleteEntry, approveEmployeeEntries,
-      saveShift, deleteShift, moveShiftDate, fillWeek,
+      saveShift, deleteShift, moveShiftDate, fillWeek, addShifts,
       createSwap, approveSwap, declineSwap,
       saveFerie, deleteFerie,
       saveTask, deleteTask, moveTask,

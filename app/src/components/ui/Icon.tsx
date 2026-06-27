@@ -2,7 +2,8 @@ import {
   LayoutDashboard, Users, CalendarDays, Clock, ListChecks, Package,
   FileText, BarChart3, Settings, CalendarPlus, PackagePlus,
   DoorOpen, DoorClosed, Bell, Sun, Moon, User, Phone, Mail,
-  Paperclip, LifeBuoy, ClipboardList, PenLine, FolderOpen, TimerReset,
+  Paperclip, LifeBuoy, ClipboardList, PenLine, FolderOpen, TimerReset, Menu,
+  Smartphone, Monitor, MonitorSmartphone,
   type LucideProps,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
@@ -34,6 +35,10 @@ const MAP: Record<string, ComponentType<LucideProps>> = {
   mail: Mail,
   paperclip: Paperclip,
   check: ListChecks,
+  menu: Menu,
+  mobile: Smartphone,
+  desktop: Monitor,
+  auto: MonitorSmartphone,
   // dokumentkategoriar
   HMS: LifeBuoy,
   Rutine: ClipboardList,
