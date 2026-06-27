@@ -2,6 +2,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { weekDates, mondayOf, today } from '../../lib/dates';
 import { VIEWS, type View } from '../../lib/view';
 import { Icon } from '../ui/Icon';
+import { NotificationMenuItem } from './NotificationCenter';
 
 export function Sidebar({
   view, setView, open = false, onClose,
@@ -46,6 +47,8 @@ export function Sidebar({
           <div style={{ fontSize: 10, color: 'var(--text-faint)', fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase' }}>Vakt &amp; timestyring</div>
         </div>
       </div>
+
+      <NotificationMenuItem setView={setView} onNavigated={onClose} />
 
       {VIEWS.map((v) => {
         const active = view === v.key;

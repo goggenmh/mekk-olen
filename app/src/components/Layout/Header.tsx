@@ -7,6 +7,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { AdminPanel } from '../Admin/AdminPanel';
+import { NotificationBell } from './NotificationCenter';
 import type { View } from '../../lib/view';
 
 interface SearchHit {
@@ -126,6 +127,7 @@ export function Header({ setView, onMenuClick }: { setView: (v: View) => void; o
         >
           <Icon name={viewMode} size={18} />
         </button>
+        <NotificationBell setView={setView} />
         <button
           onClick={toggle}
           title={dark ? 'Bytt til lys modus' : 'Bytt til mørk modus'}
