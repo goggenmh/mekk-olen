@@ -37,6 +37,10 @@ export function Vaktplan() {
   const days = DAGER_VAKTPLAN.map((d, i) => ({ ...d, date: addDays(vpWeek, i) }));
   const ukasVakter = shifts.filter((s) => days.some((d) => d.date === s.date));
 
+  const toMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  const shiftTimar = (s: Shift) => Math.max(0, (toMin(s.slutt) - toMin(s.start)) / 60);
+  const fmtTimar = (h: number) => Number.isInteger(h) ? `${h}t` : `${h.toFixed(1).replace('.', ',')}t`;
+
   const fyllVeke = () => {
     fillWeek(SHIFT_TEMPLATE.map((t) => ({ ansatt: t.ansatt, date: addDays(vpWeek, DAG_IDX[t.dag]), start: t.start, slutt: t.slutt, skift: t.skift })));
   };
@@ -92,6 +96,7 @@ export function Vaktplan() {
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${days.length},1fr)`, gap: 12, minWidth: 760 }}>
         {days.map((d) => {
           const dayShifts = shifts.filter((s) => s.date === d.date).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
+          const dagTimar = dayShifts.reduce((sum, s) => sum + shiftTimar(s), 0);
           return (
             <div
               key={d.key}
@@ -102,9 +107,16 @@ export function Vaktplan() {
               onContextMenu={(e) => { e.preventDefault(); setMenu({ x: e.clientX, y: e.clientY, date: d.date }); }}
               style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 10, minHeight: 220, display: 'flex', flexDirection: 'column', gap: 8 }}
             >
-              <div>
-                <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase' }}>{d.kort} {parseDate(d.date).getDate()}</div>
-                <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Ope {d.open}</div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase' }}>{d.kort} {parseDate(d.date).getDate()}</div>
+                  <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Ope {d.open}</div>
+                </div>
+                {dagTimar > 0 && (
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--brand-strong)', background: 'var(--brand-soft)', borderRadius: 8, padding: '2px 7px' }}>
+                    {fmtTimar(dagTimar)}
+                  </span>
+                )}
               </div>
               {dayShifts.map((s) => {
                 const a = findAnsatt(s.ansatt);
@@ -139,6 +151,27 @@ export function Vaktplan() {
           );
         })}
       </div>
+      {ukasVakter.length > 0 && (() => {
+        const byAnsatt = ukasVakter.reduce<Record<string, number>>((acc, s) => {
+          acc[s.ansatt] = (acc[s.ansatt] ?? 0) + shiftTimar(s);
+          return acc;
+        }, {});
+        const totalVeke = Object.values(byAnsatt).reduce((a, b) => a + b, 0);
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', paddingTop: 4 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Total uke:</span>
+            {Object.entries(byAnsatt).map(([id, h]) => {
+              const a = findAnsatt(id);
+              return (
+                <span key={id} style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: a.farge, borderRadius: 9, padding: '3px 9px' }}>
+                  {a.init} {fmtTimar(h)}
+                </span>
+              );
+            })}
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginLeft: 4 }}>= {fmtTimar(totalVeke)}</span>
+          </div>
+        );
+      })()}
       </div>
       )}
 
