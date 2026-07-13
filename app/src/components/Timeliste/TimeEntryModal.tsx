@@ -17,6 +17,7 @@ export function TimeEntryModal({
   const existing = target.entry;
   const a = findAnsatt(target.ansatt);
 
+  const [date, setDate] = useState(target.date);
   const [start, setStart] = useState(existing?.start || '09:00');
   const [slutt, setSlutt] = useState(existing?.slutt || '17:00');
   const [pause, setPause] = useState(existing?.pause ?? 30);
@@ -27,7 +28,7 @@ export function TimeEntryModal({
 
   const save = async () => {
     if (mins(slutt) <= mins(start)) { setFeil(true); return; }
-    await saveEntry({ id: existing?.id, ansatt: target.ansatt, date: target.date, start, slutt, pause, status });
+    await saveEntry({ id: existing?.id, ansatt: target.ansatt, date, start, slutt, pause, status });
     onClose();
   };
 
@@ -42,7 +43,7 @@ export function TimeEntryModal({
     <Modal
       onClose={onClose}
       title={existing ? 'Endre timeregistrering' : 'Ny timeregistrering'}
-      subtitle={`${a.navn} · ${target.date}`}
+      subtitle={a.navn}
       footer={
         <>
           {existing && <DeleteButton onClick={del} />}
@@ -51,6 +52,9 @@ export function TimeEntryModal({
         </>
       }
     >
+      <Field label="Dato">
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={monoInputStyle} />
+      </Field>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Field label="Start">
           <input type="time" value={start} onChange={(e) => { setStart(e.target.value); setFeil(false); }} style={monoInputStyle} />

@@ -44,6 +44,35 @@ Function is the only place that key is used.
 Whenever `index.ts` changes in the repo, repeat steps 2–3 (paste + deploy) to
 push the change live — there's no CLI deploy step in this workflow.
 
+## 3b. Set up push notifications (optional)
+
+Lets employees install the app on their phone and get a push notification for
+new shifts, swap requests, and approved hours.
+
+1. Generate a VAPID key pair (one-time, on your own machine):
+   ```
+   npx web-push generate-vapid-keys
+   ```
+   This prints a public and a private key.
+2. In the Supabase dashboard, go to **Edge Functions → Create a new function**,
+   name it exactly `send-push`, paste the contents of
+   `supabase/functions/send-push/index.ts`, and click **Deploy**.
+3. Go to **Edge Functions → send-push → Secrets** (or **Project Settings →
+   Edge Functions → Secrets** for project-wide secrets) and add:
+   ```
+   VAPID_PUBLIC_KEY=<the public key from step 1>
+   VAPID_PRIVATE_KEY=<the private key from step 1>
+   VAPID_SUBJECT=mailto:you@example.com
+   ```
+4. Add the same public key to your app's env as `VITE_VAPID_PUBLIC_KEY` (see
+   step 4 below) and redeploy the app.
+5. Run `supabase/schema.sql` again (step 2) if you ran it before this section
+   existed — it adds the `push_subscriptions` table.
+
+Each employee then turns it on themselves in **Innstillingar → "Varsel på
+telefonen"**. Skip all of this if you don't need push notifications — the
+rest of the app works fine without it.
+
 ## 3a. Create the 3 starting employee logins
 
 The app's PIN pad is a UI layer on top of real Supabase Auth accounts. The
@@ -88,6 +117,7 @@ Copy `.env.example` to `.env.local` in the `app/` folder and fill in:
 VITE_SUPABASE_URL=<your project URL>
 VITE_SUPABASE_ANON_KEY=<your anon public key>
 VITE_APP_PIN_SALT=<pick your own salt, or keep the default>
+VITE_VAPID_PUBLIC_KEY=<the public key from step 3b, or leave blank to skip push>
 ```
 
 `.env.local` is gitignored — never commit real keys. The anon key is safe to

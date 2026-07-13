@@ -149,6 +149,19 @@ create table if not exists meldinger (
   created_at timestamptz not null default now()
 );
 
+-- ---------- push_subscriptions ----------
+-- One row per device/browser an employee has opted into push notifications
+-- on (Innstillinger → "Varsel på telefonen"). endpoint is unique per
+-- device+browser, so re-subscribing on the same device just updates it.
+create table if not exists push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  ansatt text not null references ansatte(id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now()
+);
+
 -- ---------- legacy constraint cleanup (safe to re-run) ----------
 -- Earlier versions hardcoded `check (col in ('sander','georg','christian'))` on
 -- these columns. Drop those so any employee created via the Ansatte module can
@@ -210,12 +223,13 @@ alter table orders enable row level security;
 alter table docs enable row level security;
 alter table permissions enable row level security;
 alter table meldinger enable row level security;
+alter table push_subscriptions enable row level security;
 
 do $$
 declare
   t text;
 begin
-  for t in select unnest(array['time_entries','shifts','shift_swaps','ferie','tasks','orders','docs','permissions','meldinger']) loop
+  for t in select unnest(array['time_entries','shifts','shift_swaps','ferie','tasks','orders','docs','permissions','meldinger','push_subscriptions']) loop
     execute format('drop policy if exists "authenticated_all" on %I', t);
     execute format(
       'create policy "authenticated_all" on %I for all to authenticated using (true) with check (true)',
@@ -238,5 +252,5 @@ create policy "authenticated_all_ansatte" on ansatte for all to authenticated us
 -- RLS policies alone don't grant table access — Postgres still requires the
 -- underlying GRANTs, separate from row-level security.
 grant usage on schema public to authenticated, anon;
-grant select, insert, update, delete on time_entries, shifts, shift_swaps, ferie, tasks, orders, docs, permissions, meldinger, ansatte to authenticated;
+grant select, insert, update, delete on time_entries, shifts, shift_swaps, ferie, tasks, orders, docs, permissions, meldinger, push_subscriptions, ansatte to authenticated;
 grant select on ansatte to anon;

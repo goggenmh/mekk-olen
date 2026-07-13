@@ -8,6 +8,7 @@ import {
 } from '../../lib/dates';
 import { TimeEntryModal } from './TimeEntryModal';
 import type { TimeEntry } from '../../types';
+import type { Employee } from '../../constants';
 
 function downloadCsv(filename: string, rows: (string | number)[][]) {
   const csv = '﻿' + rows.map((r) => r.join(';')).join('\n');
@@ -31,6 +32,8 @@ export function Timeliste() {
   const [editTarget, setEditTarget] = useState<{ ansatt: TimeEntry['ansatt']; date: string; entry?: TimeEntry } | null>(null);
 
   const dates = useMemo(() => weekDates(weekStart), [weekStart]);
+  const synlegeAnsatte = useMemo(() => (maaGodkjenne ? ansatte : ansatte.filter((a) => a.id === user?.id)), [maaGodkjenne, ansatte, user?.id]);
+  const synlegeEntries = useMemo(() => (maaGodkjenne ? entries : entries.filter((e) => e.ansatt === user?.id)), [maaGodkjenne, entries, user?.id]);
 
   const prevPeriod = () => (mode === 'uke' ? setWeekStart(addDays(weekStart, -7)) : setMonthAnchor(shiftMonth(monthAnchor, -1)));
   const nextPeriod = () => (mode === 'uke' ? setWeekStart(addDays(weekStart, 7)) : setMonthAnchor(shiftMonth(monthAnchor, 1)));
@@ -49,8 +52,8 @@ export function Timeliste() {
 
   const exportCsv = () => {
     const rows: (string | number)[][] = [['Tilsett', 'Dato', 'Start', 'Slutt', 'Pause(min)', 'Timar', 'Status']];
-    dates.forEach((dt) => ansatte.forEach((a) => {
-      const e = entries.find((x) => x.ansatt === a.id && x.date === dt);
+    dates.forEach((dt) => synlegeAnsatte.forEach((a) => {
+      const e = synlegeEntries.find((x) => x.ansatt === a.id && x.date === dt);
       if (e) rows.push([a.navn, dt, e.start, e.slutt, e.pause, fmt(timar(e)), e.status]);
     }));
     downloadCsv(`mekk-olen-timeliste-veke${isoWeek(weekStart)}.csv`, rows);
@@ -62,8 +65,8 @@ export function Timeliste() {
     const [my, mm] = monthAnchor.split('-').map(Number);
     const inMonth = (dt: string) => dt.slice(0, 7) === monthAnchor;
     const rows: (string | number)[][] = [['Tilsett', 'Maaned', 'Timar', 'Sats (kr/t)', 'Brutto (kr)', 'Lonstype']];
-    ansatte.forEach((a) => {
-      const tot = entries.filter((e) => e.ansatt === a.id && inMonth(e.date) && e.status === 'godkjent').reduce((acc, e) => acc + timar(e), 0);
+    synlegeAnsatte.forEach((a) => {
+      const tot = synlegeEntries.filter((e) => e.ansatt === a.id && inMonth(e.date) && e.status === 'godkjent').reduce((acc, e) => acc + timar(e), 0);
       const brutto = a.lonn === 'time' ? Math.round(tot * a.sats) : '';
       rows.push([a.navn, `${MND[mm - 1]} ${my}`, fmt(tot), a.lonn === 'time' ? a.sats : '', brutto, a.lonn === 'time' ? 'Timeløn' : 'Fastløn']);
     });
@@ -110,7 +113,8 @@ export function Timeliste() {
       {mode === 'uke' ? (
         <WeekTable
           dates={dates}
-          entries={entries}
+          ansatte={synlegeAnsatte}
+          entries={synlegeEntries}
           onCellClick={(ansatt, date, entry) => setEditTarget({ ansatt, date, entry })}
           maaGodkjenne={maaGodkjenne}
           onApprove={(ansatt) => approveEmployeeEntries(ansatt, dates)}
@@ -118,7 +122,10 @@ export function Timeliste() {
       ) : (
         <MonthView
           monthAnchor={monthAnchor}
-          entries={entries}
+          ansatte={synlegeAnsatte}
+          entries={synlegeEntries}
+          maaGodkjenne={maaGodkjenne}
+          onApprove={(ansatt) => approveEmployeeEntries(ansatt, entries.filter((e) => e.ansatt === ansatt && e.date.slice(0, 7) === monthAnchor).map((e) => e.date))}
           onDayClick={(date) => { setWeekStart(mondayOf(date)); setMode('uke'); }}
         />
       )}
@@ -135,21 +142,22 @@ export function Timeliste() {
 }
 
 function WeekTable({
-  dates, entries, onCellClick, maaGodkjenne, onApprove,
+  dates, ansatte, entries, onCellClick, maaGodkjenne, onApprove,
 }: {
   dates: string[];
+  ansatte: Employee[];
   entries: TimeEntry[];
   onCellClick: (ansatt: TimeEntry['ansatt'], date: string, entry?: TimeEntry) => void;
   maaGodkjenne: boolean;
   onApprove: (ansatt: TimeEntry['ansatt']) => void;
 }) {
-  const { ansatte } = useAnsatte();
+  const soloVisning = !maaGodkjenne;
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+    <div className="table-scroll" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18 }}>
+      <table style={{ width: '100%', minWidth: (soloVisning ? 0 : 120) + dates.length * 110 + 220, borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ background: 'var(--surface-alt)' }}>
-            <th style={th}>Tilsett</th>
+            {!soloVisning && <th style={th}>Tilsett</th>}
             {dates.map((d) => (
               <th key={d} style={th}>{UKE_KORT[weekdayIdx(d)]} {parseDate(d).getDate()}</th>
             ))}
@@ -167,7 +175,7 @@ function WeekTable({
             const ventarN = rowEntries.filter((e) => e?.status === 'venter').length;
             return (
               <tr key={a.id} style={{ borderTop: '1px solid var(--divider)' }}>
-                <td style={{ ...td, fontWeight: 600 }}>{a.navn}</td>
+                {!soloVisning && <td style={{ ...td, fontWeight: 600 }}>{a.navn}</td>}
                 {dates.map((d, i) => {
                   const e = rowEntries[i];
                   return (
@@ -213,13 +221,16 @@ function WeekTable({
 }
 
 function MonthView({
-  monthAnchor, entries, onDayClick,
+  monthAnchor, ansatte, entries, maaGodkjenne, onApprove, onDayClick,
 }: {
   monthAnchor: string;
+  ansatte: Employee[];
   entries: TimeEntry[];
+  maaGodkjenne: boolean;
+  onApprove: (ansatt: TimeEntry['ansatt']) => void;
   onDayClick: (date: string) => void;
 }) {
-  const { ansatte, findAnsatt } = useAnsatte();
+  const { findAnsatt } = useAnsatte();
   const mm = Number(monthAnchor.split('-')[1]);
   const firstOfMonth = `${monthAnchor}-01`;
   const gridStart = mondayOf(firstOfMonth);
@@ -234,14 +245,17 @@ function MonthView({
   const inMonth = (d: string) => Number(d.split('-')[1]) === mm;
 
   const manadKort = ansatte.map((a) => {
-    const tot = entries.filter((e) => e.ansatt === a.id && e.date.slice(0, 7) === monthAnchor && e.status === 'godkjent').reduce((acc, e) => acc + timar(e), 0);
+    const manadsEntries = entries.filter((e) => e.ansatt === a.id && e.date.slice(0, 7) === monthAnchor);
+    const tot = manadsEntries.filter((e) => e.status === 'godkjent').reduce((acc, e) => acc + timar(e), 0);
     const lonn = a.lonn === 'time' ? fmtKr(tot * a.sats) : 'Fastløn';
-    return { a, tot, lonn };
+    const ventarN = manadsEntries.filter((e) => e.status === 'venter').length;
+    return { a, tot, lonn, ventarN };
   });
 
   return (
     <>
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
+      <div className="table-scroll" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18 }}>
+        <div style={{ minWidth: 700, borderRadius: 18, overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: 'var(--surface-alt)' }}>
           {UKE_KORT.map((d) => <div key={d} style={{ ...th, textAlign: 'center' }}>{d}</div>)}
         </div>
@@ -275,14 +289,23 @@ function MonthView({
             })}
           </div>
         ))}
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14 }}>
-        {manadKort.map(({ a, tot, lonn }) => (
+        {manadKort.map(({ a, tot, lonn, ventarN }) => (
           <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px' }}>
             <div style={{ fontSize: 13.5, fontWeight: 700 }}>{a.navn}</div>
             <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Geist Mono'", color: a.farge, marginTop: 4 }}>{fmt(tot)} t</div>
             <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>{lonn}</div>
+            {maaGodkjenne && ventarN > 0 && (
+              <button
+                onClick={() => onApprove(a.id)}
+                style={{ marginTop: 10, padding: '7px 12px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                Godkjenn månaden ({ventarN})
+              </button>
+            )}
           </div>
         ))}
       </div>

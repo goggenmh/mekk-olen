@@ -2,16 +2,17 @@ import { useRef, useState, type CSSProperties } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
-import { DAGER_VAKTPLAN, SKIFT_FARGE, SHIFT_TEMPLATE } from '../../constants';
+import { DAGER_VAKTPLAN, SHIFT_TEMPLATE } from '../../constants';
 import { addDays, mondayOf, today, isoWeek, parseDate, DAG_IDX, shiftMonth, MND, UKE_KORT } from '../../lib/dates';
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
 import { FerieModal } from './FerieModal';
+import { CopyWeekModal } from './CopyWeekModal';
 import { Avatar } from '../ui/Avatar';
 import type { Shift, Ferie } from '../../types';
 
 export function Vaktplan() {
-  const { shifts, swaps, ferie, moveShiftDate, fillWeek, approveSwap, declineSwap, canApprove } = useAppData();
+  const { shifts, swaps, ferie, moveShiftDate, fillWeek, addShifts, approveSwap, declineSwap, canApprove } = useAppData();
   const { user } = useAuth();
   const { findAnsatt } = useAnsatte();
   const maaGodkjenne = canApprove(user?.id);
@@ -21,9 +22,24 @@ export function Vaktplan() {
   const [shiftTarget, setShiftTarget] = useState<{ date: string; shift?: Shift } | null>(null);
   const [swapTarget, setSwapTarget] = useState<Shift | null>(null);
   const [ferieTarget, setFerieTarget] = useState<Ferie | 'new' | null>(null);
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [clipboard, setClipboard] = useState<{ ansatt: Shift['ansatt']; start: string; slutt: string; skift: string } | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number; date: string; shift?: Shift } | null>(null);
   const dragShiftId = useRef<string | null>(null);
 
+  const copyShift = (s: Shift) => { setClipboard({ ansatt: s.ansatt, start: s.start, slutt: s.slutt, skift: s.skift }); setMenu(null); };
+  const pasteShift = async (date: string) => {
+    if (!clipboard) return;
+    await addShifts([{ ...clipboard, date }]);
+    setMenu(null);
+  };
+
   const days = DAGER_VAKTPLAN.map((d, i) => ({ ...d, date: addDays(vpWeek, i) }));
+  const ukasVakter = shifts.filter((s) => days.some((d) => d.date === s.date));
+
+  const toMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  const shiftTimar = (s: Shift) => Math.max(0, (toMin(s.slutt) - toMin(s.start)) / 60);
+  const fmtTimar = (h: number) => Number.isInteger(h) ? `${h}t` : `${h.toFixed(1).replace('.', ',')}t`;
 
   const fyllVeke = () => {
     fillWeek(SHIFT_TEMPLATE.map((t) => ({ ansatt: t.ansatt, date: addDays(vpWeek, DAG_IDX[t.dag]), start: t.start, slutt: t.slutt, skift: t.skift })));
@@ -61,19 +77,28 @@ export function Vaktplan() {
         <div style={{ fontWeight: 700, fontSize: 15 }}>{periodTittel}</div>
         <button onClick={nextPeriod} style={navBtn}>›</button>
         <button onClick={goToday} style={btnGhost}>I dag</button>
-        {mode === 'uke' && <button onClick={fyllVeke} style={{ ...btnGhost, marginLeft: 'auto' }}>↻ Fyll frå standardveke</button>}
+        {mode === 'uke' && (
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <button onClick={() => setCopyOpen(true)} disabled={ukasVakter.length === 0} style={{ ...btnGhost, opacity: ukasVakter.length === 0 ? 0.5 : 1 }}>⧉ Kopier veka</button>
+            <button onClick={fyllVeke} style={btnGhost}>↻ Fyll frå standardveke</button>
+          </div>
+        )}
       </div>
 
       {mode === 'manad' ? (
         <MonthView
           monthAnchor={monthAnchor}
           shifts={shifts}
+          shiftTimar={shiftTimar}
+          fmtTimar={fmtTimar}
           onDayClick={(date) => { setVpWeek(mondayOf(date)); setMode('uke'); }}
         />
       ) : (
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${days.length},1fr)`, gap: 12 }}>
+      <div className="table-scroll">
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${days.length},1fr)`, gap: 12, minWidth: 760 }}>
         {days.map((d) => {
           const dayShifts = shifts.filter((s) => s.date === d.date).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
+          const dagTimar = dayShifts.reduce((sum, s) => sum + shiftTimar(s), 0);
           return (
             <div
               key={d.key}
@@ -81,21 +106,30 @@ export function Vaktplan() {
               onDrop={() => {
                 if (dragShiftId.current) { moveShiftDate(dragShiftId.current, d.date); dragShiftId.current = null; }
               }}
+              onContextMenu={(e) => { e.preventDefault(); setMenu({ x: e.clientX, y: e.clientY, date: d.date }); }}
               style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 10, minHeight: 220, display: 'flex', flexDirection: 'column', gap: 8 }}
             >
-              <div>
-                <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase' }}>{d.kort} {parseDate(d.date).getDate()}</div>
-                <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Ope {d.open}</div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase' }}>{d.kort} {parseDate(d.date).getDate()}</div>
+                  <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Ope {d.open}</div>
+                </div>
+                {dagTimar > 0 && (
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--brand-strong)', background: 'var(--brand-soft)', borderRadius: 8, padding: '2px 7px' }}>
+                    {fmtTimar(dagTimar)}
+                  </span>
+                )}
               </div>
               {dayShifts.map((s) => {
                 const a = findAnsatt(s.ansatt);
-                const farge = SKIFT_FARGE[s.skift] || a.farge;
+                const farge = a.farge;
                 return (
                   <div
                     key={s.id}
                     draggable
                     onDragStart={() => { dragShiftId.current = s.id; }}
                     onClick={() => setShiftTarget({ date: d.date, shift: s })}
+                    onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setMenu({ x: e.clientX, y: e.clientY, date: d.date, shift: s }); }}
                     style={{ background: farge, color: '#fff', borderRadius: 12, padding: '8px 9px', cursor: 'grab', fontSize: 12 }}
                   >
                     <div style={{ fontWeight: 700 }}>{a.navn}</div>
@@ -118,6 +152,28 @@ export function Vaktplan() {
             </div>
           );
         })}
+      </div>
+      {ukasVakter.length > 0 && (() => {
+        const byAnsatt = ukasVakter.reduce<Record<string, number>>((acc, s) => {
+          acc[s.ansatt] = (acc[s.ansatt] ?? 0) + shiftTimar(s);
+          return acc;
+        }, {});
+        const totalVeke = Object.values(byAnsatt).reduce((a, b) => a + b, 0);
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', paddingTop: 4 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Total uke:</span>
+            {Object.entries(byAnsatt).map(([id, h]) => {
+              const a = findAnsatt(id);
+              return (
+                <span key={id} style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: a.farge, borderRadius: 9, padding: '3px 9px' }}>
+                  {a.init} {fmtTimar(h)}
+                </span>
+              );
+            })}
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginLeft: 4 }}>= {fmtTimar(totalVeke)}</span>
+          </div>
+        );
+      })()}
       </div>
       )}
 
@@ -180,15 +236,35 @@ export function Vaktplan() {
       {shiftTarget && <ShiftModal target={shiftTarget} onClose={() => setShiftTarget(null)} />}
       {swapTarget && <SwapModal shift={swapTarget} onClose={() => setSwapTarget(null)} />}
       {ferieTarget && <FerieModal existing={ferieTarget === 'new' ? undefined : ferieTarget} onClose={() => setFerieTarget(null)} />}
+      {copyOpen && <CopyWeekModal weekStart={vpWeek} shifts={ukasVakter} onClose={() => setCopyOpen(false)} />}
+
+      {menu && (
+        <>
+          <div onClick={() => setMenu(null)} onContextMenu={(e) => { e.preventDefault(); setMenu(null); }} style={{ position: 'fixed', inset: 0, zIndex: 60 }} />
+          <div
+            style={{
+              position: 'fixed', left: menu.x, top: menu.y, zIndex: 61, background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: 11, boxShadow: '0 12px 30px rgba(0,0,0,0.2)', padding: 6, display: 'flex', flexDirection: 'column', minWidth: 160,
+            }}
+          >
+            {menu.shift && (
+              <button onClick={() => copyShift(menu.shift!)} style={ctxBtn}>⧉ Kopier vakt</button>
+            )}
+            <button onClick={() => pasteShift(menu.date)} disabled={!clipboard} style={{ ...ctxBtn, opacity: clipboard ? 1 : 0.5, cursor: clipboard ? 'pointer' : 'default' }}>📋 Lim inn her</button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
 function MonthView({
-  monthAnchor, shifts, onDayClick,
+  monthAnchor, shifts, shiftTimar, fmtTimar, onDayClick,
 }: {
   monthAnchor: string;
   shifts: Shift[];
+  shiftTimar: (s: Shift) => number;
+  fmtTimar: (h: number) => string;
   onDayClick: (date: string) => void;
 }) {
   const { findAnsatt } = useAnsatte();
@@ -204,42 +280,76 @@ function MonthView({
   }
 
   const inMonth = (d: string) => Number(d.split('-')[1]) === mm;
+  const manadVakter = shifts.filter((s) => inMonth(s.date));
+
+  const byAnsatt = manadVakter.reduce<Record<string, number>>((acc, s) => {
+    acc[s.ansatt] = (acc[s.ansatt] ?? 0) + shiftTimar(s);
+    return acc;
+  }, {});
+  const totalManad = Object.values(byAnsatt).reduce((a, b) => a + b, 0);
 
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: 'var(--surface-alt)' }}>
-        {UKE_KORT.map((d) => <div key={d} style={{ ...th, textAlign: 'center' }}>{d}</div>)}
-      </div>
-      {weeks.map((row, ri) => (
-        <div key={ri} style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderTop: '1px solid var(--divider)' }}>
-          {row.map((d, ci) => {
-            const dayShifts = shifts.filter((s) => s.date === d).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
-            return (
-              <div
-                key={d}
-                onClick={() => onDayClick(d)}
-                style={{
-                  minHeight: 78, padding: 7, borderRight: ci < 6 ? '1px solid var(--divider)' : 'none',
-                  background: !inMonth(d) ? 'var(--surface-soft)' : 'var(--surface)',
-                  cursor: 'pointer', opacity: inMonth(d) ? 1 : 0.45,
-                }}
-              >
-                <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>{parseDate(d).getDate()}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {dayShifts.map((s) => {
-                    const a = findAnsatt(s.ansatt);
-                    return <div key={s.id} style={{ fontSize: 10.5, fontWeight: 700, color: a.farge }}>{a.init} {s.start}–{s.slutt}</div>;
-                  })}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="table-scroll" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18 }}>
+        <div style={{ minWidth: 700, borderRadius: 18, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: 'var(--surface-alt)' }}>
+          {UKE_KORT.map((d) => <div key={d} style={{ ...th, textAlign: 'center' }}>{d}</div>)}
+        </div>
+        {weeks.map((row, ri) => (
+          <div key={ri} style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderTop: '1px solid var(--divider)' }}>
+            {row.map((d, ci) => {
+              const dayShifts = shifts.filter((s) => s.date === d).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
+              const dagTimar = dayShifts.reduce((sum, s) => sum + shiftTimar(s), 0);
+              return (
+                <div
+                  key={d}
+                  onClick={() => onDayClick(d)}
+                  style={{
+                    minHeight: 78, padding: 7, borderRight: ci < 6 ? '1px solid var(--divider)' : 'none',
+                    background: !inMonth(d) ? 'var(--surface-soft)' : 'var(--surface)',
+                    cursor: 'pointer', opacity: inMonth(d) ? 1 : 0.45,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                    <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-muted)' }}>{parseDate(d).getDate()}</div>
+                    {dagTimar > 0 && inMonth(d) && (
+                      <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--brand-strong)', background: 'var(--brand-soft)', borderRadius: 6, padding: '1px 5px' }}>
+                        {fmtTimar(dagTimar)}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {dayShifts.map((s) => {
+                      const a = findAnsatt(s.ansatt);
+                      return <div key={s.id} style={{ fontSize: 10.5, fontWeight: 700, color: a.farge }}>{a.init} {s.start}–{s.slutt}</div>;
+                    })}
+                  </div>
                 </div>
-              </div>
+              );
+            })}
+          </div>
+        ))}
+        </div>
+      </div>
+      {totalManad > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Total månad:</span>
+          {Object.entries(byAnsatt).map(([id, h]) => {
+            const a = findAnsatt(id);
+            return (
+              <span key={id} style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: a.farge, borderRadius: 9, padding: '3px 9px' }}>
+                {a.init} {fmtTimar(h)}
+              </span>
             );
           })}
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginLeft: 4 }}>= {fmtTimar(totalManad)}</span>
         </div>
-      ))}
+      )}
     </div>
   );
 }
 
 const btnGhost: CSSProperties = { padding: '9px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' };
+const ctxBtn: CSSProperties = { padding: '8px 10px', border: 'none', background: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', textAlign: 'left' };
 const navBtn: CSSProperties = { width: 32, height: 32, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, cursor: 'pointer', fontSize: 15, color: 'var(--text-secondary)' };
 const th: CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px' };
