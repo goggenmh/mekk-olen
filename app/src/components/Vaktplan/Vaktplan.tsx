@@ -89,6 +89,8 @@ export function Vaktplan() {
         <MonthView
           monthAnchor={monthAnchor}
           shifts={shifts}
+          shiftTimar={shiftTimar}
+          fmtTimar={fmtTimar}
           onDayClick={(date) => { setVpWeek(mondayOf(date)); setMode('uke'); }}
         />
       ) : (
@@ -257,10 +259,12 @@ export function Vaktplan() {
 }
 
 function MonthView({
-  monthAnchor, shifts, onDayClick,
+  monthAnchor, shifts, shiftTimar, fmtTimar, onDayClick,
 }: {
   monthAnchor: string;
   shifts: Shift[];
+  shiftTimar: (s: Shift) => number;
+  fmtTimar: (h: number) => string;
   onDayClick: (date: string) => void;
 }) {
   const { findAnsatt } = useAnsatte();
@@ -276,40 +280,71 @@ function MonthView({
   }
 
   const inMonth = (d: string) => Number(d.split('-')[1]) === mm;
+  const manadVakter = shifts.filter((s) => inMonth(s.date));
+
+  const byAnsatt = manadVakter.reduce<Record<string, number>>((acc, s) => {
+    acc[s.ansatt] = (acc[s.ansatt] ?? 0) + shiftTimar(s);
+    return acc;
+  }, {});
+  const totalManad = Object.values(byAnsatt).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="table-scroll" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18 }}>
-      <div style={{ minWidth: 700, borderRadius: 18, overflow: 'hidden' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: 'var(--surface-alt)' }}>
-        {UKE_KORT.map((d) => <div key={d} style={{ ...th, textAlign: 'center' }}>{d}</div>)}
-      </div>
-      {weeks.map((row, ri) => (
-        <div key={ri} style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderTop: '1px solid var(--divider)' }}>
-          {row.map((d, ci) => {
-            const dayShifts = shifts.filter((s) => s.date === d).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
-            return (
-              <div
-                key={d}
-                onClick={() => onDayClick(d)}
-                style={{
-                  minHeight: 78, padding: 7, borderRight: ci < 6 ? '1px solid var(--divider)' : 'none',
-                  background: !inMonth(d) ? 'var(--surface-soft)' : 'var(--surface)',
-                  cursor: 'pointer', opacity: inMonth(d) ? 1 : 0.45,
-                }}
-              >
-                <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>{parseDate(d).getDate()}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {dayShifts.map((s) => {
-                    const a = findAnsatt(s.ansatt);
-                    return <div key={s.id} style={{ fontSize: 10.5, fontWeight: 700, color: a.farge }}>{a.init} {s.start}–{s.slutt}</div>;
-                  })}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="table-scroll" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18 }}>
+        <div style={{ minWidth: 700, borderRadius: 18, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: 'var(--surface-alt)' }}>
+          {UKE_KORT.map((d) => <div key={d} style={{ ...th, textAlign: 'center' }}>{d}</div>)}
+        </div>
+        {weeks.map((row, ri) => (
+          <div key={ri} style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderTop: '1px solid var(--divider)' }}>
+            {row.map((d, ci) => {
+              const dayShifts = shifts.filter((s) => s.date === d).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
+              const dagTimar = dayShifts.reduce((sum, s) => sum + shiftTimar(s), 0);
+              return (
+                <div
+                  key={d}
+                  onClick={() => onDayClick(d)}
+                  style={{
+                    minHeight: 78, padding: 7, borderRight: ci < 6 ? '1px solid var(--divider)' : 'none',
+                    background: !inMonth(d) ? 'var(--surface-soft)' : 'var(--surface)',
+                    cursor: 'pointer', opacity: inMonth(d) ? 1 : 0.45,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                    <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-muted)' }}>{parseDate(d).getDate()}</div>
+                    {dagTimar > 0 && inMonth(d) && (
+                      <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--brand-strong)', background: 'var(--brand-soft)', borderRadius: 6, padding: '1px 5px' }}>
+                        {fmtTimar(dagTimar)}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {dayShifts.map((s) => {
+                      const a = findAnsatt(s.ansatt);
+                      return <div key={s.id} style={{ fontSize: 10.5, fontWeight: 700, color: a.farge }}>{a.init} {s.start}–{s.slutt}</div>;
+                    })}
+                  </div>
                 </div>
-              </div>
+              );
+            })}
+          </div>
+        ))}
+        </div>
+      </div>
+      {totalManad > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Total månad:</span>
+          {Object.entries(byAnsatt).map(([id, h]) => {
+            const a = findAnsatt(id);
+            return (
+              <span key={id} style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: a.farge, borderRadius: 9, padding: '3px 9px' }}>
+                {a.init} {fmtTimar(h)}
+              </span>
             );
           })}
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginLeft: 4 }}>= {fmtTimar(totalManad)}</span>
         </div>
-      ))}
-      </div>
+      )}
     </div>
   );
 }
