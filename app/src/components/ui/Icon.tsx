@@ -3,7 +3,7 @@ import {
   FileText, BarChart3, Settings, CalendarPlus, PackagePlus,
   DoorOpen, DoorClosed, Bell, Sun, Moon, User, Phone, Mail,
   Paperclip, LifeBuoy, ClipboardList, PenLine, FolderOpen, TimerReset,
-  Menu, LogOut, Search,
+  Menu, LogOut, Search, AlertTriangle,
   type LucideProps,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
@@ -38,6 +38,7 @@ const MAP: Record<string, ComponentType<LucideProps>> = {
   menu: Menu,
   logout: LogOut,
   search: Search,
+  alert: AlertTriangle,
   // dokumentkategoriar
   HMS: LifeBuoy,
   Rutine: ClipboardList,

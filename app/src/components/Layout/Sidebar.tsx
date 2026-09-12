@@ -32,15 +32,15 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 10px 16px' }}>
         <img src="/assets/mekk-logo.png" alt="MEKK Ølen" style={{ width: 34, height: 34, borderRadius: 11 }} />
         <div style={{ lineHeight: 1.15 }}>
-          <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 15.5, letterSpacing: '0.3px', color: 'var(--brand-strong)' }}>MEKK ØLEN</div>
-          <div style={{ fontSize: 10, color: 'var(--text-faint)', fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase' }}>Vakt &amp; timestyring</div>
+          <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 15.5, letterSpacing: '0.3px', color: 'var(--rail-brand)' }}>MEKK ØLEN</div>
+          <div style={{ fontSize: 10, color: 'var(--rail-brand-sub)', fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase' }}>Vakt &amp; timestyring</div>
         </div>
       </div>
 
       {NAV_GROUPS.map((grp, gi) => (
         <div key={gi} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {grp.seksjon && (
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: 'var(--text-faint)', padding: '14px 12px 5px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: 'var(--rail-section)', padding: '14px 12px 5px' }}>
               {grp.seksjon}
             </div>
           )}
@@ -55,7 +55,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
                 style={{
                   display: 'flex', alignItems: 'center', gap: 11, padding: '9px 12px', border: 'none', cursor: 'pointer',
                   fontFamily: "'Geist'", fontSize: 13.5, fontWeight: 600, textAlign: 'left', borderRadius: 12,
-                  background: active ? 'var(--brand-soft)' : 'transparent', color: active ? 'var(--brand-strong)' : 'var(--text-secondary)',
+                  background: active ? 'var(--rail-active-bg)' : 'transparent', color: active ? 'var(--rail-active-fg)' : 'var(--rail-fg)',
                 }}
               >
                 <span style={{ width: 20, display: 'flex', justifyContent: 'center', flex: 'none' }}>
@@ -86,7 +86,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
           style={{
             position: 'fixed', top: 0, left: 0, bottom: 0, width: 250, zIndex: 61,
             display: 'flex', flexDirection: 'column', gap: 2, padding: '18px 12px',
-            background: 'var(--surface)', borderRight: '1px solid var(--divider)', overflowY: 'auto',
+            background: 'var(--rail-bg)', borderRight: '1px solid var(--rail-border)', overflowY: 'auto',
             transform: open ? 'translateX(0)' : 'translateX(-100%)', transition: 'transform 0.2s ease',
             boxShadow: open ? '0 0 40px rgba(0,0,0,0.3)' : 'none',
           }}
@@ -102,7 +102,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
       className="no-print"
       style={{
         width: 232, flex: 'none', display: 'flex', flexDirection: 'column', gap: 2, padding: '18px 12px',
-        background: 'var(--surface)', borderRight: '1px solid var(--divider)', height: '100vh', overflowY: 'auto',
+        background: 'var(--rail-bg)', borderRight: '1px solid var(--rail-border)', height: '100vh', overflowY: 'auto',
       }}
     >
       {innhald}

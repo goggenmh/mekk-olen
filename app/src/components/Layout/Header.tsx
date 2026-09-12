@@ -46,7 +46,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
       className="no-print"
       style={{
         display: 'flex', alignItems: 'center', gap: 14, padding: isMobile ? '12px 16px' : '14px 26px',
-        background: 'var(--surface)', borderBottom: '1px solid var(--divider)',
+        background: 'var(--topbar-bg)', borderBottom: '1px solid var(--rail-border)',
       }}
     >
       {isMobile && (
@@ -54,8 +54,8 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           onClick={onMenu}
           title="Meny"
           style={{
-            width: 38, height: 38, border: '1px solid var(--border)', background: 'var(--surface-alt)',
-            borderRadius: 12, cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none',
+            width: 38, height: 38, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
+            borderRadius: 12, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none',
           }}
         >
           <Icon name="menu" size={20} />
@@ -67,8 +67,8 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Søk etter ansatt, dokument, oppgåve…"
           style={{
-            width: '100%', padding: '10px 14px', border: '1px solid var(--border)', background: 'var(--surface-alt)',
-            borderRadius: 12, fontFamily: "'Geist'", fontSize: 13.5, color: 'var(--text)',
+            width: '100%', padding: '10px 14px', border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
+            borderRadius: 12, fontFamily: "'Geist'", fontSize: 13.5, color: 'var(--topbar-ctl-fg)',
           }}
         />
         {hits.length > 0 && (
@@ -104,8 +104,8 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
             onClick={() => setAdminOpen(true)}
             title="Administrasjon"
             style={{
-              width: 36, height: 36, border: '1px solid var(--border)', background: 'var(--surface-alt)',
-              borderRadius: 12, cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 36, height: 36, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
+              borderRadius: 12, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
             <Icon name="innstillinger" size={18} />
@@ -115,8 +115,8 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           onClick={toggle}
           title={dark ? 'Bytt til lys modus' : 'Bytt til mørk modus'}
           style={{
-            width: 36, height: 36, border: '1px solid var(--border)', background: 'var(--surface-alt)',
-            borderRadius: 12, cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 36, height: 36, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
+            borderRadius: 12, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
           <Icon name={dark ? 'sun' : 'moon'} size={18} />
@@ -124,16 +124,16 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
         <Avatar init={user.init} farge={user.farge} size={36} fontSize={13} />
         {!isMobile && (
           <div style={{ lineHeight: 1.2 }}>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>{user.navn}</div>
-            <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{user.rolle}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--topbar-name)' }}>{user.navn}</div>
+            <div style={{ fontSize: 11.5, color: 'var(--topbar-role)' }}>{user.rolle}</div>
           </div>
         )}
         <button
           onClick={logout}
           title="Logg ut"
           style={{
-            marginLeft: 6, border: '1px solid var(--border)', background: 'var(--surface-alt)',
-            borderRadius: 12, cursor: 'pointer', fontFamily: "'Geist'", fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)',
+            marginLeft: 6, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
+            borderRadius: 12, cursor: 'pointer', fontFamily: "'Geist'", fontSize: 13, fontWeight: 600, color: 'var(--topbar-ctl-fg)',
             ...(isMobile
               ? { width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }
               : { padding: '8px 14px' }),

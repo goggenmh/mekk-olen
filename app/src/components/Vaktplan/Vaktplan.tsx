@@ -24,6 +24,7 @@ export function Vaktplan() {
   const dragShiftId = useRef<string | null>(null);
 
   const days = DAGER_VAKTPLAN.map((d, i) => ({ ...d, date: addDays(vpWeek, i) }));
+  const iDag = today();
 
   const fyllVeke = () => {
     fillWeek(SHIFT_TEMPLATE.map((t) => ({ ansatt: t.ansatt, date: addDays(vpWeek, DAG_IDX[t.dag]), start: t.start, slutt: t.slutt, skift: t.skift })));
@@ -74,6 +75,7 @@ export function Vaktplan() {
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${days.length},1fr)`, gap: 12 }}>
         {days.map((d) => {
           const dayShifts = shifts.filter((s) => s.date === d.date).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
+          const erIDag = d.date === iDag;
           return (
             <div
               key={d.key}
@@ -81,11 +83,14 @@ export function Vaktplan() {
               onDrop={() => {
                 if (dragShiftId.current) { moveShiftDate(dragShiftId.current, d.date); dragShiftId.current = null; }
               }}
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 10, minHeight: 220, display: 'flex', flexDirection: 'column', gap: 8 }}
+              style={{ background: erIDag ? 'var(--brand-soft)' : 'var(--surface)', border: erIDag ? '1px solid var(--brand)' : '1px solid var(--border)', borderRadius: 16, padding: 10, minHeight: 220, display: 'flex', flexDirection: 'column', gap: 8 }}
             >
-              <div>
-                <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase' }}>{d.kort} {parseDate(d.date).getDate()}</div>
-                <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Ope {d.open}</div>
+              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)', textTransform: 'uppercase' }}>{d.kort} {parseDate(d.date).getDate()}</div>
+                  <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Ope {d.open}</div>
+                </div>
+                {erIDag && <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, letterSpacing: '0.4px', textTransform: 'uppercase', color: '#fff', background: 'var(--brand)', borderRadius: 8, padding: '2px 7px' }}>I dag</span>}
               </div>
               {dayShifts.map((s) => {
                 const a = findAnsatt(s.ansatt);
