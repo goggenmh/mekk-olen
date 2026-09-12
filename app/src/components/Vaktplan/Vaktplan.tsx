@@ -2,7 +2,7 @@ import { useRef, useState, type CSSProperties } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
-import { DAGER_VAKTPLAN, SKIFT_FARGE, SHIFT_TEMPLATE } from '../../constants';
+import { DAGER_VAKTPLAN, SHIFT_TEMPLATE } from '../../constants';
 import { addDays, mondayOf, today, isoWeek, parseDate, DAG_IDX, shiftMonth, MND, UKE_KORT } from '../../lib/dates';
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
@@ -89,7 +89,7 @@ export function Vaktplan() {
               </div>
               {dayShifts.map((s) => {
                 const a = findAnsatt(s.ansatt);
-                const farge = SKIFT_FARGE[s.skift] || a.farge;
+                const farge = a.farge;
                 return (
                   <div
                     key={s.id}
@@ -100,6 +100,7 @@ export function Vaktplan() {
                   >
                     <div style={{ fontWeight: 700 }}>{a.navn}</div>
                     <div style={{ opacity: 0.9, fontSize: 11 }}>{s.start}–{s.slutt}</div>
+                    {s.skift && <div style={{ opacity: 0.8, fontSize: 10 }}>{s.skift}</div>}
                     <button
                       onClick={(e) => { e.stopPropagation(); setSwapTarget(s); }}
                       style={{ marginTop: 4, fontSize: 10.5, background: 'rgba(255,255,255,0.22)', color: '#fff', border: 'none', borderRadius: 9, padding: '3px 7px', cursor: 'pointer' }}
