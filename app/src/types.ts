@@ -40,6 +40,11 @@ export interface Ferie {
   tekst: string;
 }
 
+export interface SjekklistePunkt {
+  tekst: string;
+  ferdig: boolean;
+}
+
 export interface Task {
   id: string;
   tittel: string;
@@ -47,6 +52,10 @@ export interface Task {
   prioritet: string;
   ansatt: EmployeeId | 'ufordelt';
   ferdig: boolean;
+  frist: string | null;
+  kategori: string;
+  gjentak: string;
+  sjekkliste: SjekklistePunkt[];
 }
 
 export interface Order {

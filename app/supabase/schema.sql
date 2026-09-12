@@ -82,10 +82,18 @@ create table if not exists tasks (
   detalj text not null default '',
   prioritet text not null default 'medium' check (prioritet in ('høg', 'medium', 'låg')),
   ansatt text not null default 'ufordelt',
-  ferdig boolean not null default false
+  ferdig boolean not null default false,
+  frist date,
+  kategori text not null default 'Anna',
+  gjentak text not null default 'ingen',
+  sjekkliste jsonb not null default '[]'::jsonb
 );
 
 alter table tasks add column if not exists ferdig boolean not null default false;
+alter table tasks add column if not exists frist date;
+alter table tasks add column if not exists kategori text not null default 'Anna';
+alter table tasks add column if not exists gjentak text not null default 'ingen';
+alter table tasks add column if not exists sjekkliste jsonb not null default '[]'::jsonb;
 
 -- ---------- orders ----------
 create table if not exists orders (

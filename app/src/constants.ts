@@ -98,3 +98,20 @@ export const PRIORITET = {
   låg: { bg: '#eef0ee', fg: '#6b7368', tekst: 'Låg' },
 } as const;
 export type Prioritet = keyof typeof PRIORITET;
+
+// Kategoriar for oppgåver.
+export const OPPGAVE_KAT: Record<string, { fg: string; bg: string }> = {
+  Butikk: { fg: '#11788a', bg: '#e7f6f8' },
+  Lager: { fg: '#b07b1a', bg: '#fdf2e0' },
+  Kampanje: { fg: '#6a5acd', bg: '#eee9fb' },
+  Anna: { fg: '#6e7d88', bg: '#eef2f4' },
+};
+export const OPPGAVE_KATEGORIAR = ['Butikk', 'Lager', 'Kampanje', 'Anna'] as const;
+
+// Gjentaking for faste rutinar.
+export const GJENTAK: Record<string, { tekst: string }> = {
+  ingen: { tekst: 'Inga gjentaking' },
+  dagleg: { tekst: 'Kvar dag' },
+  vekevis: { tekst: 'Kvar veke' },
+  manadleg: { tekst: 'Kvar månad' },
+};

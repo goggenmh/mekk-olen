@@ -1,8 +1,19 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from '../supabaseClient';
 import type { EmployeeId } from '../constants';
+import { parseDate, ymd, today } from '../lib/dates';
 import { useAnsatte } from './AnsatteContext';
 import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Task, TimeEntry } from '../types';
+
+// Neste forfallsdato for ei gjentakande oppgåve.
+const nesteFrist = (frist: string | null, gjentak: string): string | null => {
+  const d = parseDate(frist || today());
+  if (gjentak === 'dagleg') d.setDate(d.getDate() + 1);
+  else if (gjentak === 'vekevis') d.setDate(d.getDate() + 7);
+  else if (gjentak === 'manadleg') d.setMonth(d.getMonth() + 1);
+  else return null;
+  return ymd(d);
+};
 
 interface AppData {
   loading: boolean;
@@ -43,6 +54,7 @@ interface AppData {
   saveTask: (t: Omit<Task, 'id'> & { id?: string }) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   moveTask: (id: string, ansatt: EmployeeId | 'ufordelt') => Promise<void>;
+  completeTask: (task: Task) => Promise<void>;
 
   saveOrder: (o: Omit<Order, 'id'> & { id?: string }) => Promise<void>;
   deleteOrder: (id: string) => Promise<void>;
@@ -60,7 +72,7 @@ const mapEntry = (r: any): TimeEntry => ({ id: r.id, ansatt: r.ansatt, date: r.d
 const mapShift = (r: any): Shift => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift });
 const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.fra, til: r.til, dag: r.dag, tid: r.tid, status: r.status });
 const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst });
-const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig });
+const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [] });
 const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
 const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne: r.kan_godkjenne });
@@ -227,14 +239,31 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   // ---- tasks ----
   const saveTask: AppData['saveTask'] = async (t) => {
+    const felt = {
+      tittel: t.tittel, detalj: t.detalj, prioritet: t.prioritet, ansatt: t.ansatt,
+      frist: t.frist ?? null, kategori: t.kategori ?? 'Anna', gjentak: t.gjentak ?? 'ingen',
+      sjekkliste: t.sjekkliste ?? [],
+    };
     if (t.id) {
-      const { data, error: err } = await supabase.from('tasks').update({ tittel: t.tittel, detalj: t.detalj, prioritet: t.prioritet, ansatt: t.ansatt, ferdig: t.ferdig }).eq('id', t.id).select().single();
+      const { data, error: err } = await supabase.from('tasks').update({ ...felt, ferdig: t.ferdig }).eq('id', t.id).select().single();
       if (err) throw err;
       setTasks((prev) => prev.map((x) => (x.id === t.id ? mapTask(data) : x)));
     } else {
-      const { data, error: err } = await supabase.from('tasks').insert({ tittel: t.tittel, detalj: t.detalj, prioritet: t.prioritet, ansatt: t.ansatt, ferdig: t.ferdig ?? false }).select().single();
+      const { data, error: err } = await supabase.from('tasks').insert({ ...felt, ferdig: t.ferdig ?? false }).select().single();
       if (err) throw err;
       setTasks((prev) => [...prev, mapTask(data)]);
+    }
+  };
+  // Marker ferdig, og lag automatisk neste førekomst om oppgåva er gjentakande.
+  const completeTask: AppData['completeTask'] = async (task) => {
+    await saveTask({ ...task, ferdig: true });
+    if (task.gjentak && task.gjentak !== 'ingen') {
+      await saveTask({
+        tittel: task.tittel, detalj: task.detalj, prioritet: task.prioritet, ansatt: task.ansatt,
+        ferdig: false, kategori: task.kategori, gjentak: task.gjentak,
+        frist: nesteFrist(task.frist, task.gjentak),
+        sjekkliste: (task.sjekkliste || []).map((s) => ({ tekst: s.tekst, ferdig: false })),
+      });
     }
   };
   const deleteTask: AppData['deleteTask'] = async (id) => {
@@ -337,7 +366,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveShift, deleteShift, moveShiftDate, fillWeek,
       createSwap, approveSwap, declineSwap,
       saveFerie, deleteFerie,
-      saveTask, deleteTask, moveTask,
+      saveTask, deleteTask, moveTask, completeTask,
       saveOrder, deleteOrder, advanceOrder, markOrderVarsla,
       saveDoc, deleteDoc, uploadDocFile,
     }),
