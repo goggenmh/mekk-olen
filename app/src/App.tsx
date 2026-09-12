@@ -13,12 +13,16 @@ import { Bestillinger } from './components/Bestillinger/Bestillinger';
 import { Dokument } from './components/Dokument/Dokument';
 import { Rapporter } from './components/Rapporter/Rapporter';
 import { Innstillinger } from './components/Innstillinger/Innstillinger';
+import { useIsMobile } from './lib/useIsMobile';
 import type { View } from './lib/view';
 
 function App() {
   const { loading: authLoading, user } = useAuth();
   const { loading: dataLoading, error, refreshAll } = useAppData();
   const [view, setView] = useState<View>('dashbord');
+  const isMobile = useIsMobile();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const go = (v: View) => { setView(v); setMenuOpen(false); };
 
   useEffect(() => {
     if (user) refreshAll();
@@ -37,19 +41,21 @@ function App() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex' }}>
-      <Sidebar view={view} setView={setView} />
+      <Sidebar view={view} setView={go} isMobile={isMobile} open={menuOpen} onClose={() => setMenuOpen(false)} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <Header setView={setView} />
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {view === 'dashbord' && <Dashboard setView={setView} />}
-          {view === 'ansatte' && <Ansatte />}
-          {view === 'timeliste' && <Timeliste />}
-          {view === 'vaktplan' && <Vaktplan />}
-          {view === 'oppgaver' && <Oppgaver />}
-          {view === 'bestilling' && <Bestillinger />}
-          {view === 'dokument' && <Dokument />}
-          {view === 'rapporter' && <Rapporter />}
-          {view === 'innstillinger' && <Innstillinger setView={setView} />}
+        <Header setView={go} isMobile={isMobile} onMenu={() => setMenuOpen(true)} />
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto' }}>
+          <div style={{ maxWidth: 1240, margin: '0 auto', width: '100%' }}>
+            {view === 'dashbord' && <Dashboard setView={go} />}
+            {view === 'ansatte' && <Ansatte />}
+            {view === 'timeliste' && <Timeliste />}
+            {view === 'vaktplan' && <Vaktplan />}
+            {view === 'oppgaver' && <Oppgaver />}
+            {view === 'bestilling' && <Bestillinger />}
+            {view === 'dokument' && <Dokument />}
+            {view === 'rapporter' && <Rapporter />}
+            {view === 'innstillinger' && <Innstillinger setView={go} />}
+          </div>
         </div>
       </div>
     </div>

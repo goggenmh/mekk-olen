@@ -16,7 +16,7 @@ interface SearchHit {
   ikon: string;
 }
 
-export function Header({ setView }: { setView: (v: View) => void }) {
+export function Header({ setView, isMobile = false, onMenu }: { setView: (v: View) => void; isMobile?: boolean; onMenu?: () => void }) {
   const { user, logout } = useAuth();
   const { dark, toggle } = useTheme();
   const { isLeder, ansatte } = useAnsatte();
@@ -45,11 +45,23 @@ export function Header({ setView }: { setView: (v: View) => void }) {
     <div
       className="no-print"
       style={{
-        display: 'flex', alignItems: 'center', gap: 14, padding: '14px 26px',
+        display: 'flex', alignItems: 'center', gap: 14, padding: isMobile ? '12px 16px' : '14px 26px',
         background: 'var(--surface)', borderBottom: '1px solid var(--divider)',
       }}
     >
-      <div style={{ position: 'relative', flex: 1, maxWidth: 420 }}>
+      {isMobile && (
+        <button
+          onClick={onMenu}
+          title="Meny"
+          style={{
+            width: 38, height: 38, border: '1px solid var(--border)', background: 'var(--surface-alt)',
+            borderRadius: 12, cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none',
+          }}
+        >
+          <Icon name="menu" size={20} />
+        </button>
+      )}
+      <div style={{ position: 'relative', flex: 1, maxWidth: 420, display: isMobile ? 'none' : 'block' }}>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -110,18 +122,24 @@ export function Header({ setView }: { setView: (v: View) => void }) {
           <Icon name={dark ? 'sun' : 'moon'} size={18} />
         </button>
         <Avatar init={user.init} farge={user.farge} size={36} fontSize={13} />
-        <div style={{ lineHeight: 1.2 }}>
-          <div style={{ fontSize: 14, fontWeight: 600 }}>{user.navn}</div>
-          <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{user.rolle}</div>
-        </div>
+        {!isMobile && (
+          <div style={{ lineHeight: 1.2 }}>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>{user.navn}</div>
+            <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{user.rolle}</div>
+          </div>
+        )}
         <button
           onClick={logout}
+          title="Logg ut"
           style={{
-            marginLeft: 6, padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface-alt)',
+            marginLeft: 6, border: '1px solid var(--border)', background: 'var(--surface-alt)',
             borderRadius: 12, cursor: 'pointer', fontFamily: "'Geist'", fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)',
+            ...(isMobile
+              ? { width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }
+              : { padding: '8px 14px' }),
           }}
         >
-          Logg ut
+          {isMobile ? <Icon name="logout" size={18} /> : 'Logg ut'}
         </button>
       </div>
       {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}

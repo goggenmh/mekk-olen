@@ -168,9 +168,9 @@ export function Vaktplan() {
         </div>
       </div>
 
-      <div style={{ background: '#0c2436', color: '#fff', borderRadius: 18, padding: '16px 18px' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Bemanningsregel</div>
-        <ul style={{ paddingLeft: 18, fontSize: 13, color: '#cfe0e6', lineHeight: 1.6 }}>
+      <div style={{ background: 'linear-gradient(135deg,#0d5f6e,#0c5a69)', color: '#eaf6f8', borderRadius: 16, padding: '16px 18px', boxShadow: '0 8px 24px rgba(12,90,105,0.22)' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: '#8fd2dd', marginBottom: 10 }}>Bemanningsregel</div>
+        <ul style={{ paddingLeft: 18, fontSize: 13, color: '#cfe6ec', lineHeight: 1.6 }}>
           <li>Minst éin tilsett på vakt i alle opningstider.</li>
           <li>Sander dekkjer hovudsakleg formiddagar man–fre.</li>
           <li>Laurdagsvakt går på rundgang mellom Georg og Christian.</li>

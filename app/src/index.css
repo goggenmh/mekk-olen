@@ -1,24 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg: #eef1f3;
+  --bg: #f3f5f4;
   --surface: #ffffff;
-  --surface-alt: #f6f8fa;
-  --surface-soft: #f1f5f6;
-  --border: #e3e9ec;
-  --divider: #eef1f3;
+  --surface-alt: #f6f8f7;
+  --surface-soft: #f1f4f3;
+  --border: #e6eae8;
+  --divider: #eef1ef;
   --danger-border: #ecc9c2;
-  --text: #15212b;
+  --text: #18232e;
   --text-secondary: #56656f;
-  --text-muted: #7e93a0;
+  --text-muted: #65727d;
   --text-label: #6e7d88;
-  --text-faint: #a4b1ba;
+  --text-faint: #93a1ab;
   --text-faint2: #c3ced5;
   --danger: #c0392b;
+  --accent: #c67e1e;
+  --accent-soft: #f7edda;
   --modal-overlay: rgba(12, 36, 54, 0.5);
   --brand: #11788a;
   --brand-strong: #0c5a69;
-  --brand-soft: #e7f6f8;
+  --brand-soft: #e6f3f5;
+  --shadow-card: 0 1px 2px rgba(16, 40, 50, 0.04), 0 6px 18px rgba(16, 40, 50, 0.045);
+  --shadow-hover: 0 2px 4px rgba(16, 40, 50, 0.06), 0 12px 28px rgba(16, 40, 50, 0.10);
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 20px;
@@ -40,10 +44,14 @@
   --text-faint: #647580;
   --text-faint2: #4d5d67;
   --danger: #e0584a;
+  --accent: #d9954a;
+  --accent-soft: #382c1a;
   --modal-overlay: rgba(0, 0, 0, 0.6);
   --brand: #2bb6c9;
   --brand-strong: #5fd0df;
   --brand-soft: #142e36;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.25), 0 6px 18px rgba(0, 0, 0, 0.22);
+  --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 28px rgba(0, 0, 0, 0.32);
   color-scheme: dark;
 }
 
