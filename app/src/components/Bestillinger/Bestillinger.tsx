@@ -1,7 +1,7 @@
-import { useState, type CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { ORDER_FLOW, ORDER_STATUS } from '../../constants';
-import { datoKort } from '../../lib/dates';
+import { datoKort, MND } from '../../lib/dates';
 import { OrderModal } from './OrderModal';
 import { NotifyModal } from './NotifyModal';
 import { Icon } from '../ui/Icon';
@@ -20,6 +20,35 @@ export function Bestillinger() {
   const [filter, setFilter] = useState('aktive');
   const [orderTarget, setOrderTarget] = useState<Order | 'new' | null>(null);
   const [notifyTarget, setNotifyTarget] = useState<Order | null>(null);
+  const [openYear, setOpenYear] = useState<string | null>(null);
+  const [openMonth, setOpenMonth] = useState<string | null>(null);
+
+  // Henta-bestillingar grupperte i år → månad, nyaste først.
+  const hentaGrupper = useMemo(() => {
+    const henta = orders.filter((o) => o.status === 'henta');
+    const byAr = new Map<string, Map<string, Order[]>>();
+    for (const o of henta) {
+      const ar = (o.dato || '').slice(0, 4) || 'Ukjent';
+      const md = (o.dato || '').slice(0, 7) || 'Ukjent';
+      if (!byAr.has(ar)) byAr.set(ar, new Map());
+      const mnd = byAr.get(ar)!;
+      if (!mnd.has(md)) mnd.set(md, []);
+      mnd.get(md)!.push(o);
+    }
+    return [...byAr.entries()]
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+      .map(([ar, mndMap]) => ({
+        ar,
+        tal: [...mndMap.values()].reduce((n, arr) => n + arr.length, 0),
+        maneder: [...mndMap.entries()]
+          .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+          .map(([md, arr]) => ({
+            md,
+            namn: MND[Number(md.slice(5, 7)) - 1] || md,
+            ordrar: arr.slice().sort((a, b) => (a.dato < b.dato ? 1 : -1)),
+          })),
+      }));
+  }, [orders]);
 
   const filtered = orders
     .filter((o) => (filter === 'aktive' ? o.status !== 'henta' : o.status === filter))
@@ -58,6 +87,7 @@ export function Bestillinger() {
         ))}
       </div>
 
+      {filter !== 'henta' && (
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
@@ -105,6 +135,68 @@ export function Bestillinger() {
           </tbody>
         </table>
       </div>
+      )}
+
+      {filter === 'henta' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {hentaGrupper.length === 0 && (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '16px 18px', fontSize: 13, color: 'var(--text-muted)' }}>
+              Ingen henta bestillingar enno.
+            </div>
+          )}
+          {hentaGrupper.map((g) => {
+            const arOpen = openYear === g.ar;
+            return (
+              <div key={g.ar} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
+                <button
+                  onClick={() => { setOpenYear(arOpen ? null : g.ar); setOpenMonth(null); }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
+                >
+                  <span style={{ fontSize: 12, color: 'var(--text-faint)', width: 14 }}>{arOpen ? '▾' : '▸'}</span>
+                  <span style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Geist'" }}>{g.ar}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--surface-alt)', borderRadius: 10, padding: '2px 9px' }}>{g.tal} henta</span>
+                </button>
+
+                {arOpen && (
+                  <div style={{ borderTop: '1px solid var(--divider)', padding: '6px 10px 10px' }}>
+                    {g.maneder.map((m) => {
+                      const mdOpen = openMonth === m.md;
+                      return (
+                        <div key={m.md}>
+                          <button
+                            onClick={() => setOpenMonth(mdOpen ? null : m.md)}
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
+                          >
+                            <span style={{ fontSize: 11, color: 'var(--text-faint)', width: 14 }}>{mdOpen ? '▾' : '▸'}</span>
+                            <span style={{ fontSize: 13.5, fontWeight: 600, textTransform: 'capitalize' }}>{m.namn}</span>
+                            <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>{m.ordrar.length} stk</span>
+                          </button>
+                          {mdOpen && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '2px 6px 10px' }}>
+                              {m.ordrar.map((o) => (
+                                <button
+                                  key={o.id}
+                                  onClick={() => setOrderTarget(o)}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', textAlign: 'left' }}
+                                >
+                                  <span style={{ fontSize: 13, fontWeight: 600, flex: 'none', minWidth: 0 }}>{o.kunde}</span>
+                                  <span style={{ fontSize: 12.5, color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.vare}</span>
+                                  {o.antal > 1 && <span style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>×{o.antal}</span>}
+                                  <span style={{ fontSize: 11.5, color: 'var(--text-faint)', flex: 'none' }}>{datoKort(o.dato)}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {orderTarget && <OrderModal existing={orderTarget === 'new' ? undefined : orderTarget} onClose={() => setOrderTarget(null)} />}
       {notifyTarget && <NotifyModal order={notifyTarget} onClose={() => setNotifyTarget(null)} />}
