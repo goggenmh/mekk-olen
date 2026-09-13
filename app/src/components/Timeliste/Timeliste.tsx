@@ -31,6 +31,7 @@ export function Timeliste() {
   const [editTarget, setEditTarget] = useState<{ ansatt: TimeEntry['ansatt']; date: string; entry?: TimeEntry } | null>(null);
 
   const dates = useMemo(() => weekDates(weekStart), [weekStart]);
+  const prevDates = useMemo(() => weekDates(addDays(weekStart, -7)), [weekStart]);
 
   const prevPeriod = () => (mode === 'uke' ? setWeekStart(addDays(weekStart, -7)) : setMonthAnchor(shiftMonth(monthAnchor, -1)));
   const nextPeriod = () => (mode === 'uke' ? setWeekStart(addDays(weekStart, 7)) : setMonthAnchor(shiftMonth(monthAnchor, 1)));
@@ -108,13 +109,16 @@ export function Timeliste() {
       </div>
 
       {mode === 'uke' ? (
-        <WeekTable
-          dates={dates}
-          entries={entries}
-          onCellClick={(ansatt, date, entry) => setEditTarget({ ansatt, date, entry })}
-          maaGodkjenne={maaGodkjenne}
-          onApprove={(ansatt) => approveEmployeeEntries(ansatt, dates)}
-        />
+        <>
+          <WeekSummary dates={dates} prevDates={prevDates} entries={entries} />
+          <WeekTable
+            dates={dates}
+            entries={entries}
+            onCellClick={(ansatt, date, entry) => setEditTarget({ ansatt, date, entry })}
+            maaGodkjenne={maaGodkjenne}
+            onApprove={(ansatt) => approveEmployeeEntries(ansatt, dates)}
+          />
+        </>
       ) : (
         <MonthView
           monthAnchor={monthAnchor}
@@ -130,6 +134,40 @@ export function Timeliste() {
       </div>
 
       {editTarget && <TimeEntryModal target={editTarget} onClose={() => setEditTarget(null)} />}
+    </div>
+  );
+}
+
+const NORMALTID = 37.5;
+
+function WeekSummary({ dates, prevDates, entries }: { dates: string[]; prevDates: string[]; entries: TimeEntry[] }) {
+  const { ansatte } = useAnsatte();
+  return (
+    <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: 14 }}>
+      {ansatte.map((a) => {
+        const sum = entries.filter((e) => e.ansatt === a.id && dates.includes(e.date)).reduce((acc, e) => acc + timar(e), 0);
+        const prev = entries.filter((e) => e.ansatt === a.id && prevDates.includes(e.date)).reduce((acc, e) => acc + timar(e), 0);
+        const pct = Math.round((sum / NORMALTID) * 100);
+        const diff = Math.round((sum - prev) * 4) / 4;
+        return (
+          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '15px 17px', boxShadow: 'var(--shadow-card)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: a.farge, flex: 'none' }} />
+              <span style={{ fontSize: 13.5, fontWeight: 700, flex: 1 }}>{a.navn}</span>
+              {diff !== 0 && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: diff > 0 ? '#2f9e6f' : 'var(--danger)' }}>
+                  {diff > 0 ? '↑' : '↓'} {fmt(Math.abs(diff))} t
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Geist Mono'", color: a.farge, letterSpacing: '-0.5px', marginTop: 8 }}>{fmt(sum)} t</div>
+            <div style={{ height: 9, borderRadius: 6, background: 'var(--surface-alt)', overflow: 'hidden', marginTop: 8 }}>
+              <div style={{ height: '100%', width: `${Math.min(100, pct)}%`, background: pct >= 100 ? '#2f9e6f' : a.farge, borderRadius: 6 }} />
+            </div>
+            <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 6 }}>{pct}% av normaltid ({fmt(NORMALTID)} t) · {diff === 0 ? 'som førre veke' : `${diff > 0 ? '+' : '−'}${fmt(Math.abs(diff))} t frå førre veke`}</div>
+          </div>
+        );
+      })}
     </div>
   );
 }

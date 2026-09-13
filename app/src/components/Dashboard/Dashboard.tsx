@@ -118,6 +118,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         {hurtighandlinger.map((h) => (
           <button
             key={h.key}
+            className="hoverable"
             onClick={() => setQuickAction(h.key)}
             style={{
               display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', background: 'var(--surface)',
