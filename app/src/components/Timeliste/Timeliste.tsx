@@ -110,7 +110,6 @@ export function Timeliste() {
 
       {mode === 'uke' ? (
         <>
-          <WeekSummary dates={dates} prevDates={prevDates} entries={entries} />
           <WeekTable
             dates={dates}
             entries={entries}
@@ -118,6 +117,7 @@ export function Timeliste() {
             maaGodkjenne={maaGodkjenne}
             onApprove={(ansatt) => approveEmployeeEntries(ansatt, dates)}
           />
+          <WeekSummary dates={dates} prevDates={prevDates} entries={entries} />
         </>
       ) : (
         <MonthView
