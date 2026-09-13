@@ -68,8 +68,8 @@ export const ORDER_FLOW = ['ny', 'tinga', 'komen', 'henta'] as const;
 export type OrderStatus = (typeof ORDER_FLOW)[number];
 
 export const ORDER_STATUS: Record<OrderStatus, { tekst: string; fg: string; bg: string; neste: string }> = {
-  ny: { tekst: 'Ny', fg: '#6e7d88', bg: '#eef2f4', neste: 'Marker tinga' },
-  tinga: { tekst: 'Tinga', fg: '#b07b1a', bg: '#fdf2e0', neste: 'Komen i butikk' },
+  ny: { tekst: 'Ny', fg: '#6e7d88', bg: '#eef2f4', neste: 'Marker bestilt' },
+  tinga: { tekst: 'Bestilt', fg: '#b07b1a', bg: '#fdf2e0', neste: 'Komen i butikk' },
   komen: { tekst: 'Komen', fg: '#11788a', bg: '#e7f6f8', neste: 'Marker henta' },
   henta: { tekst: 'Henta', fg: '#2f9e6f', bg: '#e8f5ee', neste: '' },
 };
