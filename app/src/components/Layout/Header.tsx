@@ -68,7 +68,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           placeholder="Søk etter ansatt, dokument, oppgåve…"
           style={{
             width: '100%', padding: '10px 14px', border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 12, fontFamily: "'Geist'", fontSize: 13.5, color: 'var(--topbar-ctl-fg)',
+            borderRadius: 10, fontFamily: "'Geist'", fontSize: 13.5, color: 'var(--topbar-ctl-fg)',
           }}
         />
         {hits.length > 0 && (

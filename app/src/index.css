@@ -129,6 +129,22 @@ button:active {
   transform: translateY(-2px);
 }
 
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Skjelett-lasting */
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.skeleton {
+  background: var(--surface-alt);
+  border-radius: 12px;
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
 input, textarea, select {
   color-scheme: inherit;
 }

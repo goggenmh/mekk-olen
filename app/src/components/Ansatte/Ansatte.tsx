@@ -7,6 +7,7 @@ import { Icon } from '../ui/Icon';
 import { Pill } from '../ui/Pill';
 import { AnsattModal } from './AnsattModal';
 import { ResetPinModal } from './ResetPinModal';
+import { AnsattProfil } from './AnsattProfil';
 import type { Employee } from '../../constants';
 
 interface AnsattStats { timarUke: number; ventarOppg: number; nesteVakt: string | null; }
@@ -24,15 +25,16 @@ function StatBit({ ikon, tekst }: { ikon: string; tekst: string }) {
   );
 }
 
-function AnsattCard({ ansatt, stats, onEdit, onResetPin, onToggleAktiv }: {
+function AnsattCard({ ansatt, stats, onProfil, onEdit, onResetPin, onToggleAktiv }: {
   ansatt: Employee;
   stats: AnsattStats;
+  onProfil: () => void;
   onEdit: () => void;
   onResetPin: () => void;
   onToggleAktiv: () => void;
 }) {
   return (
-    <div style={{ ...cardStyle, opacity: ansatt.aktiv ? 1 : 0.55, flexWrap: 'wrap' }}>
+    <div className="hoverable" style={{ ...cardStyle, opacity: ansatt.aktiv ? 1 : 0.55, flexWrap: 'wrap' }}>
       <Avatar init={ansatt.init} farge={ansatt.farge} size={44} fontSize={14} />
       <div style={{ flex: 1, minWidth: 180, lineHeight: 1.3 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -56,12 +58,16 @@ function AnsattCard({ ansatt, stats, onEdit, onResetPin, onToggleAktiv }: {
       <div style={{ display: 'flex', gap: 8, flex: 'none', flexWrap: 'wrap' }}>
         {ansatt.aktiv ? (
           <>
+            <button onClick={onProfil} style={{ ...btnStyle, background: 'var(--brand-soft)', color: 'var(--brand-strong)', borderColor: 'var(--brand-soft)' }}>Profil</button>
             <button onClick={onEdit} style={btnStyle}>Endre</button>
             <button onClick={onResetPin} style={btnStyle}>Nullstill PIN</button>
             <button onClick={onToggleAktiv} style={{ ...btnStyle, color: 'var(--danger)' }}>Deaktiver</button>
           </>
         ) : (
-          <button onClick={onToggleAktiv} style={btnStyle}>Reaktiver</button>
+          <>
+            <button onClick={onProfil} style={btnStyle}>Profil</button>
+            <button onClick={onToggleAktiv} style={btnStyle}>Reaktiver</button>
+          </>
         )}
       </div>
     </div>
@@ -78,6 +84,7 @@ export function Ansatte() {
   const { entries, tasks, shifts } = useAppData();
   const [modalAnsatt, setModalAnsatt] = useState<Employee | undefined | 'new'>(undefined);
   const [pinAnsatt, setPinAnsatt] = useState<Employee | null>(null);
+  const [profilAnsatt, setProfilAnsatt] = useState<Employee | null>(null);
   const [visInaktive, setVisInaktive] = useState(false);
 
   const inaktive = alleAnsatte.filter((a) => !a.aktiv);
@@ -97,6 +104,23 @@ export function Ansatte() {
       setAktiv(a.id, false);
     }
   };
+
+  if (profilAnsatt) {
+    return (
+      <>
+        <AnsattProfil
+          ansatt={profilAnsatt}
+          onBack={() => setProfilAnsatt(null)}
+          onEdit={() => setModalAnsatt(profilAnsatt)}
+          onResetPin={() => setPinAnsatt(profilAnsatt)}
+        />
+        {modalAnsatt !== undefined && (
+          <AnsattModal existing={modalAnsatt === 'new' ? undefined : modalAnsatt} onClose={() => setModalAnsatt(undefined)} />
+        )}
+        {pinAnsatt && <ResetPinModal ansatt={pinAnsatt} onClose={() => setPinAnsatt(null)} />}
+      </>
+    );
+  }
 
   return (
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 880 }}>
@@ -122,6 +146,7 @@ export function Ansatte() {
             key={a.id}
             ansatt={a}
             stats={statsFor(a.id)}
+            onProfil={() => setProfilAnsatt(a)}
             onEdit={() => setModalAnsatt(a)}
             onResetPin={() => setPinAnsatt(a)}
             onToggleAktiv={() => deaktiver(a)}
@@ -144,6 +169,7 @@ export function Ansatte() {
                   key={a.id}
                   ansatt={a}
                   stats={statsFor(a.id)}
+                  onProfil={() => setProfilAnsatt(a)}
                   onEdit={() => setModalAnsatt(a)}
                   onResetPin={() => setPinAnsatt(a)}
                   onToggleAktiv={() => setAktiv(a.id, true)}

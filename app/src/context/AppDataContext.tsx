@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { supabase } from '../supabaseClient';
 import type { EmployeeId } from '../constants';
 import { parseDate, ymd, today } from '../lib/dates';
+import { toast } from '../lib/toast';
 import { useAnsatte } from './AnsatteContext';
 import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Task, TimeEntry } from '../types';
 
@@ -147,6 +148,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         return [...prev, mapped];
       });
     }
+    toast('Timeføring lagra');
   };
   const deleteEntry: AppData['deleteEntry'] = async (id) => {
     const { error: err } = await supabase.from('time_entries').delete().eq('id', id);
@@ -159,6 +161,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { error: err } = await supabase.from('time_entries').update({ status: 'godkjent' }).in('id', ids);
     if (err) throw err;
     setEntries((prev) => prev.map((e) => (ids.includes(e.id) ? { ...e, status: 'godkjent' } : e)));
+    toast('Timar godkjende');
   };
 
   // ---- shifts ----
@@ -176,6 +179,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (err) throw err;
       setShifts((prev) => [...prev, mapShift(data)]);
     }
+    toast('Vakt lagra');
   };
   const deleteShift: AppData['deleteShift'] = async (id) => {
     const { error: err } = await supabase.from('shifts').delete().eq('id', id);
@@ -253,6 +257,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (err) throw err;
       setTasks((prev) => [...prev, mapTask(data)]);
     }
+    toast('Oppgåve lagra');
   };
   // Marker ferdig, og lag automatisk neste førekomst om oppgåva er gjentakande.
   const completeTask: AppData['completeTask'] = async (task) => {
@@ -292,6 +297,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (err) throw err;
       setOrders((prev) => [mapOrder(data), ...prev]);
     }
+    toast('Bestilling lagra');
   };
   const deleteOrder: AppData['deleteOrder'] = async (id) => {
     const { error: err } = await supabase.from('orders').delete().eq('id', id);
@@ -302,6 +308,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { data, error: err } = await supabase.from('orders').update({ status: nextStatus }).eq('id', id).select().single();
     if (err) throw err;
     setOrders((prev) => prev.map((x) => (x.id === id ? mapOrder(data) : x)));
+    toast('Status oppdatert');
   };
   const markOrderVarsla: AppData['markOrderVarsla'] = async (id, date) => {
     const { data, error: err } = await supabase.from('orders').update({ varsla: date }).eq('id', id).select().single();
@@ -320,6 +327,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (err) throw err;
       setDocs((prev) => [mapDoc(data), ...prev]);
     }
+    toast('Dokument lagra');
   };
   const deleteDoc: AppData['deleteDoc'] = async (id) => {
     const { error: err } = await supabase.from('docs').delete().eq('id', id);

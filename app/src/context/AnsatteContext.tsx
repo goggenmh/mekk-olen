@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase, pinToPassword } from '../supabaseClient';
+import { toast } from '../lib/toast';
 import { DEFAULT_ANSATTE, type Employee, type EmployeeId } from '../constants';
 
 const TOMT_ANSATT: Employee = { id: '', navn: '', rolle: '', lonn: 'time', sats: 0, farge: '#999', init: '?', email: '', telefon: '', leder: false, aktiv: false };
@@ -62,26 +63,31 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
     const { pin, ...rest } = input;
     await callAdmin('create', { id, ...rest, password: pinToPassword(pin) });
     await refreshAnsatte();
+    toast('Ansatt oppretta');
   };
 
   const updateAnsatt: AnsatteState['updateAnsatt'] = async (id, patch) => {
     const { data, error } = await supabase.from('ansatte').update(patch).eq('id', id).select().single();
     if (error) throw error;
     setAlleAnsatte((prev) => prev.map((a) => (a.id === id ? mapAnsatt(data) : a)));
+    toast('Ansatt oppdatert');
   };
 
   const setAktiv: AnsatteState['setAktiv'] = async (id, aktiv) => {
     await callAdmin(aktiv ? 'reactivate' : 'deactivate', { id });
     await refreshAnsatte();
+    toast(aktiv ? 'Ansatt reaktivert' : 'Ansatt deaktivert');
   };
 
   const resetPin: AnsatteState['resetPin'] = async (id, pin) => {
     await callAdmin('resetpin', { id, password: pinToPassword(pin) });
+    toast('PIN nullstilt');
   };
 
   const updateEmail: AnsatteState['updateEmail'] = async (id, email) => {
     await callAdmin('updateemail', { id, email });
     await refreshAnsatte();
+    toast('E-post oppdatert');
   };
 
   const value = useMemo<AnsatteState>(

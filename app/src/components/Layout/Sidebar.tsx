@@ -63,7 +63,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
                 </span>
                 <span style={{ flex: 1 }}>{v.label}</span>
                 {badge && (
-                  <span style={{ fontSize: 10.5, fontWeight: 700, color: '#fff', background: 'var(--accent)', borderRadius: 12, padding: '1px 7px', minWidth: 16, textAlign: 'center' }}>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: '#fff', background: 'var(--accent)', borderRadius: 8, padding: '1px 7px', minWidth: 16, textAlign: 'center' }}>
                     {badge.n}
                   </span>
                 )}
