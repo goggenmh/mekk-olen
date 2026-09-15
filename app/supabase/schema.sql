@@ -206,6 +206,15 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 
+-- ---------- utilgjengeleg (raude dagar: ansatt kan ikkje jobbe) ----------
+create table if not exists utilgjengeleg (
+  id uuid primary key default gen_random_uuid(),
+  ansatt text not null references ansatte(id),
+  dato date not null,
+  created_at timestamptz not null default now(),
+  unique (ansatt, dato)
+);
+
 -- ---------- RLS ----------
 -- All employees are equally trusted staff in this shop — any logged-in
 -- employee can read/write everything (matches the original prototype's behaviour,
@@ -220,12 +229,13 @@ alter table orders enable row level security;
 alter table docs enable row level security;
 alter table permissions enable row level security;
 alter table meldinger enable row level security;
+alter table utilgjengeleg enable row level security;
 
 do $$
 declare
   t text;
 begin
-  for t in select unnest(array['time_entries','shifts','shift_swaps','ferie','tasks','orders','docs','permissions','meldinger']) loop
+  for t in select unnest(array['time_entries','shifts','shift_swaps','ferie','tasks','orders','docs','permissions','meldinger','utilgjengeleg']) loop
     execute format('drop policy if exists "authenticated_all" on %I', t);
     execute format(
       'create policy "authenticated_all" on %I for all to authenticated using (true) with check (true)',
@@ -248,5 +258,5 @@ create policy "authenticated_all_ansatte" on ansatte for all to authenticated us
 -- RLS policies alone don't grant table access — Postgres still requires the
 -- underlying GRANTs, separate from row-level security.
 grant usage on schema public to authenticated, anon;
-grant select, insert, update, delete on time_entries, shifts, shift_swaps, ferie, tasks, orders, docs, permissions, meldinger, ansatte to authenticated;
+grant select, insert, update, delete on time_entries, shifts, shift_swaps, ferie, tasks, orders, docs, permissions, meldinger, ansatte, utilgjengeleg to authenticated;
 grant select on ansatte to anon;

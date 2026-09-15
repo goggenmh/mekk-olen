@@ -94,3 +94,10 @@ export interface Melding {
   tekst: string;
   created_at: string;
 }
+
+/** Ein dag ein ansatt har merka at dei ikkje kan jobbe (raud dag). */
+export interface Unavailable {
+  id: string;
+  ansatt: EmployeeId;
+  dato: string;
+}

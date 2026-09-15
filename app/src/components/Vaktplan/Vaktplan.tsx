@@ -12,7 +12,7 @@ import { useIsMobile } from '../../lib/useIsMobile';
 import type { Shift, Ferie } from '../../types';
 
 export function Vaktplan() {
-  const { shifts, swaps, ferie, moveShiftDate, fillWeek, approveSwap, declineSwap, canApprove } = useAppData();
+  const { shifts, swaps, ferie, moveShiftDate, fillWeek, approveSwap, declineSwap, canApprove, unavailable, toggleUnavailable } = useAppData();
   const { user } = useAuth();
   const { findAnsatt } = useAnsatte();
   const isMobile = useIsMobile();
@@ -78,6 +78,8 @@ export function Vaktplan() {
         {days.map((d) => {
           const dayShifts = shifts.filter((s) => s.date === d.date).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
           const erIDag = d.date === iDag;
+          const dagUtil = unavailable.filter((u) => u.dato === d.date);
+          const egUtil = !!user && dagUtil.some((u) => u.ansatt === user.id);
           return (
             <div
               key={d.key}
@@ -86,8 +88,8 @@ export function Vaktplan() {
                 if (dragShiftId.current) { moveShiftDate(dragShiftId.current, d.date); dragShiftId.current = null; }
               }}
               style={{
-                background: erIDag ? 'var(--brand-soft)' : 'var(--surface)',
-                border: erIDag ? '2px solid var(--brand)' : '1px solid var(--border)',
+                background: erIDag ? 'var(--brand-soft)' : egUtil ? 'rgba(192,57,43,0.055)' : 'var(--surface)',
+                border: erIDag ? '2px solid var(--brand)' : egUtil ? '1px solid rgba(192,57,43,0.35)' : '1px solid var(--border)',
                 borderRadius: 12, padding: erIDag ? 9 : 10, minHeight: isMobile ? 'auto' : 220, display: 'flex', flexDirection: 'column', gap: 7,
               }}
             >
@@ -127,6 +129,33 @@ export function Vaktplan() {
                   </div>
                 );
               })}
+              {(dagUtil.length > 0 || user) && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: dayShifts.length ? 2 : 0 }}>
+                  {dagUtil.map((u) => {
+                    const a = findAnsatt(u.ansatt);
+                    const eg = user?.id === u.ansatt;
+                    return (
+                      <span
+                        key={u.id}
+                        onClick={eg ? () => toggleUnavailable(u.ansatt, d.date) : undefined}
+                        title={eg ? 'Trykk for å fjerne' : `${a.navn} kan ikkje jobbe`}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, color: '#b3261e', background: 'rgba(192,57,43,0.12)', border: '1px solid rgba(192,57,43,0.3)', borderRadius: 8, padding: '2px 7px', cursor: eg ? 'pointer' : 'default' }}
+                      >
+                        {a.init}{eg ? ' ✕' : ''}
+                      </span>
+                    );
+                  })}
+                  {user && !egUtil && (
+                    <button
+                      onClick={() => toggleUnavailable(user.id, d.date)}
+                      title="Merk at du ikkje kan jobbe denne dagen"
+                      style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text-muted)', background: 'none', border: '1px dashed var(--border)', borderRadius: 8, padding: '2px 7px', cursor: 'pointer' }}
+                    >
+                      Kan ikkje jobbe
+                    </button>
+                  )}
+                </div>
+              )}
               <button
                 onClick={() => setShiftTarget({ date: d.date })}
                 style={{ marginTop: 'auto', border: '1px dashed var(--border)', background: 'none', borderRadius: 9, padding: '7px 0', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer' }}

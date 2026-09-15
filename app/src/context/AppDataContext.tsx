@@ -4,7 +4,7 @@ import type { EmployeeId } from '../constants';
 import { parseDate, ymd, today } from '../lib/dates';
 import { toast } from '../lib/toast';
 import { useAnsatte } from './AnsatteContext';
-import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Task, TimeEntry } from '../types';
+import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Task, TimeEntry, Unavailable } from '../types';
 
 // Neste forfallsdato for ei gjentakande oppgåve.
 const nesteFrist = (frist: string | null, gjentak: string): string | null => {
@@ -28,6 +28,8 @@ interface AppData {
   docs: Doc[];
   permissions: Permission[];
   meldinger: Melding[];
+  unavailable: Unavailable[];
+  toggleUnavailable: (ansatt: EmployeeId, dato: string) => Promise<void>;
   refreshAll: () => Promise<void>;
 
   canApprove: (ansatt: EmployeeId | null | undefined) => boolean;
@@ -73,6 +75,7 @@ const mapEntry = (r: any): TimeEntry => ({ id: r.id, ansatt: r.ansatt, date: r.d
 const mapShift = (r: any): Shift => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift });
 const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.fra, til: r.til, dag: r.dag, tid: r.tid, status: r.status });
 const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst });
+const mapUnavail = (r: any): Unavailable => ({ id: r.id, ansatt: r.ansatt, dato: r.dato });
 const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [] });
 const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
@@ -87,6 +90,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [swaps, setSwaps] = useState<ShiftSwap[]>([]);
   const [ferie, setFerie] = useState<Ferie[]>([]);
+  const [unavailable, setUnavailable] = useState<Unavailable[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [docs, setDocs] = useState<Doc[]>([]);
@@ -96,7 +100,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const refreshAll = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [e, s, sw, f, t, o, d, p, m] = await Promise.all([
+    const [e, s, sw, f, t, o, d, p, m, u] = await Promise.all([
       supabase.from('time_entries').select('*'),
       supabase.from('shifts').select('*'),
       supabase.from('shift_swaps').select('*'),
@@ -106,8 +110,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       supabase.from('docs').select('*').order('dato', { ascending: false }),
       supabase.from('permissions').select('*'),
       supabase.from('meldinger').select('*').order('created_at', { ascending: false }),
+      supabase.from('utilgjengeleg').select('*'),
     ]);
-    const firstError = [e, s, sw, f, t, o, d, p, m].find((r) => r.error)?.error;
+    const firstError = [e, s, sw, f, t, o, d, p, m, u].find((r) => r.error)?.error;
     if (firstError) {
       setError(firstError.message);
     } else {
@@ -120,6 +125,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setDocs((d.data || []).map(mapDoc));
       setPermissions((p.data || []).map(mapPermission));
       setMeldinger((m.data || []).map(mapMelding));
+      setUnavailable((u.data || []).map(mapUnavail));
     }
     setLoading(false);
   }, []);
@@ -239,6 +245,21 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { error: err } = await supabase.from('ferie').delete().eq('id', id);
     if (err) throw err;
     setFerie((prev) => prev.filter((x) => x.id !== id));
+  };
+
+  // ---- utilgjengeleg (raude dagar) ----
+  const toggleUnavailable: AppData['toggleUnavailable'] = async (ansatt, dato) => {
+    const eksisterande = unavailable.find((x) => x.ansatt === ansatt && x.dato === dato);
+    if (eksisterande) {
+      const { error: err } = await supabase.from('utilgjengeleg').delete().eq('id', eksisterande.id);
+      if (err) throw err;
+      setUnavailable((prev) => prev.filter((x) => x.id !== eksisterande.id));
+    } else {
+      const { data, error: err } = await supabase.from('utilgjengeleg').insert({ ansatt, dato }).select().single();
+      if (err) throw err;
+      setUnavailable((prev) => [...prev, mapUnavail(data)]);
+      toast('Merka som utilgjengeleg');
+    }
   };
 
   // ---- tasks ----
@@ -367,19 +388,19 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppData>(
     () => ({
-      loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, refreshAll,
+      loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, unavailable, refreshAll,
       canApprove, setKanGodkjenne,
       sendMelding, deleteMelding,
       saveEntry, deleteEntry, approveEmployeeEntries,
       saveShift, deleteShift, moveShiftDate, fillWeek,
       createSwap, approveSwap, declineSwap,
-      saveFerie, deleteFerie,
+      saveFerie, deleteFerie, toggleUnavailable,
       saveTask, deleteTask, moveTask, completeTask,
       saveOrder, deleteOrder, advanceOrder, markOrderVarsla,
       saveDoc, deleteDoc, uploadDocFile,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, canApprove]
+    [loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, unavailable, canApprove]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
