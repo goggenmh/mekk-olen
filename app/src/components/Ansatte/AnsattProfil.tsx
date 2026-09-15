@@ -1,6 +1,6 @@
 import { useAppData } from '../../context/AppDataContext';
-import { weekDates, mondayOf, today, timar, fmt, fmtKr, UKE_FULL, weekdayIdx, datoKort } from '../../lib/dates';
-import { FERIE_TYPE } from '../../constants';
+import { weekDates, mondayOf, today, timar, fmt, fmtKr, UKE_KORT, weekdayIdx, datoKort, parseDate } from '../../lib/dates';
+import { FERIE_TYPE, SKIFT_FARGE } from '../../constants';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { Pill } from '../ui/Pill';
@@ -82,13 +82,25 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
         <div style={cardStyle}>
           <div style={labelStyle}>Kommande vakter</div>
           {kommendeVakter.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen planlagte vakter.</div>}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {kommendeVakter.map((s) => {
-              const dag = UKE_FULL[weekdayIdx(s.date)];
+              const erIDag = s.date === t;
+              const farge = SKIFT_FARGE[s.skift] || ansatt.farge;
               return (
-                <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                  <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{dag} {datoKort(s.date)}</span>
-                  <span style={{ marginLeft: 'auto', fontFamily: "'Geist Mono'", color: 'var(--text-muted)' }}>{s.start}–{s.slutt}</span>
+                <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ flex: 'none', width: 46, textAlign: 'center', padding: '6px 0', borderRadius: 10, background: erIDag ? 'var(--brand-soft)' : 'var(--surface-alt)', border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)' }}>{UKE_KORT[weekdayIdx(s.date)]}</div>
+                    <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(s.date).getDate()}</div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: "'Geist Mono'", fontSize: 14, fontWeight: 700 }}>{s.start}–{s.slutt}</div>
+                    {s.skift && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: farge, marginTop: 2 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: farge }} />{s.skift}
+                      </span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{datoKort(s.date)}</span>
                 </div>
               );
             })}

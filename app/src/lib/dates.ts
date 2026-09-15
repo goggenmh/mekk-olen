@@ -92,3 +92,13 @@ export const datoIntervall = (fra: string | null, til: string | null) => {
 // Tal på dagar i eit intervall (inklusive begge endar).
 export const talDagar = (fra: string, til: string) =>
   Math.round((parseDate(til).getTime() - parseDate(fra).getTime()) / 86400000) + 1;
+
+// Finn skifttype automatisk ut frå tid og dag: Laurdag / Heildag / Kveld / Formiddag.
+export const skiftFraTid = (start: string, slutt: string, dato: string): string => {
+  if (weekdayIdx(dato) === 5) return 'Laurdag';
+  const span = dur(start, slutt);
+  if (span >= 6.5) return 'Heildag';
+  const startH = Math.floor(mins(start) / 60);
+  if (startH >= 12) return 'Kveld';
+  return 'Formiddag';
+};

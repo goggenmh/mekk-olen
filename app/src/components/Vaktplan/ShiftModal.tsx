@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Modal, Field, inputStyle, monoInputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
 import { useAppData } from '../../context/AppDataContext';
 import { useAnsatte } from '../../context/AnsatteContext';
-import { SKIFT_VALG } from '../../constants';
-import { dur, fmt, mins } from '../../lib/dates';
+import { SKIFT_FARGE } from '../../constants';
+import { dur, fmt, mins, skiftFraTid } from '../../lib/dates';
 import type { Shift } from '../../types';
 
 export function ShiftModal({
@@ -20,13 +20,16 @@ export function ShiftModal({
   const [ansatt, setAnsatt] = useState<Shift['ansatt']>(existing?.ansatt || ansatte[0]?.id || '');
   const [start, setStart] = useState(existing?.start || '09:00');
   const [slutt, setSlutt] = useState(existing?.slutt || '17:00');
-  const [skift, setSkift] = useState(existing?.skift || SKIFT_VALG[0]);
   const [feil, setFeil] = useState(false);
 
-  const varar = mins(slutt) > mins(start) ? `${fmt(dur(start, slutt))} t` : '–';
+  const gyldig = mins(slutt) > mins(start);
+  const varar = gyldig ? `${fmt(dur(start, slutt))} t` : '–';
+  // Skifttype blir sett automatisk ut frå tida (og dagen).
+  const skift = gyldig ? skiftFraTid(start, slutt, target.date) : (existing?.skift || 'Formiddag');
+  const skiftFarge = SKIFT_FARGE[skift] || 'var(--brand)';
 
   const save = async () => {
-    if (mins(slutt) <= mins(start)) { setFeil(true); return; }
+    if (!gyldig) { setFeil(true); return; }
     await saveShift({ id: existing?.id, ansatt, date: target.date, start, slutt, skift });
     onClose();
   };
@@ -54,11 +57,6 @@ export function ShiftModal({
           {ansatte.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
         </select>
       </Field>
-      <Field label="Skifttype">
-        <select value={skift} onChange={(e) => setSkift(e.target.value)} style={inputStyle}>
-          {SKIFT_VALG.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-      </Field>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Field label="Start">
           <input type="time" value={start} onChange={(e) => { setStart(e.target.value); setFeil(false); }} style={monoInputStyle} />
@@ -68,7 +66,15 @@ export function ShiftModal({
         </Field>
       </div>
       {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Slutt må vere etter start.</div>}
-      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Varer: <strong style={{ color: 'var(--text)' }}>{varar}</strong></div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 13px', borderRadius: 12, background: 'var(--surface-alt)', border: '1px solid var(--border)' }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', color: 'var(--text-label)' }}>Skift</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: skiftFarge }}>
+          <span style={{ width: 9, height: 9, borderRadius: '50%', background: skiftFarge }} />
+          {skift}
+        </span>
+        <span style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--text-muted)' }}>Varer <strong style={{ color: 'var(--text)' }}>{varar}</strong></span>
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>Skifttypen blir sett automatisk ut frå klokkeslettet.</div>
     </Modal>
   );
 }

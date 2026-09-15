@@ -3,7 +3,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { DAGER_VAKTPLAN } from '../../constants';
-import { weekDates, mondayOf, today, fullDatoTekst, fmt, timar, UKE_FULL, weekdayIdx, addDays, datoKort, datoIntervall } from '../../lib/dates';
+import { weekDates, mondayOf, today, fullDatoTekst, fmt, timar, UKE_KORT, weekdayIdx, addDays, datoKort, datoIntervall, parseDate } from '../../lib/dates';
 import { useIsMobile } from '../../lib/useIsMobile';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
@@ -222,13 +222,27 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             <div style={cardStyle}>
               <div style={labelStyle}>Kommande vakter</div>
               {kommendeVakter.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen planlagte vakter denne veka.</div>}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {kommendeVakter.map((g) => {
-                  const dagNamn = UKE_FULL[weekdayIdx(g.dato)];
-                  const linje = g.vakter.map((s) => `${findAnsatt(s.ansatt).navn} ${s.start}–${s.slutt}`).join(', ');
+                  const erIDag = g.dato === t;
                   return (
-                    <div key={g.dato} style={{ fontSize: 13 }}>
-                      <strong>{dagNamn.charAt(0).toUpperCase()}{dagNamn.slice(1)}:</strong> {linje}
+                    <div key={g.dato} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                      <div style={{ flex: 'none', width: 46, textAlign: 'center', padding: '6px 0', borderRadius: 10, background: erIDag ? 'var(--brand-soft)' : 'var(--surface-alt)', border: '1px solid var(--border)' }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)' }}>{UKE_KORT[weekdayIdx(g.dato)]}</div>
+                        <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(g.dato).getDate()}</div>
+                      </div>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 1 }}>
+                        {g.vakter.map((s) => {
+                          const a = findAnsatt(s.ansatt);
+                          return (
+                            <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ width: 9, height: 9, borderRadius: '50%', background: a.farge, flex: 'none' }} />
+                              <span style={{ fontSize: 13, fontWeight: 600 }}>{a.navn}</span>
+                              <span style={{ marginLeft: 'auto', fontFamily: "'Geist Mono'", fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)' }}>{s.start}–{s.slutt}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   );
                 })}
