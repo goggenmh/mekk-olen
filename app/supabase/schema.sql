@@ -211,9 +211,11 @@ create table if not exists utilgjengeleg (
   id uuid primary key default gen_random_uuid(),
   ansatt text not null references ansatte(id),
   dato date not null,
+  grunn text,
   created_at timestamptz not null default now(),
   unique (ansatt, dato)
 );
+alter table utilgjengeleg add column if not exists grunn text;
 
 -- ---------- RLS ----------
 -- All employees are equally trusted staff in this shop — any logged-in

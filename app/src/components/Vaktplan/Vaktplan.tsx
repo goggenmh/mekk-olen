@@ -7,12 +7,13 @@ import { addDays, mondayOf, today, isoWeek, parseDate, DAG_IDX, shiftMonth, MND,
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
 import { FerieModal } from './FerieModal';
+import { UnavailableModal } from './UnavailableModal';
 import { Avatar } from '../ui/Avatar';
 import { useIsMobile } from '../../lib/useIsMobile';
-import type { Shift, Ferie } from '../../types';
+import type { Shift, Ferie, Unavailable } from '../../types';
 
 export function Vaktplan() {
-  const { shifts, swaps, ferie, moveShiftDate, fillWeek, approveSwap, declineSwap, canApprove, unavailable, toggleUnavailable } = useAppData();
+  const { shifts, swaps, ferie, moveShiftDate, fillWeek, approveSwap, declineSwap, canApprove, unavailable } = useAppData();
   const { user } = useAuth();
   const { findAnsatt } = useAnsatte();
   const isMobile = useIsMobile();
@@ -23,6 +24,7 @@ export function Vaktplan() {
   const [shiftTarget, setShiftTarget] = useState<{ date: string; shift?: Shift } | null>(null);
   const [swapTarget, setSwapTarget] = useState<Shift | null>(null);
   const [ferieTarget, setFerieTarget] = useState<Ferie | 'new' | null>(null);
+  const [utilTarget, setUtilTarget] = useState<{ dato: string; existing?: Unavailable } | null>(null);
   const dragShiftId = useRef<string | null>(null);
 
   const days = DAGER_VAKTPLAN.map((d, i) => ({ ...d, date: addDays(vpWeek, i) }));
@@ -137,17 +139,17 @@ export function Vaktplan() {
                     return (
                       <span
                         key={u.id}
-                        onClick={eg ? () => toggleUnavailable(u.ansatt, d.date) : undefined}
-                        title={eg ? 'Trykk for å fjerne' : `${a.navn} kan ikkje jobbe`}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, color: '#b3261e', background: 'rgba(192,57,43,0.12)', border: '1px solid rgba(192,57,43,0.3)', borderRadius: 8, padding: '2px 7px', cursor: eg ? 'pointer' : 'default' }}
+                        onClick={eg ? () => setUtilTarget({ dato: d.date, existing: u }) : undefined}
+                        title={`${a.navn}${u.grunn ? ` – ${u.grunn}` : ' kan ikkje jobbe'}${eg ? ' (trykk for å endre)' : ''}`}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%', fontSize: 10.5, fontWeight: 700, color: '#b3261e', background: 'rgba(192,57,43,0.12)', border: '1px solid rgba(192,57,43,0.3)', borderRadius: 8, padding: '2px 7px', cursor: eg ? 'pointer' : 'default' }}
                       >
-                        {a.init}{eg ? ' ✕' : ''}
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.init}{u.grunn ? `: ${u.grunn}` : ''}</span>
                       </span>
                     );
                   })}
                   {user && !egUtil && (
                     <button
-                      onClick={() => toggleUnavailable(user.id, d.date)}
+                      onClick={() => setUtilTarget({ dato: d.date })}
                       title="Merk at du ikkje kan jobbe denne dagen"
                       style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text-muted)', background: 'none', border: '1px dashed var(--border)', borderRadius: 8, padding: '2px 7px', cursor: 'pointer' }}
                     >
@@ -227,6 +229,7 @@ export function Vaktplan() {
       {shiftTarget && <ShiftModal target={shiftTarget} onClose={() => setShiftTarget(null)} />}
       {swapTarget && <SwapModal shift={swapTarget} onClose={() => setSwapTarget(null)} />}
       {ferieTarget && <FerieModal existing={ferieTarget === 'new' ? undefined : ferieTarget} onClose={() => setFerieTarget(null)} />}
+      {utilTarget && user && <UnavailableModal ansatt={user.id} dato={utilTarget.dato} existing={utilTarget.existing} onClose={() => setUtilTarget(null)} />}
     </div>
   );
 }

@@ -29,7 +29,8 @@ interface AppData {
   permissions: Permission[];
   meldinger: Melding[];
   unavailable: Unavailable[];
-  toggleUnavailable: (ansatt: EmployeeId, dato: string) => Promise<void>;
+  saveUnavailable: (ansatt: EmployeeId, dato: string, grunn: string | null) => Promise<void>;
+  removeUnavailable: (id: string) => Promise<void>;
   refreshAll: () => Promise<void>;
 
   canApprove: (ansatt: EmployeeId | null | undefined) => boolean;
@@ -75,7 +76,7 @@ const mapEntry = (r: any): TimeEntry => ({ id: r.id, ansatt: r.ansatt, date: r.d
 const mapShift = (r: any): Shift => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift });
 const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.fra, til: r.til, dag: r.dag, tid: r.tid, status: r.status });
 const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst });
-const mapUnavail = (r: any): Unavailable => ({ id: r.id, ansatt: r.ansatt, dato: r.dato });
+const mapUnavail = (r: any): Unavailable => ({ id: r.id, ansatt: r.ansatt, dato: r.dato, grunn: r.grunn ?? null });
 const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [] });
 const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
@@ -248,18 +249,24 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   };
 
   // ---- utilgjengeleg (raude dagar) ----
-  const toggleUnavailable: AppData['toggleUnavailable'] = async (ansatt, dato) => {
+  const saveUnavailable: AppData['saveUnavailable'] = async (ansatt, dato, grunn) => {
+    const reit = grunn?.trim() || null;
     const eksisterande = unavailable.find((x) => x.ansatt === ansatt && x.dato === dato);
     if (eksisterande) {
-      const { error: err } = await supabase.from('utilgjengeleg').delete().eq('id', eksisterande.id);
+      const { data, error: err } = await supabase.from('utilgjengeleg').update({ grunn: reit }).eq('id', eksisterande.id).select().single();
       if (err) throw err;
-      setUnavailable((prev) => prev.filter((x) => x.id !== eksisterande.id));
+      setUnavailable((prev) => prev.map((x) => (x.id === eksisterande.id ? mapUnavail(data) : x)));
     } else {
-      const { data, error: err } = await supabase.from('utilgjengeleg').insert({ ansatt, dato }).select().single();
+      const { data, error: err } = await supabase.from('utilgjengeleg').insert({ ansatt, dato, grunn: reit }).select().single();
       if (err) throw err;
       setUnavailable((prev) => [...prev, mapUnavail(data)]);
-      toast('Merka som utilgjengeleg');
     }
+    toast('Merka som utilgjengeleg');
+  };
+  const removeUnavailable: AppData['removeUnavailable'] = async (id) => {
+    const { error: err } = await supabase.from('utilgjengeleg').delete().eq('id', id);
+    if (err) throw err;
+    setUnavailable((prev) => prev.filter((x) => x.id !== id));
   };
 
   // ---- tasks ----
@@ -394,7 +401,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveEntry, deleteEntry, approveEmployeeEntries,
       saveShift, deleteShift, moveShiftDate, fillWeek,
       createSwap, approveSwap, declineSwap,
-      saveFerie, deleteFerie, toggleUnavailable,
+      saveFerie, deleteFerie, saveUnavailable, removeUnavailable,
       saveTask, deleteTask, moveTask, completeTask,
       saveOrder, deleteOrder, advanceOrder, markOrderVarsla,
       saveDoc, deleteDoc, uploadDocFile,

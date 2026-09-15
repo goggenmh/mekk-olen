@@ -100,4 +100,5 @@ export interface Unavailable {
   id: string;
   ansatt: EmployeeId;
   dato: string;
+  grunn: string | null;
 }
