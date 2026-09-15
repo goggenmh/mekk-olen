@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { DAGER_VAKTPLAN, SHIFT_TEMPLATE } from '../../constants';
 import { addDays, mondayOf, today, isoWeek, parseDate, DAG_IDX, shiftMonth, MND, UKE_KORT } from '../../lib/dates';
-import { helligdagFor } from '../../lib/helligdagar';
+import { helligdagFor, halvdagFor } from '../../lib/helligdagar';
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
 import { FerieModal } from './FerieModal';
@@ -85,6 +85,7 @@ export function Vaktplan() {
           const dagUtil = unavailable.filter((u) => u.dato === d.date);
           const egUtil = !!user && dagUtil.some((u) => u.ansatt === user.id);
           const heilagdag = helligdagFor(d.date);
+          const halvdag = halvdagFor(d.date);
           const raudTint = egUtil || !!heilagdag;
           return (
             <div
@@ -94,17 +95,19 @@ export function Vaktplan() {
                 if (dragShiftId.current) { moveShiftDate(dragShiftId.current, d.date); dragShiftId.current = null; }
               }}
               style={{
-                background: erIDag ? 'var(--brand-soft)' : raudTint ? 'rgba(192,57,43,0.055)' : 'var(--surface)',
-                border: erIDag ? '2px solid var(--brand)' : raudTint ? '1px solid rgba(192,57,43,0.35)' : '1px solid var(--border)',
+                background: erIDag ? 'var(--brand-soft)' : raudTint ? 'rgba(192,57,43,0.055)' : halvdag ? 'rgba(198,126,30,0.09)' : 'var(--surface)',
+                border: erIDag ? '2px solid var(--brand)' : raudTint ? '1px solid rgba(192,57,43,0.35)' : halvdag ? '1px solid rgba(198,126,30,0.35)' : '1px solid var(--border)',
                 borderRadius: 12, padding: erIDag ? 9 : 10, minHeight: isMobile ? 'auto' : 220, display: 'flex', flexDirection: 'column', gap: 7,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, paddingBottom: 7, borderBottom: '1px solid var(--divider)' }}>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : heilagdag ? '#b3261e' : 'var(--text)', lineHeight: 1 }}>{parseDate(d.date).getDate()}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : heilagdag ? '#b3261e' : halvdag ? '#a6631a' : 'var(--text)', lineHeight: 1 }}>{parseDate(d.date).getDate()}</div>
                   <div style={{ fontSize: 10.5, fontWeight: 700, color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px', marginTop: 2 }}>{d.kort}</div>
                   {heilagdag ? (
                     <div style={{ fontSize: 10, fontWeight: 700, color: '#b3261e', marginTop: 1 }}>{heilagdag}</div>
+                  ) : halvdag ? (
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#a6631a', marginTop: 1 }}>{halvdag}</div>
                   ) : (
                     <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 1 }}>Ope {d.open}</div>
                   )}
@@ -275,18 +278,23 @@ function MonthView({
             const dayShifts = shifts.filter((s) => s.date === d).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
             const dagUtil = unavailable.filter((u) => u.dato === d);
             const heilagdag = helligdagFor(d);
+            const halvdag = halvdagFor(d);
+            const bg = !inMonth(d) ? 'var(--surface-soft)'
+              : (dagUtil.length || heilagdag) ? 'rgba(192,57,43,0.05)'
+              : halvdag ? 'rgba(198,126,30,0.08)' : 'var(--surface)';
             return (
               <div
                 key={d}
                 onClick={() => onDayClick(d)}
                 style={{
                   minHeight: 78, padding: 7, borderRight: ci < 6 ? '1px solid var(--divider)' : 'none',
-                  background: !inMonth(d) ? 'var(--surface-soft)' : (dagUtil.length || heilagdag) ? 'rgba(192,57,43,0.05)' : 'var(--surface)',
+                  background: bg,
                   cursor: 'pointer', opacity: inMonth(d) ? 1 : 0.45,
                 }}
               >
-                <div style={{ fontSize: 11.5, fontWeight: 600, color: heilagdag ? '#b3261e' : 'var(--text-muted)', marginBottom: 4 }}>{parseDate(d).getDate()}</div>
+                <div style={{ fontSize: 11.5, fontWeight: 600, color: heilagdag ? '#b3261e' : halvdag ? '#a6631a' : 'var(--text-muted)', marginBottom: 4 }}>{parseDate(d).getDate()}</div>
                 {heilagdag && <div title={heilagdag} style={{ fontSize: 9.5, fontWeight: 700, color: '#b3261e', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{heilagdag}</div>}
+                {!heilagdag && halvdag && <div title={halvdag} style={{ fontSize: 9.5, fontWeight: 700, color: '#a6631a', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{halvdag}</div>}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   {dayShifts.map((s) => {
                     const a = findAnsatt(s.ansatt);

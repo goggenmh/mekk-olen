@@ -49,3 +49,14 @@ export function helligdagFor(dateStr: string): string | null {
   if (!year) return null;
   return helligdagarForAar(year)[dateStr] || null;
 }
+
+/**
+ * «Halve» dagar som ikkje er offisielle heilagdagar, men der butikken
+ * gjerne har kortare opningstid (julaftan, nyttårsaftan).
+ */
+export function halvdagFor(dateStr: string): string | null {
+  const md = dateStr.slice(5);
+  if (md === '12-24') return 'Julaftan';
+  if (md === '12-31') return 'Nyttårsaftan';
+  return null;
+}
