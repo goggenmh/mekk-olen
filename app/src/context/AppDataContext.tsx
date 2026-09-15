@@ -120,7 +120,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setEntries((e.data || []).map(mapEntry));
       setShifts((s.data || []).map(mapShift));
       setSwaps((sw.data || []).map(mapSwap));
-      setFerie((f.data || []).map(mapFerie));
+      // Ferie som er over blir automatisk sletta ved innlasting.
+      const t0 = today();
+      const alleFerie = (f.data || []).map(mapFerie);
+      const utgatt = alleFerie.filter((x) => x.til && x.til < t0);
+      setFerie(alleFerie.filter((x) => !(x.til && x.til < t0)));
+      if (utgatt.length > 0) {
+        supabase.from('ferie').delete().in('id', utgatt.map((x) => x.id)).then(() => {});
+      }
       setTasks((t.data || []).map(mapTask));
       setOrders((o.data || []).map(mapOrder));
       setDocs((d.data || []).map(mapDoc));

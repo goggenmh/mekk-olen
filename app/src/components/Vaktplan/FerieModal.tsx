@@ -2,15 +2,19 @@ import { useState } from 'react';
 import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
 import { useAppData } from '../../context/AppDataContext';
 import { useAnsatte } from '../../context/AnsatteContext';
+import { useAuth } from '../../context/AuthContext';
 import { FERIE_TYPER } from '../../constants';
 import { today, talDagar } from '../../lib/dates';
 import type { Ferie } from '../../types';
 
 export function FerieModal({ existing, onClose }: { existing?: Ferie; onClose: () => void }) {
-  const { saveFerie, deleteFerie } = useAppData();
-  const { ansatte } = useAnsatte();
+  const { saveFerie, deleteFerie, canApprove } = useAppData();
+  const { ansatte, findAnsatt } = useAnsatte();
+  const { user } = useAuth();
+  // Kan berre setje ferie for seg sjølv – med mindre ein har delegeringsansvar.
+  const kanStyreAlle = canApprove(user?.id);
 
-  const [ansatt, setAnsatt] = useState<Ferie['ansatt']>(existing?.ansatt || ansatte[0]?.id || '');
+  const [ansatt, setAnsatt] = useState<Ferie['ansatt']>(existing?.ansatt || (kanStyreAlle ? ansatte[0]?.id : user?.id) || '');
   const [type, setType] = useState(existing?.type || FERIE_TYPER[0]);
   const [fra, setFra] = useState(existing?.fra || today());
   const [til, setTil] = useState(existing?.til || existing?.fra || today());
@@ -22,7 +26,9 @@ export function FerieModal({ existing, onClose }: { existing?: Ferie; onClose: (
   const save = async () => {
     if (!fra || !til) { setFeil('Vel både frå- og til-dato.'); return; }
     if (til < fra) { setFeil('Til-dato må vere same dag eller etter frå-dato.'); return; }
-    await saveFerie({ id: existing?.id, ansatt, type, tekst, fra, til });
+    // Utan delegeringsansvar blir ferien alltid lagra på deg sjølv.
+    const forAnsatt = kanStyreAlle ? ansatt : (user?.id || ansatt);
+    await saveFerie({ id: existing?.id, ansatt: forAnsatt, type, tekst, fra, til });
     onClose();
   };
 
@@ -37,16 +43,20 @@ export function FerieModal({ existing, onClose }: { existing?: Ferie; onClose: (
       title={existing ? 'Endre ferie/fri' : 'Ny ferie/fri'}
       footer={
         <>
-          {existing && <DeleteButton onClick={del} />}
+          {existing && (kanStyreAlle || existing.ansatt === user?.id) && <DeleteButton onClick={del} />}
           <CancelButton onClick={onClose} />
           <SaveButton onClick={save} />
         </>
       }
     >
       <Field label="Tilsett">
-        <select value={ansatt} onChange={(e) => setAnsatt(e.target.value as Ferie['ansatt'])} style={inputStyle}>
-          {ansatte.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
-        </select>
+        {kanStyreAlle ? (
+          <select value={ansatt} onChange={(e) => setAnsatt(e.target.value as Ferie['ansatt'])} style={inputStyle}>
+            {ansatte.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
+          </select>
+        ) : (
+          <input value={findAnsatt(user?.id || '').navn} disabled style={{ ...inputStyle, opacity: 0.7, cursor: 'not-allowed' }} />
+        )}
       </Field>
       <Field label="Type">
         <select value={type} onChange={(e) => setType(e.target.value)} style={inputStyle}>

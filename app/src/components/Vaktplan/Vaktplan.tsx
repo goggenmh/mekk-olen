@@ -23,6 +23,9 @@ export function Vaktplan() {
   const { findAnsatt } = useAnsatte();
   const isMobile = useIsMobile();
   const maaGodkjenne = canApprove(user?.id);
+  // Kan berre redigere eigen ferie – med mindre ein har delegeringsansvar.
+  const kanStyreFerie = canApprove(user?.id);
+  const opneFerie = (f: Ferie) => { if (kanStyreFerie || f.ansatt === user?.id) setFerieTarget(f); };
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
   const [vpWeek, setVpWeek] = useState(mondayOf(today()));
   const [monthAnchor, setMonthAnchor] = useState(today().slice(0, 7));
@@ -188,9 +191,9 @@ export function Vaktplan() {
                 return (
                   <span
                     key={f.id}
-                    onClick={() => setFerieTarget(f)}
+                    onClick={() => opneFerie(f)}
                     title={`${a.navn} – ${f.type}${f.tekst ? ` (${f.tekst})` : ''}`}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 700, color: st.fg, background: st.bg, border: `1px solid ${st.kant}`, borderRadius: 8, padding: '3px 8px', cursor: 'pointer' }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 700, color: st.fg, background: st.bg, border: `1px solid ${st.kant}`, borderRadius: 8, padding: '3px 8px', cursor: (kanStyreFerie || f.ansatt === user?.id) ? 'pointer' : 'default' }}
                   >
                     <Icon name={st.ikon} size={12} />
                     {a.init} · {f.type}
@@ -251,9 +254,9 @@ export function Vaktplan() {
             return (
               <div
                 key={f.id}
-                onClick={() => setFerieTarget(f)}
+                onClick={() => opneFerie(f)}
                 className="hoverable"
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', border: `1px solid ${st.kant}`, background: st.bg, borderRadius: 12, cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', border: `1px solid ${st.kant}`, background: st.bg, borderRadius: 12, cursor: (kanStyreFerie || f.ansatt === user?.id) ? 'pointer' : 'default' }}
               >
                 <span style={{ width: 38, height: 38, borderRadius: 11, background: '#fff', color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
                   <Icon name={st.ikon} size={18} />
