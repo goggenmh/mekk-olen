@@ -73,6 +73,7 @@ export function Vaktplan() {
         <MonthView
           monthAnchor={monthAnchor}
           shifts={shifts}
+          unavailable={unavailable}
           onDayClick={(date) => { setVpWeek(mondayOf(date)); setMode('uke'); }}
         />
       ) : (
@@ -235,10 +236,11 @@ export function Vaktplan() {
 }
 
 function MonthView({
-  monthAnchor, shifts, onDayClick,
+  monthAnchor, shifts, unavailable, onDayClick,
 }: {
   monthAnchor: string;
   shifts: Shift[];
+  unavailable: Unavailable[];
   onDayClick: (date: string) => void;
 }) {
   const { findAnsatt } = useAnsatte();
@@ -264,13 +266,14 @@ function MonthView({
         <div key={ri} style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderTop: '1px solid var(--divider)' }}>
           {row.map((d, ci) => {
             const dayShifts = shifts.filter((s) => s.date === d).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
+            const dagUtil = unavailable.filter((u) => u.dato === d);
             return (
               <div
                 key={d}
                 onClick={() => onDayClick(d)}
                 style={{
                   minHeight: 78, padding: 7, borderRight: ci < 6 ? '1px solid var(--divider)' : 'none',
-                  background: !inMonth(d) ? 'var(--surface-soft)' : 'var(--surface)',
+                  background: !inMonth(d) ? 'var(--surface-soft)' : dagUtil.length ? 'rgba(192,57,43,0.05)' : 'var(--surface)',
                   cursor: 'pointer', opacity: inMonth(d) ? 1 : 0.45,
                 }}
               >
@@ -280,6 +283,22 @@ function MonthView({
                     const a = findAnsatt(s.ansatt);
                     return <div key={s.id} style={{ fontSize: 10.5, fontWeight: 700, color: a.farge }}>{a.init} {s.start}–{s.slutt}</div>;
                   })}
+                  {dagUtil.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginTop: dayShifts.length ? 2 : 0 }}>
+                      {dagUtil.map((u) => {
+                        const a = findAnsatt(u.ansatt);
+                        return (
+                          <span
+                            key={u.id}
+                            title={`${a.navn}${u.grunn ? ` – ${u.grunn}` : ' kan ikkje jobbe'}`}
+                            style={{ fontSize: 9.5, fontWeight: 700, color: '#b3261e', background: 'rgba(192,57,43,0.12)', border: '1px solid rgba(192,57,43,0.3)', borderRadius: 6, padding: '1px 5px' }}
+                          >
+                            {a.init}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             );
