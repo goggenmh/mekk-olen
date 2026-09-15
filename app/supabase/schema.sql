@@ -107,8 +107,10 @@ create table if not exists orders (
   antal int not null default 1,
   status text not null default 'ny' check (status in ('ny', 'tinga', 'komen', 'henta')),
   varsla date,
+  lenke text,
   created_at timestamptz not null default now()
 );
+alter table orders add column if not exists lenke text;
 
 -- ---------- docs ----------
 create table if not exists docs (

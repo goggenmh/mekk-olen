@@ -104,6 +104,9 @@ export function Bestillinger() {
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 5 }}>{o.vare}{o.antal > 1 ? ` · ${o.antal} stk` : ''}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{o.leverandor} · {datoKort(o.dato)}{o.varsla ? ` · varsla ${datoKort(o.varsla)}` : ''}</div>
+                {o.lenke && (
+                  <a href={lenkeHref(o.lenke)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 7, fontSize: 12.5, fontWeight: 600, color: 'var(--brand)', textDecoration: 'none' }}>Opne produkt ↗</a>
+                )}
                 {(kanVarsle || kanFram) && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 11 }}>
                     {kanVarsle && (
@@ -146,7 +149,12 @@ export function Bestillinger() {
               return (
                 <tr key={o.id} style={{ borderTop: '1px solid var(--divider)' }}>
                   <td style={{ ...td, fontWeight: 600, cursor: 'pointer' }} onClick={() => setOrderTarget(o)}>{o.kunde}</td>
-                  <td style={td}>{o.vare}</td>
+                  <td style={td}>
+                    {o.vare}
+                    {o.lenke && (
+                      <a href={lenkeHref(o.lenke)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title="Opne produktlenke" style={{ marginLeft: 6, color: 'var(--brand)', fontWeight: 700, textDecoration: 'none' }}>↗</a>
+                    )}
+                  </td>
                   <td style={td}>{o.leverandor}</td>
                   <td style={td}>{datoKort(o.dato)}</td>
                   <td style={td}>{o.antal}</td>
@@ -217,6 +225,14 @@ export function Bestillinger() {
                                 >
                                   <span style={{ fontSize: 13, fontWeight: 600, flex: 'none', minWidth: 0 }}>{o.kunde}</span>
                                   <span style={{ fontSize: 12.5, color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.vare}</span>
+                                  {o.lenke && (
+                                    <span
+                                      role="link"
+                                      title="Opne produktlenke"
+                                      onClick={(e) => { e.stopPropagation(); window.open(lenkeHref(o.lenke!), '_blank', 'noopener'); }}
+                                      style={{ fontSize: 12.5, color: 'var(--brand)', fontWeight: 700, flex: 'none' }}
+                                    >↗</span>
+                                  )}
                                   {o.antal > 1 && <span style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>×{o.antal}</span>}
                                   <span style={{ fontSize: 11.5, color: 'var(--text-faint)', flex: 'none' }}>{datoKort(o.dato)}</span>
                                 </button>
@@ -239,6 +255,8 @@ export function Bestillinger() {
     </div>
   );
 }
+
+const lenkeHref = (l: string) => (/^https?:\/\//i.test(l) ? l : `https://${l}`);
 
 const th: CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px' };
 const td: CSSProperties = { padding: '10px 12px' };

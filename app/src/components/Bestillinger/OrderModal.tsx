@@ -13,6 +13,7 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
   const [vare, setVare] = useState(existing?.vare || '');
   const [leverandor, setLeverandor] = useState(existing?.leverandor || '');
   const [varenr, setVarenr] = useState(existing?.varenr || '');
+  const [lenke, setLenke] = useState(existing?.lenke || '');
   const [dato, setDato] = useState(existing?.dato || today());
   const [antal, setAntal] = useState(existing?.antal ?? 1);
   const [status, setStatus] = useState(existing?.status || ORDER_FLOW[0]);
@@ -20,7 +21,7 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
 
   const save = async () => {
     if (!kunde.trim()) { setFeil(true); return; }
-    await saveOrder({ id: existing?.id, kunde, telefon, vare, leverandor, varenr, dato, antal, status, varsla: existing?.varsla ?? null });
+    await saveOrder({ id: existing?.id, kunde, telefon, vare, leverandor, varenr, lenke: lenke.trim() || null, dato, antal, status, varsla: existing?.varsla ?? null });
     onClose();
   };
 
@@ -53,6 +54,9 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
       {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Skriv inn kundenamn.</div>}
       <Field label="Vare">
         <input value={vare} onChange={(e) => setVare(e.target.value)} style={inputStyle} />
+      </Field>
+      <Field label="Lenke til produkt">
+        <input value={lenke} onChange={(e) => setLenke(e.target.value)} placeholder="https://…" style={inputStyle} />
       </Field>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Field label="Leverandør">

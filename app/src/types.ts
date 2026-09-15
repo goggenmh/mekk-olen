@@ -65,6 +65,7 @@ export interface Order {
   vare: string;
   leverandor: string;
   varenr: string;
+  lenke: string | null;
   dato: string;
   antal: number;
   status: string;

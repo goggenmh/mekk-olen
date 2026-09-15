@@ -74,7 +74,7 @@ const mapShift = (r: any): Shift => ({ id: r.id, ansatt: r.ansatt, date: r.date,
 const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.fra, til: r.til, dag: r.dag, tid: r.tid, status: r.status });
 const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst });
 const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [] });
-const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla });
+const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
 const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne: r.kan_godkjenne });
 const mapMelding = (r: any): Melding => ({ id: r.id, fra: r.fra, til: r.til, tekst: r.tekst, created_at: r.created_at });
@@ -286,13 +286,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const saveOrder: AppData['saveOrder'] = async (o) => {
     if (o.id) {
       const { data, error: err } = await supabase.from('orders').update({
-        kunde: o.kunde, telefon: o.telefon, vare: o.vare, leverandor: o.leverandor, varenr: o.varenr, dato: o.dato, antal: o.antal, status: o.status,
+        kunde: o.kunde, telefon: o.telefon, vare: o.vare, leverandor: o.leverandor, varenr: o.varenr, lenke: o.lenke || null, dato: o.dato, antal: o.antal, status: o.status,
       }).eq('id', o.id).select().single();
       if (err) throw err;
       setOrders((prev) => prev.map((x) => (x.id === o.id ? mapOrder(data) : x)));
     } else {
       const { data, error: err } = await supabase.from('orders').insert({
-        kunde: o.kunde, telefon: o.telefon, vare: o.vare, leverandor: o.leverandor, varenr: o.varenr, dato: o.dato, antal: o.antal, status: o.status,
+        kunde: o.kunde, telefon: o.telefon, vare: o.vare, leverandor: o.leverandor, varenr: o.varenr, lenke: o.lenke || null, dato: o.dato, antal: o.antal, status: o.status,
       }).select().single();
       if (err) throw err;
       setOrders((prev) => [mapOrder(data), ...prev]);
