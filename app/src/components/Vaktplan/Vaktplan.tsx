@@ -8,12 +8,14 @@ import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
 import { FerieModal } from './FerieModal';
 import { Avatar } from '../ui/Avatar';
+import { useIsMobile } from '../../lib/useIsMobile';
 import type { Shift, Ferie } from '../../types';
 
 export function Vaktplan() {
   const { shifts, swaps, ferie, moveShiftDate, fillWeek, approveSwap, declineSwap, canApprove } = useAppData();
   const { user } = useAuth();
   const { findAnsatt } = useAnsatte();
+  const isMobile = useIsMobile();
   const maaGodkjenne = canApprove(user?.id);
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
   const [vpWeek, setVpWeek] = useState(mondayOf(today()));
@@ -41,7 +43,7 @@ export function Vaktplan() {
   const pendingSwaps = swaps.filter((s) => s.status === 'pending');
 
   return (
-    <div style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ padding: isMobile ? 16 : 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
         <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Vaktplan</div>
         <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
@@ -72,7 +74,7 @@ export function Vaktplan() {
           onDayClick={(date) => { setVpWeek(mondayOf(date)); setMode('uke'); }}
         />
       ) : (
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${days.length},1fr)`, gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `repeat(${days.length},1fr)`, gap: 10 }}>
         {days.map((d) => {
           const dayShifts = shifts.filter((s) => s.date === d.date).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
           const erIDag = d.date === iDag;
@@ -86,7 +88,7 @@ export function Vaktplan() {
               style={{
                 background: erIDag ? 'var(--brand-soft)' : 'var(--surface)',
                 border: erIDag ? '2px solid var(--brand)' : '1px solid var(--border)',
-                borderRadius: 12, padding: erIDag ? 9 : 10, minHeight: 220, display: 'flex', flexDirection: 'column', gap: 7,
+                borderRadius: 12, padding: erIDag ? 9 : 10, minHeight: isMobile ? 'auto' : 220, display: 'flex', flexDirection: 'column', gap: 7,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, paddingBottom: 7, borderBottom: '1px solid var(--divider)' }}>
