@@ -74,9 +74,9 @@ export function Timeliste() {
   };
 
   return (
-    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 22, letterSpacing: '-0.2px' }}>Timeliste</div>
+        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Timeliste</div>
         <div className="no-print" style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
           {(['uke', 'manad'] as const).map((m) => (
             <button
@@ -150,7 +150,7 @@ function WeekSummary({ dates, prevDates, entries }: { dates: string[]; prevDates
         const pct = Math.round((sum / NORMALTID) * 100);
         const diff = Math.round((sum - prev) * 4) / 4;
         return (
-          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '15px 17px', boxShadow: 'var(--shadow-card)' }}>
+          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '15px 17px', boxShadow: 'var(--shadow-card)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: a.farge, flex: 'none' }} />
               <span style={{ fontSize: 13.5, fontWeight: 700, flex: 1 }}>{a.navn}</span>
@@ -160,7 +160,10 @@ function WeekSummary({ dates, prevDates, entries }: { dates: string[]; prevDates
                 </span>
               )}
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Geist Mono'", color: a.farge, letterSpacing: '-0.5px', marginTop: 8 }}>{fmt(sum)} t</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 8 }}>
+              <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Geist Mono'", color: a.farge, letterSpacing: '-0.5px' }}>{fmt(sum)} t</div>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)' }}>{a.lonn === 'time' ? fmtKr(sum * a.sats) : 'Fastløn'}</div>
+            </div>
             <div style={{ height: 9, borderRadius: 6, background: 'var(--surface-alt)', overflow: 'hidden', marginTop: 8 }}>
               <div style={{ height: '100%', width: `${Math.min(100, pct)}%`, background: pct >= 100 ? '#2f9e6f' : a.farge, borderRadius: 6 }} />
             </div>
@@ -183,16 +186,16 @@ function WeekTable({
 }) {
   const { ansatte } = useAnsatte();
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'auto' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ background: 'var(--surface-alt)' }}>
-            <th style={th}>Tilsett</th>
+            <th style={{ ...th, textAlign: 'left' }}>Tilsett</th>
             {dates.map((d) => (
-              <th key={d} style={th}>{UKE_KORT[weekdayIdx(d)]} {parseDate(d).getDate()}</th>
+              <th key={d} style={{ ...th, textAlign: 'center' }}>{UKE_KORT[weekdayIdx(d)]} {parseDate(d).getDate()}</th>
             ))}
-            <th style={th}>Totalt</th>
-            <th style={th}>Lønn</th>
+            <th style={{ ...th, textAlign: 'right' }}>Totalt</th>
+            <th style={{ ...th, textAlign: 'center' }}>Status</th>
             {maaGodkjenne && <th style={th}></th>}
           </tr>
         </thead>
@@ -200,41 +203,39 @@ function WeekTable({
           {ansatte.map((a) => {
             const rowEntries = dates.map((d) => entries.find((e) => e.ansatt === a.id && e.date === d));
             const sum = rowEntries.reduce((acc, e) => acc + (e ? timar(e) : 0), 0);
-            const overtid = sum > 37.5 ? `+${fmt(sum - 37.5)} t ot` : 'normaltid';
-            const lonn = a.lonn === 'time' ? fmtKr(sum * a.sats) : 'Fastløn';
             const ventarN = rowEntries.filter((e) => e?.status === 'venter').length;
+            const harTimar = rowEntries.some(Boolean);
+            const status = !harTimar ? 'tom' : ventarN > 0 ? 'venter' : 'godkjent';
             return (
               <tr key={a.id} style={{ borderTop: '1px solid var(--divider)' }}>
                 <td style={{ ...td, fontWeight: 600 }}>{a.navn}</td>
                 {dates.map((d, i) => {
                   const e = rowEntries[i];
                   return (
-                    <td key={d} style={{ ...td, cursor: 'pointer' }} onClick={() => onCellClick(a.id, d, e)}>
+                    <td key={d} style={{ ...td, textAlign: 'center', cursor: 'pointer' }} onClick={() => onCellClick(a.id, d, e)}>
                       {e ? (
-                        <div style={{ lineHeight: 1.2 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Geist Mono'", fontWeight: 600 }}>
-                            <span style={dot(e.status === 'godkjent' ? '#2f9e6f' : '#d8920f')} />
-                            {fmt(timar(e))} t
-                          </div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{e.start}–{e.slutt}</div>
-                        </div>
+                        <span style={{ fontFamily: "'Geist Mono'", fontWeight: 600, color: e.status === 'godkjent' ? 'var(--text)' : '#b7830b' }}>{fmt(timar(e))}</span>
                       ) : (
-                        <span style={{ color: 'var(--text-faint2)', fontWeight: 700 }}>+</span>
+                        <span style={{ color: 'var(--text-faint2)' }}>–</span>
                       )}
                     </td>
                   );
                 })}
-                <td style={{ ...td, fontFamily: "'Geist Mono'", fontWeight: 700 }}>
+                <td style={{ ...td, textAlign: 'right', fontFamily: "'Geist Mono'", fontWeight: 700, whiteSpace: 'nowrap' }}>
                   {fmt(sum)} t
-                  <div style={{ fontSize: 10.5, fontWeight: 600, color: sum > 37.5 ? 'var(--danger)' : 'var(--text-muted)' }}>{overtid}</div>
+                  {sum > 37.5 && <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--danger)', marginLeft: 5 }}>+{fmt(sum - 37.5)}</span>}
                 </td>
-                <td style={{ ...td, fontWeight: 600 }}>{lonn}</td>
+                <td style={{ ...td, textAlign: 'center' }}>
+                  {status === 'godkjent' && <span title="Alle timar godkjende" style={{ color: '#2f9e6f', fontWeight: 800 }}>✓</span>}
+                  {status === 'venter' && <span title={`${ventarN} ventar godkjenning`} style={{ color: '#d8920f', fontWeight: 800 }}>!</span>}
+                  {status === 'tom' && <span style={{ color: 'var(--text-faint2)' }}>–</span>}
+                </td>
                 {maaGodkjenne && (
-                  <td style={td}>
+                  <td style={{ ...td, textAlign: 'right' }}>
                     {ventarN > 0 && (
                       <button
                         onClick={() => onApprove(a.id)}
-                        style={{ padding: '7px 12px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        style={{ padding: '6px 11px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                       >
                         Godkjenn ({ventarN})
                       </button>
@@ -279,7 +280,7 @@ function MonthView({
 
   return (
     <>
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: 'var(--surface-alt)' }}>
           {UKE_KORT.map((d) => <div key={d} style={{ ...th, textAlign: 'center' }}>{d}</div>)}
         </div>
@@ -317,7 +318,7 @@ function MonthView({
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14 }}>
         {manadKort.map(({ a, tot, lonn }) => (
-          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px' }}>
+          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
             <div style={{ fontSize: 13.5, fontWeight: 700 }}>{a.navn}</div>
             <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Geist Mono'", color: a.farge, marginTop: 4 }}>{fmt(tot)} t</div>
             <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>{lonn}</div>

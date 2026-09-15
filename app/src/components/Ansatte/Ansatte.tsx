@@ -13,7 +13,7 @@ import type { Employee } from '../../constants';
 interface AnsattStats { timarUke: number; ventarOppg: number; nesteVakt: string | null; }
 
 const cardStyle = {
-  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12,
   padding: 16, display: 'flex', alignItems: 'center', gap: 14,
 } as const;
 
@@ -126,7 +126,7 @@ export function Ansatte() {
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 880 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 22 }}>Ansatte</h1>
+          <h1 style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Ansatte</h1>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Administrer ansatte, roller og tilgangsnivå</div>
         </div>
         <button

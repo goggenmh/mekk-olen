@@ -25,6 +25,7 @@
   --shadow-hover: 0 2px 4px rgba(16, 40, 50, 0.06), 0 12px 28px rgba(16, 40, 50, 0.10);
   /* Mørkeblå ramme (sidemeny + topplinje) i lys modus */
   --rail-bg: linear-gradient(180deg, #0c2436, #0e2c42);
+  --rail-bg-solid: #0e2c42;
   --rail-fg: #a8bcc7;
   --rail-section: #5d7686;
   --rail-active-bg: rgba(43, 182, 201, 0.16);
@@ -38,9 +39,9 @@
   --topbar-ctl-bg: rgba(255, 255, 255, 0.08);
   --topbar-ctl-border: rgba(255, 255, 255, 0.14);
   --topbar-ctl-fg: #9fb4c0;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-sm: 9px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
   color-scheme: light;
 }
 
@@ -69,6 +70,7 @@
   --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 28px rgba(0, 0, 0, 0.32);
   /* I mørk modus følgjer ramma den vanlege mørke flata */
   --rail-bg: #182230;
+  --rail-bg-solid: #182230;
   --rail-fg: #c1ccd3;
   --rail-section: #647580;
   --rail-active-bg: #142e36;
@@ -141,9 +143,12 @@ button:active {
 }
 .skeleton {
   background: var(--surface-alt);
-  border-radius: 12px;
+  border-radius: 10px;
   animation: skeletonPulse 1.2s ease-in-out infinite;
 }
+
+/* Kollapsbar sidemeny: skjul tekst når smal */
+.rail-collapsed .rail-label { display: none; }
 
 input, textarea, select {
   color-scheme: inherit;

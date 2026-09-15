@@ -44,7 +44,7 @@ export function Rapporter() {
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 920 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 22 }}>Rapporter</h1>
+          <h1 style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Rapporter</h1>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Nøkkeltall for {periode === 'uke' ? 'denne veka' : 'denne månaden'}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -65,14 +65,14 @@ export function Rapporter() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 14 }}>
         {kort.map((k) => (
-          <div key={k.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '16px 18px' }}>
+          <div key={k.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px' }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: k.farge, fontFamily: "'Geist Mono'" }}>{k.verdi}</div>
             <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4 }}>{k.label}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', padding: '12px 18px', fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.4px', borderBottom: '1px solid var(--divider)' }}>
           <span>Ansatt</span>
           <span>Timar</span>

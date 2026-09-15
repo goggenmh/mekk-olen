@@ -22,14 +22,14 @@ function DashboardSkeleton() {
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div className="skeleton" style={{ width: 240, height: 30 }} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14 }}>
-        {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 74, borderRadius: 16 }} />)}
+        {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 74, borderRadius: 12 }} />)}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14 }}>
-        {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 82, borderRadius: 16 }} />)}
+        {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 82, borderRadius: 12 }} />)}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1.7fr 1fr', gap: 18 }}>
-        <div className="skeleton" style={{ height: 260, borderRadius: 16 }} />
-        <div className="skeleton" style={{ height: 260, borderRadius: 16 }} />
+        <div className="skeleton" style={{ height: 260, borderRadius: 12 }} />
+        <div className="skeleton" style={{ height: 260, borderRadius: 12 }} />
       </div>
     </div>
   );
@@ -57,7 +57,7 @@ function App() {
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <Header setView={go} isMobile={isMobile} onMenu={() => setMenuOpen(true)} />
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto' }}>
-          <div style={{ maxWidth: 1240, margin: '0 auto', width: '100%' }}>
+          <div style={{ maxWidth: 1440, margin: '0 auto', width: '100%' }}>
             {dataLoading ? (
               <DashboardSkeleton />
             ) : error ? (

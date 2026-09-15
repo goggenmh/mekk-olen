@@ -14,9 +14,9 @@ export function LoginScreen() {
         background: 'linear-gradient(160deg,#0c2436 0%,#103244 100%)',
       }}
     >
-      <div style={{ width: '100%', maxWidth: 380, background: 'var(--surface)', borderRadius: 22, boxShadow: '0 30px 70px rgba(0,0,0,0.35)', overflow: 'hidden' }}>
+      <div style={{ width: '100%', maxWidth: 380, background: 'var(--surface)', borderRadius: 14, boxShadow: '0 30px 70px rgba(0,0,0,0.35)', overflow: 'hidden' }}>
         <div style={{ padding: '28px 28px 20px', textAlign: 'center', borderBottom: '1px solid var(--divider)' }}>
-          <img src="/assets/mekk-logo.png" alt="MEKK Ølen" style={{ width: 58, height: 58, borderRadius: 16, display: 'block', margin: '0 auto 12px' }} />
+          <img src="/assets/mekk-logo.png" alt="MEKK Ølen" style={{ width: 58, height: 58, borderRadius: 12, display: 'block', margin: '0 auto 12px' }} />
           <div style={{ fontFamily: "'Geist'", fontWeight: 700, fontSize: 21, letterSpacing: '0.4px' }}>MEKK ØLEN</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', marginTop: 2 }}>
             Vakt &amp; timestyring
@@ -61,7 +61,7 @@ export function LoginScreen() {
                   <button
                     key={k}
                     onClick={() => pressDigit(k)}
-                    style={{ height: 56, border: '1px solid var(--border)', background: 'var(--surface-alt)', borderRadius: 16, cursor: 'pointer', fontFamily: "'Geist Mono'", fontSize: 21, fontWeight: 600, color: 'var(--text)' }}
+                    style={{ height: 56, border: '1px solid var(--border)', background: 'var(--surface-alt)', borderRadius: 12, cursor: 'pointer', fontFamily: "'Geist Mono'", fontSize: 21, fontWeight: 600, color: 'var(--text)' }}
                   >
                     {k}
                   </button>
@@ -69,13 +69,13 @@ export function LoginScreen() {
                 <div />
                 <button
                   onClick={() => pressDigit('0')}
-                  style={{ height: 56, border: '1px solid var(--border)', background: 'var(--surface-alt)', borderRadius: 16, cursor: 'pointer', fontFamily: "'Geist Mono'", fontSize: 21, fontWeight: 600, color: 'var(--text)' }}
+                  style={{ height: 56, border: '1px solid var(--border)', background: 'var(--surface-alt)', borderRadius: 12, cursor: 'pointer', fontFamily: "'Geist Mono'", fontSize: 21, fontWeight: 600, color: 'var(--text)' }}
                 >
                   0
                 </button>
                 <button
                   onClick={backspace}
-                  style={{ height: 56, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 16, cursor: 'pointer', fontSize: 19, color: 'var(--text-muted)' }}
+                  style={{ height: 56, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 12, cursor: 'pointer', fontSize: 19, color: 'var(--text-muted)' }}
                 >
                   ⌫
                 </button>
@@ -90,7 +90,7 @@ export function LoginScreen() {
                 <button
                   key={u.id}
                   onClick={() => pickUser(u.id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 16, cursor: 'pointer', textAlign: 'left' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 12, cursor: 'pointer', textAlign: 'left' }}
                 >
                   <div style={{ flex: 'none', width: 42, height: 42, borderRadius: '50%', background: u.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#fff' }}>
                     {u.init}

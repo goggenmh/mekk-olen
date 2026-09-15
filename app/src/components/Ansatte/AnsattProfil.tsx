@@ -6,7 +6,7 @@ import { Icon } from '../ui/Icon';
 import { Pill } from '../ui/Pill';
 import type { Employee } from '../../constants';
 
-const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', boxShadow: 'var(--shadow-card)' } as const;
+const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', boxShadow: 'var(--shadow-card)' } as const;
 const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 12 } as const;
 
 export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {

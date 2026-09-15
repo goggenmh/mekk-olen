@@ -41,9 +41,9 @@ export function Vaktplan() {
   const pendingSwaps = swaps.filter((s) => s.status === 'pending');
 
   return (
-    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 22, letterSpacing: '-0.2px' }}>Vaktplan</div>
+        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Vaktplan</div>
         <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
           {(['uke', 'manad'] as const).map((m) => (
             <button
@@ -72,7 +72,7 @@ export function Vaktplan() {
           onDayClick={(date) => { setVpWeek(mondayOf(date)); setMode('uke'); }}
         />
       ) : (
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${days.length},1fr)`, gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${days.length},1fr)`, gap: 10 }}>
         {days.map((d) => {
           const dayShifts = shifts.filter((s) => s.date === d.date).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
           const erIDag = d.date === iDag;
@@ -83,14 +83,19 @@ export function Vaktplan() {
               onDrop={() => {
                 if (dragShiftId.current) { moveShiftDate(dragShiftId.current, d.date); dragShiftId.current = null; }
               }}
-              style={{ background: erIDag ? 'var(--brand-soft)' : 'var(--surface)', border: erIDag ? '1px solid var(--brand)' : '1px solid var(--border)', borderRadius: 16, padding: 10, minHeight: 220, display: 'flex', flexDirection: 'column', gap: 8 }}
+              style={{
+                background: erIDag ? 'var(--brand-soft)' : 'var(--surface)',
+                border: erIDag ? '2px solid var(--brand)' : '1px solid var(--border)',
+                borderRadius: 12, padding: erIDag ? 9 : 10, minHeight: 220, display: 'flex', flexDirection: 'column', gap: 7,
+              }}
             >
-              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, paddingBottom: 7, borderBottom: '1px solid var(--divider)' }}>
                 <div>
-                  <div style={{ fontSize: 11.5, fontWeight: 700, color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)', textTransform: 'uppercase' }}>{d.kort} {parseDate(d.date).getDate()}</div>
-                  <div style={{ fontSize: 10.5, color: 'var(--text-faint)' }}>Ope {d.open}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1 }}>{parseDate(d.date).getDate()}</div>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px', marginTop: 2 }}>{d.kort}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 1 }}>Ope {d.open}</div>
                 </div>
-                {erIDag && <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, letterSpacing: '0.4px', textTransform: 'uppercase', color: '#fff', background: 'var(--brand)', borderRadius: 8, padding: '2px 7px' }}>I dag</span>}
+                {erIDag && <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', color: '#fff', background: 'var(--brand)', borderRadius: 999, padding: '2px 8px' }}>I dag</span>}
               </div>
               {dayShifts.map((s) => {
                 const a = findAnsatt(s.ansatt);
@@ -101,23 +106,28 @@ export function Vaktplan() {
                     draggable
                     onDragStart={() => { dragShiftId.current = s.id; }}
                     onClick={() => setShiftTarget({ date: d.date, shift: s })}
-                    style={{ background: farge, color: '#fff', borderRadius: 12, padding: '8px 9px', cursor: 'grab', fontSize: 12 }}
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 10, padding: '7px 9px', cursor: 'grab' }}
                   >
-                    <div style={{ fontWeight: 700 }}>{a.navn}</div>
-                    <div style={{ opacity: 0.9, fontSize: 11 }}>{s.start}–{s.slutt}</div>
-                    {s.skift && <div style={{ opacity: 0.8, fontSize: 10 }}>{s.skift}</div>}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setSwapTarget(s); }}
-                      style={{ marginTop: 4, fontSize: 10.5, background: 'rgba(255,255,255,0.22)', color: '#fff', border: 'none', borderRadius: 9, padding: '3px 7px', cursor: 'pointer' }}
-                    >
-                      Bytt vakt
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: farge, flex: 'none' }} />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.navn}</span>
+                    </div>
+                    <div style={{ fontFamily: "'Geist Mono'", fontSize: 12.5, fontWeight: 700, color: 'var(--text)', marginTop: 3, letterSpacing: '-0.3px' }}>{s.start}–{s.slutt}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      {s.skift && <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>{s.skift}</span>}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSwapTarget(s); }}
+                        style={{ marginLeft: 'auto', fontSize: 10.5, fontWeight: 600, background: 'none', color: 'var(--brand)', border: 'none', padding: 0, cursor: 'pointer' }}
+                      >
+                        Bytt vakt
+                      </button>
+                    </div>
                   </div>
                 );
               })}
               <button
                 onClick={() => setShiftTarget({ date: d.date })}
-                style={{ marginTop: 'auto', border: '1px dashed var(--border)', background: 'none', borderRadius: 11, padding: '7px 0', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ marginTop: 'auto', border: '1px dashed var(--border)', background: 'none', borderRadius: 9, padding: '7px 0', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 + vakt
               </button>
@@ -128,7 +138,7 @@ export function Vaktplan() {
       )}
 
       {pendingSwaps.length > 0 && (
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '16px 18px' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px' }}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Bytteønske</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {pendingSwaps.map((s) => {
@@ -154,7 +164,7 @@ export function Vaktplan() {
         </div>
       )}
 
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '16px 18px' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
           <div style={{ fontSize: 14, fontWeight: 700 }}>Ferie &amp; fri</div>
           <button onClick={() => setFerieTarget('new')} style={{ ...btnGhost, marginLeft: 'auto' }}>+ Legg til</button>
@@ -173,7 +183,7 @@ export function Vaktplan() {
         </div>
       </div>
 
-      <div style={{ background: 'linear-gradient(135deg,#0d5f6e,#0c5a69)', color: '#eaf6f8', borderRadius: 16, padding: '16px 18px', boxShadow: '0 8px 24px rgba(12,90,105,0.22)' }}>
+      <div style={{ background: 'linear-gradient(135deg,#0d5f6e,#0c5a69)', color: '#eaf6f8', borderRadius: 12, padding: '16px 18px', boxShadow: '0 8px 24px rgba(12,90,105,0.22)' }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: '#8fd2dd', marginBottom: 10 }}>Bemanningsregel</div>
         <ul style={{ paddingLeft: 18, fontSize: 13, color: '#cfe6ec', lineHeight: 1.6 }}>
           <li>Minst éin tilsett på vakt i alle opningstider.</li>
@@ -212,7 +222,7 @@ function MonthView({
   const inMonth = (d: string) => Number(d.split('-')[1]) === mm;
 
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: 'var(--surface-alt)' }}>
         {UKE_KORT.map((d) => <div key={d} style={{ ...th, textAlign: 'center' }}>{d}</div>)}
       </div>

@@ -13,7 +13,7 @@ import { TaskModal } from '../Oppgaver/TaskModal';
 import { OrderModal } from '../Bestillinger/OrderModal';
 import type { View } from '../../lib/view';
 
-const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', boxShadow: 'var(--shadow-card)' } as const;
+const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', boxShadow: 'var(--shadow-card)' } as const;
 const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 12 } as const;
 const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 const PRI_RANG: Record<string, number> = { høg: 0, medium: 1, låg: 2 };
@@ -58,8 +58,8 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
 
   const nokkeltal = [
     { verdi: `${fmt(totalTimarUke)} t`, lab: 'Timar denne veka', trend: timarTrend },
-    { verdi: String(aktiveBestillingar), lab: 'Aktive bestillingar', trend: null as number | null },
-    { verdi: String(ventandeTimar), lab: 'Ventar godkjenning', trend: null as number | null },
+    { verdi: String(aktiveBestillingar), lab: 'Bestillingar', trend: null as number | null },
+    { verdi: String(ventandeTimar), lab: 'Til godkjenning', trend: null as number | null },
     { verdi: String(opneOppgaver), lab: 'Opne oppgåver', trend: null as number | null },
   ];
 
@@ -107,9 +107,9 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   ] as const;
 
   return (
-    <div style={{ padding: isMobile ? 18 : 26, display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ padding: isMobile ? 18 : 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div>
-        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 22, letterSpacing: '-0.2px' }}>{helsing}, {fornamn}</div>
+        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>{helsing}, {fornamn}</div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>{fullDatoTekst(t)}</div>
       </div>
 
@@ -122,7 +122,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             onClick={() => setQuickAction(h.key)}
             style={{
               display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', background: 'var(--surface)',
-              border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', cursor: 'pointer', boxShadow: 'var(--shadow-card)',
+              border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', cursor: 'pointer', boxShadow: 'var(--shadow-card)',
             }}
           >
             <span style={{ width: 42, height: 42, borderRadius: 13, background: h.primary ? 'var(--accent-soft)' : 'var(--brand-soft)', color: h.primary ? 'var(--accent)' : 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={h.ikon} size={21} /></span>
@@ -131,21 +131,27 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         ))}
       </div>
 
-      {/* nøkkeltal-rad */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14 }}>
-        {nokkeltal.map((k) => (
-          <div key={k.lab} style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'Geist Mono'", color: 'var(--brand-strong)', letterSpacing: '-0.4px' }}>{k.verdi}</div>
-              {k.trend !== null && (
-                <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 8, color: k.trend >= 0 ? '#2f9e6f' : 'var(--danger)', background: k.trend >= 0 ? 'rgba(47,158,111,0.12)' : 'rgba(192,57,43,0.10)' }}>
-                  {k.trend >= 0 ? '↑' : '↓'} {Math.abs(k.trend)}%
-                </span>
-              )}
-            </div>
-            <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 3 }}>{k.lab}</div>
-          </div>
-        ))}
+      {/* nøkkeltal – samla i eitt panel */}
+      <div style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)' }}>
+          {nokkeltal.map((k, i) => {
+            const nyRad = isMobile ? i >= 2 : false;
+            const forsteIKol = isMobile ? i % 2 === 0 : i === 0;
+            return (
+              <div key={k.lab} style={{ padding: '16px 20px', borderLeft: forsteIKol ? 'none' : '1px solid var(--divider)', borderTop: nyRad ? '1px solid var(--divider)' : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
+                  <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Geist Mono'", color: 'var(--brand-strong)', letterSpacing: '-0.5px' }}>{k.verdi}</div>
+                  {k.trend !== null && (
+                    <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 999, color: k.trend >= 0 ? '#2f9e6f' : 'var(--danger)', background: k.trend >= 0 ? 'rgba(47,158,111,0.12)' : 'rgba(192,57,43,0.10)' }}>
+                      {k.trend >= 0 ? '↑' : '↓'} {Math.abs(k.trend)}%
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{k.lab}</div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.7fr 1fr', gap: 18, alignItems: 'start' }}>
@@ -273,7 +279,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             </div>
           </div>
 
-          <div style={{ borderRadius: 16, padding: '16px 18px', background: 'linear-gradient(135deg,#0d5f6e,#0c5a69)', color: '#eaf6f8', boxShadow: '0 8px 24px rgba(12,90,105,0.22)' }}>
+          <div style={{ borderRadius: 12, padding: '16px 18px', background: 'linear-gradient(135deg,#0d5f6e,#0c5a69)', color: '#eaf6f8', boxShadow: '0 8px 24px rgba(12,90,105,0.22)' }}>
             <div style={{ ...labelStyle, color: '#8fd2dd' }}>Ferie &amp; fri på trappene</div>
             {dashFerie.length === 0 && <div style={{ fontSize: 13, color: '#bcdfe6' }}>Ingen registrert.</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

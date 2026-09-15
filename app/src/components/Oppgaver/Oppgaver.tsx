@@ -32,9 +32,9 @@ export function Oppgaver() {
   };
 
   return (
-    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 22, letterSpacing: '-0.2px' }}>Oppgåver</div>
+        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Oppgåver</div>
         <label style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>
           <input type="checkbox" checked={visFullforte} onChange={(e) => setVisFullforte(e.target.checked)} style={{ width: 16, height: 16, cursor: 'pointer' }} />
           Vis fullførte
@@ -59,7 +59,7 @@ export function Oppgaver() {
               onDrop={() => {
                 if (dragTaskId.current) { moveTask(dragTaskId.current, k.id); dragTaskId.current = null; }
               }}
-              style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 16, padding: 10, minHeight: 300, display: 'flex', flexDirection: 'column', gap: 8 }}
+              style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 12, padding: 10, minHeight: 300, display: 'flex', flexDirection: 'column', gap: 8 }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: k.farge }} />

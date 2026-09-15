@@ -61,9 +61,9 @@ export function Bestillinger() {
     });
 
   return (
-    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 22, letterSpacing: '-0.2px' }}>Bestillingar</div>
+        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Bestillingar</div>
         <button
           onClick={() => setOrderTarget('new')}
           style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
@@ -88,7 +88,7 @@ export function Bestillinger() {
       </div>
 
       {filter !== 'henta' && (
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'auto' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: 'var(--surface-alt)' }}>
@@ -140,14 +140,14 @@ export function Bestillinger() {
       {filter === 'henta' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {hentaGrupper.length === 0 && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '16px 18px', fontSize: 13, color: 'var(--text-muted)' }}>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', fontSize: 13, color: 'var(--text-muted)' }}>
               Ingen henta bestillingar enno.
             </div>
           )}
           {hentaGrupper.map((g) => {
             const arOpen = openYear === g.ar;
             return (
-              <div key={g.ar} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
+              <div key={g.ar} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
                 <button
                   onClick={() => { setOpenYear(arOpen ? null : g.ar); setOpenMonth(null); }}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}

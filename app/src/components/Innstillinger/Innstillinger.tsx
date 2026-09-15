@@ -5,7 +5,7 @@ import { Avatar } from '../ui/Avatar';
 import type { View } from '../../lib/view';
 
 const cardStyle = {
-  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '18px 20px',
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '18px 20px',
 } as const;
 
 export function Innstillinger({ setView }: { setView: (v: View) => void }) {
@@ -18,7 +18,7 @@ export function Innstillinger({ setView }: { setView: (v: View) => void }) {
   return (
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 640 }}>
       <div>
-        <h1 style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 22 }}>Innstillingar</h1>
+        <h1 style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Innstillingar</h1>
         <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Profil og preferansar</div>
       </div>
 
@@ -47,7 +47,7 @@ export function Innstillinger({ setView }: { setView: (v: View) => void }) {
         <button
           onClick={toggle}
           style={{
-            width: 52, height: 30, borderRadius: 15, border: 'none', cursor: 'pointer', position: 'relative',
+            width: 52, height: 30, borderRadius: 12, border: 'none', cursor: 'pointer', position: 'relative',
             background: dark ? 'var(--brand)' : 'var(--border)', flex: 'none',
           }}
         >

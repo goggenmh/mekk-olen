@@ -45,8 +45,8 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
     <div
       className="no-print"
       style={{
-        display: 'flex', alignItems: 'center', gap: 14, padding: isMobile ? '12px 16px' : '14px 26px',
-        background: 'var(--topbar-bg)', borderBottom: '1px solid var(--rail-border)',
+        display: 'flex', alignItems: 'center', gap: 12, padding: isMobile ? '9px 14px' : '10px 20px',
+        background: 'var(--topbar-bg)', borderBottom: '1px solid var(--rail-border)', minHeight: isMobile ? 56 : 62,
       }}
     >
       {isMobile && (
@@ -54,21 +54,21 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           onClick={onMenu}
           title="Meny"
           style={{
-            width: 38, height: 38, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 12, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none',
+            width: 36, height: 36, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
+            borderRadius: 9, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none',
           }}
         >
           <Icon name="menu" size={20} />
         </button>
       )}
-      <div style={{ position: 'relative', flex: 1, maxWidth: 420, display: isMobile ? 'none' : 'block' }}>
+      <div style={{ position: 'relative', flex: 1, maxWidth: 380, display: isMobile ? 'none' : 'block' }}>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Søk etter ansatt, dokument, oppgåve…"
           style={{
-            width: '100%', padding: '10px 14px', border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 10, fontFamily: "'Geist'", fontSize: 13.5, color: 'var(--topbar-ctl-fg)',
+            width: '100%', padding: '8px 13px', border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
+            borderRadius: 9, fontFamily: "'Geist'", fontSize: 13, color: 'var(--topbar-ctl-fg)',
           }}
         />
         {hits.length > 0 && (
@@ -104,8 +104,8 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
             onClick={() => setAdminOpen(true)}
             title="Administrasjon"
             style={{
-              width: 36, height: 36, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-              borderRadius: 12, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 34, height: 34, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
+              borderRadius: 9, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
             <Icon name="innstillinger" size={18} />
@@ -115,13 +115,13 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           onClick={toggle}
           title={dark ? 'Bytt til lys modus' : 'Bytt til mørk modus'}
           style={{
-            width: 36, height: 36, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 12, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 34, height: 34, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
+            borderRadius: 9, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
           <Icon name={dark ? 'sun' : 'moon'} size={18} />
         </button>
-        <Avatar init={user.init} farge={user.farge} size={36} fontSize={13} />
+        <Avatar init={user.init} farge={user.farge} size={32} fontSize={12} />
         {!isMobile && (
           <div style={{ lineHeight: 1.2 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--topbar-name)' }}>{user.navn}</div>
@@ -133,9 +133,9 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           title="Logg ut"
           style={{
             marginLeft: 6, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 12, cursor: 'pointer', fontFamily: "'Geist'", fontSize: 13, fontWeight: 600, color: 'var(--topbar-ctl-fg)',
+            borderRadius: 9, cursor: 'pointer', fontFamily: "'Geist'", fontSize: 13, fontWeight: 600, color: 'var(--topbar-ctl-fg)',
             ...(isMobile
-              ? { width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }
+              ? { width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }
               : { padding: '8px 14px' }),
           }}
         >

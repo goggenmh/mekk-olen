@@ -16,9 +16,9 @@ export function Dokument() {
   const filtered = docs.filter((d) => filter === 'Alle' || d.kategori === filter);
 
   return (
-    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 22, letterSpacing: '-0.2px' }}>Dokument</div>
+        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Dokument</div>
         <button
           onClick={() => setDocTarget('new')}
           style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
@@ -49,7 +49,7 @@ export function Dokument() {
             <div
               key={d.id}
               onClick={() => setDocTarget(d)}
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer' }}
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', cursor: 'pointer' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
                 <span style={{ display: 'flex', color: k.fg }}><Icon name={k.ikon} size={18} /></span>

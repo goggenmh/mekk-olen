@@ -28,7 +28,7 @@ export function Modal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth, boxShadow: '0 24px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}
+        style={{ background: 'var(--surface)', borderRadius: 12, width: '100%', maxWidth, boxShadow: '0 24px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--divider)' }}>
           {leftHeader ? (
