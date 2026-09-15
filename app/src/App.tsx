@@ -14,6 +14,7 @@ import { Dokument } from './components/Dokument/Dokument';
 import { Rapporter } from './components/Rapporter/Rapporter';
 import { Innstillinger } from './components/Innstillinger/Innstillinger';
 import { useIsMobile } from './lib/useIsMobile';
+import { useIdleLogout } from './lib/useIdleLogout';
 import { Toaster } from './components/ui/Toaster';
 import type { View } from './lib/view';
 
@@ -36,12 +37,15 @@ function DashboardSkeleton() {
 }
 
 function App() {
-  const { loading: authLoading, user } = useAuth();
+  const { loading: authLoading, user, logout } = useAuth();
   const { loading: dataLoading, error, refreshAll } = useAppData();
   const [view, setView] = useState<View>('dashbord');
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
   const go = (v: View) => { setView(v); setMenuOpen(false); };
+
+  // Automatisk utlogging etter 5 minutt utan aktivitet.
+  useIdleLogout(!!user, logout, 5);
 
   useEffect(() => {
     if (user) refreshAll();
