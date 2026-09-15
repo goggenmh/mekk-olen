@@ -2,29 +2,32 @@ import { useRef, useState, type CSSProperties } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
-import { DAGER_VAKTPLAN, SHIFT_TEMPLATE, FERIE_STYL } from '../../constants';
-import { addDays, mondayOf, today, isoWeek, parseDate, DAG_IDX, shiftMonth, MND, UKE_KORT, datoIntervall, talDagar } from '../../lib/dates';
+import { DAGER_VAKTPLAN, FERIE_STYL } from '../../constants';
+import { addDays, mondayOf, today, isoWeek, parseDate, weekdayIdx, shiftMonth, MND, UKE_KORT, datoIntervall, talDagar } from '../../lib/dates';
 import { helligdagFor, halvdagFor } from '../../lib/helligdagar';
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
 import { FerieModal } from './FerieModal';
 import { UnavailableModal } from './UnavailableModal';
+import { StandardvekeModal } from './StandardvekeModal';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { useIsMobile } from '../../lib/useIsMobile';
 import type { Shift, Ferie, Unavailable } from '../../types';
 
+const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 const ferieStyl = (type: string) => FERIE_STYL[type] || FERIE_STYL.Fri;
 const ferieForDag = (ferie: Ferie[], dato: string) => ferie.filter((f) => f.fra && f.til && f.fra <= dato && dato <= f.til);
 
 export function Vaktplan() {
-  const { shifts, swaps, ferie, moveShiftDate, fillWeek, approveSwap, declineSwap, canApprove, unavailable } = useAppData();
+  const { shifts, swaps, ferie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke } = useAppData();
   const { user } = useAuth();
   const { findAnsatt } = useAnsatte();
   const isMobile = useIsMobile();
   const maaGodkjenne = canApprove(user?.id);
-  // Kan berre redigere eigen ferie – med mindre ein har delegeringsansvar.
+  // Kan berre redigere eigen ferie / standardveka – med mindre ein har delegeringsansvar.
   const kanStyreFerie = canApprove(user?.id);
+  const kanStyreStandard = canApprove(user?.id);
   const opneFerie = (f: Ferie) => { if (kanStyreFerie || f.ansatt === user?.id) setFerieTarget(f); };
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
   const [vpWeek, setVpWeek] = useState(mondayOf(today()));
@@ -33,13 +36,25 @@ export function Vaktplan() {
   const [swapTarget, setSwapTarget] = useState<Shift | null>(null);
   const [ferieTarget, setFerieTarget] = useState<Ferie | 'new' | null>(null);
   const [utilTarget, setUtilTarget] = useState<{ dato: string; existing?: Unavailable } | null>(null);
+  const [standardOpen, setStandardOpen] = useState(false);
   const dragShiftId = useRef<string | null>(null);
 
   const days = DAGER_VAKTPLAN.map((d, i) => ({ ...d, date: addDays(vpWeek, i) }));
   const iDag = today();
 
   const fyllVeke = () => {
-    fillWeek(SHIFT_TEMPLATE.map((t) => ({ ansatt: t.ansatt, date: addDays(vpWeek, DAG_IDX[t.dag]), start: t.start, slutt: t.slutt, skift: t.skift })));
+    if (standardveke.length === 0) { window.alert('Standardveka er tom. Trykk «Lagre som standardveke» eller «Rediger standardveke» først.'); return; }
+    if (window.confirm('Dette slettar alle vaktene denne veka og fyller inn standardveka på nytt. Halde fram?')) {
+      applyStandardveke(vpWeek);
+    }
+  };
+
+  const lagreSomStandard = () => {
+    const vekeSkift = shifts.filter((s) => days.some((d) => d.date === s.date));
+    if (vekeSkift.length === 0) { window.alert('Det er ingen vakter denne veka å lagre som standard.'); return; }
+    if (!window.confirm('Lagre vaktene i denne veka som ny standardveke? Dette erstattar den førre standardveka.')) return;
+    const entries = vekeSkift.map((s) => ({ ansatt: s.ansatt, dag: DAG_KEYS[weekdayIdx(s.date)], start: s.start, slutt: s.slutt }));
+    saveStandardveke(entries);
   };
 
   const prevPeriod = () => (mode === 'uke' ? setVpWeek(addDays(vpWeek, -7)) : setMonthAnchor(shiftMonth(monthAnchor, -1)));
@@ -82,7 +97,13 @@ export function Vaktplan() {
         <div style={{ fontWeight: 700, fontSize: 15 }}>{periodTittel}</div>
         <button onClick={nextPeriod} style={navBtn}>›</button>
         <button onClick={goToday} style={btnGhost}>I dag</button>
-        {mode === 'uke' && <button onClick={fyllVeke} style={{ ...btnGhost, marginLeft: 'auto' }}>↻ Fyll frå standardveke</button>}
+        {mode === 'uke' && (
+          <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
+            {kanStyreStandard && <button onClick={() => setStandardOpen(true)} style={btnGhost} title="Rediger malen for standardveka">Rediger standardveke</button>}
+            {kanStyreStandard && <button onClick={lagreSomStandard} style={btnGhost} title="Lagre vaktene i denne veka som standardveke">Lagre denne veka</button>}
+            <button onClick={fyllVeke} style={{ ...btnGhost, color: 'var(--brand-strong)', borderColor: 'var(--brand)' }}>↻ Fyll frå standardveke</button>
+          </div>
+        )}
       </div>
 
       {mode === 'manad' ? (
@@ -295,6 +316,7 @@ export function Vaktplan() {
       {swapTarget && <SwapModal shift={swapTarget} onClose={() => setSwapTarget(null)} />}
       {ferieTarget && <FerieModal existing={ferieTarget === 'new' ? undefined : ferieTarget} onClose={() => setFerieTarget(null)} />}
       {utilTarget && user && <UnavailableModal ansatt={user.id} dato={utilTarget.dato} existing={utilTarget.existing} onClose={() => setUtilTarget(null)} />}
+      {standardOpen && <StandardvekeModal onClose={() => setStandardOpen(false)} />}
     </div>
   );
 }

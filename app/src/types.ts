@@ -97,6 +97,15 @@ export interface Melding {
   created_at: string;
 }
 
+/** Ein rad i standardveka (malen for "fyll frå standardveke"). */
+export interface StandardvekeEntry {
+  id: string;
+  ansatt: EmployeeId;
+  dag: string; // 'man' | 'tir' | 'ons' | 'tor' | 'fre' | 'lau'
+  start: string;
+  slutt: string;
+}
+
 /** Ein dag ein ansatt har merka at dei ikkje kan jobbe (raud dag). */
 export interface Unavailable {
   id: string;

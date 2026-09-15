@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from '../supabaseClient';
 import type { EmployeeId } from '../constants';
-import { parseDate, ymd, today } from '../lib/dates';
+import { parseDate, ymd, today, addDays, DAG_IDX, skiftFraTid } from '../lib/dates';
 import { toast } from '../lib/toast';
 import { useAnsatte } from './AnsatteContext';
-import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Task, TimeEntry, Unavailable } from '../types';
+import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Task, TimeEntry, Unavailable, StandardvekeEntry } from '../types';
 
 // Neste forfallsdato for ei gjentakande oppgåve.
 const nesteFrist = (frist: string | null, gjentak: string): string | null => {
@@ -46,7 +46,9 @@ interface AppData {
   saveShift: (shift: Omit<Shift, 'id'> & { id?: string }) => Promise<void>;
   deleteShift: (id: string) => Promise<void>;
   moveShiftDate: (id: string, date: string) => Promise<void>;
-  fillWeek: (template: { ansatt: EmployeeId; date: string; start: string; slutt: string; skift: string }[]) => Promise<void>;
+  standardveke: StandardvekeEntry[];
+  saveStandardveke: (entries: Omit<StandardvekeEntry, 'id'>[]) => Promise<void>;
+  applyStandardveke: (weekStart: string) => Promise<void>;
 
   createSwap: (swap: Omit<ShiftSwap, 'id' | 'status'>) => Promise<void>;
   approveSwap: (id: string) => Promise<void>;
@@ -77,6 +79,7 @@ const mapShift = (r: any): Shift => ({ id: r.id, ansatt: r.ansatt, date: r.date,
 const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.fra, til: r.til, dag: r.dag, tid: r.tid, status: r.status });
 const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst ?? '', fra: r.fra ?? null, til: r.til ?? null });
 const mapUnavail = (r: any): Unavailable => ({ id: r.id, ansatt: r.ansatt, dato: r.dato, grunn: r.grunn ?? null });
+const mapStandard = (r: any): StandardvekeEntry => ({ id: r.id, ansatt: r.ansatt, dag: r.dag, start: r.start, slutt: r.slutt });
 const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [] });
 const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
@@ -92,6 +95,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [swaps, setSwaps] = useState<ShiftSwap[]>([]);
   const [ferie, setFerie] = useState<Ferie[]>([]);
   const [unavailable, setUnavailable] = useState<Unavailable[]>([]);
+  const [standardveke, setStandardveke] = useState<StandardvekeEntry[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [docs, setDocs] = useState<Doc[]>([]);
@@ -101,7 +105,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const refreshAll = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [e, s, sw, f, t, o, d, p, m, u] = await Promise.all([
+    const [e, s, sw, f, t, o, d, p, m, u, sv] = await Promise.all([
       supabase.from('time_entries').select('*'),
       supabase.from('shifts').select('*'),
       supabase.from('shift_swaps').select('*'),
@@ -112,8 +116,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       supabase.from('permissions').select('*'),
       supabase.from('meldinger').select('*').order('created_at', { ascending: false }),
       supabase.from('utilgjengeleg').select('*'),
+      supabase.from('standardveke').select('*'),
     ]);
-    const firstError = [e, s, sw, f, t, o, d, p, m, u].find((r) => r.error)?.error;
+    const firstError = [e, s, sw, f, t, o, d, p, m, u, sv].find((r) => r.error)?.error;
     if (firstError) {
       setError(firstError.message);
     } else {
@@ -134,6 +139,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setPermissions((p.data || []).map(mapPermission));
       setMeldinger((m.data || []).map(mapMelding));
       setUnavailable((u.data || []).map(mapUnavail));
+      setStandardveke((sv.data || []).map(mapStandard));
     }
     setLoading(false);
   }, []);
@@ -205,12 +211,38 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     if (err) throw err;
     setShifts((prev) => prev.map((x) => (x.id === id ? mapShift(data) : x)));
   };
-  const fillWeek: AppData['fillWeek'] = async (template) => {
-    const missing = template.filter((t) => !shifts.some((x) => x.ansatt === t.ansatt && x.date === t.date));
-    if (missing.length === 0) return;
-    const { data, error: err } = await supabase.from('shifts').insert(missing).select();
-    if (err) throw err;
-    setShifts((prev) => [...prev, ...(data || []).map(mapShift)]);
+  // ---- standardveke (mal) ----
+  const saveStandardveke: AppData['saveStandardveke'] = async (entries) => {
+    // Erstattar heile malen.
+    const { error: delErr } = await supabase.from('standardveke').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (delErr) throw delErr;
+    if (entries.length === 0) {
+      setStandardveke([]);
+    } else {
+      const { data, error: err } = await supabase.from('standardveke').insert(entries).select();
+      if (err) throw err;
+      setStandardveke((data || []).map(mapStandard));
+    }
+    toast('Standardveke lagra');
+  };
+
+  const applyStandardveke: AppData['applyStandardveke'] = async (weekStart) => {
+    // Overskriv: slett alle vakter den veka (man–lau), fyll inn på nytt frå malen.
+    const dates = [0, 1, 2, 3, 4, 5].map((i) => addDays(weekStart, i));
+    const { error: delErr } = await supabase.from('shifts').delete().in('date', dates);
+    if (delErr) throw delErr;
+    const nye = standardveke.map((e) => {
+      const date = addDays(weekStart, DAG_IDX[e.dag] ?? 0);
+      return { ansatt: e.ansatt, date, start: e.start, slutt: e.slutt, skift: skiftFraTid(e.start, e.slutt, date) };
+    });
+    let innsette: Shift[] = [];
+    if (nye.length > 0) {
+      const { data, error: err } = await supabase.from('shifts').insert(nye).select();
+      if (err) throw err;
+      innsette = (data || []).map(mapShift);
+    }
+    setShifts((prev) => [...prev.filter((x) => !dates.includes(x.date)), ...innsette]);
+    toast('Veka fylt frå standardveke');
   };
 
   // ---- swaps ----
@@ -402,11 +434,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppData>(
     () => ({
-      loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, unavailable, refreshAll,
+      loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, unavailable, standardveke, refreshAll,
       canApprove, setKanGodkjenne,
       sendMelding, deleteMelding,
       saveEntry, deleteEntry, approveEmployeeEntries,
-      saveShift, deleteShift, moveShiftDate, fillWeek,
+      saveShift, deleteShift, moveShiftDate, saveStandardveke, applyStandardveke,
       createSwap, approveSwap, declineSwap,
       saveFerie, deleteFerie, saveUnavailable, removeUnavailable,
       saveTask, deleteTask, moveTask, completeTask,
@@ -414,7 +446,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveDoc, deleteDoc, uploadDocFile,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, unavailable, canApprove]
+    [loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, unavailable, standardveke, canApprove]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
