@@ -5,6 +5,7 @@ import { datoKort, MND } from '../../lib/dates';
 import { OrderModal } from './OrderModal';
 import { NotifyModal } from './NotifyModal';
 import { Icon } from '../ui/Icon';
+import { useIsMobile } from '../../lib/useIsMobile';
 import type { Order } from '../../types';
 
 const FILTERS: { key: string; label: string }[] = [
@@ -17,6 +18,7 @@ const FILTERS: { key: string; label: string }[] = [
 
 export function Bestillinger() {
   const { orders, advanceOrder } = useAppData();
+  const isMobile = useIsMobile();
   const [filter, setFilter] = useState('aktive');
   const [orderTarget, setOrderTarget] = useState<Order | 'new' | null>(null);
   const [notifyTarget, setNotifyTarget] = useState<Order | null>(null);
@@ -61,7 +63,7 @@ export function Bestillinger() {
     });
 
   return (
-    <div style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ padding: isMobile ? 16 : 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Bestillingar</div>
         <button
@@ -72,7 +74,7 @@ export function Bestillinger() {
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {FILTERS.map((f) => (
           <button
             key={f.key}
@@ -87,7 +89,41 @@ export function Bestillinger() {
         ))}
       </div>
 
-      {filter !== 'henta' && (
+      {filter !== 'henta' && isMobile && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {filtered.map((o) => {
+            const s = ORDER_STATUS[o.status as keyof typeof ORDER_STATUS];
+            const kanFram = o.status !== ORDER_FLOW[ORDER_FLOW.length - 1];
+            const kanVarsle = o.status === 'komen';
+            const nesteIdx = ORDER_FLOW.indexOf(o.status as typeof ORDER_FLOW[number]) + 1;
+            return (
+              <div key={o.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '13px 14px', boxShadow: 'var(--shadow-card)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span onClick={() => setOrderTarget(o)} style={{ fontSize: 14.5, fontWeight: 700, flex: 1, cursor: 'pointer' }}>{o.kunde}</span>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 9, textTransform: 'uppercase' }}>{s.tekst}</span>
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 5 }}>{o.vare}{o.antal > 1 ? ` · ${o.antal} stk` : ''}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{o.leverandor} · {datoKort(o.dato)}{o.varsla ? ` · varsla ${datoKort(o.varsla)}` : ''}</div>
+                {(kanVarsle || kanFram) && (
+                  <div style={{ display: 'flex', gap: 8, marginTop: 11 }}>
+                    {kanVarsle && (
+                      <button onClick={() => setNotifyTarget(o)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--border)', background: o.varsla ? '#e8f5ee' : '#fdf2e0', borderRadius: 10, fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}><Icon name="bell" size={14} /> Varsle</button>
+                    )}
+                    {kanFram && (
+                      <button onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])} style={{ marginLeft: 'auto', padding: '7px 14px', background: 'var(--brand-strong)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{s.neste} →</button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>Ingen bestillingar.</div>
+          )}
+        </div>
+      )}
+
+      {filter !== 'henta' && !isMobile && (
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
