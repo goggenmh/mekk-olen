@@ -73,3 +73,22 @@ export const fullDatoTekst = (s: string) => {
   const dag = UKE_FULL[wi];
   return `${dag.charAt(0).toUpperCase()}${dag.slice(1)} ${d.getDate()}. ${MND[d.getMonth()]}`;
 };
+
+// Lesbar datointervall, t.d. "14.–18. juli" eller "28. jul – 3. aug".
+export const datoIntervall = (fra: string | null, til: string | null) => {
+  if (!fra && !til) return '';
+  if (fra && !til) return datoKort(fra);
+  if (!fra && til) return datoKort(til);
+  const a = parseDate(fra!);
+  const b = parseDate(til!);
+  if (fra === til) return `${a.getDate()}. ${MND[a.getMonth()]}`;
+  const sameYear = a.getFullYear() === b.getFullYear();
+  const sameMonth = sameYear && a.getMonth() === b.getMonth();
+  if (sameMonth) return `${a.getDate()}.–${b.getDate()}. ${MND[b.getMonth()]}`;
+  if (sameYear) return `${a.getDate()}. ${MND[a.getMonth()].slice(0, 3)} – ${b.getDate()}. ${MND[b.getMonth()].slice(0, 3)}`;
+  return `${a.getDate()}. ${MND[a.getMonth()].slice(0, 3)} ${a.getFullYear()} – ${b.getDate()}. ${MND[b.getMonth()].slice(0, 3)} ${b.getFullYear()}`;
+};
+
+// Tal på dagar i eit intervall (inklusive begge endar).
+export const talDagar = (fra: string, til: string) =>
+  Math.round((parseDate(til).getTime() - parseDate(fra).getTime()) / 86400000) + 1;

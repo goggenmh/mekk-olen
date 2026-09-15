@@ -2,16 +2,20 @@ import { useRef, useState, type CSSProperties } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
-import { DAGER_VAKTPLAN, SHIFT_TEMPLATE } from '../../constants';
-import { addDays, mondayOf, today, isoWeek, parseDate, DAG_IDX, shiftMonth, MND, UKE_KORT } from '../../lib/dates';
+import { DAGER_VAKTPLAN, SHIFT_TEMPLATE, FERIE_STYL } from '../../constants';
+import { addDays, mondayOf, today, isoWeek, parseDate, DAG_IDX, shiftMonth, MND, UKE_KORT, datoIntervall, talDagar } from '../../lib/dates';
 import { helligdagFor, halvdagFor } from '../../lib/helligdagar';
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
 import { FerieModal } from './FerieModal';
 import { UnavailableModal } from './UnavailableModal';
 import { Avatar } from '../ui/Avatar';
+import { Icon } from '../ui/Icon';
 import { useIsMobile } from '../../lib/useIsMobile';
 import type { Shift, Ferie, Unavailable } from '../../types';
+
+const ferieStyl = (type: string) => FERIE_STYL[type] || FERIE_STYL.Fri;
+const ferieForDag = (ferie: Ferie[], dato: string) => ferie.filter((f) => f.fra && f.til && f.fra <= dato && dato <= f.til);
 
 export function Vaktplan() {
   const { shifts, swaps, ferie, moveShiftDate, fillWeek, approveSwap, declineSwap, canApprove, unavailable } = useAppData();
@@ -45,6 +49,14 @@ export function Vaktplan() {
 
   const pendingSwaps = swaps.filter((s) => s.status === 'pending');
 
+  // Pågåande/kommande først, avslutta sist; elles etter frå-dato.
+  const ferieSortert = [...ferie].sort((a, b) => {
+    const aEnd = a.til && a.til < iDag ? 1 : 0;
+    const bEnd = b.til && b.til < iDag ? 1 : 0;
+    if (aEnd !== bEnd) return aEnd - bEnd;
+    return (a.fra || '9999-99-99').localeCompare(b.fra || '9999-99-99');
+  });
+
   return (
     <div style={{ padding: isMobile ? 16 : 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
@@ -75,6 +87,7 @@ export function Vaktplan() {
           monthAnchor={monthAnchor}
           shifts={shifts}
           unavailable={unavailable}
+          ferie={ferie}
           onDayClick={(date) => { setVpWeek(mondayOf(date)); setMode('uke'); }}
         />
       ) : (
@@ -169,6 +182,21 @@ export function Vaktplan() {
                   )}
                 </div>
               )}
+              {ferieForDag(ferie, d.date).map((f) => {
+                const a = findAnsatt(f.ansatt);
+                const st = ferieStyl(f.type);
+                return (
+                  <span
+                    key={f.id}
+                    onClick={() => setFerieTarget(f)}
+                    title={`${a.navn} – ${f.type}${f.tekst ? ` (${f.tekst})` : ''}`}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 700, color: st.fg, background: st.bg, border: `1px solid ${st.kant}`, borderRadius: 8, padding: '3px 8px', cursor: 'pointer' }}
+                  >
+                    <Icon name={st.ikon} size={12} />
+                    {a.init} · {f.type}
+                  </span>
+                );
+              })}
               <button
                 onClick={() => setShiftTarget({ date: d.date })}
                 style={{ marginTop: 'auto', border: '1px dashed var(--border)', background: 'none', borderRadius: 9, padding: '7px 0', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer' }}
@@ -209,17 +237,40 @@ export function Vaktplan() {
       )}
 
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
           <div style={{ fontSize: 14, fontWeight: 700 }}>Ferie &amp; fri</div>
           <button onClick={() => setFerieTarget('new')} style={{ ...btnGhost, marginLeft: 'auto' }}>+ Legg til</button>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {ferie.map((f) => {
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
+          {ferieSortert.map((f) => {
             const a = findAnsatt(f.ansatt);
+            const st = ferieStyl(f.type);
+            const dagar = f.fra && f.til ? talDagar(f.fra, f.til) : 0;
+            const paagaar = !!f.fra && !!f.til && f.fra <= iDag && iDag <= f.til;
+            const kommande = !!f.fra && f.fra > iDag;
             return (
-              <div key={f.id} onClick={() => setFerieTarget(f)} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                <Avatar init={a.init} farge={a.farge} size={28} fontSize={10.5} />
-                <span style={{ fontSize: 13 }}>{a.navn} — {f.tekst} ({f.type})</span>
+              <div
+                key={f.id}
+                onClick={() => setFerieTarget(f)}
+                className="hoverable"
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', border: `1px solid ${st.kant}`, background: st.bg, borderRadius: 12, cursor: 'pointer' }}
+              >
+                <span style={{ width: 38, height: 38, borderRadius: 11, background: '#fff', color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+                  <Icon name={st.ikon} size={18} />
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ width: 9, height: 9, borderRadius: '50%', background: a.farge, flex: 'none' }} />
+                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{a.navn}</span>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: st.fg, background: '#fff', border: `1px solid ${st.kant}`, borderRadius: 8, padding: '1px 8px' }}>{f.type}</span>
+                    {paagaar && <span style={{ fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.3px', color: '#fff', background: st.fg, borderRadius: 999, padding: '2px 7px' }}>Pågår</span>}
+                    {kommande && <span style={{ fontSize: 10, fontWeight: 700, color: st.fg }}>om {talDagar(iDag, f.fra!) - 1} d</span>}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {f.fra ? `${datoIntervall(f.fra, f.til)}${dagar ? ` · ${dagar} ${dagar === 1 ? 'dag' : 'dagar'}` : ''}` : 'Utan dato'}
+                    {f.tekst ? ` — ${f.tekst}` : ''}
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -246,11 +297,12 @@ export function Vaktplan() {
 }
 
 function MonthView({
-  monthAnchor, shifts, unavailable, onDayClick,
+  monthAnchor, shifts, unavailable, ferie, onDayClick,
 }: {
   monthAnchor: string;
   shifts: Shift[];
   unavailable: Unavailable[];
+  ferie: Ferie[];
   onDayClick: (date: string) => void;
 }) {
   const { findAnsatt } = useAnsatte();
@@ -299,6 +351,15 @@ function MonthView({
                   {dayShifts.map((s) => {
                     const a = findAnsatt(s.ansatt);
                     return <div key={s.id} style={{ fontSize: 10.5, fontWeight: 700, color: a.farge }}>{a.init} {s.start}–{s.slutt}</div>;
+                  })}
+                  {ferieForDag(ferie, d).map((f) => {
+                    const a = findAnsatt(f.ansatt);
+                    const st = ferieStyl(f.type);
+                    return (
+                      <span key={f.id} title={`${a.navn} – ${f.type}${f.tekst ? ` (${f.tekst})` : ''}`} style={{ fontSize: 9.5, fontWeight: 700, color: st.fg, background: st.bg, border: `1px solid ${st.kant}`, borderRadius: 6, padding: '1px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {a.init} {f.type}
+                      </span>
+                    );
                   })}
                   {dagUtil.length > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginTop: dayShifts.length ? 2 : 0 }}>

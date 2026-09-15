@@ -38,6 +38,8 @@ export interface Ferie {
   ansatt: EmployeeId;
   type: string;
   tekst: string;
+  fra: string | null;
+  til: string | null;
 }
 
 export interface SjekklistePunkt {

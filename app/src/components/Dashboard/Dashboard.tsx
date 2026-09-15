@@ -3,7 +3,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { DAGER_VAKTPLAN } from '../../constants';
-import { weekDates, mondayOf, today, fullDatoTekst, fmt, timar, UKE_FULL, weekdayIdx, addDays, datoKort } from '../../lib/dates';
+import { weekDates, mondayOf, today, fullDatoTekst, fmt, timar, UKE_FULL, weekdayIdx, addDays, datoKort, datoIntervall } from '../../lib/dates';
 import { useIsMobile } from '../../lib/useIsMobile';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
@@ -97,7 +97,12 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
 
   // ---- ansattstatus ----
   const jobbarIdagIds = shifts.filter((s) => s.date === t).map((s) => s.ansatt);
-  const dashFerie = ferie.slice(0, 4);
+  // Pågåande og kommande ferie/fri først, avslutta blir droppa.
+  const dashFerie = ferie
+    .filter((f) => !f.til || f.til >= t)
+    .slice()
+    .sort((a, b) => (a.fra || '9999').localeCompare(b.fra || '9999'))
+    .slice(0, 4);
 
   const hurtighandlinger = [
     { key: 'timer', ikon: 'ny-timer', tekst: 'Registrer timar', primary: true },
@@ -288,7 +293,10 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                 return (
                   <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <Avatar init={a.init} farge={a.farge} size={28} fontSize={10.5} />
-                    <div style={{ flex: 1, fontSize: 13 }}>{a.navn} — {f.tekst}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{a.navn}</div>
+                      <div style={{ fontSize: 11.5, color: '#bcdfe6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.fra ? datoIntervall(f.fra, f.til) : (f.tekst || '—')}</div>
+                    </div>
                     <span style={{ fontSize: 9.5, fontWeight: 700, color: '#0c5a69', background: '#d5eef2', padding: '3px 8px', borderRadius: 9, textTransform: 'uppercase' }}>{f.type}</span>
                   </div>
                 );

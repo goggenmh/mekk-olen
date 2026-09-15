@@ -75,7 +75,7 @@ const AppDataContext = createContext<AppData | null>(null);
 const mapEntry = (r: any): TimeEntry => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, pause: r.pause, status: r.status });
 const mapShift = (r: any): Shift => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift });
 const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.fra, til: r.til, dag: r.dag, tid: r.tid, status: r.status });
-const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst });
+const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst ?? '', fra: r.fra ?? null, til: r.til ?? null });
 const mapUnavail = (r: any): Unavailable => ({ id: r.id, ansatt: r.ansatt, dato: r.dato, grunn: r.grunn ?? null });
 const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [] });
 const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla });
@@ -233,11 +233,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // ---- ferie ----
   const saveFerie: AppData['saveFerie'] = async (f) => {
     if (f.id) {
-      const { data, error: err } = await supabase.from('ferie').update({ ansatt: f.ansatt, type: f.type, tekst: f.tekst }).eq('id', f.id).select().single();
+      const { data, error: err } = await supabase.from('ferie').update({ ansatt: f.ansatt, type: f.type, tekst: f.tekst, fra: f.fra, til: f.til }).eq('id', f.id).select().single();
       if (err) throw err;
       setFerie((prev) => prev.map((x) => (x.id === f.id ? mapFerie(data) : x)));
     } else {
-      const { data, error: err } = await supabase.from('ferie').insert({ ansatt: f.ansatt, type: f.type, tekst: f.tekst }).select().single();
+      const { data, error: err } = await supabase.from('ferie').insert({ ansatt: f.ansatt, type: f.type, tekst: f.tekst, fra: f.fra, til: f.til }).select().single();
       if (err) throw err;
       setFerie((prev) => [...prev, mapFerie(data)]);
     }

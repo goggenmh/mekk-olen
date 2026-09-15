@@ -70,8 +70,13 @@ create table if not exists ferie (
   id uuid primary key default gen_random_uuid(),
   ansatt text not null references ansatte(id),
   type text not null check (type in ('Ferie', 'Fri', 'Kurs', 'Sjukmeld')),
-  tekst text not null
+  tekst text not null default '',
+  fra date,
+  til date
 );
+alter table ferie add column if not exists fra date;
+alter table ferie add column if not exists til date;
+alter table ferie alter column tekst set default '';
 
 -- ---------- tasks ----------
 -- ansatt is 'ufordelt' (unassigned) or an ansatte.id — no FK since 'ufordelt'

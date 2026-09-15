@@ -64,6 +64,14 @@ export const FERIE_TYPE: Record<string, { fg: string; bg: string }> = {
 };
 export const FERIE_TYPER = ['Ferie', 'Fri', 'Kurs', 'Sjukmeld'] as const;
 
+// Fargar og ikon per ferie/fri-type — brukt på vaktplanen og i oversikta.
+export const FERIE_STYL: Record<string, { fg: string; bg: string; kant: string; ikon: string }> = {
+  Ferie: { fg: '#0c5a69', bg: '#e6f3f5', kant: 'rgba(17,120,138,0.35)', ikon: 'sun' },
+  Fri: { fg: '#5a4b8a', bg: '#ece9f6', kant: 'rgba(90,75,138,0.3)', ikon: 'vaktplan' },
+  Kurs: { fg: '#8a5a08', bg: '#f7edda', kant: 'rgba(198,126,30,0.35)', ikon: 'dokument' },
+  Sjukmeld: { fg: '#b03a2e', bg: '#fbe4e0', kant: 'rgba(192,57,43,0.35)', ikon: 'alert' },
+};
+
 export const ORDER_FLOW = ['ny', 'tinga', 'komen', 'henta'] as const;
 export type OrderStatus = (typeof ORDER_FLOW)[number];
 
