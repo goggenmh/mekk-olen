@@ -7,6 +7,7 @@ import {
   fmt, fmtKr, timar, UKE_KORT, parseDate, weekdayIdx,
 } from '../../lib/dates';
 import { TimeEntryModal } from './TimeEntryModal';
+import { useIsMobile } from '../../lib/useIsMobile';
 import type { TimeEntry } from '../../types';
 
 function downloadCsv(filename: string, rows: (string | number)[][]) {
@@ -24,6 +25,7 @@ export function Timeliste() {
   const { entries, approveEmployeeEntries, canApprove } = useAppData();
   const { ansatte } = useAnsatte();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const maaGodkjenne = canApprove(user?.id);
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
   const [weekStart, setWeekStart] = useState(mondayOf(today()));
@@ -110,14 +112,26 @@ export function Timeliste() {
 
       {mode === 'uke' ? (
         <>
-          <WeekTable
-            dates={dates}
-            entries={entries}
-            onCellClick={(ansatt, date, entry) => setEditTarget({ ansatt, date, entry })}
-            maaGodkjenne={maaGodkjenne}
-            onApprove={(ansatt) => approveEmployeeEntries(ansatt, dates)}
-          />
-          <WeekSummary dates={dates} prevDates={prevDates} entries={entries} />
+          {isMobile ? (
+            <WeekCards
+              dates={dates}
+              entries={entries}
+              onCellClick={(ansatt, date, entry) => setEditTarget({ ansatt, date, entry })}
+              maaGodkjenne={maaGodkjenne}
+              onApprove={(ansatt) => approveEmployeeEntries(ansatt, dates)}
+            />
+          ) : (
+            <>
+              <WeekTable
+                dates={dates}
+                entries={entries}
+                onCellClick={(ansatt, date, entry) => setEditTarget({ ansatt, date, entry })}
+                maaGodkjenne={maaGodkjenne}
+                onApprove={(ansatt) => approveEmployeeEntries(ansatt, dates)}
+              />
+              <WeekSummary dates={dates} prevDates={prevDates} entries={entries} />
+            </>
+          )}
         </>
       ) : (
         <MonthView
@@ -247,6 +261,73 @@ function WeekTable({
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function WeekCards({
+  dates, entries, onCellClick, maaGodkjenne, onApprove,
+}: {
+  dates: string[];
+  entries: TimeEntry[];
+  onCellClick: (ansatt: TimeEntry['ansatt'], date: string, entry?: TimeEntry) => void;
+  maaGodkjenne: boolean;
+  onApprove: (ansatt: TimeEntry['ansatt']) => void;
+}) {
+  const { ansatte } = useAnsatte();
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {ansatte.map((a) => {
+        const rowEntries = dates.map((d) => entries.find((e) => e.ansatt === a.id && e.date === d));
+        const sum = rowEntries.reduce((acc, e) => acc + (e ? timar(e) : 0), 0);
+        const ventarN = rowEntries.filter((e) => e?.status === 'venter').length;
+        const harTimar = rowEntries.some(Boolean);
+        const lonn = a.lonn === 'time' ? fmtKr(sum * a.sats) : 'Fastløn';
+        return (
+          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 15px', boxShadow: 'var(--shadow-card)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: a.farge, flex: 'none' }} />
+              <span style={{ fontSize: 14.5, fontWeight: 700, flex: 1 }}>{a.navn}</span>
+              <span style={{ fontFamily: "'Geist Mono'", fontWeight: 700, fontSize: 15 }}>{fmt(sum)} t</span>
+              {harTimar && (
+                <span style={{ fontSize: 15, fontWeight: 800, color: ventarN > 0 ? '#d8920f' : '#2f9e6f', width: 16, textAlign: 'center' }}>{ventarN > 0 ? '!' : '✓'}</span>
+              )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 6, marginTop: 12 }}>
+              {dates.map((d, i) => {
+                const e = rowEntries[i];
+                return (
+                  <button
+                    key={d}
+                    onClick={() => onCellClick(a.id, d, e)}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '7px 2px', cursor: 'pointer',
+                      border: '1px solid var(--border)', borderRadius: 10,
+                      background: e ? (e.status === 'godkjent' ? 'rgba(47,158,111,0.10)' : 'rgba(216,146,15,0.12)') : 'var(--surface-alt)',
+                    }}
+                  >
+                    <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.2px' }}>{UKE_KORT[weekdayIdx(d)]}</span>
+                    <span style={{ fontFamily: "'Geist Mono'", fontSize: 12.5, fontWeight: 600, color: e ? 'var(--text)' : 'var(--text-faint2)' }}>{e ? fmt(timar(e)) : '–'}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
+              <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{lonn}{sum > 37.5 ? ` · +${fmt(sum - 37.5)} t overtid` : ''}</span>
+              {maaGodkjenne && ventarN > 0 && (
+                <button
+                  onClick={() => onApprove(a.id)}
+                  style={{ marginLeft: 'auto', padding: '7px 13px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 9, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  Godkjenn ({ventarN})
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
