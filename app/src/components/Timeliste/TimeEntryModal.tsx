@@ -19,7 +19,7 @@ export function TimeEntryModal({
 
   const [start, setStart] = useState(existing?.start || '09:00');
   const [slutt, setSlutt] = useState(existing?.slutt || '17:00');
-  const [pause, setPause] = useState(existing?.pause ?? 30);
+  const [pause, setPause] = useState(existing?.pause ?? 0);
   const [status, setStatus] = useState<TimeEntry['status']>(existing?.status || 'venter');
   const [feil, setFeil] = useState(false);
 

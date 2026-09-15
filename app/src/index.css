@@ -150,6 +150,9 @@ button:active {
 /* Kollapsbar sidemeny: skjul tekst når smal */
 .rail-collapsed .rail-label { display: none; }
 
+/* PIN-tastar på innlogging */
+.pinkey:hover { background: var(--brand) !important; color: #fff !important; border-color: var(--brand) !important; }
+
 input, textarea, select {
   color-scheme: inherit;
 }
