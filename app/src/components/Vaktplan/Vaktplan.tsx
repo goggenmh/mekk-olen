@@ -20,7 +20,7 @@ const ferieStyl = (type: string) => FERIE_STYL[type] || FERIE_STYL.Fri;
 const ferieForDag = (ferie: Ferie[], dato: string) => ferie.filter((f) => f.fra && f.til && f.fra <= dato && dato <= f.til);
 
 export function Vaktplan() {
-  const { shifts, swaps, ferie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, saveShift, deleteShift } = useAppData();
+  const { shifts, swaps, ferie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, saveShift, deleteShift, saveFerie } = useAppData();
   const { user } = useAuth();
   const { findAnsatt } = useAnsatte();
   const isMobile = useIsMobile();
@@ -332,10 +332,25 @@ export function Vaktplan() {
         const items: { tekst: string; ikon: string; farge?: string; handling: () => void }[] = [];
         if (kanEndre) items.push({ tekst: kanLageVakt ? 'Endre vakt' : 'Endre tidspunkt', ikon: 'blyant', handling: () => setShiftTarget({ date: meny.date, shift: s }) });
         items.push({ tekst: 'Be om bytte', ikon: 'bytte', handling: () => setSwapTarget(s) });
+        if (kanEndre) {
+          items.push({ tekst: 'Merk som sjuk', ikon: 'alert', handling: () => {
+            if (window.confirm(`Merke ${a.navn} som sjuk denne dagen? Vakta blir fjerna og dagen merka «Sjukmeld».`)) {
+              saveFerie({ ansatt: s.ansatt, type: 'Sjukmeld', tekst: '', fra: meny.date, til: meny.date });
+              deleteShift(s.id);
+            }
+          } });
+        }
         if (kanLageVakt) {
           items.push({ tekst: 'Dupliser til neste dag', ikon: 'kopi', handling: () => {
             const nd = addDays(meny.date, 1);
             saveShift({ ansatt: s.ansatt, date: nd, start: s.start, slutt: s.slutt, skift: skiftFraTid(s.start, s.slutt, nd) });
+          } });
+          items.push({ tekst: 'Dupliser til heile veka', ikon: 'vaktplan', handling: () => {
+            days.forEach((d2) => {
+              if (d2.date === meny.date) return;
+              if (shifts.some((x) => x.ansatt === s.ansatt && x.date === d2.date)) return;
+              saveShift({ ansatt: s.ansatt, date: d2.date, start: s.start, slutt: s.slutt, skift: skiftFraTid(s.start, s.slutt, d2.date) });
+            });
           } });
           items.push({ tekst: 'Slett vakt', ikon: 'soppel', farge: 'var(--danger)', handling: () => {
             if (window.confirm(`Slette vakta til ${a.navn} ${s.start}–${s.slutt}?`)) deleteShift(s.id);
