@@ -21,6 +21,15 @@
   --brand: #11788a;
   --brand-strong: #0c5a69;
   --brand-soft: #e6f3f5;
+  /* Raude dagar (utilgjengeleg + heilagdagar) og "halve" dagar (gul) */
+  --dag-raud-bg: rgba(192, 57, 43, 0.055);
+  --dag-raud-border: rgba(192, 57, 43, 0.35);
+  --dag-raud-tekst: #b3261e;
+  --dag-amber-bg: rgba(198, 126, 30, 0.09);
+  --dag-amber-border: rgba(198, 126, 30, 0.35);
+  --dag-amber-tekst: #a6631a;
+  --dag-raud-sterk: rgba(192, 57, 43, 0.13);
+  --dag-amber-sterk: rgba(198, 126, 30, 0.15);
   --shadow-card: 0 1px 2px rgba(16, 40, 50, 0.04), 0 6px 18px rgba(16, 40, 50, 0.045);
   --shadow-hover: 0 2px 4px rgba(16, 40, 50, 0.06), 0 12px 28px rgba(16, 40, 50, 0.10);
   /* Mørkeblå ramme (sidemeny + topplinje) i lys modus */
@@ -66,6 +75,15 @@
   --brand: #2bb6c9;
   --brand-strong: #5fd0df;
   --brand-soft: #142e36;
+  /* Raude/gule dagar – lysare tekst og litt sterkare tint i mørk modus */
+  --dag-raud-bg: rgba(224, 88, 74, 0.15);
+  --dag-raud-border: rgba(224, 88, 74, 0.42);
+  --dag-raud-tekst: #f0968a;
+  --dag-amber-bg: rgba(217, 149, 74, 0.16);
+  --dag-amber-border: rgba(217, 149, 74, 0.42);
+  --dag-amber-tekst: #e6b06a;
+  --dag-raud-sterk: rgba(224, 88, 74, 0.24);
+  --dag-amber-sterk: rgba(217, 149, 74, 0.24);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.25), 0 6px 18px rgba(0, 0, 0, 0.22);
   --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 28px rgba(0, 0, 0, 0.32);
   /* I mørk modus følgjer ramma den vanlege mørke flata */

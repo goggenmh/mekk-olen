@@ -133,19 +133,19 @@ export function Vaktplan() {
                 if (dragShiftId.current) { moveShiftDate(dragShiftId.current, d.date); dragShiftId.current = null; }
               }}
               style={{
-                background: erIDag ? 'var(--brand-soft)' : raudTint ? 'rgba(192,57,43,0.055)' : halvdag ? 'rgba(198,126,30,0.09)' : 'var(--surface)',
-                border: erIDag ? '2px solid var(--brand)' : raudTint ? '1px solid rgba(192,57,43,0.35)' : halvdag ? '1px solid rgba(198,126,30,0.35)' : '1px solid var(--border)',
+                background: erIDag ? 'var(--brand-soft)' : raudTint ? 'var(--dag-raud-bg)' : halvdag ? 'var(--dag-amber-bg)' : 'var(--surface)',
+                border: erIDag ? '2px solid var(--brand)' : raudTint ? '1px solid var(--dag-raud-border)' : halvdag ? '1px solid var(--dag-amber-border)' : '1px solid var(--border)',
                 borderRadius: 12, padding: erIDag ? 9 : 10, minHeight: isMobile ? 'auto' : 220, display: 'flex', flexDirection: 'column', gap: 7,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, paddingBottom: 7, borderBottom: '1px solid var(--divider)' }}>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : heilagdag ? '#b3261e' : halvdag ? '#a6631a' : 'var(--text)', lineHeight: 1 }}>{parseDate(d.date).getDate()}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : heilagdag ? 'var(--dag-raud-tekst)' : halvdag ? 'var(--dag-amber-tekst)' : 'var(--text)', lineHeight: 1 }}>{parseDate(d.date).getDate()}</div>
                   <div style={{ fontSize: 10.5, fontWeight: 700, color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px', marginTop: 2 }}>{d.kort}</div>
                   {heilagdag ? (
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#b3261e', marginTop: 1 }}>{heilagdag}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--dag-raud-tekst)', marginTop: 1 }}>{heilagdag}</div>
                   ) : halvdag ? (
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#a6631a', marginTop: 1 }}>{halvdag}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--dag-amber-tekst)', marginTop: 1 }}>{halvdag}</div>
                   ) : (
                     <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 1 }}>Ope {d.open}</div>
                   )}
@@ -191,7 +191,7 @@ export function Vaktplan() {
                         key={u.id}
                         onClick={eg ? () => setUtilTarget({ dato: d.date, existing: u }) : undefined}
                         title={`${a.navn}${u.grunn ? ` – ${u.grunn}` : ' kan ikkje jobbe'}${eg ? ' (trykk for å endre)' : ''}`}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%', fontSize: 10.5, fontWeight: 700, color: '#b3261e', background: 'rgba(192,57,43,0.12)', border: '1px solid rgba(192,57,43,0.3)', borderRadius: 8, padding: '2px 7px', cursor: eg ? 'pointer' : 'default' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%', fontSize: 10.5, fontWeight: 700, color: 'var(--dag-raud-tekst)', background: 'var(--dag-raud-sterk)', border: '1px solid var(--dag-raud-border)', borderRadius: 8, padding: '2px 7px', cursor: eg ? 'pointer' : 'default' }}
                       >
                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.init}{u.grunn ? `: ${u.grunn}` : ''}</span>
                       </span>
@@ -281,18 +281,18 @@ export function Vaktplan() {
                 key={f.id}
                 onClick={() => opneFerie(f)}
                 className="hoverable"
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', border: `1px solid ${st.kant}`, background: st.bg, borderRadius: 12, cursor: (kanStyreFerie || f.ansatt === user?.id) ? 'pointer' : 'default' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', border: `1px solid ${st.kant}`, background: 'var(--surface-alt)', borderRadius: 12, cursor: (kanStyreFerie || f.ansatt === user?.id) ? 'pointer' : 'default' }}
               >
-                <span style={{ width: 38, height: 38, borderRadius: 11, background: '#fff', color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+                <span style={{ width: 38, height: 38, borderRadius: 11, background: st.bg, color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
                   <Icon name={st.ikon} size={18} />
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ width: 9, height: 9, borderRadius: '50%', background: a.farge, flex: 'none' }} />
                     <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{a.navn}</span>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: st.fg, background: '#fff', border: `1px solid ${st.kant}`, borderRadius: 8, padding: '1px 8px' }}>{f.type}</span>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: st.fg, background: st.bg, border: `1px solid ${st.kant}`, borderRadius: 8, padding: '1px 8px' }}>{f.type}</span>
                     {paagaar && <span style={{ fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.3px', color: '#fff', background: st.fg, borderRadius: 999, padding: '2px 7px' }}>Pågår</span>}
-                    {kommande && <span style={{ fontSize: 10, fontWeight: 700, color: st.fg }}>om {talDagar(iDag, f.fra!) - 1} d</span>}
+                    {kommande && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)' }}>om {talDagar(iDag, f.fra!) - 1} d</span>}
                   </div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {f.fra ? `${datoIntervall(f.fra, f.til)}${dagar ? ` · ${dagar} ${dagar === 1 ? 'dag' : 'dagar'}` : ''}` : 'Utan dato'}
@@ -361,8 +361,8 @@ function MonthView({
             const heilagdag = helligdagFor(d);
             const halvdag = halvdagFor(d);
             const bg = !inMonth(d) ? 'var(--surface-soft)'
-              : (dagUtil.length || heilagdag) ? 'rgba(192,57,43,0.05)'
-              : halvdag ? 'rgba(198,126,30,0.08)' : 'var(--surface)';
+              : (dagUtil.length || heilagdag) ? 'var(--dag-raud-bg)'
+              : halvdag ? 'var(--dag-amber-bg)' : 'var(--surface)';
             return (
               <div
                 key={d}
@@ -373,9 +373,9 @@ function MonthView({
                   cursor: 'pointer', opacity: inMonth(d) ? 1 : 0.45,
                 }}
               >
-                <div style={{ fontSize: 11.5, fontWeight: 600, color: heilagdag ? '#b3261e' : halvdag ? '#a6631a' : 'var(--text-muted)', marginBottom: 4 }}>{parseDate(d).getDate()}</div>
-                {heilagdag && <div title={heilagdag} style={{ fontSize: 9.5, fontWeight: 700, color: '#b3261e', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{heilagdag}</div>}
-                {!heilagdag && halvdag && <div title={halvdag} style={{ fontSize: 9.5, fontWeight: 700, color: '#a6631a', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{halvdag}</div>}
+                <div style={{ fontSize: 11.5, fontWeight: 600, color: heilagdag ? 'var(--dag-raud-tekst)' : halvdag ? 'var(--dag-amber-tekst)' : 'var(--text-muted)', marginBottom: 4 }}>{parseDate(d).getDate()}</div>
+                {heilagdag && <div title={heilagdag} style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--dag-raud-tekst)', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{heilagdag}</div>}
+                {!heilagdag && halvdag && <div title={halvdag} style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--dag-amber-tekst)', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{halvdag}</div>}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   {dayShifts.map((s) => {
                     const a = findAnsatt(s.ansatt);
@@ -398,7 +398,7 @@ function MonthView({
                           <span
                             key={u.id}
                             title={`${a.navn}${u.grunn ? ` – ${u.grunn}` : ' kan ikkje jobbe'}`}
-                            style={{ fontSize: 9.5, fontWeight: 700, color: '#b3261e', background: 'rgba(192,57,43,0.12)', border: '1px solid rgba(192,57,43,0.3)', borderRadius: 6, padding: '1px 5px' }}
+                            style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--dag-raud-tekst)', background: 'var(--dag-raud-sterk)', border: '1px solid var(--dag-raud-border)', borderRadius: 6, padding: '1px 5px' }}
                           >
                             {a.init}
                           </span>
