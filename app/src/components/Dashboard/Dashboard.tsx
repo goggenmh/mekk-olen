@@ -19,8 +19,9 @@ const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 const PRI_RANG: Record<string, number> = { høg: 0, medium: 1, låg: 2 };
 
 export function Dashboard({ setView }: { setView: (v: View) => void }) {
-  const { entries, shifts, swaps, tasks, orders, ferie, meldinger } = useAppData();
+  const { entries, shifts, swaps, tasks, orders, ferie, meldinger, canApprove } = useAppData();
   const { user } = useAuth();
+  const kanLageVakt = canApprove(user?.id);
   const { ansatte, findAnsatt } = useAnsatte();
   const isMobile = useIsMobile();
   const [quickAction, setQuickAction] = useState<'timer' | 'vakt' | 'oppgave' | 'bestilling' | null>(null);
@@ -104,12 +105,14 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
     .sort((a, b) => (a.fra || '9999').localeCompare(b.fra || '9999'))
     .slice(0, 4);
 
-  const hurtighandlinger = [
+  type Hurtig = { key: 'timer' | 'vakt' | 'oppgave' | 'bestilling'; ikon: string; tekst: string; primary: boolean };
+  const hurtighandlinger: Hurtig[] = [
     { key: 'timer', ikon: 'ny-timer', tekst: 'Registrer timar', primary: true },
-    { key: 'vakt', ikon: 'ny-vakt', tekst: 'Ny vakt', primary: false },
+    // Berre leiar/delegert kan opprette vakter.
+    ...(kanLageVakt ? [{ key: 'vakt' as const, ikon: 'ny-vakt', tekst: 'Ny vakt', primary: false }] : []),
     { key: 'oppgave', ikon: 'ny-oppgave', tekst: 'Ny oppgåve', primary: false },
     { key: 'bestilling', ikon: 'ny-bestilling', tekst: 'Ny bestilling', primary: false },
-  ] as const;
+  ];
 
   return (
     <div style={{ padding: isMobile ? 18 : 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
