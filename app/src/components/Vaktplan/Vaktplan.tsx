@@ -25,9 +25,10 @@ export function Vaktplan() {
   const { findAnsatt } = useAnsatte();
   const isMobile = useIsMobile();
   const maaGodkjenne = canApprove(user?.id);
-  // Kan berre redigere eigen ferie / standardveka – med mindre ein har delegeringsansvar.
+  // Kan berre redigere eigen ferie / standardveka / vakter – med mindre ein har delegeringsansvar.
   const kanStyreFerie = canApprove(user?.id);
   const kanStyreStandard = canApprove(user?.id);
+  const kanLageVakt = canApprove(user?.id);
   const opneFerie = (f: Ferie) => { if (kanStyreFerie || f.ansatt === user?.id) setFerieTarget(f); };
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
   const [vpWeek, setVpWeek] = useState(mondayOf(today()));
@@ -97,10 +98,10 @@ export function Vaktplan() {
         <div style={{ fontWeight: 700, fontSize: 15 }}>{periodTittel}</div>
         <button onClick={nextPeriod} style={navBtn}>›</button>
         <button onClick={goToday} style={btnGhost}>I dag</button>
-        {mode === 'uke' && (
+        {mode === 'uke' && kanStyreStandard && (
           <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
-            {kanStyreStandard && <button onClick={() => setStandardOpen(true)} style={btnGhost} title="Rediger malen for standardveka">Rediger standardveke</button>}
-            {kanStyreStandard && <button onClick={lagreSomStandard} style={btnGhost} title="Lagre vaktene i denne veka som standardveke">Lagre denne veka</button>}
+            <button onClick={() => setStandardOpen(true)} style={btnGhost} title="Rediger malen for standardveka">Rediger standardveke</button>
+            <button onClick={lagreSomStandard} style={btnGhost} title="Lagre vaktene i denne veka som standardveke">Lagre denne veka</button>
             <button onClick={fyllVeke} style={{ ...btnGhost, color: 'var(--brand-strong)', borderColor: 'var(--brand)' }}>↻ Fyll frå standardveke</button>
           </div>
         )}
@@ -157,10 +158,10 @@ export function Vaktplan() {
                 return (
                   <div
                     key={s.id}
-                    draggable
-                    onDragStart={() => { dragShiftId.current = s.id; }}
-                    onClick={() => setShiftTarget({ date: d.date, shift: s })}
-                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 10, padding: '7px 9px', cursor: 'grab' }}
+                    draggable={kanLageVakt}
+                    onDragStart={kanLageVakt ? () => { dragShiftId.current = s.id; } : undefined}
+                    onClick={kanLageVakt ? () => setShiftTarget({ date: d.date, shift: s }) : undefined}
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 10, padding: '7px 9px', cursor: kanLageVakt ? 'grab' : 'default' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ width: 8, height: 8, borderRadius: '50%', background: farge, flex: 'none' }} />
@@ -221,12 +222,14 @@ export function Vaktplan() {
                   </span>
                 );
               })}
-              <button
-                onClick={() => setShiftTarget({ date: d.date })}
-                style={{ marginTop: 'auto', border: '1px dashed var(--border)', background: 'none', borderRadius: 9, padding: '7px 0', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer' }}
-              >
-                + vakt
-              </button>
+              {kanLageVakt && (
+                <button
+                  onClick={() => setShiftTarget({ date: d.date })}
+                  style={{ marginTop: 'auto', border: '1px dashed var(--border)', background: 'none', borderRadius: 9, padding: '7px 0', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  + vakt
+                </button>
+              )}
             </div>
           );
         })}
