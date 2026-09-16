@@ -155,13 +155,14 @@ export function Vaktplan() {
               {dayShifts.map((s) => {
                 const a = findAnsatt(s.ansatt);
                 const farge = a.farge;
+                const kanOpne = kanLageVakt || s.ansatt === user?.id;
                 return (
                   <div
                     key={s.id}
                     draggable={kanLageVakt}
                     onDragStart={kanLageVakt ? () => { dragShiftId.current = s.id; } : undefined}
-                    onClick={kanLageVakt ? () => setShiftTarget({ date: d.date, shift: s }) : undefined}
-                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 10, padding: '7px 9px', cursor: kanLageVakt ? 'grab' : 'default' }}
+                    onClick={kanOpne ? () => setShiftTarget({ date: d.date, shift: s }) : undefined}
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 10, padding: '7px 9px', cursor: kanLageVakt ? 'grab' : kanOpne ? 'pointer' : 'default' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ width: 8, height: 8, borderRadius: '50%', background: farge, flex: 'none' }} />

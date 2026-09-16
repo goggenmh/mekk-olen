@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Modal, Field, inputStyle, monoInputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
 import { useAppData } from '../../context/AppDataContext';
 import { useAnsatte } from '../../context/AnsatteContext';
+import { useAuth } from '../../context/AuthContext';
 import { SKIFT_FARGE } from '../../constants';
 import { dur, fmt, mins, skiftFraTid } from '../../lib/dates';
 import type { Shift } from '../../types';
@@ -13,9 +14,13 @@ export function ShiftModal({
   target: { date: string; shift?: Shift };
   onClose: () => void;
 }) {
-  const { saveShift, deleteShift } = useAppData();
-  const { ansatte } = useAnsatte();
+  const { saveShift, deleteShift, canApprove } = useAppData();
+  const { ansatte, findAnsatt } = useAnsatte();
+  const { user } = useAuth();
   const existing = target.shift;
+  // Leiar/delegert har full tilgang. Vanlege tilsette kan berre endre
+  // tidspunktet på si eiga vakt – ikkje byte person, opprette eller slette.
+  const kanFull = canApprove(user?.id);
 
   const [ansatt, setAnsatt] = useState<Shift['ansatt']>(existing?.ansatt || ansatte[0]?.id || '');
   const [start, setStart] = useState(existing?.start || '09:00');
@@ -30,7 +35,9 @@ export function ShiftModal({
 
   const save = async () => {
     if (!gyldig) { setFeil(true); return; }
-    await saveShift({ id: existing?.id, ansatt, date: target.date, start, slutt, skift });
+    // Utan full tilgang blir vakta alltid verande på same person.
+    const forAnsatt = kanFull ? ansatt : (existing?.ansatt || ansatt);
+    await saveShift({ id: existing?.id, ansatt: forAnsatt, date: target.date, start, slutt, skift });
     onClose();
   };
 
@@ -42,20 +49,24 @@ export function ShiftModal({
   return (
     <Modal
       onClose={onClose}
-      title={existing ? 'Endre vakt' : 'Ny vakt'}
+      title={existing ? (kanFull ? 'Endre vakt' : 'Endre tidspunkt') : 'Ny vakt'}
       subtitle={target.date}
       footer={
         <>
-          {existing && <DeleteButton onClick={del} />}
+          {existing && kanFull && <DeleteButton onClick={del} />}
           <CancelButton onClick={onClose} />
           <SaveButton onClick={save} />
         </>
       }
     >
       <Field label="Tilsett">
-        <select value={ansatt} onChange={(e) => setAnsatt(e.target.value as Shift['ansatt'])} style={inputStyle}>
-          {ansatte.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
-        </select>
+        {kanFull ? (
+          <select value={ansatt} onChange={(e) => setAnsatt(e.target.value as Shift['ansatt'])} style={inputStyle}>
+            {ansatte.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
+          </select>
+        ) : (
+          <input value={findAnsatt(ansatt).navn} disabled style={{ ...inputStyle, opacity: 0.7, cursor: 'not-allowed' }} />
+        )}
       </Field>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Field label="Start">
