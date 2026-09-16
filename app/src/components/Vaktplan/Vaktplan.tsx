@@ -140,8 +140,8 @@ export function Vaktplan() {
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, paddingBottom: 7, borderBottom: '1px solid var(--divider)' }}>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : heilagdag ? 'var(--dag-raud-tekst)' : halvdag ? 'var(--dag-amber-tekst)' : 'var(--text)', lineHeight: 1 }}>{parseDate(d.date).getDate()}</div>
-                  <div style={{ fontSize: 10.5, fontWeight: 700, color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px', marginTop: 2 }}>{d.kort}</div>
+                  <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : heilagdag ? 'var(--dag-raud-tekst)' : halvdag ? 'var(--dag-amber-tekst)' : 'var(--text)', lineHeight: 1, letterSpacing: '-0.6px' }}>{parseDate(d.date).getDate()}</div>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.6px', marginTop: 3 }}>{d.kort}</div>
                   {heilagdag ? (
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--dag-raud-tekst)', marginTop: 1 }}>{heilagdag}</div>
                   ) : halvdag ? (
@@ -162,15 +162,15 @@ export function Vaktplan() {
                     draggable={kanLageVakt}
                     onDragStart={kanLageVakt ? () => { dragShiftId.current = s.id; } : undefined}
                     onClick={kanOpne ? () => setShiftTarget({ date: d.date, shift: s }) : undefined}
-                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 10, padding: '7px 9px', cursor: kanLageVakt ? 'grab' : kanOpne ? 'pointer' : 'default' }}
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 10, padding: '8px 10px', cursor: kanLageVakt ? 'grab' : kanOpne ? 'pointer' : 'default' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: farge, flex: 'none' }} />
-                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.navn}</span>
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: farge, flex: 'none' }} />
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.navn}</span>
                     </div>
-                    <div style={{ fontFamily: "'Geist Mono'", fontSize: 12.5, fontWeight: 700, color: 'var(--text)', marginTop: 3, letterSpacing: '-0.3px' }}>{s.start}–{s.slutt}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                      {s.skift && <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>{s.skift}</span>}
+                    <div style={{ fontFamily: "'Geist Mono'", fontSize: 14, fontWeight: 700, color: 'var(--text)', marginTop: 4, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>{s.start}–{s.slutt}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                      {s.skift && <span style={{ fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-faint)' }}>{s.skift}</span>}
                       <button
                         onClick={(e) => { e.stopPropagation(); setSwapTarget(s); }}
                         style={{ marginLeft: 'auto', fontSize: 10.5, fontWeight: 600, background: 'none', color: 'var(--brand)', border: 'none', padding: 0, cursor: 'pointer' }}
