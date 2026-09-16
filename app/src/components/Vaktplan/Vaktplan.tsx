@@ -3,7 +3,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { DAGER_VAKTPLAN, FERIE_STYL } from '../../constants';
-import { addDays, mondayOf, today, isoWeek, parseDate, weekdayIdx, shiftMonth, MND, UKE_KORT, datoIntervall, talDagar } from '../../lib/dates';
+import { addDays, mondayOf, today, isoWeek, parseDate, weekdayIdx, shiftMonth, MND, UKE_KORT, datoIntervall, talDagar, skiftFraTid } from '../../lib/dates';
 import { helligdagFor, halvdagFor } from '../../lib/helligdagar';
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
@@ -20,7 +20,7 @@ const ferieStyl = (type: string) => FERIE_STYL[type] || FERIE_STYL.Fri;
 const ferieForDag = (ferie: Ferie[], dato: string) => ferie.filter((f) => f.fra && f.til && f.fra <= dato && dato <= f.til);
 
 export function Vaktplan() {
-  const { shifts, swaps, ferie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke } = useAppData();
+  const { shifts, swaps, ferie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, saveShift, deleteShift } = useAppData();
   const { user } = useAuth();
   const { findAnsatt } = useAnsatte();
   const isMobile = useIsMobile();
@@ -35,6 +35,7 @@ export function Vaktplan() {
   const [monthAnchor, setMonthAnchor] = useState(today().slice(0, 7));
   const [shiftTarget, setShiftTarget] = useState<{ date: string; shift?: Shift } | null>(null);
   const [swapTarget, setSwapTarget] = useState<Shift | null>(null);
+  const [meny, setMeny] = useState<{ x: number; y: number; shift: Shift; date: string } | null>(null);
   const [ferieTarget, setFerieTarget] = useState<Ferie | 'new' | null>(null);
   const [utilTarget, setUtilTarget] = useState<{ dato: string; existing?: Unavailable } | null>(null);
   const [standardOpen, setStandardOpen] = useState(false);
@@ -162,6 +163,8 @@ export function Vaktplan() {
                     draggable={kanLageVakt}
                     onDragStart={kanLageVakt ? () => { dragShiftId.current = s.id; } : undefined}
                     onClick={kanOpne ? () => setShiftTarget({ date: d.date, shift: s }) : undefined}
+                    onContextMenu={(e) => { e.preventDefault(); setMeny({ x: e.clientX, y: e.clientY, shift: s, date: d.date }); }}
+                    title="Høgreklikk for val"
                     style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 10, padding: '8px 10px', cursor: kanLageVakt ? 'grab' : kanOpne ? 'pointer' : 'default' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -321,6 +324,53 @@ export function Vaktplan() {
       {ferieTarget && <FerieModal existing={ferieTarget === 'new' ? undefined : ferieTarget} onClose={() => setFerieTarget(null)} />}
       {utilTarget && user && <UnavailableModal ansatt={user.id} dato={utilTarget.dato} existing={utilTarget.existing} onClose={() => setUtilTarget(null)} />}
       {standardOpen && <StandardvekeModal onClose={() => setStandardOpen(false)} />}
+      {meny && (() => {
+        const s = meny.shift;
+        const a = findAnsatt(s.ansatt);
+        const eigen = s.ansatt === user?.id;
+        const kanEndre = kanLageVakt || eigen;
+        const items: { tekst: string; ikon: string; farge?: string; handling: () => void }[] = [];
+        if (kanEndre) items.push({ tekst: kanLageVakt ? 'Endre vakt' : 'Endre tidspunkt', ikon: 'blyant', handling: () => setShiftTarget({ date: meny.date, shift: s }) });
+        items.push({ tekst: 'Be om bytte', ikon: 'bytte', handling: () => setSwapTarget(s) });
+        if (kanLageVakt) {
+          items.push({ tekst: 'Dupliser til neste dag', ikon: 'kopi', handling: () => {
+            const nd = addDays(meny.date, 1);
+            saveShift({ ansatt: s.ansatt, date: nd, start: s.start, slutt: s.slutt, skift: skiftFraTid(s.start, s.slutt, nd) });
+          } });
+          items.push({ tekst: 'Slett vakt', ikon: 'soppel', farge: 'var(--danger)', handling: () => {
+            if (window.confirm(`Slette vakta til ${a.navn} ${s.start}–${s.slutt}?`)) deleteShift(s.id);
+          } });
+        }
+        const MENY_BREIDD = 210;
+        const left = Math.min(meny.x, (typeof window !== 'undefined' ? window.innerWidth : 1200) - MENY_BREIDD - 8);
+        const top = Math.min(meny.y, (typeof window !== 'undefined' ? window.innerHeight : 800) - (items.length * 42 + 46));
+        return (
+          <>
+            <div onClick={() => setMeny(null)} onContextMenu={(e) => { e.preventDefault(); setMeny(null); }} style={{ position: 'fixed', inset: 0, zIndex: 70 }} />
+            <div style={{ position: 'fixed', left, top, width: MENY_BREIDD, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 34px rgba(0,0,0,0.22)', overflow: 'hidden', zIndex: 71, padding: 5 }}>
+              <div style={{ padding: '7px 11px 8px', borderBottom: '1px solid var(--divider)', marginBottom: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: a.farge, flex: 'none' }} />
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{a.navn}</span>
+                </div>
+                <div style={{ fontFamily: "'Geist Mono'", fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>{s.start}–{s.slutt}</div>
+              </div>
+              {items.map((it) => (
+                <button
+                  key={it.tekst}
+                  onClick={() => { it.handling(); setMeny(null); }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 600, color: it.farge || 'var(--text)' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-alt)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                >
+                  <span style={{ display: 'flex', color: it.farge || 'var(--text-muted)', flex: 'none' }}><Icon name={it.ikon} size={15} /></span>
+                  {it.tekst}
+                </button>
+              ))}
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }
