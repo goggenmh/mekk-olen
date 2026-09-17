@@ -22,7 +22,7 @@ const ferieForDag = (ferie: Ferie[], dato: string) => ferie.filter((f) => f.fra 
 export function Vaktplan() {
   const { shifts, swaps, ferie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, saveShift, deleteShift, saveFerie } = useAppData();
   const { user } = useAuth();
-  const { findAnsatt } = useAnsatte();
+  const { findAnsatt, ansatte } = useAnsatte();
   const isMobile = useIsMobile();
   const maaGodkjenne = canApprove(user?.id);
   // Kan berre redigere eigen ferie / standardveka / vakter – med mindre ein har delegeringsansvar.
@@ -36,6 +36,7 @@ export function Vaktplan() {
   const [shiftTarget, setShiftTarget] = useState<{ date: string; shift?: Shift } | null>(null);
   const [swapTarget, setSwapTarget] = useState<Shift | null>(null);
   const [meny, setMeny] = useState<{ x: number; y: number; shift: Shift; date: string } | null>(null);
+  const [bytOpen, setBytOpen] = useState(false);
   const [ferieTarget, setFerieTarget] = useState<Ferie | 'new' | null>(null);
   const [utilTarget, setUtilTarget] = useState<{ dato: string; existing?: Unavailable } | null>(null);
   const [standardOpen, setStandardOpen] = useState(false);
@@ -163,7 +164,7 @@ export function Vaktplan() {
                     draggable={kanLageVakt}
                     onDragStart={kanLageVakt ? () => { dragShiftId.current = s.id; } : undefined}
                     onClick={kanOpne ? () => setShiftTarget({ date: d.date, shift: s }) : undefined}
-                    onContextMenu={(e) => { e.preventDefault(); setMeny({ x: e.clientX, y: e.clientY, shift: s, date: d.date }); }}
+                    onContextMenu={(e) => { e.preventDefault(); setBytOpen(false); setMeny({ x: e.clientX, y: e.clientY, shift: s, date: d.date }); }}
                     title="Høgreklikk for val"
                     style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 10, padding: '8px 10px', cursor: kanLageVakt ? 'grab' : kanOpne ? 'pointer' : 'default' }}
                   >
@@ -329,7 +330,8 @@ export function Vaktplan() {
         const a = findAnsatt(s.ansatt);
         const eigen = s.ansatt === user?.id;
         const kanEndre = kanLageVakt || eigen;
-        const items: { tekst: string; ikon: string; farge?: string; handling: () => void }[] = [];
+        const dagVakter = shifts.filter((x) => x.date === meny.date);
+        const items: { tekst: string; ikon: string; farge?: string; keepOpen?: boolean; handling: () => void }[] = [];
         if (kanEndre) items.push({ tekst: kanLageVakt ? 'Endre vakt' : 'Endre tidspunkt', ikon: 'blyant', handling: () => setShiftTarget({ date: meny.date, shift: s }) });
         items.push({ tekst: 'Be om bytte', ikon: 'bytte', handling: () => setSwapTarget(s) });
         if (kanEndre) {
@@ -341,6 +343,7 @@ export function Vaktplan() {
           } });
         }
         if (kanLageVakt) {
+          items.push({ tekst: 'Byt til annan person', ikon: 'user', keepOpen: true, handling: () => setBytOpen(true) });
           items.push({ tekst: 'Dupliser til neste dag', ikon: 'kopi', handling: () => {
             const nd = addDays(meny.date, 1);
             saveShift({ ansatt: s.ansatt, date: nd, start: s.start, slutt: s.slutt, skift: skiftFraTid(s.start, s.slutt, nd) });
@@ -351,6 +354,11 @@ export function Vaktplan() {
               if (shifts.some((x) => x.ansatt === s.ansatt && x.date === d2.date)) return;
               saveShift({ ansatt: s.ansatt, date: d2.date, start: s.start, slutt: s.slutt, skift: skiftFraTid(s.start, s.slutt, d2.date) });
             });
+          } });
+          items.push({ tekst: 'Tøm dagen', ikon: 'soppel', farge: 'var(--danger)', handling: () => {
+            if (window.confirm(`Tømme heile dagen? Dette slettar ${dagVakter.length} ${dagVakter.length === 1 ? 'vakt' : 'vakter'}.`)) {
+              dagVakter.forEach((x) => deleteShift(x.id));
+            }
           } });
           items.push({ tekst: 'Slett vakt', ikon: 'soppel', farge: 'var(--danger)', handling: () => {
             if (window.confirm(`Slette vakta til ${a.navn} ${s.start}–${s.slutt}?`)) deleteShift(s.id);
@@ -363,25 +371,53 @@ export function Vaktplan() {
           <>
             <div onClick={() => setMeny(null)} onContextMenu={(e) => { e.preventDefault(); setMeny(null); }} style={{ position: 'fixed', inset: 0, zIndex: 70 }} />
             <div style={{ position: 'fixed', left, top, width: MENY_BREIDD, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 34px rgba(0,0,0,0.22)', overflow: 'hidden', zIndex: 71, padding: 5 }}>
-              <div style={{ padding: '7px 11px 8px', borderBottom: '1px solid var(--divider)', marginBottom: 4 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: a.farge, flex: 'none' }} />
-                  <span style={{ fontSize: 13, fontWeight: 700 }}>{a.navn}</span>
-                </div>
-                <div style={{ fontFamily: "'Geist Mono'", fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>{s.start}–{s.slutt}</div>
-              </div>
-              {items.map((it) => (
-                <button
-                  key={it.tekst}
-                  onClick={() => { it.handling(); setMeny(null); }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 600, color: it.farge || 'var(--text)' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-alt)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-                >
-                  <span style={{ display: 'flex', color: it.farge || 'var(--text-muted)', flex: 'none' }}><Icon name={it.ikon} size={15} /></span>
-                  {it.tekst}
-                </button>
-              ))}
+              {bytOpen ? (
+                <>
+                  <button
+                    onClick={() => setBytOpen(false)}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 6, padding: '8px 11px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid var(--divider)', marginBottom: 4, fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}
+                  >
+                    ‹ Byt til…
+                  </button>
+                  {ansatte.filter((x) => x.id !== s.ansatt).map((x) => (
+                    <button
+                      key={x.id}
+                      onClick={() => { saveShift({ id: s.id, ansatt: x.id, date: meny.date, start: s.start, slutt: s.slutt, skift: s.skift }); setMeny(null); }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 600, color: 'var(--text)' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-alt)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                    >
+                      <span style={{ width: 9, height: 9, borderRadius: '50%', background: x.farge, flex: 'none' }} />
+                      {x.navn}
+                    </button>
+                  ))}
+                  {ansatte.filter((x) => x.id !== s.ansatt).length === 0 && (
+                    <div style={{ padding: '10px 11px', fontSize: 12.5, color: 'var(--text-muted)' }}>Ingen andre å byte til.</div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div style={{ padding: '7px 11px 8px', borderBottom: '1px solid var(--divider)', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: a.farge, flex: 'none' }} />
+                      <span style={{ fontSize: 13, fontWeight: 700 }}>{a.navn}</span>
+                    </div>
+                    <div style={{ fontFamily: "'Geist Mono'", fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>{s.start}–{s.slutt}</div>
+                  </div>
+                  {items.map((it) => (
+                    <button
+                      key={it.tekst}
+                      onClick={() => { it.handling(); if (!it.keepOpen) setMeny(null); }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 600, color: it.farge || 'var(--text)' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-alt)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                    >
+                      <span style={{ display: 'flex', color: it.farge || 'var(--text-muted)', flex: 'none' }}><Icon name={it.ikon} size={15} /></span>
+                      {it.tekst}
+                    </button>
+                  ))}
+                </>
+              )}
             </div>
           </>
         );
