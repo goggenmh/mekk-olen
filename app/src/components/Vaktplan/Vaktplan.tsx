@@ -363,6 +363,10 @@ export function Vaktplan() {
           items.push({ tekst: 'Slett vakt', ikon: 'soppel', farge: 'var(--danger)', handling: () => {
             if (window.confirm(`Slette vakta til ${a.navn} ${s.start}–${s.slutt}?`)) deleteShift(s.id);
           } });
+        } else if (eigen) {
+          items.push({ tekst: 'Slett vakt', ikon: 'soppel', farge: 'var(--danger)', overskrift: 'Slett', handling: () => {
+            if (window.confirm(`Slette di eiga vakt ${s.start}–${s.slutt}?`)) deleteShift(s.id);
+          } });
         }
         if (items[0]) items[0].overskrift = items[0].overskrift || 'Endre';
         const MENY_BREIDD = 210;
