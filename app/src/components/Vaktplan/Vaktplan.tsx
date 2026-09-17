@@ -331,7 +331,7 @@ export function Vaktplan() {
         const eigen = s.ansatt === user?.id;
         const kanEndre = kanLageVakt || eigen;
         const dagVakter = shifts.filter((x) => x.date === meny.date);
-        const items: { tekst: string; ikon: string; farge?: string; keepOpen?: boolean; skilje?: boolean; handling: () => void }[] = [];
+        const items: { tekst: string; ikon: string; farge?: string; keepOpen?: boolean; overskrift?: string; handling: () => void }[] = [];
         if (kanEndre) items.push({ tekst: kanLageVakt ? 'Endre vakt' : 'Endre tidspunkt', ikon: 'blyant', handling: () => setShiftTarget({ date: meny.date, shift: s }) });
         items.push({ tekst: 'Be om bytte', ikon: 'bytte', handling: () => setSwapTarget(s) });
         if (kanEndre) {
@@ -343,7 +343,7 @@ export function Vaktplan() {
           } });
         }
         if (kanLageVakt) {
-          items.push({ tekst: 'Byt til annan person', ikon: 'user', keepOpen: true, handling: () => setBytOpen(true) });
+          items.push({ tekst: 'Byt til annan person', ikon: 'user', keepOpen: true, overskrift: 'Kopiér & flytt', handling: () => setBytOpen(true) });
           items.push({ tekst: 'Dupliser til neste dag', ikon: 'kopi', handling: () => {
             const nd = addDays(meny.date, 1);
             saveShift({ ansatt: s.ansatt, date: nd, start: s.start, slutt: s.slutt, skift: skiftFraTid(s.start, s.slutt, nd) });
@@ -355,7 +355,7 @@ export function Vaktplan() {
               saveShift({ ansatt: s.ansatt, date: d2.date, start: s.start, slutt: s.slutt, skift: skiftFraTid(s.start, s.slutt, d2.date) });
             });
           } });
-          items.push({ tekst: 'Tøm dagen', ikon: 'soppel', farge: 'var(--danger)', skilje: true, handling: () => {
+          items.push({ tekst: 'Tøm dagen', ikon: 'soppel', farge: 'var(--danger)', overskrift: 'Slett', handling: () => {
             if (window.confirm(`Tømme heile dagen? Dette slettar ${dagVakter.length} ${dagVakter.length === 1 ? 'vakt' : 'vakter'}.`)) {
               dagVakter.forEach((x) => deleteShift(x.id));
             }
@@ -364,6 +364,7 @@ export function Vaktplan() {
             if (window.confirm(`Slette vakta til ${a.navn} ${s.start}–${s.slutt}?`)) deleteShift(s.id);
           } });
         }
+        if (items[0]) items[0].overskrift = items[0].overskrift || 'Handtering';
         const MENY_BREIDD = 210;
         const left = Math.min(meny.x, (typeof window !== 'undefined' ? window.innerWidth : 1200) - MENY_BREIDD - 8);
         const top = Math.min(meny.y, (typeof window !== 'undefined' ? window.innerHeight : 800) - (items.length * 42 + 46));
@@ -404,9 +405,9 @@ export function Vaktplan() {
                     </div>
                     <div style={{ fontFamily: "'Geist Mono'", fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>{s.start}–{s.slutt}</div>
                   </div>
-                  {items.map((it) => (
+                  {items.map((it, idx) => (
                     <div key={it.tekst}>
-                      {it.skilje && <div style={{ height: 1, background: 'var(--divider)', margin: '5px 8px' }} />}
+                      {it.overskrift && <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: 'var(--text-faint)', padding: '7px 11px 4px', marginTop: idx === 0 ? 0 : 3, borderTop: idx === 0 ? 'none' : '1px solid var(--divider)' }}>{it.overskrift}</div>}
                       <button
                         onClick={() => { it.handling(); if (!it.keepOpen) setMeny(null); }}
                         style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 600, color: it.farge || 'var(--text)' }}
