@@ -28,9 +28,9 @@ export function Modal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: 'var(--surface)', borderRadius: 12, width: '100%', maxWidth, boxShadow: '0 24px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}
+        style={{ background: 'var(--surface)', borderRadius: 12, width: '100%', maxWidth, maxHeight: 'calc(100vh - 48px)', boxShadow: '0 24px 60px rgba(0,0,0,0.3)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--divider)' }}>
+        <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--divider)' }}>
           {leftHeader ? (
             leftHeader
           ) : (
@@ -46,8 +46,8 @@ export function Modal({
             ✕
           </button>
         </div>
-        <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 15 }}>{children}</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 22px', borderTop: '1px solid var(--divider)', background: 'var(--surface-alt)' }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 15 }}>{children}</div>
+        <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 10, padding: '16px 22px', borderTop: '1px solid var(--divider)', background: 'var(--surface-alt)' }}>
           {footer}
         </div>
       </div>
