@@ -162,13 +162,26 @@ export function Bestillinger() {
                     <span style={{ fontSize: 11, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 9, textTransform: 'uppercase' }}>{s.tekst}</span>
                     {o.varsla && <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 3 }}>Varsla {datoKort(o.varsla)}</div>}
                   </td>
-                  <td style={{ ...td, display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                    {kanVarsle && (
-                      <button onClick={() => setNotifyTarget(o)} title="Varsle kunde" style={{ ...iconBtn(o.varsla ? '#e8f5ee' : '#fdf2e0'), display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="bell" size={15} /></button>
-                    )}
-                    {kanFram && (
-                      <button onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])} title={s.neste} style={iconBtn('#e7f6f8')}>→</button>
-                    )}
+                  <td style={td}>
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                      {kanVarsle && (
+                        <button
+                          onClick={() => setNotifyTarget(o)}
+                          title="Varsle kunde"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 11px', border: '1px solid var(--border)', background: o.varsla ? '#e8f5ee' : '#fdf2e0', borderRadius: 9, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                          <Icon name="bell" size={14} /> Varsle
+                        </button>
+                      )}
+                      {kanFram && (
+                        <button
+                          onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])}
+                          style={{ padding: '6px 12px', background: 'var(--brand-strong)', color: '#fff', border: 'none', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                          {s.neste} →
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );
@@ -260,4 +273,3 @@ const lenkeHref = (l: string) => (/^https?:\/\//i.test(l) ? l : `https://${l}`);
 
 const th: CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px' };
 const td: CSSProperties = { padding: '10px 12px' };
-const iconBtn = (bg: string): CSSProperties => ({ width: 30, height: 30, border: 'none', background: bg, borderRadius: 11, cursor: 'pointer', fontSize: 13 });
