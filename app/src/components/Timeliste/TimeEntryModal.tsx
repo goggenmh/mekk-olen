@@ -39,18 +39,33 @@ export function TimeEntryModal({
 
   const totalTimar = bolkar.reduce((acc, b) => acc + (mins(b.slutt) > mins(b.start) ? dur(b.start, b.slutt) - b.pause / 60 : 0), 0);
 
+  const [lagrar, setLagrar] = useState(false);
+
   const save = async () => {
+    if (lagrar) return;
     if (bolkar.some((b) => mins(b.slutt) <= mins(b.start))) { setFeil('Slutt må vere etter start i alle bolkane.'); return; }
-    // Slett bolkar som er fjerna.
-    const behaldne = new Set(bolkar.map((b) => b.id).filter(Boolean));
-    for (const e of eksisterande) {
-      if (!behaldne.has(e.id)) await deleteEntry(e.id);
+    setFeil(null);
+    setLagrar(true);
+    try {
+      // Slett bolkar som er fjerna.
+      const behaldne = new Set(bolkar.map((b) => b.id).filter(Boolean));
+      for (const e of eksisterande) {
+        if (!behaldne.has(e.id)) await deleteEntry(e.id);
+      }
+      // Lagre / oppdatere resten.
+      for (const b of bolkar) {
+        await saveEntry({ id: b.id, ansatt: target.ansatt, date: target.date, start: b.start, slutt: b.slutt, pause: b.pause, status });
+      }
+      onClose();
+    } catch (e) {
+      const msg = e && typeof e === 'object' && 'message' in e ? String((e as { message: unknown }).message) : String(e);
+      if (/duplicate key|unique|ansatt_date/i.test(msg)) {
+        setFeil('Databasen tillèt enno berre éin tidsbolk per dag. Køyr SQL-linja i Supabase for å opne for fleire bolkar (sjå meldinga i chatten).');
+      } else {
+        setFeil('Kunne ikkje lagre: ' + msg);
+      }
+      setLagrar(false);
     }
-    // Lagre / oppdatere resten.
-    for (const b of bolkar) {
-      await saveEntry({ id: b.id, ansatt: target.ansatt, date: target.date, start: b.start, slutt: b.slutt, pause: b.pause, status });
-    }
-    onClose();
   };
 
   const godkjent = status === 'godkjent';
@@ -64,7 +79,7 @@ export function TimeEntryModal({
       footer={
         <>
           <CancelButton onClick={onClose} />
-          <SaveButton onClick={save} />
+          <SaveButton onClick={save}>{lagrar ? 'Lagrar…' : 'Lagre'}</SaveButton>
         </>
       }
     >
