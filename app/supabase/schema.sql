@@ -39,9 +39,10 @@ create table if not exists time_entries (
   start text not null,
   slutt text not null,
   pause int not null default 0,
-  status text not null default 'venter' check (status in ('venter', 'godkjent')),
-  unique (ansatt, date)
+  status text not null default 'venter' check (status in ('venter', 'godkjent'))
 );
+-- Fleire tidsbolkar per dag er lov (fjernar den gamle "éin per dag"-regelen).
+alter table time_entries drop constraint if exists time_entries_ansatt_date_key;
 
 -- ---------- shifts ----------
 create table if not exists shifts (

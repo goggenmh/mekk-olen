@@ -4,7 +4,6 @@ import { ORDER_FLOW, ORDER_STATUS } from '../../constants';
 import { datoKort, MND } from '../../lib/dates';
 import { OrderModal } from './OrderModal';
 import { NotifyModal } from './NotifyModal';
-import { Icon } from '../ui/Icon';
 import { useIsMobile } from '../../lib/useIsMobile';
 import type { Order } from '../../types';
 
@@ -110,7 +109,7 @@ export function Bestillinger() {
                 {(kanVarsle || kanFram) && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 11 }}>
                     {kanVarsle && (
-                      <button onClick={() => setNotifyTarget(o)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--border)', background: o.varsla ? '#e8f5ee' : '#fdf2e0', borderRadius: 10, fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}><Icon name="bell" size={14} /> Varsle</button>
+                      <button onClick={() => setNotifyTarget(o)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--border)', background: o.varsla ? '#e8f5ee' : '#fdf2e0', borderRadius: 10, fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>Varsle</button>
                     )}
                     {kanFram && (
                       <button onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])} style={{ marginLeft: 'auto', padding: '7px 14px', background: 'var(--brand-strong)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{s.neste} →</button>
@@ -168,9 +167,9 @@ export function Bestillinger() {
                         <button
                           onClick={() => setNotifyTarget(o)}
                           title="Varsle kunde"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 11px', border: '1px solid var(--border)', background: o.varsla ? '#e8f5ee' : '#fdf2e0', borderRadius: 9, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          style={{ padding: '6px 11px', border: '1px solid var(--border)', background: o.varsla ? '#e8f5ee' : '#fdf2e0', borderRadius: 9, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
-                          <Icon name="bell" size={14} /> Varsle
+                          Varsle
                         </button>
                       )}
                       {kanFram && (

@@ -30,7 +30,7 @@ export function Timeliste() {
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
   const [weekStart, setWeekStart] = useState(mondayOf(today()));
   const [monthAnchor, setMonthAnchor] = useState(today().slice(0, 7));
-  const [editTarget, setEditTarget] = useState<{ ansatt: TimeEntry['ansatt']; date: string; entry?: TimeEntry } | null>(null);
+  const [editTarget, setEditTarget] = useState<{ ansatt: TimeEntry['ansatt']; date: string } | null>(null);
 
   const dates = useMemo(() => weekDates(weekStart), [weekStart]);
   const prevDates = useMemo(() => weekDates(addDays(weekStart, -7)), [weekStart]);
@@ -53,8 +53,10 @@ export function Timeliste() {
   const exportCsv = () => {
     const rows: (string | number)[][] = [['Tilsett', 'Dato', 'Start', 'Slutt', 'Pause(min)', 'Timar', 'Status']];
     dates.forEach((dt) => ansatte.forEach((a) => {
-      const e = entries.find((x) => x.ansatt === a.id && x.date === dt);
-      if (e) rows.push([a.navn, dt, e.start, e.slutt, e.pause, fmt(timar(e)), e.status]);
+      entries
+        .filter((x) => x.ansatt === a.id && x.date === dt)
+        .sort((x, y) => (x.start < y.start ? -1 : 1))
+        .forEach((e) => rows.push([a.navn, dt, e.start, e.slutt, e.pause, fmt(timar(e)), e.status]));
     }));
     downloadCsv(`mekk-olen-timeliste-veke${isoWeek(weekStart)}.csv`, rows);
   };
@@ -116,7 +118,7 @@ export function Timeliste() {
             <WeekCards
               dates={dates}
               entries={entries}
-              onCellClick={(ansatt, date, entry) => setEditTarget({ ansatt, date, entry })}
+              onCellClick={(ansatt, date) => setEditTarget({ ansatt, date })}
               maaGodkjenne={maaGodkjenne}
               onApprove={(ansatt) => approveEmployeeEntries(ansatt, dates)}
             />
@@ -125,7 +127,7 @@ export function Timeliste() {
               <WeekTable
                 dates={dates}
                 entries={entries}
-                onCellClick={(ansatt, date, entry) => setEditTarget({ ansatt, date, entry })}
+                onCellClick={(ansatt, date) => setEditTarget({ ansatt, date })}
                 maaGodkjenne={maaGodkjenne}
                 onApprove={(ansatt) => approveEmployeeEntries(ansatt, dates)}
               />
@@ -194,7 +196,7 @@ function WeekTable({
 }: {
   dates: string[];
   entries: TimeEntry[];
-  onCellClick: (ansatt: TimeEntry['ansatt'], date: string, entry?: TimeEntry) => void;
+  onCellClick: (ansatt: TimeEntry['ansatt'], date: string) => void;
   maaGodkjenne: boolean;
   onApprove: (ansatt: TimeEntry['ansatt']) => void;
 }) {
@@ -215,20 +217,25 @@ function WeekTable({
         </thead>
         <tbody>
           {ansatte.map((a) => {
-            const rowEntries = dates.map((d) => entries.find((e) => e.ansatt === a.id && e.date === d));
-            const sum = rowEntries.reduce((acc, e) => acc + (e ? timar(e) : 0), 0);
-            const ventarN = rowEntries.filter((e) => e?.status === 'venter').length;
-            const harTimar = rowEntries.some(Boolean);
+            const dagBolkar = dates.map((d) => entries.filter((e) => e.ansatt === a.id && e.date === d));
+            const sum = dagBolkar.reduce((acc, es) => acc + es.reduce((s2, e) => s2 + timar(e), 0), 0);
+            const ventarN = dagBolkar.reduce((acc, es) => acc + es.filter((e) => e.status === 'venter').length, 0);
+            const harTimar = dagBolkar.some((es) => es.length > 0);
             const status = !harTimar ? 'tom' : ventarN > 0 ? 'venter' : 'godkjent';
             return (
               <tr key={a.id} style={{ borderTop: '1px solid var(--divider)' }}>
                 <td style={{ ...td, fontWeight: 600 }}>{a.navn}</td>
                 {dates.map((d, i) => {
-                  const e = rowEntries[i];
+                  const es = dagBolkar[i];
+                  const dagSum = es.reduce((s2, e) => s2 + timar(e), 0);
+                  const dagVentar = es.some((e) => e.status === 'venter');
                   return (
-                    <td key={d} style={{ ...td, textAlign: 'center', cursor: 'pointer' }} onClick={() => onCellClick(a.id, d, e)}>
-                      {e ? (
-                        <span style={{ fontFamily: "'Geist Mono'", fontWeight: 600, color: e.status === 'godkjent' ? 'var(--text)' : '#b7830b' }}>{fmt(timar(e))}</span>
+                    <td key={d} style={{ ...td, textAlign: 'center', cursor: 'pointer' }} onClick={() => onCellClick(a.id, d)}>
+                      {es.length > 0 ? (
+                        <div style={{ lineHeight: 1.15 }}>
+                          <span style={{ fontFamily: "'Geist Mono'", fontWeight: 600, color: dagVentar ? '#b7830b' : 'var(--text)' }}>{fmt(dagSum)}</span>
+                          {es.length > 1 && <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--brand)' }}>{es.length} bolkar</div>}
+                        </div>
                       ) : (
                         <span style={{ color: 'var(--text-faint2)' }}>–</span>
                       )}
@@ -270,7 +277,7 @@ function WeekCards({
 }: {
   dates: string[];
   entries: TimeEntry[];
-  onCellClick: (ansatt: TimeEntry['ansatt'], date: string, entry?: TimeEntry) => void;
+  onCellClick: (ansatt: TimeEntry['ansatt'], date: string) => void;
   maaGodkjenne: boolean;
   onApprove: (ansatt: TimeEntry['ansatt']) => void;
 }) {
@@ -278,10 +285,10 @@ function WeekCards({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {ansatte.map((a) => {
-        const rowEntries = dates.map((d) => entries.find((e) => e.ansatt === a.id && e.date === d));
-        const sum = rowEntries.reduce((acc, e) => acc + (e ? timar(e) : 0), 0);
-        const ventarN = rowEntries.filter((e) => e?.status === 'venter').length;
-        const harTimar = rowEntries.some(Boolean);
+        const dagBolkar = dates.map((d) => entries.filter((e) => e.ansatt === a.id && e.date === d));
+        const sum = dagBolkar.reduce((acc, es) => acc + es.reduce((s2, e) => s2 + timar(e), 0), 0);
+        const ventarN = dagBolkar.reduce((acc, es) => acc + es.filter((e) => e.status === 'venter').length, 0);
+        const harTimar = dagBolkar.some((es) => es.length > 0);
         const lonn = a.lonn === 'time' ? fmtKr(sum * a.sats) : 'Fastløn';
         return (
           <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 15px', boxShadow: 'var(--shadow-card)' }}>
@@ -296,19 +303,22 @@ function WeekCards({
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 6, marginTop: 12 }}>
               {dates.map((d, i) => {
-                const e = rowEntries[i];
+                const es = dagBolkar[i];
+                const dagSum = es.reduce((s2, e) => s2 + timar(e), 0);
+                const dagVentar = es.some((e) => e.status === 'venter');
                 return (
                   <button
                     key={d}
-                    onClick={() => onCellClick(a.id, d, e)}
+                    onClick={() => onCellClick(a.id, d)}
                     style={{
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '7px 2px', cursor: 'pointer',
                       border: '1px solid var(--border)', borderRadius: 10,
-                      background: e ? (e.status === 'godkjent' ? 'rgba(47,158,111,0.10)' : 'rgba(216,146,15,0.12)') : 'var(--surface-alt)',
+                      background: es.length > 0 ? (dagVentar ? 'rgba(216,146,15,0.12)' : 'rgba(47,158,111,0.10)') : 'var(--surface-alt)',
                     }}
                   >
                     <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.2px' }}>{UKE_KORT[weekdayIdx(d)]}</span>
-                    <span style={{ fontFamily: "'Geist Mono'", fontSize: 12.5, fontWeight: 600, color: e ? 'var(--text)' : 'var(--text-faint2)' }}>{e ? fmt(timar(e)) : '–'}</span>
+                    <span style={{ fontFamily: "'Geist Mono'", fontSize: 12.5, fontWeight: 600, color: es.length > 0 ? 'var(--text)' : 'var(--text-faint2)' }}>{es.length > 0 ? fmt(dagSum) : '–'}</span>
+                    {es.length > 1 && <span style={{ fontSize: 8.5, fontWeight: 700, color: 'var(--brand)' }}>×{es.length}</span>}
                   </button>
                 );
               })}
