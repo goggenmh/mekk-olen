@@ -157,16 +157,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (err) throw err;
       setEntries((prev) => prev.map((x) => (x.id === entry.id ? mapEntry(data) : x)));
     } else {
-      const { data, error: err } = await supabase.from('time_entries').upsert({
+      // Ny bolk = vanleg innsetjing (fleire tidsbolkar per dag er lov).
+      const { data, error: err } = await supabase.from('time_entries').insert({
         ansatt: entry.ansatt, date: entry.date, start: entry.start, slutt: entry.slutt, pause: entry.pause, status: entry.status,
-      }, { onConflict: 'ansatt,date' }).select().single();
+      }).select().single();
       if (err) throw err;
-      setEntries((prev) => {
-        const i = prev.findIndex((x) => x.ansatt === entry.ansatt && x.date === entry.date);
-        const mapped = mapEntry(data);
-        if (i >= 0) { const next = prev.slice(); next[i] = mapped; return next; }
-        return [...prev, mapped];
-      });
+      setEntries((prev) => [...prev, mapEntry(data)]);
     }
     toast('Timeføring lagra');
   };
