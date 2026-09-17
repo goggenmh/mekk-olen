@@ -331,7 +331,7 @@ export function Vaktplan() {
         const eigen = s.ansatt === user?.id;
         const kanEndre = kanLageVakt || eigen;
         const dagVakter = shifts.filter((x) => x.date === meny.date);
-        const items: { tekst: string; ikon: string; farge?: string; keepOpen?: boolean; handling: () => void }[] = [];
+        const items: { tekst: string; ikon: string; farge?: string; keepOpen?: boolean; skilje?: boolean; handling: () => void }[] = [];
         if (kanEndre) items.push({ tekst: kanLageVakt ? 'Endre vakt' : 'Endre tidspunkt', ikon: 'blyant', handling: () => setShiftTarget({ date: meny.date, shift: s }) });
         items.push({ tekst: 'Be om bytte', ikon: 'bytte', handling: () => setSwapTarget(s) });
         if (kanEndre) {
@@ -355,7 +355,7 @@ export function Vaktplan() {
               saveShift({ ansatt: s.ansatt, date: d2.date, start: s.start, slutt: s.slutt, skift: skiftFraTid(s.start, s.slutt, d2.date) });
             });
           } });
-          items.push({ tekst: 'Tøm dagen', ikon: 'soppel', farge: 'var(--danger)', handling: () => {
+          items.push({ tekst: 'Tøm dagen', ikon: 'soppel', farge: 'var(--danger)', skilje: true, handling: () => {
             if (window.confirm(`Tømme heile dagen? Dette slettar ${dagVakter.length} ${dagVakter.length === 1 ? 'vakt' : 'vakter'}.`)) {
               dagVakter.forEach((x) => deleteShift(x.id));
             }
@@ -405,16 +405,18 @@ export function Vaktplan() {
                     <div style={{ fontFamily: "'Geist Mono'", fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>{s.start}–{s.slutt}</div>
                   </div>
                   {items.map((it) => (
-                    <button
-                      key={it.tekst}
-                      onClick={() => { it.handling(); if (!it.keepOpen) setMeny(null); }}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 600, color: it.farge || 'var(--text)' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-alt)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-                    >
-                      <span style={{ display: 'flex', color: it.farge || 'var(--text-muted)', flex: 'none' }}><Icon name={it.ikon} size={15} /></span>
-                      {it.tekst}
-                    </button>
+                    <div key={it.tekst}>
+                      {it.skilje && <div style={{ height: 1, background: 'var(--divider)', margin: '5px 8px' }} />}
+                      <button
+                        onClick={() => { it.handling(); if (!it.keepOpen) setMeny(null); }}
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 600, color: it.farge || 'var(--text)' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = it.farge ? 'rgba(192,57,43,0.08)' : 'var(--surface-alt)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                      >
+                        <span style={{ display: 'flex', color: it.farge || 'var(--text-muted)', flex: 'none' }}><Icon name={it.ikon} size={15} /></span>
+                        {it.tekst}
+                      </button>
+                    </div>
                   ))}
                 </>
               )}
