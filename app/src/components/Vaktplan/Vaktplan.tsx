@@ -364,7 +364,7 @@ export function Vaktplan() {
             if (window.confirm(`Slette vakta til ${a.navn} ${s.start}–${s.slutt}?`)) deleteShift(s.id);
           } });
         }
-        if (items[0]) items[0].overskrift = items[0].overskrift || 'Handtering';
+        if (items[0]) items[0].overskrift = items[0].overskrift || 'Endre';
         const MENY_BREIDD = 210;
         const left = Math.min(meny.x, (typeof window !== 'undefined' ? window.innerWidth : 1200) - MENY_BREIDD - 8);
         const top = Math.min(meny.y, (typeof window !== 'undefined' ? window.innerHeight : 800) - (items.length * 42 + 46));
