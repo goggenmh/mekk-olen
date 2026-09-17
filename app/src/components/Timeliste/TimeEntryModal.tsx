@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Modal, Field, monoInputStyle, CancelButton, SaveButton } from '../ui/Modal';
+import { Modal, Field, monoInputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
 import { useAppData } from '../../context/AppDataContext';
 import { useAnsatte } from '../../context/AnsatteContext';
+import { useAuth } from '../../context/AuthContext';
 import { dur, fmt, mins } from '../../lib/dates';
 import type { TimeEntry } from '../../types';
 
@@ -14,9 +15,11 @@ export function TimeEntryModal({
   target: { ansatt: TimeEntry['ansatt']; date: string };
   onClose: () => void;
 }) {
-  const { entries, saveEntry, deleteEntry } = useAppData();
+  const { entries, saveEntry, deleteEntry, canApprove } = useAppData();
   const { findAnsatt } = useAnsatte();
+  const { user } = useAuth();
   const a = findAnsatt(target.ansatt);
+  const kanSlette = target.ansatt === user?.id || canApprove(user?.id);
 
   const eksisterande = entries
     .filter((e) => e.ansatt === target.ansatt && e.date === target.date)
@@ -68,6 +71,20 @@ export function TimeEntryModal({
     }
   };
 
+  const slettDag = async () => {
+    if (lagrar) return;
+    if (!window.confirm(`Slette heile timeføringa for denne dagen? Dette fjernar ${eksisterande.length} ${eksisterande.length === 1 ? 'tidsbolk' : 'tidsbolkar'}.`)) return;
+    setLagrar(true);
+    try {
+      for (const e of eksisterande) await deleteEntry(e.id);
+      onClose();
+    } catch (e) {
+      const msg = e && typeof e === 'object' && 'message' in e ? String((e as { message: unknown }).message) : String(e);
+      setFeil('Kunne ikkje slette: ' + msg);
+      setLagrar(false);
+    }
+  };
+
   const godkjent = status === 'godkjent';
 
   return (
@@ -78,6 +95,7 @@ export function TimeEntryModal({
       maxWidth={460}
       footer={
         <>
+          {eksisterande.length > 0 && kanSlette && <DeleteButton onClick={slettDag}>Slett dag</DeleteButton>}
           <CancelButton onClick={onClose} />
           <SaveButton onClick={save}>{lagrar ? 'Lagrar…' : 'Lagre'}</SaveButton>
         </>
