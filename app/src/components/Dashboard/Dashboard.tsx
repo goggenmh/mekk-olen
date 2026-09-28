@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { DAGER_VAKTPLAN } from '../../constants';
-import { weekDates, mondayOf, today, fullDatoTekst, fmt, timar, UKE_KORT, weekdayIdx, addDays, datoKort, datoIntervall, parseDate } from '../../lib/dates';
+import { weekDates, mondayOf, today, fullDatoTekst, fmt, timar, UKE_KORT, weekdayIdx, addDays, datoKort, datoIntervall, parseDate, isoWeek } from '../../lib/dates';
 import { useIsMobile } from '../../lib/useIsMobile';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
@@ -25,6 +25,12 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const { ansatte, findAnsatt } = useAnsatte();
   const isMobile = useIsMobile();
   const [quickAction, setQuickAction] = useState<'timer' | 'vakt' | 'oppgave' | 'bestilling' | null>(null);
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const klokke = now.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
 
   const mineMeldinger = meldinger.filter((m) => m.til === null || m.til === user?.id).slice(0, 5);
 
@@ -33,7 +39,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const forrigeVeke = weekDates(mondayOf(addDays(t, -7)));
 
   // ---- helsing ----
-  const time = new Date().getHours();
+  const time = now.getHours();
   const helsing = time < 10 ? 'God morgon' : time < 18 ? 'God dag' : 'God kveld';
   const fornamn = (user?.navn || '').split(' ')[0];
 
@@ -77,6 +83,27 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
     .map((d) => ({ dato: d, vakter: shifts.filter((s) => s.date === d).slice().sort((a, b) => (a.start < b.start ? -1 : 1)) }))
     .filter((g) => g.vakter.length > 0);
 
+  // ---- neste vakt for innlogga brukar ----
+  const mineFramtidige = shifts
+    .filter((s) => s.ansatt === user?.id && s.date >= t)
+    .slice()
+    .sort((a, b) => (a.date !== b.date ? (a.date < b.date ? -1 : 1) : (a.start < b.start ? -1 : 1)));
+  const nesteVakt = mineFramtidige[0];
+  const nesteKollegaer = nesteVakt
+    ? shifts.filter((s) => s.date === nesteVakt.date && s.ansatt !== user?.id).map((s) => findAnsatt(s.ansatt).navn.split(' ')[0])
+    : [];
+  let startOm = '';
+  if (nesteVakt && nesteVakt.date === t) {
+    const [hh, mm] = nesteVakt.start.split(':').map(Number);
+    const diff = hh * 60 + mm - (now.getHours() * 60 + now.getMinutes());
+    if (diff > 0) startOm = diff >= 60 ? `Startar om ${Math.floor(diff / 60)} t ${diff % 60} min` : `Startar om ${diff} min`;
+    else startOm = 'På jobb no';
+  }
+
+  // ---- timar per dag (denne veka) ----
+  const timarPerDag = weekDays.map((d) => ({ d, t: entries.filter((e) => e.date === d).reduce((acc, e) => acc + timar(e), 0) }));
+  const maxDag = Math.max(1, ...timarPerDag.map((x) => x.t));
+
   // ---- opne oppgåver (liste) ----
   const opneListe = tasks
     .filter((x) => !x.ferdig)
@@ -116,9 +143,19 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
 
   return (
     <div style={{ padding: isMobile ? 18 : 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div>
-        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>{helsing}, {fornamn}</div>
-        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>{fullDatoTekst(t)}</div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: isMobile ? 24 : 30, letterSpacing: '-0.6px' }}>
+            {helsing}, <span style={{ background: 'linear-gradient(120deg, var(--brand), var(--brand-strong))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{fornamn}</span> 👋
+          </div>
+          <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4 }}>{fullDatoTekst(t)}</div>
+        </div>
+        {!isMobile && (
+          <div style={{ textAlign: 'right', lineHeight: 1.1 }}>
+            <div style={{ fontFamily: "'Geist Mono'", fontSize: 26, fontWeight: 600, letterSpacing: '-0.5px' }}>{klokke}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginTop: 2 }}>Veke {isoWeek(t)}</div>
+          </div>
+        )}
       </div>
 
       {/* hurtighandlingar */}
@@ -159,6 +196,47 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Neste vakt + timar per dag */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: 18 }}>
+        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, padding: isMobile ? '18px 20px' : '22px 24px', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 12px 32px rgba(12, 90, 105, 0.28)' }}>
+          <span style={{ position: 'absolute', right: -60, top: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 68%)', pointerEvents: 'none' }} />
+          <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', background: 'rgba(255,255,255,0.16)', padding: '5px 11px', borderRadius: 20 }}>
+            Neste vakt {nesteVakt ? (nesteVakt.date === t ? '· I dag' : `· ${datoKort(nesteVakt.date)}`) : ''}
+          </span>
+          {nesteVakt ? (
+            <>
+              <div style={{ fontFamily: "'Geist Mono'", fontSize: isMobile ? 32 : 40, fontWeight: 600, letterSpacing: '-1px', margin: '12px 0 2px' }}>{nesteVakt.start} – {nesteVakt.slutt}</div>
+              <div style={{ fontSize: 14, color: 'var(--hero-sub)', fontWeight: 500, textTransform: 'capitalize' }}>{nesteVakt.skift || 'Vakt'}</div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
+                {nesteKollegaer.length > 0 && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 11, fontSize: 13, fontWeight: 600 }}>👥 Saman med {nesteKollegaer.join(' & ')}</span>
+                )}
+                {startOm && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 11, fontSize: 13, fontWeight: 600 }}>⏳ {startOm}</span>
+                )}
+              </div>
+            </>
+          ) : (
+            <div style={{ fontSize: 15, color: 'var(--hero-sub)', marginTop: 16, fontWeight: 500 }}>Ingen komande vakt planlagt denne veka. Nyt fridagen! 🌿</div>
+          )}
+        </div>
+
+        <div style={cardStyle}>
+          <div style={labelStyle}>Timar per dag</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 94 }}>
+            {timarPerDag.map(({ d, t: tt }) => {
+              const erIdag = d === t;
+              return (
+                <div key={d} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: 7, height: '100%' }} title={`${fmt(tt)} t`}>
+                  <div style={{ width: '100%', height: `${Math.max(4, (tt / maxDag) * 100)}%`, borderRadius: '7px 7px 3px 3px', background: erIdag ? 'linear-gradient(var(--brand), var(--brand-strong))' : 'var(--brand-soft)', boxShadow: erIdag ? 'var(--glow-brand)' : 'none' }} />
+                  <span style={{ fontSize: 11, color: erIdag ? 'var(--brand-strong)' : 'var(--text-muted)', fontWeight: 700 }}>{UKE_KORT[weekdayIdx(d)]}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
