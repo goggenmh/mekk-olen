@@ -245,7 +245,7 @@ export function Vaktplan() {
       )}
 
       {pendingSwaps.length > 0 && (
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', boxShadow: 'var(--shadow-card)' }}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Bytteønske</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {pendingSwaps.map((s) => {
@@ -271,9 +271,9 @@ export function Vaktplan() {
         </div>
       )}
 
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', boxShadow: 'var(--shadow-card)' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>Ferie &amp; fri</div>
+          <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px' }}>Ferie &amp; fri</div>
           <button onClick={() => setFerieTarget('new')} style={{ ...btnGhost, marginLeft: 'auto' }}>+ Legg til</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
@@ -313,9 +313,9 @@ export function Vaktplan() {
         </div>
       </div>
 
-      <div style={{ background: 'linear-gradient(135deg,#0d5f6e,#0c5a69)', color: '#eaf6f8', borderRadius: 12, padding: '16px 18px', boxShadow: '0 8px 24px rgba(12,90,105,0.22)' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: '#8fd2dd', marginBottom: 10 }}>Bemanningsregel</div>
-        <ul style={{ paddingLeft: 18, fontSize: 13, color: '#cfe6ec', lineHeight: 1.6 }}>
+      <div style={{ background: 'var(--hero-grad)', color: 'var(--hero-fg)', borderRadius: 16, padding: '16px 18px', boxShadow: '0 10px 30px rgba(12,90,105,0.28)' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--hero-sub)', marginBottom: 10 }}>Bemanningsregel</div>
+        <ul style={{ paddingLeft: 18, fontSize: 13, color: 'var(--hero-sub)', lineHeight: 1.6 }}>
           <li>Minst éin tilsett på vakt i alle opningstider.</li>
           <li>Sander dekkjer hovudsakleg formiddagar man–fre.</li>
           <li>Laurdagsvakt går på rundgang mellom Georg og Christian.</li>

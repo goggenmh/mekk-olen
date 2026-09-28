@@ -62,12 +62,12 @@ export function Oppgaver() {
               onDrop={() => {
                 if (dragTaskId.current) { moveTask(dragTaskId.current, k.id); dragTaskId.current = null; }
               }}
-              style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 12, padding: 10, minHeight: isMobile ? 'auto' : 300, display: 'flex', flexDirection: 'column', gap: 8 }}
+              style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 14, padding: 10, minHeight: isMobile ? 'auto' : 300, display: 'flex', flexDirection: 'column', gap: 8 }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: k.farge }} />
-                <span style={{ fontSize: 12.5, fontWeight: 700 }}>{k.tittel}</span>
-                <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>({kolTasks.length})</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, padding: '2px 3px' }}>
+                <span style={{ width: 9, height: 9, borderRadius: '50%', background: k.farge, flex: 'none' }} />
+                <span style={{ fontSize: 12.5, fontWeight: 700, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{k.tittel}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 999, padding: '1px 8px', minWidth: 20, textAlign: 'center' }}>{kolTasks.length}</span>
               </div>
               {kolTasks.map((task) => {
                 const p = PRIORITET[task.prioritet as Prioritet] || PRIORITET.medium;
@@ -80,7 +80,7 @@ export function Oppgaver() {
                     key={task.id}
                     draggable
                     onDragStart={() => { dragTaskId.current = task.id; }}
-                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 13, padding: '10px 11px', cursor: 'grab', opacity: task.ferdig ? 0.6 : 1 }}
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '10px 11px', cursor: 'grab', opacity: task.ferdig ? 0.6 : 1, boxShadow: 'var(--shadow-card)' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                       <input

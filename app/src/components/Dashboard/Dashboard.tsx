@@ -380,9 +380,9 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             </div>
           </div>
 
-          <div style={{ borderRadius: 12, padding: '16px 18px', background: 'linear-gradient(135deg,#0d5f6e,#0c5a69)', color: '#eaf6f8', boxShadow: '0 8px 24px rgba(12,90,105,0.22)' }}>
-            <div style={{ ...labelStyle, color: '#8fd2dd' }}>Ferie &amp; fri på trappene</div>
-            {dashFerie.length === 0 && <div style={{ fontSize: 13, color: '#bcdfe6' }}>Ingen registrert.</div>}
+          <div style={{ borderRadius: 16, padding: '16px 18px', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 10px 30px rgba(12,90,105,0.28)' }}>
+            <div style={{ ...labelStyle, color: 'var(--hero-sub)' }}>Ferie &amp; fri på trappene</div>
+            {dashFerie.length === 0 && <div style={{ fontSize: 13, color: 'var(--hero-sub)' }}>Ingen registrert.</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {dashFerie.map((f) => {
                 const a = findAnsatt(f.ansatt);
@@ -391,7 +391,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                     <Avatar init={a.init} farge={a.farge} size={28} fontSize={10.5} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{a.navn}</div>
-                      <div style={{ fontSize: 11.5, color: '#bcdfe6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.fra ? datoIntervall(f.fra, f.til) : (f.tekst || '—')}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--hero-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.fra ? datoIntervall(f.fra, f.til) : (f.tekst || '—')}</div>
                     </div>
                     <span style={{ fontSize: 9.5, fontWeight: 700, color: '#0c5a69', background: '#d5eef2', padding: '3px 8px', borderRadius: 9, textTransform: 'uppercase' }}>{f.type}</span>
                   </div>

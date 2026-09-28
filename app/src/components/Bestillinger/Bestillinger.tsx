@@ -109,7 +109,7 @@ export function Bestillinger() {
                 {(kanVarsle || kanFram) && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 11 }}>
                     {kanVarsle && (
-                      <button onClick={() => setNotifyTarget(o)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--border)', background: o.varsla ? '#e8f5ee' : '#fdf2e0', borderRadius: 10, fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>Varsle</button>
+                      <button onClick={() => setNotifyTarget(o)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--border)', background: o.varsla ? 'var(--brand-soft)' : 'var(--accent-soft)', borderRadius: 10, fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>Varsle</button>
                     )}
                     {kanFram && (
                       <button onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])} style={{ marginLeft: 'auto', padding: '7px 14px', background: 'var(--brand-strong)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{s.neste} →</button>
@@ -126,7 +126,7 @@ export function Bestillinger() {
       )}
 
       {filter !== 'henta' && !isMobile && (
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'auto' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'auto', boxShadow: 'var(--shadow-card)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: 'var(--surface-alt)' }}>
@@ -167,7 +167,7 @@ export function Bestillinger() {
                         <button
                           onClick={() => setNotifyTarget(o)}
                           title="Varsle kunde"
-                          style={{ padding: '6px 11px', border: '1px solid var(--border)', background: o.varsla ? '#e8f5ee' : '#fdf2e0', borderRadius: 9, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          style={{ padding: '6px 11px', border: '1px solid var(--border)', background: o.varsla ? 'var(--brand-soft)' : 'var(--accent-soft)', borderRadius: 9, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
                           Varsle
                         </button>

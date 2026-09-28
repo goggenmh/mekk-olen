@@ -13,8 +13,8 @@ import type { Employee } from '../../constants';
 interface AnsattStats { timarUke: number; ventarOppg: number; nesteVakt: string | null; }
 
 const cardStyle = {
-  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12,
-  padding: 16, display: 'flex', alignItems: 'center', gap: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16,
+  padding: 16, display: 'flex', alignItems: 'center', gap: 14, boxShadow: 'var(--shadow-card)',
 } as const;
 
 function StatBit({ ikon, tekst }: { ikon: string; tekst: string }) {
