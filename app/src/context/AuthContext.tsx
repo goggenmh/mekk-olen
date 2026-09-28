@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { supabase, pinToPassword } from '../supabaseClient';
 import type { Employee } from '../constants';
 import { useAnsatte } from './AnsatteContext';
@@ -26,6 +26,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [pick, setPick] = useState<Employee | null>(null);
   const [pin, setPin] = useState('');
   const [feil, setFeil] = useState<string | null>(null);
+  // Hindrar at same PIN blir sendt inn to gonger samtidig.
+  const submitting = useRef(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -40,21 +42,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(match ?? null);
     });
     return () => sub.subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alleAnsatte]);
 
   const tryLogin = async (employee: Employee, candidatePin: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: employee.email,
-      password: pinToPassword(candidatePin),
-    });
-    if (error) {
-      setFeil(error.message || 'Innlogging feila');
-      setPin('');
-    } else {
-      setPick(null);
-      setPin('');
-      setFeil(null);
+    if (submitting.current) return;
+    submitting.current = true;
+    const creds = { email: employee.email, password: pinToPassword(candidatePin) };
+    const erFeilPin = (e: { message?: string } | null) => !!e && /invalid login credentials/i.test(e.message || '');
+    try {
+      let { error } = await supabase.auth.signInWithPassword(creds);
+      // Mellombels feil (auth-klienten ikkje klar, nettverk) – prøv ein gong til
+      // før vi gir opp, slik at ein rett PIN ikkje blir avvist ved uhell.
+      if (error && !erFeilPin(error)) {
+        await new Promise((r) => setTimeout(r, 400));
+        ({ error } = await supabase.auth.signInWithPassword(creds));
+      }
+      if (error) {
+        setFeil(erFeilPin(error) ? 'Feil PIN – prøv igjen' : 'Innlogging feila – prøv igjen');
+        setPin('');
+      } else {
+        setPick(null);
+        setPin('');
+        setFeil(null);
+      }
+    } finally {
+      submitting.current = false;
     }
   };
 
@@ -76,13 +88,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setFeil(null);
       },
       pressDigit: (d: string) => {
-        if (pin.length >= 4 || !pick) return;
-        const next = pin + d;
-        setPin(next);
+        if (!pick) return;
         setFeil(null);
-        if (next.length === 4) {
-          setTimeout(() => tryLogin(pick, next), 120);
-        }
+        // Funksjonell oppdatering: byggjer alltid på nyaste PIN, så ingen
+        // siffer går tapt sjølv om ein tastar raskt.
+        setPin((prev) => {
+          if (prev.length >= 4) return prev;
+          const next = prev + d;
+          if (next.length === 4) setTimeout(() => tryLogin(pick, next), 60);
+          return next;
+        });
       },
       backspace: () => {
         setPin((p) => p.slice(0, -1));

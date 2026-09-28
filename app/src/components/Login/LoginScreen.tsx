@@ -87,7 +87,7 @@ export function LoginScreen() {
 
               {feil ? (
                 <div style={{ textAlign: 'center', maxWidth: 300, margin: '6px 0 14px' }}>
-                  <div style={{ fontSize: 13, color: '#ff9b8f', fontWeight: 600 }}>Feil PIN — prøv igjen</div>
+                  <div style={{ fontSize: 13, color: '#ff9b8f', fontWeight: 600 }}>{feil}</div>
                 </div>
               ) : (
                 <div style={{ fontSize: 12, color: '#7fb3c1', margin: '8px 0 16px' }}>0–9 for å taste · ⌫ for å slette</div>
