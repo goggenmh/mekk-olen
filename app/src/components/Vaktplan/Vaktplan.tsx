@@ -142,7 +142,7 @@ export function Vaktplan() {
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, paddingBottom: 7, borderBottom: '1px solid var(--divider)' }}>
                 <div>
-                  <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : heilagdag ? 'var(--dag-raud-tekst)' : halvdag ? 'var(--dag-amber-tekst)' : 'var(--text)', lineHeight: 1, letterSpacing: '-0.6px' }}>{parseDate(d.date).getDate()}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : heilagdag ? 'var(--dag-raud-tekst)' : halvdag ? 'var(--dag-amber-tekst)' : 'var(--text)', lineHeight: 1, letterSpacing: '-0.7px' }}>{parseDate(d.date).getDate()}</div>
                   <div style={{ fontSize: 10.5, fontWeight: 700, color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.6px', marginTop: 3 }}>{d.kort}</div>
                   {heilagdag ? (
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--dag-raud-tekst)', marginTop: 1 }}>{heilagdag}</div>
@@ -166,20 +166,23 @@ export function Vaktplan() {
                     onClick={kanOpne ? () => setShiftTarget({ date: d.date, shift: s }) : undefined}
                     onContextMenu={(e) => { e.preventDefault(); setBytOpen(false); setMeny({ x: e.clientX, y: e.clientY, shift: s, date: d.date }); }}
                     title="Høgreklikk for val"
-                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 10, padding: '8px 10px', cursor: kanLageVakt ? 'grab' : kanOpne ? 'pointer' : 'default' }}
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 11, padding: '9px 11px', cursor: kanLageVakt ? 'grab' : kanOpne ? 'pointer' : 'default', boxShadow: 'var(--shadow-card)' }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: farge, flex: 'none' }} />
-                      <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.navn}</span>
+                    <div style={{ fontFamily: "'Geist Mono'", fontSize: 15.5, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.6px', fontVariantNumeric: 'tabular-nums' }}>{s.start}–{s.slutt}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 6 }}>
+                      <span style={{ width: 20, height: 20, borderRadius: 6, background: farge, color: '#fff', fontSize: 9.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{a.init}</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.navn}</span>
                     </div>
-                    <div style={{ fontFamily: "'Geist Mono'", fontSize: 14, fontWeight: 700, color: 'var(--text)', marginTop: 4, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>{s.start}–{s.slutt}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                      {s.skift && <span style={{ fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-faint)' }}>{s.skift}</span>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                      {s.skift && (() => {
+                        const erKveld = s.skift.toLowerCase().includes('kveld');
+                        return <span style={{ fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px', padding: '2px 8px', borderRadius: 20, background: erKveld ? 'var(--skift-kveld-bg)' : 'var(--brand-soft)', color: erKveld ? 'var(--skift-kveld-fg)' : 'var(--brand-strong)' }}>{s.skift}</span>;
+                      })()}
                       <button
                         onClick={(e) => { e.stopPropagation(); setSwapTarget(s); }}
                         style={{ marginLeft: 'auto', fontSize: 10.5, fontWeight: 600, background: 'none', color: 'var(--brand)', border: 'none', padding: 0, cursor: 'pointer' }}
                       >
-                        Bytt vakt
+                        Bytt
                       </button>
                     </div>
                   </div>

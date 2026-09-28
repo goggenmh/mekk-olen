@@ -21,6 +21,8 @@
   --brand: #11788a;
   --brand-strong: #0c5a69;
   --brand-soft: #e7f3f4;
+  --skift-kveld-bg: #efe9fb;
+  --skift-kveld-fg: #6a49c4;
   /* Raude dagar (utilgjengeleg + heilagdagar) og "halve" dagar (gul) */
   --dag-raud-bg: rgba(192, 57, 43, 0.055);
   --dag-raud-border: rgba(192, 57, 43, 0.35);
@@ -82,6 +84,8 @@
   --brand: #20c9b8;
   --brand-strong: #5ee0d2;
   --brand-soft: rgba(32, 201, 184, 0.13);
+  --skift-kveld-bg: rgba(150, 120, 255, 0.16);
+  --skift-kveld-fg: #b9a6ff;
   /* Raude/gule dagar – lysare tekst og litt sterkare tint i mørk modus */
   --dag-raud-bg: rgba(224, 88, 74, 0.15);
   --dag-raud-border: rgba(224, 88, 74, 0.42);
