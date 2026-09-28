@@ -87,7 +87,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       pin,
       feil,
       pickUser: (id: string) => {
-        setPick(findAnsatt(id));
+        const emp = findAnsatt(id);
+        // Ikkje vel ein ukjend/tom brukar (kan skje viss lista ikkje er lasta).
+        if (!emp.email) return;
+        setPick(emp);
         setPin('');
         setFeil(null);
       },
@@ -118,8 +121,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPin('');
       },
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, user, pick, pin, feil]
+    // findAnsatt MÅ vere med: elles brukar pickUser eit utdatert oppslag frå
+    // før ansattlista var lasta, og vel ein «tom» brukar (? utan namn/e-post).
+    [loading, user, pick, pin, feil, findAnsatt]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
