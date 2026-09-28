@@ -48,7 +48,7 @@ export function LoginScreen() {
       </div>
 
       <div style={{ fontFamily: "'Geist Mono'", fontWeight: 700, fontSize: 'clamp(54px, 10vw, 78px)', color: '#eaf6f8', letterSpacing: '-1px', lineHeight: 1, textShadow: '0 4px 30px rgba(0,0,0,0.3)' }}>
-        {pad(now.getHours())}:{pad(now.getMinutes())}<span style={{ color: '#6fe0ef' }}>:{pad(now.getSeconds())}</span>
+        {pad(now.getHours())}:{pad(now.getMinutes())}<span style={{ color: '#5ee0d2' }}>:{pad(now.getSeconds())}</span>
       </div>
       <div style={{ fontSize: 16, color: '#9cc0cc', fontWeight: 500, marginTop: 12, letterSpacing: '0.3px' }}>{dateStr}</div>
 
@@ -73,9 +73,9 @@ export function LoginScreen() {
                       style={{
                         width: 48, height: 56, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontFamily: "'Geist Mono'", fontSize: 24, fontWeight: 700, color: '#eaf6f8',
-                        border: `1.5px solid ${fylt || aktiv ? '#2bb6c9' : 'rgba(255,255,255,0.18)'}`,
+                        border: `1.5px solid ${fylt || aktiv ? '#20c9b8' : 'rgba(255,255,255,0.18)'}`,
                         background: 'rgba(255,255,255,0.05)',
-                        boxShadow: aktiv ? '0 0 0 3px rgba(43,182,201,0.22)' : 'none',
+                        boxShadow: aktiv ? '0 0 0 3px rgba(32,201,184,0.28)' : 'none',
                         transition: 'all 0.12s ease',
                       }}
                     >

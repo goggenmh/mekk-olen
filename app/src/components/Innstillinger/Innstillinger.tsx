@@ -5,7 +5,7 @@ import { Avatar } from '../ui/Avatar';
 import type { View } from '../../lib/view';
 
 const cardStyle = {
-  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '18px 20px',
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '18px 20px', boxShadow: 'var(--shadow-card)',
 } as const;
 
 export function Innstillinger({ setView }: { setView: (v: View) => void }) {

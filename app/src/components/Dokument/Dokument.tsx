@@ -48,8 +48,9 @@ export function Dokument() {
           return (
             <div
               key={d.id}
+              className="hoverable"
               onClick={() => setDocTarget(d)}
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', cursor: 'pointer' }}
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer', boxShadow: 'var(--shadow-card)' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
                 <span style={{ display: 'flex', color: k.fg }}><Icon name={k.ikon} size={18} /></span>

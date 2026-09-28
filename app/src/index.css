@@ -192,7 +192,7 @@ button:active {
 
 /* Innlogging – glass-terminal (konsept D) */
 .glassrow:hover { background: rgba(255,255,255,0.14) !important; border-color: rgba(255,255,255,0.24) !important; }
-.glasskey:hover { background: rgba(43,182,201,0.30) !important; border-color: rgba(43,182,201,0.6) !important; }
+.glasskey:hover { background: rgba(32,201,184,0.30) !important; border-color: rgba(32,201,184,0.6) !important; }
 @keyframes loginShake {
   0%,100% { transform: translateX(0); }
   20%,60% { transform: translateX(-6px); }
