@@ -70,7 +70,6 @@ interface AppData {
   saveDoc: (d: Omit<Doc, 'id'> & { id?: string }) => Promise<void>;
   deleteDoc: (id: string) => Promise<void>;
   uploadDocFile: (file: File) => Promise<{ url: string; namn: string }>;
-  docFileUrl: (filUrl: string | null) => Promise<string | null>;
 }
 
 const AppDataContext = createContext<AppData | null>(null);
@@ -402,21 +401,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const path = `${Date.now()}-${file.name}`;
     const { error: err } = await supabase.storage.from('docs').upload(path, file);
     if (err) throw err;
-    // Lagrar berre storage-stien (ikkje ein offentleg URL). Dokumentet blir
-    // opna via ei signert, tidsavgrensa lenke som krev innlogging.
-    return { url: path, namn: file.name };
-  };
-
-  // Lag ei kortliva signert lenke for eit dokument. Handterer òg gamle
-  // verdiar: ferdige http-URL-ar blir opna direkte, og gamle «/docs/…»-stiar
-  // blir mappa til storage-stien.
-  const docFileUrl: AppData['docFileUrl'] = async (filUrl) => {
-    if (!filUrl) return null;
-    if (/^https?:\/\//i.test(filUrl)) return filUrl;
-    const path = filUrl.replace(/^\/?docs\//, '');
-    const { data, error } = await supabase.storage.from('docs').createSignedUrl(path, 60);
-    if (error) return null;
-    return data.signedUrl;
+    const { data } = supabase.storage.from('docs').getPublicUrl(path);
+    return { url: data.publicUrl, namn: file.name };
   };
 
   // ---- permissions & delegation ----
@@ -453,7 +439,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveFerie, deleteFerie, saveUnavailable, removeUnavailable,
       saveTask, deleteTask, moveTask, completeTask,
       saveOrder, deleteOrder, advanceOrder, markOrderVarsla,
-      saveDoc, deleteDoc, uploadDocFile, docFileUrl,
+      saveDoc, deleteDoc, uploadDocFile,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, unavailable, standardveke, canApprove]

@@ -3,10 +3,11 @@ import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from
 import { useAppData } from '../../context/AppDataContext';
 import { DOC_KATEGORIER } from '../../constants';
 import { today } from '../../lib/dates';
+import { safeHref } from '../../lib/url';
 import type { Doc } from '../../types';
 
 export function DocModal({ existing, onClose }: { existing?: Doc; onClose: () => void }) {
-  const { saveDoc, deleteDoc, uploadDocFile, docFileUrl } = useAppData();
+  const { saveDoc, deleteDoc, uploadDocFile } = useAppData();
 
   const [tittel, setTittel] = useState(existing?.tittel || '');
   const [kategori, setKategori] = useState(existing?.kategori || 'Rutine');
@@ -73,13 +74,7 @@ export function DocModal({ existing, onClose }: { existing?: Doc; onClose: () =>
       <Field label="Filvedlegg">
         {filNamn && !fil && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, fontSize: 13 }}>
-            {filUrl ? (
-              <button
-                type="button"
-                onClick={async () => { const u = await docFileUrl(filUrl); if (u) window.open(u, '_blank', 'noopener'); }}
-                style={{ background: 'none', border: 'none', padding: 0, color: 'var(--brand-strong)', cursor: 'pointer', textDecoration: 'underline', font: 'inherit' }}
-              >{filNamn}</button>
-            ) : <span>{filNamn}</span>}
+            {filUrl ? <a href={safeHref(filUrl)} target="_blank" rel="noreferrer">{filNamn}</a> : <span>{filNamn}</span>}
             <button
               type="button"
               onClick={() => { setFilUrl(null); setFilNamn(null); }}
