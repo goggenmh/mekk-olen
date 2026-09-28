@@ -1,18 +1,23 @@
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { DOC_KAT, DOC_KATEGORIER } from '../../constants';
 import { Icon } from '../ui/Icon';
 import { datoKort } from '../../lib/dates';
-import { safeHref } from '../../lib/url';
 import { DocModal } from './DocModal';
 import type { Doc } from '../../types';
 
 const FILTERS = ['Alle', ...DOC_KATEGORIER];
 
 export function Dokument() {
-  const { docs } = useAppData();
+  const { docs, docFileUrl } = useAppData();
   const [filter, setFilter] = useState('Alle');
   const [docTarget, setDocTarget] = useState<Doc | 'new' | null>(null);
+
+  const opneFil = async (e: MouseEvent, filUrl: string | null) => {
+    e.stopPropagation();
+    const url = await docFileUrl(filUrl);
+    if (url) window.open(url, '_blank', 'noopener');
+  };
 
   const filtered = docs.filter((d) => filter === 'Alle' || d.kategori === filter);
 
@@ -61,15 +66,12 @@ export function Dokument() {
               {d.notat && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6, lineHeight: 1.4 }}>{d.notat}</div>}
               <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{datoKort(d.dato)}</div>
               {d.fil_url && (
-                <a
-                  href={safeHref(d.fil_url)}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'var(--brand-strong)', marginTop: 6 }}
+                <button
+                  onClick={(e) => opneFil(e, d.fil_url)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'var(--brand-strong)', marginTop: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                 >
                   <Icon name="paperclip" size={13} /> {d.fil_namn}
-                </a>
+                </button>
               )}
             </div>
           );
