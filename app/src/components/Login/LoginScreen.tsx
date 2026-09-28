@@ -7,7 +7,7 @@ const PAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 export function LoginScreen() {
   const { pick, pin, feil, pickUser, back, pressDigit, backspace } = useAuth();
-  const { ansatte } = useAnsatte();
+  const { ansatte, loading } = useAnsatte();
 
   // Levande klokke
   const [now, setNow] = useState(() => new Date());
@@ -103,6 +103,11 @@ export function LoginScreen() {
               </div>
             </div>
           </>
+        ) : loading ? (
+          <div style={{ padding: '30px 0 18px', textAlign: 'center' }}>
+            <div className="loginspinner" />
+            <div style={{ fontSize: 13, color: '#9cc0cc', marginTop: 14 }}>Lastar brukarar…</div>
+          </div>
         ) : (
           <>
             <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: '#7fb3c1', marginBottom: 18, textAlign: 'center' }}>Vel kven du er</div>

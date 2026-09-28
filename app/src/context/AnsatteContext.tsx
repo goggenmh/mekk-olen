@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase, pinToPassword } from '../supabaseClient';
 import { toast } from '../lib/toast';
-import { DEFAULT_ANSATTE, type Employee, type EmployeeId } from '../constants';
+import { type Employee, type EmployeeId } from '../constants';
 
 const TOMT_ANSATT: Employee = { id: '', navn: '', rolle: '', lonn: 'time', sats: 0, farge: '#999', init: '?', email: '', telefon: '', leder: false, aktiv: false };
 
@@ -28,7 +28,10 @@ const mapAnsatt = (r: any): Employee => ({
 
 export function AnsatteProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
-  const [alleAnsatte, setAlleAnsatte] = useState<Employee[]>(DEFAULT_ANSATTE);
+  // Startar tomt: den ekte lista blir henta frå databasen. Ei innebygd
+  // standardliste her ville vist «spøkelses-brukarar» eit blink på
+  // innlogginga, som kunne veljast med feil identitet.
+  const [alleAnsatte, setAlleAnsatte] = useState<Employee[]>([]);
 
   const refreshAnsatte = useCallback(async () => {
     const { data, error } = await supabase.from('ansatte').select('*').order('created_at', { ascending: true });

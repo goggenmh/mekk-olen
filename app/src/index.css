@@ -199,6 +199,12 @@ button:active {
   40%,80% { transform: translateX(6px); }
 }
 .login-shake { animation: loginShake 0.35s ease; }
+@keyframes loginspin { to { transform: rotate(360deg); } }
+.loginspinner {
+  width: 30px; height: 30px; margin: 0 auto; border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.14); border-top-color: #20c9b8;
+  animation: loginspin 0.7s linear infinite;
+}
 
 input, textarea, select {
   color-scheme: inherit;
