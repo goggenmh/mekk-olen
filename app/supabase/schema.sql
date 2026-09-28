@@ -254,7 +254,7 @@ do $$
 declare
   t text;
 begin
-  for t in select unnest(array['time_entries','shifts','shift_swaps','ferie','tasks','orders','docs','permissions','meldinger','utilgjengeleg','standardveke']) loop
+  for t in select unnest(array['time_entries','shifts','shift_swaps','ferie','tasks','orders','docs','meldinger','utilgjengeleg','standardveke']) loop
     execute format('drop policy if exists "authenticated_all" on %I', t);
     execute format(
       'create policy "authenticated_all" on %I for all to authenticated using (true) with check (true)',
@@ -263,16 +263,46 @@ begin
   end loop;
 end $$;
 
--- `ansatte` also needs anon SELECT: the "who are you" login picker renders
--- the employee list before the user is authenticated. Names/roles/colours
--- aren't secret in this app's threat model, so that's an intentional, scoped
--- exception to the authenticated-only pattern used everywhere else. Writes
--- (and Auth-account creation) still require either an authenticated session
--- or the service-role key inside the ansatte-admin Edge Function.
+-- Trygg hjelpefunksjon: er den innlogga brukaren ein AKTIV LEIAR?
+-- SECURITY DEFINER gjer at han les `ansatte` utan RLS, så vi slepp uendeleg
+-- rekursjon når funksjonen blir brukt i policyane på `ansatte` sjølv.
+create or replace function public.is_active_leder()
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.ansatte
+    where email = auth.email() and leder = true and aktiv = true
+  );
+$$;
+grant execute on function public.is_active_leder() to authenticated;
+
+-- `ansatte`: alle innlogga (og anon, for innloggings-veljaren) kan LESE
+-- (namn/roller/fargar er ikkje hemmelege her). Men berre AKTIVE LEIARAR kan
+-- SKRIVE – elles kunne kven som helst innlogga setje leder = true på seg sjølv
+-- og bli admin. Admin-handlingar går uansett gjennom ansatte-admin-funksjonen
+-- (service-role), som ikkje er bunden av RLS.
 drop policy if exists "anon_select_ansatte" on ansatte;
 create policy "anon_select_ansatte" on ansatte for select to anon using (true);
 drop policy if exists "authenticated_all_ansatte" on ansatte;
-create policy "authenticated_all_ansatte" on ansatte for all to authenticated using (true) with check (true);
+drop policy if exists "ansatte_read_auth" on ansatte;
+drop policy if exists "ansatte_write_leder" on ansatte;
+create policy "ansatte_read_auth" on ansatte for select to authenticated using (true);
+create policy "ansatte_write_leder" on ansatte for all to authenticated
+  using (public.is_active_leder()) with check (public.is_active_leder());
+
+-- `permissions` styrer delegering (kan_godkjenne). Alle innlogga kan LESE
+-- (for å vite kven som har godkjenningsrett), men berre leiarar kan SKRIVE –
+-- elles kunne ein tilsett gi seg sjølv godkjenningsrett.
+drop policy if exists "authenticated_all" on permissions;
+drop policy if exists "permissions_read_auth" on permissions;
+drop policy if exists "permissions_write_leder" on permissions;
+create policy "permissions_read_auth" on permissions for select to authenticated using (true);
+create policy "permissions_write_leder" on permissions for all to authenticated
+  using (public.is_active_leder()) with check (public.is_active_leder());
 
 -- RLS policies alone don't grant table access — Postgres still requires the
 -- underlying GRANTs, separate from row-level security.

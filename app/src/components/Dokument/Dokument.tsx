@@ -3,6 +3,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { DOC_KAT, DOC_KATEGORIER } from '../../constants';
 import { Icon } from '../ui/Icon';
 import { datoKort } from '../../lib/dates';
+import { safeHref } from '../../lib/url';
 import { DocModal } from './DocModal';
 import type { Doc } from '../../types';
 
@@ -61,7 +62,7 @@ export function Dokument() {
               <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{datoKort(d.dato)}</div>
               {d.fil_url && (
                 <a
-                  href={d.fil_url}
+                  href={safeHref(d.fil_url)}
                   target="_blank"
                   rel="noreferrer"
                   onClick={(e) => e.stopPropagation()}

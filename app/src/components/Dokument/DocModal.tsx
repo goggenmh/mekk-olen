@@ -3,6 +3,7 @@ import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from
 import { useAppData } from '../../context/AppDataContext';
 import { DOC_KATEGORIER } from '../../constants';
 import { today } from '../../lib/dates';
+import { safeHref } from '../../lib/url';
 import type { Doc } from '../../types';
 
 export function DocModal({ existing, onClose }: { existing?: Doc; onClose: () => void }) {
@@ -73,7 +74,7 @@ export function DocModal({ existing, onClose }: { existing?: Doc; onClose: () =>
       <Field label="Filvedlegg">
         {filNamn && !fil && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, fontSize: 13 }}>
-            {filUrl ? <a href={filUrl} target="_blank" rel="noreferrer">{filNamn}</a> : <span>{filNamn}</span>}
+            {filUrl ? <a href={safeHref(filUrl)} target="_blank" rel="noreferrer">{filNamn}</a> : <span>{filNamn}</span>}
             <button
               type="button"
               onClick={() => { setFilUrl(null); setFilNamn(null); }}

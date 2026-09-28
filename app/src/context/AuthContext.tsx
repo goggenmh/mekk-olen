@@ -28,6 +28,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [feil, setFeil] = useState<string | null>(null);
   // Hindrar at same PIN blir sendt inn to gonger samtidig.
   const submitting = useRef(false);
+  // Enkel brute-force-sperre: låser PIN-panelet etter fleire feil forsøk.
+  const feilForsok = useRef(0);
+  const [laastTil, setLaastTil] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -67,9 +70,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ({ error } = await supabase.auth.signInWithPassword(creds));
       }
       if (error) {
-        setFeil(erFeilPin(error) ? 'Feil PIN – prøv igjen' : 'Innlogging feila – prøv igjen');
+        if (erFeilPin(error)) {
+          feilForsok.current += 1;
+          if (feilForsok.current >= 5) {
+            feilForsok.current = 0;
+            setLaastTil(Date.now() + 30000);
+            setFeil('For mange forsøk – vent 30 sekund før du prøver igjen.');
+            setPin('');
+            return;
+          }
+          setFeil('Feil PIN – prøv igjen');
+        } else {
+          setFeil('Innlogging feila – prøv igjen');
+        }
         setPin('');
       } else {
+        feilForsok.current = 0;
         setPick(null);
         setPin('');
         setFeil(null);
@@ -101,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       pressDigit: (d: string) => {
         if (!pick) return;
+        if (Date.now() < laastTil) return; // sperra etter for mange feil forsøk
         setFeil(null);
         // Funksjonell oppdatering: byggjer alltid på nyaste PIN, så ingen
         // siffer går tapt sjølv om ein tastar raskt.
@@ -123,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }),
     // findAnsatt MÅ vere med: elles brukar pickUser eit utdatert oppslag frå
     // før ansattlista var lasta, og vel ein «tom» brukar (? utan namn/e-post).
-    [loading, user, pick, pin, feil, findAnsatt]
+    [loading, user, pick, pin, feil, findAnsatt, laastTil]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
