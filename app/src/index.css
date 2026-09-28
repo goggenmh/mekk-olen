@@ -60,6 +60,24 @@
   --glow-brand: none;
   --body-img: none;
   --ring: rgba(17, 120, 138, 0.28);
+  /* Innlogging (følgjer lys/mørk) – lys drakt */
+  --login-bg:
+    radial-gradient(900px 500px at 50% -8%, rgba(17,120,138,0.14), transparent 60%),
+    radial-gradient(700px 520px at 88% 112%, rgba(200,129,26,0.10), transparent 55%),
+    linear-gradient(170deg,#f3f7f6 0%,#eaf1f0 60%,#eef3f2 100%);
+  --login-text: #14202a;
+  --login-sub: #65727d;
+  --login-faint: #8a97a0;
+  --login-accent: #11788a;
+  --login-accent-2: #11788a;
+  --login-card-bg: #ffffff;
+  --login-card-border: #e8ecea;
+  --login-card-shadow: 0 24px 60px rgba(16,33,40,0.14);
+  --login-surface: #f6f8f7;
+  --login-surface-border: #e8ecea;
+  --login-surface-hover: #eef3f2;
+  --login-pin-bg: #f6f8f7;
+  --login-error: #c0392b;
   color-scheme: light;
 }
 
@@ -119,6 +137,24 @@
   --glow-brand: 0 0 22px rgba(32, 201, 184, 0.32);
   --body-img: radial-gradient(900px 520px at 82% -10%, rgba(32, 201, 184, 0.12), transparent 60%), radial-gradient(720px 520px at -8% 6%, rgba(43, 120, 255, 0.07), transparent 55%);
   --ring: rgba(32, 201, 184, 0.4);
+  /* Innlogging – mørk drakt */
+  --login-bg:
+    radial-gradient(900px 500px at 50% -6%, rgba(43,182,201,0.26), transparent 60%),
+    radial-gradient(700px 520px at 88% 112%, rgba(198,126,30,0.18), transparent 55%),
+    linear-gradient(160deg,#0a1f30 0%,#0e2c42 55%,#0b2334 100%);
+  --login-text: #eaf6f8;
+  --login-sub: #9cc0cc;
+  --login-faint: #7fb3c1;
+  --login-accent: #20c9b8;
+  --login-accent-2: #5ee0d2;
+  --login-card-bg: rgba(255,255,255,0.07);
+  --login-card-border: rgba(255,255,255,0.14);
+  --login-card-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  --login-surface: rgba(255,255,255,0.06);
+  --login-surface-border: rgba(255,255,255,0.14);
+  --login-surface-hover: rgba(255,255,255,0.12);
+  --login-pin-bg: rgba(255,255,255,0.05);
+  --login-error: #ff9b8f;
   color-scheme: dark;
 }
 
@@ -191,8 +227,8 @@ button:active {
 .pinkey:hover { background: var(--brand) !important; color: #fff !important; border-color: var(--brand) !important; }
 
 /* Innlogging – glass-terminal (konsept D) */
-.glassrow:hover { background: rgba(255,255,255,0.14) !important; border-color: rgba(255,255,255,0.24) !important; }
-.glasskey:hover { background: rgba(32,201,184,0.30) !important; border-color: rgba(32,201,184,0.6) !important; }
+.glassrow:hover { background: var(--login-surface-hover) !important; border-color: var(--login-accent) !important; }
+.glasskey:hover { background: var(--login-surface-hover) !important; border-color: var(--login-accent) !important; }
 @keyframes loginShake {
   0%,100% { transform: translateX(0); }
   20%,60% { transform: translateX(-6px); }
@@ -202,7 +238,7 @@ button:active {
 @keyframes loginspin { to { transform: rotate(360deg); } }
 .loginspinner {
   width: 30px; height: 30px; margin: 0 auto; border-radius: 50%;
-  border: 3px solid rgba(255,255,255,0.14); border-top-color: #20c9b8;
+  border: 3px solid var(--login-surface-border); border-top-color: var(--login-accent);
   animation: loginspin 0.7s linear infinite;
 }
 
