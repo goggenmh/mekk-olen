@@ -202,14 +202,17 @@ function WeekTable({
 }) {
   const { ansatte } = useAnsatte();
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'auto' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'auto', boxShadow: 'var(--shadow-card)' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ background: 'var(--surface-alt)' }}>
-            <th style={{ ...th, textAlign: 'left' }}>Tilsett</th>
-            {dates.map((d) => (
-              <th key={d} style={{ ...th, textAlign: 'center' }}>{UKE_KORT[weekdayIdx(d)]} {parseDate(d).getDate()}</th>
-            ))}
+            <th style={{ ...th, textAlign: 'left', paddingLeft: 18 }}>Tilsett</th>
+            {dates.map((d) => {
+              const erIdag = d === today();
+              return (
+                <th key={d} style={{ ...th, textAlign: 'center', background: erIdag ? 'var(--brand-soft)' : undefined, color: erIdag ? 'var(--brand-strong)' : 'var(--text-label)' }}>{UKE_KORT[weekdayIdx(d)]} {parseDate(d).getDate()}</th>
+              );
+            })}
             <th style={{ ...th, textAlign: 'right' }}>Totalt</th>
             <th style={{ ...th, textAlign: 'center' }}>Status</th>
             {maaGodkjenne && <th style={th}></th>}
@@ -224,13 +227,19 @@ function WeekTable({
             const status = !harTimar ? 'tom' : ventarN > 0 ? 'venter' : 'godkjent';
             return (
               <tr key={a.id} style={{ borderTop: '1px solid var(--divider)' }}>
-                <td style={{ ...td, fontWeight: 600 }}>{a.navn}</td>
+                <td style={{ ...td, paddingLeft: 18 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ width: 26, height: 26, borderRadius: 8, background: a.farge, color: '#fff', fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{a.init}</span>
+                    <span style={{ fontWeight: 700 }}>{a.navn}</span>
+                  </div>
+                </td>
                 {dates.map((d, i) => {
                   const es = dagBolkar[i];
                   const dagSum = es.reduce((s2, e) => s2 + timar(e), 0);
                   const dagVentar = es.some((e) => e.status === 'venter');
+                  const erIdag = d === today();
                   return (
-                    <td key={d} style={{ ...td, textAlign: 'center', cursor: 'pointer' }} onClick={() => onCellClick(a.id, d)}>
+                    <td key={d} style={{ ...td, textAlign: 'center', cursor: 'pointer', background: erIdag ? 'var(--brand-soft)' : undefined }} onClick={() => onCellClick(a.id, d)}>
                       {es.length > 0 ? (
                         <div style={{ lineHeight: 1.15 }}>
                           <span style={{ fontFamily: "'Geist Mono'", fontWeight: 600, color: dagVentar ? '#b7830b' : 'var(--text)' }}>{fmt(dagSum)}</span>
@@ -247,8 +256,8 @@ function WeekTable({
                   {sum > 37.5 && <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--danger)', marginLeft: 5 }}>+{fmt(sum - 37.5)}</span>}
                 </td>
                 <td style={{ ...td, textAlign: 'center' }}>
-                  {status === 'godkjent' && <span title="Alle timar godkjende" style={{ color: '#2f9e6f', fontWeight: 800 }}>✓</span>}
-                  {status === 'venter' && <span title={`${ventarN} ventar godkjenning`} style={{ color: '#d8920f', fontWeight: 800 }}>!</span>}
+                  {status === 'godkjent' && <span title="Alle timar godkjende" style={{ fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: 'rgba(47,158,111,0.15)', color: '#2f9e6f' }}>Godkjend</span>}
+                  {status === 'venter' && <span title={`${ventarN} ventar godkjenning`} style={{ fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: 'var(--accent-soft)', color: 'var(--accent)' }}>Ventar</span>}
                   {status === 'tom' && <span style={{ color: 'var(--text-faint2)' }}>–</span>}
                 </td>
                 {maaGodkjenne && (
