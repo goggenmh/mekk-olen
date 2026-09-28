@@ -1,26 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg: #f3f5f4;
+  --bg: #f4f7f6;
   --surface: #ffffff;
   --surface-alt: #f6f8f7;
   --surface-soft: #f1f4f3;
-  --border: #e6eae8;
-  --divider: #eef1ef;
+  --border: #e8ecea;
+  --divider: #eef2f0;
   --danger-border: #ecc9c2;
-  --text: #18232e;
-  --text-secondary: #56656f;
-  --text-muted: #65727d;
+  --text: #14202a;
+  --text-secondary: #465561;
+  --text-muted: #7a8791;
   --text-label: #6e7d88;
   --text-faint: #93a1ab;
-  --text-faint2: #c3ced5;
+  --text-faint2: #aab4bb;
   --danger: #c0392b;
-  --accent: #c67e1e;
-  --accent-soft: #f7edda;
+  --accent: #c8811a;
+  --accent-soft: #fbf1de;
   --modal-overlay: rgba(12, 36, 54, 0.5);
   --brand: #11788a;
   --brand-strong: #0c5a69;
-  --brand-soft: #e6f3f5;
+  --brand-soft: #e7f3f4;
   /* Raude dagar (utilgjengeleg + heilagdagar) og "halve" dagar (gul) */
   --dag-raud-bg: rgba(192, 57, 43, 0.055);
   --dag-raud-border: rgba(192, 57, 43, 0.35);
@@ -30,51 +30,58 @@
   --dag-amber-tekst: #a6631a;
   --dag-raud-sterk: rgba(192, 57, 43, 0.13);
   --dag-amber-sterk: rgba(198, 126, 30, 0.15);
-  --shadow-card: 0 1px 2px rgba(16, 40, 50, 0.04), 0 6px 18px rgba(16, 40, 50, 0.045);
-  --shadow-hover: 0 2px 4px rgba(16, 40, 50, 0.06), 0 12px 28px rgba(16, 40, 50, 0.10);
-  /* Mørkeblå ramme (sidemeny + topplinje) i lys modus */
-  --rail-bg: linear-gradient(180deg, #0c2436, #0e2c42);
-  --rail-bg-solid: #0e2c42;
-  --rail-fg: #a8bcc7;
-  --rail-section: #5d7686;
-  --rail-active-bg: rgba(43, 182, 201, 0.16);
-  --rail-active-fg: #6fe0ef;
-  --rail-brand: #eaf3f6;
-  --rail-brand-sub: #6f93a1;
-  --rail-border: rgba(255, 255, 255, 0.08);
-  --topbar-bg: #0c2436;
-  --topbar-name: #eaf3f6;
-  --topbar-role: #7fa1b0;
-  --topbar-ctl-bg: rgba(255, 255, 255, 0.08);
-  --topbar-ctl-border: rgba(255, 255, 255, 0.14);
-  --topbar-ctl-fg: #9fb4c0;
-  --radius-sm: 9px;
-  --radius-md: 12px;
-  --radius-lg: 14px;
+  --shadow-card: 0 1px 2px rgba(16, 33, 40, 0.05), 0 8px 22px rgba(16, 33, 40, 0.05);
+  --shadow-hover: 0 2px 6px rgba(16, 33, 40, 0.07), 0 16px 36px rgba(16, 33, 40, 0.10);
+  /* Lys, forfina sidemeny + topplinje (premium) i lys modus */
+  --rail-bg: #ffffff;
+  --rail-bg-solid: #ffffff;
+  --rail-fg: #465561;
+  --rail-section: #aab4bb;
+  --rail-active-bg: #e7f3f4;
+  --rail-active-fg: #0c5a69;
+  --rail-brand: #14202a;
+  --rail-brand-sub: #7a8791;
+  --rail-border: #e8ecea;
+  --topbar-bg: #ffffff;
+  --topbar-name: #14202a;
+  --topbar-role: #7a8791;
+  --topbar-ctl-bg: #f6f8f7;
+  --topbar-ctl-border: #e8ecea;
+  --topbar-ctl-fg: #56656f;
+  --radius-sm: 10px;
+  --radius-md: 13px;
+  --radius-lg: 16px;
+  /* Nye felles tokens */
+  --hero-grad: linear-gradient(140deg, #0f6f80, #0b525f 72%);
+  --hero-fg: #eafaff;
+  --hero-sub: #bfe3e9;
+  --glow-brand: none;
+  --body-img: none;
+  --ring: rgba(17, 120, 138, 0.28);
   color-scheme: light;
 }
 
 [data-theme='dark'] {
-  --bg: #0c131c;
-  --surface: #182230;
-  --surface-alt: #1e2a38;
-  --surface-soft: #1a2530;
-  --border: #2b3a48;
-  --divider: #25323f;
+  --bg: #0b0f11;
+  --surface: #151c20;
+  --surface-alt: #161d21;
+  --surface-soft: #12181b;
+  --border: #232c31;
+  --divider: #232c31;
   --danger-border: #6e3530;
-  --text: #eef3f6;
-  --text-secondary: #c1ccd3;
-  --text-muted: #8ea0aa;
+  --text: #eef4f3;
+  --text-secondary: #b4c2c6;
+  --text-muted: #7f8f95;
   --text-label: #9fb0b9;
   --text-faint: #647580;
   --text-faint2: #4d5d67;
-  --danger: #e0584a;
-  --accent: #d9954a;
-  --accent-soft: #382c1a;
-  --modal-overlay: rgba(0, 0, 0, 0.6);
-  --brand: #2bb6c9;
-  --brand-strong: #5fd0df;
-  --brand-soft: #142e36;
+  --danger: #ff6b6b;
+  --accent: #f4b740;
+  --accent-soft: rgba(244, 183, 64, 0.14);
+  --modal-overlay: rgba(0, 0, 0, 0.66);
+  --brand: #20c9b8;
+  --brand-strong: #5ee0d2;
+  --brand-soft: rgba(32, 201, 184, 0.13);
   /* Raude/gule dagar – lysare tekst og litt sterkare tint i mørk modus */
   --dag-raud-bg: rgba(224, 88, 74, 0.15);
   --dag-raud-border: rgba(224, 88, 74, 0.42);
@@ -84,24 +91,30 @@
   --dag-amber-tekst: #e6b06a;
   --dag-raud-sterk: rgba(224, 88, 74, 0.24);
   --dag-amber-sterk: rgba(217, 149, 74, 0.24);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.25), 0 6px 18px rgba(0, 0, 0, 0.22);
-  --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 28px rgba(0, 0, 0, 0.32);
-  /* I mørk modus følgjer ramma den vanlege mørke flata */
-  --rail-bg: #182230;
-  --rail-bg-solid: #182230;
-  --rail-fg: #c1ccd3;
-  --rail-section: #647580;
-  --rail-active-bg: #142e36;
-  --rail-active-fg: #5fd0df;
-  --rail-brand: #5fd0df;
-  --rail-brand-sub: #647580;
-  --rail-border: #25323f;
-  --topbar-bg: #182230;
-  --topbar-name: #eef3f6;
-  --topbar-role: #8ea0aa;
-  --topbar-ctl-bg: #1e2a38;
-  --topbar-ctl-border: #2b3a48;
-  --topbar-ctl-fg: #c1ccd3;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 26px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.4), 0 18px 40px rgba(0, 0, 0, 0.4);
+  /* Mørk glass-ramme med teal-glød */
+  --rail-bg: linear-gradient(180deg, #151c20, #0d1214);
+  --rail-bg-solid: #12181b;
+  --rail-fg: #b4c2c6;
+  --rail-section: #5a6a70;
+  --rail-active-bg: rgba(32, 201, 184, 0.16);
+  --rail-active-fg: #7ff0e4;
+  --rail-brand: #eafffb;
+  --rail-brand-sub: #7f8f95;
+  --rail-border: #232c31;
+  --topbar-bg: #0e1417;
+  --topbar-name: #eef4f3;
+  --topbar-role: #7f8f95;
+  --topbar-ctl-bg: #151c20;
+  --topbar-ctl-border: #232c31;
+  --topbar-ctl-fg: #b4c2c6;
+  --hero-grad: linear-gradient(135deg, #12a294, #0e7d73);
+  --hero-fg: #eafffb;
+  --hero-sub: #bfeee7;
+  --glow-brand: 0 0 22px rgba(32, 201, 184, 0.32);
+  --body-img: radial-gradient(900px 520px at 82% -10%, rgba(32, 201, 184, 0.12), transparent 60%), radial-gradient(720px 520px at -8% 6%, rgba(43, 120, 255, 0.07), transparent 55%);
+  --ring: rgba(32, 201, 184, 0.4);
   color-scheme: dark;
 }
 
@@ -118,6 +131,8 @@ html, body, #root {
 body {
   font-family: 'Geist', system-ui, sans-serif;
   background: var(--bg);
+  background-image: var(--body-img);
+  background-attachment: fixed;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   transition: background 0.15s ease, color 0.15s ease;
