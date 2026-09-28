@@ -144,7 +144,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
               <div style={{ position: 'absolute', top: '130%', right: 0, width: 300, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, boxShadow: '0 12px 30px rgba(0,0,0,0.18)', overflow: 'hidden', zIndex: 50 }}>
                 <div style={{ padding: '11px 14px', borderBottom: '1px solid var(--divider)', fontSize: 12, fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', color: 'var(--text-label)' }}>Varsel</div>
                 {varsler.length === 0 ? (
-                  <div style={{ padding: '18px 14px', fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>Ingen nye varsel 🎉</div>
+                  <div style={{ padding: '18px 14px', fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>Ingen nye varsel</div>
                 ) : (
                   varsler.map((v) => (
                     <button

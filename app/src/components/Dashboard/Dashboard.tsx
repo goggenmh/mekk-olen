@@ -81,7 +81,8 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const kommendeVakter = weekDays
     .filter((d) => d >= t)
     .map((d) => ({ dato: d, vakter: shifts.filter((s) => s.date === d).slice().sort((a, b) => (a.start < b.start ? -1 : 1)) }))
-    .filter((g) => g.vakter.length > 0);
+    .filter((g) => g.vakter.length > 0)
+    .slice(0, 4);
 
   // ---- neste vakt for innlogga brukar ----
   const mineFramtidige = shifts
@@ -142,11 +143,11 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   ];
 
   return (
-    <div style={{ padding: isMobile ? 18 : 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ padding: isMobile ? '16px 16px 28px' : '24px 28px 34px', display: 'flex', flexDirection: 'column', gap: 15 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: isMobile ? 24 : 30, letterSpacing: '-0.6px' }}>
-            {helsing}, <span style={{ background: 'linear-gradient(120deg, var(--brand), var(--brand-strong))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{fornamn}</span> 👋
+            {helsing}, <span style={{ background: 'linear-gradient(120deg, var(--brand), var(--brand-strong))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{fornamn}</span>
           </div>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4 }}>{fullDatoTekst(t)}</div>
         </div>
@@ -212,15 +213,15 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
               <div style={{ fontSize: 14, color: 'var(--hero-sub)', fontWeight: 500, textTransform: 'capitalize' }}>{nesteVakt.skift || 'Vakt'}</div>
               <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
                 {nesteKollegaer.length > 0 && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 11, fontSize: 13, fontWeight: 600 }}>👥 Saman med {nesteKollegaer.join(' & ')}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 11, fontSize: 13, fontWeight: 600 }}><Icon name="user" size={14} /> Saman med {nesteKollegaer.join(' & ')}</span>
                 )}
                 {startOm && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 11, fontSize: 13, fontWeight: 600 }}>⏳ {startOm}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 11, fontSize: 13, fontWeight: 600 }}><Icon name="timeliste" size={14} /> {startOm}</span>
                 )}
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 15, color: 'var(--hero-sub)', marginTop: 16, fontWeight: 500 }}>Ingen komande vakt planlagt denne veka. Nyt fridagen! 🌿</div>
+            <div style={{ fontSize: 15, color: 'var(--hero-sub)', marginTop: 16, fontWeight: 500 }}>Ingen komande vakt planlagt denne veka.</div>
           )}
         </div>
 
@@ -240,9 +241,9 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.7fr 1fr', gap: 18, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.7fr 1fr', gap: 15, alignItems: 'start' }}>
         {/* hovudkolonne */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18, minWidth: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 15, minWidth: 0 }}>
           {varsler.length > 0 && (
             <div style={cardStyle}>
               <div style={labelStyle}>Varslingssenter</div>
@@ -274,7 +275,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 15, alignItems: 'start' }}>
             {/* Denne uka */}
             <div style={cardStyle}>
               <div style={labelStyle}>Denne uka</div>
@@ -334,7 +335,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
           {/* Oppgåver */}
           <div style={cardStyle}>
             <div style={labelStyle}>Oppgåver</div>
-            {opneListe.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen opne oppgåver 🎉</div>}
+            {opneListe.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen opne oppgåver.</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {opneListe.map((o) => {
                 const forfalle = !!o.frist && o.frist < t;
@@ -361,7 +362,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
 
         {/* rail */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18, minWidth: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 15, minWidth: 0 }}>
           <div style={cardStyle}>
             <div style={labelStyle}>Ansatte</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
