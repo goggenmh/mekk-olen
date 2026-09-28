@@ -13,8 +13,8 @@ import { TaskModal } from '../Oppgaver/TaskModal';
 import { OrderModal } from '../Bestillinger/OrderModal';
 import type { View } from '../../lib/view';
 
-const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', boxShadow: 'var(--shadow-card)' } as const;
-const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 12 } as const;
+const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', boxShadow: 'var(--shadow-card)' } as const;
+const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 9 } as const;
 const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 const PRI_RANG: Record<string, number> = { høg: 0, medium: 1, låg: 2 };
 
@@ -117,7 +117,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
       if (!!a.frist !== !!b.frist) return a.frist ? -1 : 1;
       return (PRI_RANG[a.prioritet] ?? 1) - (PRI_RANG[b.prioritet] ?? 1);
     })
-    .slice(0, 6);
+    .slice(0, 5);
 
   // ---- i dag: opne/steng ----
   const wi = weekdayIdx(t);
@@ -160,18 +160,18 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
       </div>
 
       {/* hurtighandlingar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12 }}>
         {hurtighandlinger.map((h) => (
           <button
             key={h.key}
             className="hoverable"
             onClick={() => setQuickAction(h.key)}
             style={{
-              display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', background: 'var(--surface)',
-              border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', cursor: 'pointer', boxShadow: 'var(--shadow-card)',
+              display: 'flex', alignItems: 'center', gap: 11, textAlign: 'left', background: 'var(--surface)',
+              border: '1px solid var(--border)', borderRadius: 14, padding: '11px 14px', cursor: 'pointer', boxShadow: 'var(--shadow-card)',
             }}
           >
-            <span style={{ width: 42, height: 42, borderRadius: 13, background: h.primary ? 'var(--accent-soft)' : 'var(--brand-soft)', color: h.primary ? 'var(--accent)' : 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={h.ikon} size={21} /></span>
+            <span style={{ width: 34, height: 34, borderRadius: 11, background: h.primary ? 'var(--accent-soft)' : 'var(--brand-soft)', color: h.primary ? 'var(--accent)' : 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={h.ikon} size={18} /></span>
             <span style={{ fontSize: 13.5, fontWeight: 700 }}>{h.tekst}</span>
           </button>
         ))}
@@ -184,7 +184,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             const nyRad = isMobile ? i >= 2 : false;
             const forsteIKol = isMobile ? i % 2 === 0 : i === 0;
             return (
-              <div key={k.lab} style={{ padding: '16px 20px', borderLeft: forsteIKol ? 'none' : '1px solid var(--divider)', borderTop: nyRad ? '1px solid var(--divider)' : 'none' }}>
+              <div key={k.lab} style={{ padding: '13px 18px', borderLeft: forsteIKol ? 'none' : '1px solid var(--divider)', borderTop: nyRad ? '1px solid var(--divider)' : 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
                   <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Geist Mono'", color: 'var(--brand-strong)', letterSpacing: '-0.5px' }}>{k.verdi}</div>
                   {k.trend !== null && (
@@ -201,17 +201,17 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
       </div>
 
       {/* Neste vakt + timar per dag */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: 18 }}>
-        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, padding: isMobile ? '18px 20px' : '22px 24px', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 12px 32px rgba(12, 90, 105, 0.28)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: 15 }}>
+        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, padding: isMobile ? '15px 18px' : '17px 22px', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 12px 32px rgba(12, 90, 105, 0.28)' }}>
           <span style={{ position: 'absolute', right: -60, top: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 68%)', pointerEvents: 'none' }} />
           <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', background: 'rgba(255,255,255,0.16)', padding: '5px 11px', borderRadius: 20 }}>
             Neste vakt {nesteVakt ? (nesteVakt.date === t ? '· I dag' : `· ${datoKort(nesteVakt.date)}`) : ''}
           </span>
           {nesteVakt ? (
             <>
-              <div style={{ fontFamily: "'Geist Mono'", fontSize: isMobile ? 32 : 40, fontWeight: 600, letterSpacing: '-1px', margin: '12px 0 2px' }}>{nesteVakt.start} – {nesteVakt.slutt}</div>
-              <div style={{ fontSize: 14, color: 'var(--hero-sub)', fontWeight: 500, textTransform: 'capitalize' }}>{nesteVakt.skift || 'Vakt'}</div>
-              <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
+              <div style={{ fontFamily: "'Geist Mono'", fontSize: isMobile ? 30 : 34, fontWeight: 600, letterSpacing: '-1px', margin: '8px 0 1px' }}>{nesteVakt.start} – {nesteVakt.slutt}</div>
+              <div style={{ fontSize: 13.5, color: 'var(--hero-sub)', fontWeight: 500, textTransform: 'capitalize' }}>{nesteVakt.skift || 'Vakt'}</div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 13, flexWrap: 'wrap' }}>
                 {nesteKollegaer.length > 0 && (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 11, fontSize: 13, fontWeight: 600 }}><Icon name="user" size={14} /> Saman med {nesteKollegaer.join(' & ')}</span>
                 )}
@@ -227,7 +227,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
 
         <div style={cardStyle}>
           <div style={labelStyle}>Timar per dag</div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 94 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 78 }}>
             {timarPerDag.map(({ d, t: tt }) => {
               const erIdag = d === t;
               return (
