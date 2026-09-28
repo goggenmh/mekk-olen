@@ -33,6 +33,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       const email = data.session?.user?.email;
       const match = email ? alleAnsatte.find((a) => a.email === email) : null;
+      // Foreldrelaus økt (ingen ansatt med den e-posten) – tøm ho lokalt så
+      // ho ikkje ligg i vegen for neste innlogging.
+      if (email && !match && alleAnsatte.length > 0) {
+        supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+      }
       setUser(match ?? null);
       setLoading(false);
     });
@@ -51,9 +56,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const erFeilPin = (e: { message?: string } | null) => !!e && /invalid login credentials/i.test(e.message || '');
     try {
       let { error } = await supabase.auth.signInWithPassword(creds);
-      // Mellombels feil (auth-klienten ikkje klar, nettverk) – prøv ein gong til
-      // før vi gir opp, slik at ein rett PIN ikkje blir avvist ved uhell.
+      // Mellombels feil (auth-klienten ikkje klar, ei gammal økt i klemme,
+      // nettverk) – tøm den lokale økta og prøv ein gong til, slik at ein
+      // rett PIN ikkje blir avvist ved uhell.
       if (error && !erFeilPin(error)) {
+        await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
         await new Promise((r) => setTimeout(r, 400));
         ({ error } = await supabase.auth.signInWithPassword(creds));
       }
