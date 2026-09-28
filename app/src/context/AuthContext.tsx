@@ -55,12 +55,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const creds = { email: employee.email, password: pinToPassword(candidatePin) };
     const erFeilPin = (e: { message?: string } | null) => !!e && /invalid login credentials/i.test(e.message || '');
     try {
+      // Start alltid frå rein tilstand. Ei gammal økt som ligg lagra i
+      // nettlesaren (typisk Georg, som oftast er den innlogga) kan elles
+      // kollidere med ny innlogging og få rett PIN til å bli avvist.
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
       let { error } = await supabase.auth.signInWithPassword(creds);
-      // Mellombels feil (auth-klienten ikkje klar, ei gammal økt i klemme,
-      // nettverk) – tøm den lokale økta og prøv ein gong til, slik at ein
-      // rett PIN ikkje blir avvist ved uhell.
+      // Mellombels feil (auth-klienten ikkje klar, nettverk) – prøv ein gong
+      // til, slik at ein rett PIN ikkje blir avvist ved uhell.
       if (error && !erFeilPin(error)) {
-        await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
         await new Promise((r) => setTimeout(r, 400));
         ({ error } = await supabase.auth.signInWithPassword(creds));
       }
