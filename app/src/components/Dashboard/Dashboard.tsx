@@ -241,27 +241,9 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.7fr 1fr', gap: 15, alignItems: 'start' }}>
-        {/* hovudkolonne */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 15, minWidth: 0 }}>
-          {varsler.length > 0 && (
-            <div style={cardStyle}>
-              <div style={labelStyle}>Varslingssenter</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {varsler.map((v) => (
-                  <button
-                    key={v.key}
-                    onClick={() => setView(v.view)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '10px 13px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
-                  >
-                    <span style={{ display: 'flex', color: 'var(--brand-strong)', flex: 'none' }}><Icon name="bell" size={16} /></span>
-                    {v.tekst}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 14, alignItems: 'start' }}>
+        {/* Kolonne 1: meldingar, varsel, kommande vakter */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
           {mineMeldinger.length > 0 && (
             <div style={cardStyle}>
               <div style={labelStyle}>Meldingar frå leiinga</div>
@@ -275,64 +257,80 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 15, alignItems: 'start' }}>
-            {/* Denne uka */}
+          {varsler.length > 0 && (
             <div style={cardStyle}>
-              <div style={labelStyle}>Denne uka</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-                {timarPerAnsatt.map(({ a, t: tt }) => (
-                  <div key={a.id}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 4 }}>
-                      <span style={{ fontWeight: 600 }}>{a.navn}</span>
-                      <span style={{ fontFamily: "'Geist Mono'", color: 'var(--text-muted)' }}>{fmt(tt)} t</span>
-                    </div>
-                    <div style={{ height: 8, borderRadius: 6, background: 'var(--surface-alt)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${(tt / maxTimar) * 100}%`, background: a.farge, borderRadius: 6 }} />
-                    </div>
-                  </div>
+              <div style={labelStyle}>Varslingssenter</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {varsler.map((v) => (
+                  <button
+                    key={v.key}
+                    onClick={() => setView(v.view)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '9px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', fontSize: 12.5, fontWeight: 600 }}
+                  >
+                    <span style={{ display: 'flex', color: 'var(--brand-strong)', flex: 'none' }}><Icon name="bell" size={15} /></span>
+                    {v.tekst}
+                  </button>
                 ))}
-                {dagDef && (apnTid || stengTid) && (
-                  <div style={{ display: 'flex', gap: 14, marginTop: 4, fontSize: 12, color: 'var(--text-muted)' }}>
-                    {apnTid && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Icon name="open" size={14} /> {apnTid}</span>}
-                    {stengTid && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Icon name="close" size={14} /> {stengTid}</span>}
-                  </div>
-                )}
               </div>
             </div>
+          )}
 
-            {/* Kommande vakter */}
-            <div style={cardStyle}>
-              <div style={labelStyle}>Kommande vakter</div>
-              {kommendeVakter.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen planlagte vakter denne veka.</div>}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {kommendeVakter.map((g) => {
-                  const erIDag = g.dato === t;
-                  return (
-                    <div key={g.dato} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                      <div style={{ flex: 'none', width: 46, textAlign: 'center', padding: '6px 0', borderRadius: 10, background: erIDag ? 'var(--brand-soft)' : 'var(--surface-alt)', border: '1px solid var(--border)' }}>
-                        <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)' }}>{UKE_KORT[weekdayIdx(g.dato)]}</div>
-                        <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(g.dato).getDate()}</div>
-                      </div>
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 1 }}>
-                        {g.vakter.map((s) => {
-                          const a = findAnsatt(s.ansatt);
-                          return (
-                            <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ width: 9, height: 9, borderRadius: '50%', background: a.farge, flex: 'none' }} />
-                              <span style={{ fontSize: 13, fontWeight: 600 }}>{a.navn}</span>
-                              <span style={{ marginLeft: 'auto', fontFamily: "'Geist Mono'", fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)' }}>{s.start}–{s.slutt}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
+          <div style={cardStyle}>
+            <div style={labelStyle}>Kommande vakter</div>
+            {kommendeVakter.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen planlagte vakter denne veka.</div>}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+              {kommendeVakter.map((g) => {
+                const erIDag = g.dato === t;
+                return (
+                  <div key={g.dato} style={{ display: 'flex', gap: 11, alignItems: 'flex-start' }}>
+                    <div style={{ flex: 'none', width: 44, textAlign: 'center', padding: '5px 0', borderRadius: 10, background: erIDag ? 'var(--brand-soft)' : 'var(--surface-alt)', border: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)' }}>{UKE_KORT[weekdayIdx(g.dato)]}</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(g.dato).getDate()}</div>
                     </div>
-                  );
-                })}
-              </div>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5, paddingTop: 1, minWidth: 0 }}>
+                      {g.vakter.map((s) => {
+                        const a = findAnsatt(s.ansatt);
+                        return (
+                          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: a.farge, flex: 'none' }} />
+                            <span style={{ fontSize: 12.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.navn}</span>
+                            <span style={{ marginLeft: 'auto', fontFamily: "'Geist Mono'", fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', flex: 'none' }}>{s.start}–{s.slutt}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Kolonne 2: denne uka + oppgåver */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+          <div style={cardStyle}>
+            <div style={labelStyle}>Denne uka</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {timarPerAnsatt.map(({ a, t: tt }) => (
+                <div key={a.id}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 4 }}>
+                    <span style={{ fontWeight: 600 }}>{a.navn}</span>
+                    <span style={{ fontFamily: "'Geist Mono'", color: 'var(--text-muted)' }}>{fmt(tt)} t</span>
+                  </div>
+                  <div style={{ height: 7, borderRadius: 6, background: 'var(--surface-alt)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${(tt / maxTimar) * 100}%`, background: a.farge, borderRadius: 6 }} />
+                  </div>
+                </div>
+              ))}
+              {dagDef && (apnTid || stengTid) && (
+                <div style={{ display: 'flex', gap: 14, marginTop: 2, fontSize: 12, color: 'var(--text-muted)' }}>
+                  {apnTid && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Icon name="open" size={14} /> {apnTid}</span>}
+                  {stengTid && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Icon name="close" size={14} /> {stengTid}</span>}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Oppgåver */}
           <div style={cardStyle}>
             <div style={labelStyle}>Oppgåver</div>
             {opneListe.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen opne oppgåver.</div>}
@@ -348,9 +346,9 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                     <span style={{ display: 'flex', color: forfalle ? 'var(--danger)' : 'var(--text-faint)', flex: 'none' }}>
                       <Icon name={forfalle ? 'alert' : 'oppgaver'} size={16} />
                     </span>
-                    <span style={{ flex: 1, fontSize: 13 }}>{o.tittel}</span>
+                    <span style={{ flex: 1, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.tittel}</span>
                     {o.frist && (
-                      <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 9, color: forfalle ? '#fff' : 'var(--text-muted)', background: forfalle ? 'var(--danger)' : 'var(--surface-alt)' }}>
+                      <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 9, color: forfalle ? '#fff' : 'var(--text-muted)', background: forfalle ? 'var(--danger)' : 'var(--surface-alt)', flex: 'none' }}>
                         {forfalle ? 'Forfalt' : datoKort(o.frist)}
                       </span>
                     )}
@@ -361,34 +359,34 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
           </div>
         </div>
 
-        {/* rail */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 15, minWidth: 0 }}>
+        {/* Kolonne 3: ansatte + ferie */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
           <div style={cardStyle}>
             <div style={labelStyle}>Ansatte</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {ansatte.map((a) => {
                 const paJobb = jobbarIdagIds.includes(a.id);
                 return (
                   <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 9, height: 9, borderRadius: '50%', flex: 'none', background: paJobb ? 'var(--brand)' : 'var(--border)' }} />
-                    <Avatar init={a.init} farge={a.farge} size={28} fontSize={10.5} />
-                    <span style={{ fontSize: 13.5, fontWeight: 600, flex: 1 }}>{a.navn}</span>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{paJobb ? 'På jobb' : 'Fri'}</span>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', background: paJobb ? 'var(--brand)' : 'var(--border)' }} />
+                    <Avatar init={a.init} farge={a.farge} size={26} fontSize={10} />
+                    <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>{a.navn}</span>
+                    <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{paJobb ? 'På jobb' : 'Fri'}</span>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          <div style={{ borderRadius: 16, padding: '16px 18px', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 10px 30px rgba(12,90,105,0.28)' }}>
+          <div style={{ borderRadius: 16, padding: '14px 16px', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 10px 30px rgba(12,90,105,0.28)' }}>
             <div style={{ ...labelStyle, color: 'var(--hero-sub)' }}>Ferie &amp; fri på trappene</div>
             {dashFerie.length === 0 && <div style={{ fontSize: 13, color: 'var(--hero-sub)' }}>Ingen registrert.</div>}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {dashFerie.map((f) => {
                 const a = findAnsatt(f.ansatt);
                 return (
                   <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Avatar init={a.init} farge={a.farge} size={28} fontSize={10.5} />
+                    <Avatar init={a.init} farge={a.farge} size={26} fontSize={10} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{a.navn}</div>
                       <div style={{ fontSize: 11.5, color: 'var(--hero-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.fra ? datoIntervall(f.fra, f.til) : (f.tekst || '—')}</div>
