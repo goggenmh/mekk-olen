@@ -20,7 +20,13 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { alleAnsatte, findAnsatt } = useAnsatte();
+  // Innlogginga byggjer på loginAnsatte (økt-uavhengig liste med alle
+  // aktive tilsette på tvers av butikkar), ikkje den RLS-avgrensa
+  // alleAnsatte – elles kan ei foreldrelaus økt tømme lista midt i
+  // innlogginga.
+  const { loginAnsatte } = useAnsatte();
+  const findAnsatt = (id: string | null | undefined): Employee | undefined =>
+    loginAnsatte.find((a) => a.id === id);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<Employee | null>(null);
   const [pick, setPick] = useState<Employee | null>(null);
@@ -35,10 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       const email = data.session?.user?.email;
-      const match = email ? alleAnsatte.find((a) => a.email === email) : null;
+      const match = email ? loginAnsatte.find((a) => a.email === email) : null;
       // Foreldrelaus økt (ingen ansatt med den e-posten) – tøm ho lokalt så
       // ho ikkje ligg i vegen for neste innlogging.
-      if (email && !match && alleAnsatte.length > 0) {
+      if (email && !match && loginAnsatte.length > 0) {
         supabase.auth.signOut({ scope: 'local' }).catch(() => {});
       }
       setUser(match ?? null);
@@ -46,11 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       const email = session?.user?.email;
-      const match = email ? alleAnsatte.find((a) => a.email === email) : null;
+      const match = email ? loginAnsatte.find((a) => a.email === email) : null;
       setUser(match ?? null);
     });
     return () => sub.subscription.unsubscribe();
-  }, [alleAnsatte]);
+  }, [loginAnsatte]);
 
   const tryLogin = async (employee: Employee, candidatePin: string) => {
     if (submitting.current) return;
@@ -105,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       pickUser: (id: string) => {
         const emp = findAnsatt(id);
         // Ikkje vel ein ukjend/tom brukar (kan skje viss lista ikkje er lasta).
-        if (!emp.email) return;
+        if (!emp || !emp.email) return;
         setPick(emp);
         setPin('');
         setFeil(null);
@@ -138,9 +144,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPin('');
       },
     }),
-    // findAnsatt MÅ vere med: elles brukar pickUser eit utdatert oppslag frå
-    // før ansattlista var lasta, og vel ein «tom» brukar (? utan namn/e-post).
-    [loading, user, pick, pin, feil, findAnsatt, laastTil]
+    // loginAnsatte MÅ vere med: elles brukar pickUser eit utdatert oppslag
+    // frå før lista var lasta, og vel ein «tom» brukar (? utan namn/e-post).
+    [loading, user, pick, pin, feil, loginAnsatte, laastTil]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

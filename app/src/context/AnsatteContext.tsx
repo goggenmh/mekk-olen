@@ -9,6 +9,9 @@ interface AnsatteState {
   loading: boolean;
   ansatte: Employee[];
   alleAnsatte: Employee[];
+  /** Alle aktive tilsette på tvers av butikkar – trygg, økt-uavhengig
+   *  kjelde til innloggings-skjermen (namn/initial/e-post, ikkje løn). */
+  loginAnsatte: Employee[];
   butikkar: Butikk[];
   finnButikk: (id?: string | null) => Butikk | undefined;
   findAnsatt: (id: EmployeeId | null | undefined) => Employee;
@@ -37,15 +40,26 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
   // standardliste her ville vist «spøkelses-brukarar» eit blink på
   // innlogginga, som kunne veljast med feil identitet.
   const [alleAnsatte, setAlleAnsatte] = useState<Employee[]>([]);
+  const [loginAnsatte, setLoginAnsatte] = useState<Employee[]>([]);
   const [butikkar, setButikkar] = useState<Butikk[]>([]);
 
   const refreshAnsatte = useCallback(async () => {
-    const [ansRes, butRes] = await Promise.all([
+    const [ansRes, butRes, loginRes] = await Promise.all([
       supabase.from('ansatte').select('*').order('created_at', { ascending: true }),
       supabase.from('butikkar').select('*').eq('aktiv', true).order('created_at', { ascending: true }),
+      // Økt-uavhengig liste til innloggings-skjermen (SECURITY DEFINER).
+      supabase.rpc('login_ansatte'),
     ]);
     if (!ansRes.error && ansRes.data) setAlleAnsatte(ansRes.data.map(mapAnsatt));
     if (!butRes.error && butRes.data) setButikkar(butRes.data.map(mapButikk));
+    // Bruk RPC-en når han finst; elles fall tilbake på det vanlege
+    // uttrekket (så innlogging verkar sjølv før fase5-SQL-en er køyrd).
+    const loginRows = loginRes.data as unknown[] | null;
+    if (!loginRes.error && loginRows && loginRows.length) {
+      setLoginAnsatte(loginRows.map(mapAnsatt));
+    } else if (!ansRes.error && ansRes.data && ansRes.data.length) {
+      setLoginAnsatte(ansRes.data.map(mapAnsatt));
+    }
     setLoading(false);
   }, []);
 
@@ -116,8 +130,8 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
   };
 
   const value = useMemo<AnsatteState>(
-    () => ({ loading, ansatte, alleAnsatte, butikkar, finnButikk, findAnsatt, isLeder, refreshAnsatte, createAnsatt, createButikk, updateAnsatt, setAktiv, resetPin, updateEmail }),
-    [loading, ansatte, alleAnsatte, butikkar, finnButikk, findAnsatt, isLeder, refreshAnsatte]
+    () => ({ loading, ansatte, alleAnsatte, loginAnsatte, butikkar, finnButikk, findAnsatt, isLeder, refreshAnsatte, createAnsatt, createButikk, updateAnsatt, setAktiv, resetPin, updateEmail }),
+    [loading, ansatte, alleAnsatte, loginAnsatte, butikkar, finnButikk, findAnsatt, isLeder, refreshAnsatte]
   );
 
   return <AnsatteContext.Provider value={value}>{children}</AnsatteContext.Provider>;

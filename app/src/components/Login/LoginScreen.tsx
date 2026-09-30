@@ -7,7 +7,10 @@ const PAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 export function LoginScreen() {
   const { pick, pin, feil, pickUser, back, pressDigit, backspace } = useAuth();
-  const { ansatte, butikkar, finnButikk, loading } = useAnsatte();
+  const { loginAnsatte, butikkar, finnButikk, loading } = useAnsatte();
+  // Innloggings-skjermen brukar den økt-uavhengige lista (upåverka av ei
+  // gammal økt som elles ville gitt «0 tilsette»).
+  const ansatte = loginAnsatte;
 
   // Butikk-val + eige admin-modus (konsern-admin er ikkje del av nokon butikk).
   const [valdButikk, setValdButikk] = useState<string | null>(null);
