@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
 
     const { data: callerAnsatt } = await admin
       .from('ansatte')
-      .select('id, leder, aktiv')
+      .select('id, leder, aktiv, butikk_id')
       .eq('email', callerData.user.email)
       .maybeSingle();
 
@@ -63,8 +63,10 @@ Deno.serve(async (req) => {
       });
       if (createErr) return json({ error: createErr.message }, 400);
 
+      // Nye tilsette blir oppretta i same butikk som leiaren som opprettar dei.
       const { error: insertErr } = await admin.from('ansatte').insert({
         id, navn, rolle, lonn, sats, farge, init, telefon, leder: !!leder, email, aktiv: true,
+        butikk_id: callerAnsatt.butikk_id,
       });
       if (insertErr) {
         // Roll back the auth user so we don't leave an orphaned login.
