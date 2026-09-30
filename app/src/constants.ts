@@ -15,6 +15,17 @@ export interface Employee {
   leder: boolean;
   /** Soft-delete flag — inactive employees are hidden from pickers but kept for history. */
   aktiv: boolean;
+  /** Kva butikk den tilsette høyrer til (fleirbutikk). */
+  butikk_id?: string;
+  /** Konsern-admin kan sjå og styre alle butikkar. */
+  konsern_admin?: boolean;
+}
+
+export interface Butikk {
+  id: string;
+  namn: string;
+  farge: string;
+  aktiv: boolean;
 }
 
 // Seed data for the dynamic `ansatte` table (see supabase/schema.sql) and a

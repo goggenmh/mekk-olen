@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useAppData } from '../../context/AppDataContext';
+import { useAuth } from '../../context/AuthContext';
+import { useAnsatte } from '../../context/AnsatteContext';
 import { weekDates, mondayOf, today } from '../../lib/dates';
 import { VIEWS, NAV_GROUPS, type View } from '../../lib/view';
 import { Icon } from '../ui/Icon';
@@ -18,6 +20,9 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   onClose?: () => void;
 }) {
   const { entries, swaps, tasks, orders } = useAppData();
+  const { user } = useAuth();
+  const { finnButikk } = useAnsatte();
+  const merke = finnButikk(user?.butikk_id)?.namn?.toUpperCase() || 'MEKK ØLEN';
   const [collapsed, setCollapsed] = useState(readCollapsed);
 
   const toggleCollapsed = () => {
@@ -50,7 +55,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
         <img src="/assets/mekk-logo.png" alt="MEKK Ølen" style={{ width: 28, height: 28, borderRadius: 9, flex: 'none' }} />
         {!smal && (
           <div style={{ lineHeight: 1.15 }} className="rail-label">
-            <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 14, letterSpacing: '0.3px', color: 'var(--rail-brand)' }}>MEKK ØLEN</div>
+            <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 14, letterSpacing: '0.3px', color: 'var(--rail-brand)' }}>{merke}</div>
             <div style={{ fontSize: 9.5, color: 'var(--rail-brand-sub)', fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase' }}>Vakt &amp; timestyring</div>
           </div>
         )}

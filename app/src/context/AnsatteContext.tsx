@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase, pinToPassword } from '../supabaseClient';
 import { toast } from '../lib/toast';
-import { type Employee, type EmployeeId } from '../constants';
+import { type Employee, type EmployeeId, type Butikk } from '../constants';
 
 const TOMT_ANSATT: Employee = { id: '', navn: '', rolle: '', lonn: 'time', sats: 0, farge: '#999', init: '?', email: '', telefon: '', leder: false, aktiv: false };
 
@@ -9,6 +9,8 @@ interface AnsatteState {
   loading: boolean;
   ansatte: Employee[];
   alleAnsatte: Employee[];
+  butikkar: Butikk[];
+  finnButikk: (id?: string | null) => Butikk | undefined;
   findAnsatt: (id: EmployeeId | null | undefined) => Employee;
   isLeder: (id: EmployeeId | null | undefined) => boolean;
   refreshAnsatte: () => Promise<void>;
@@ -24,7 +26,9 @@ const AnsatteContext = createContext<AnsatteState | null>(null);
 const mapAnsatt = (r: any): Employee => ({
   id: r.id, navn: r.navn, rolle: r.rolle, lonn: r.lonn, sats: r.sats, farge: r.farge, init: r.init,
   email: r.email, telefon: r.telefon || '', leder: r.leder, aktiv: r.aktiv,
+  butikk_id: r.butikk_id ?? undefined, konsern_admin: r.konsern_admin ?? false,
 });
+const mapButikk = (r: any): Butikk => ({ id: r.id, namn: r.namn, farge: r.farge || '#11788a', aktiv: r.aktiv });
 
 export function AnsatteProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -32,10 +36,15 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
   // standardliste her ville vist «spøkelses-brukarar» eit blink på
   // innlogginga, som kunne veljast med feil identitet.
   const [alleAnsatte, setAlleAnsatte] = useState<Employee[]>([]);
+  const [butikkar, setButikkar] = useState<Butikk[]>([]);
 
   const refreshAnsatte = useCallback(async () => {
-    const { data, error } = await supabase.from('ansatte').select('*').order('created_at', { ascending: true });
-    if (!error && data) setAlleAnsatte(data.map(mapAnsatt));
+    const [ansRes, butRes] = await Promise.all([
+      supabase.from('ansatte').select('*').order('created_at', { ascending: true }),
+      supabase.from('butikkar').select('*').eq('aktiv', true).order('created_at', { ascending: true }),
+    ]);
+    if (!ansRes.error && ansRes.data) setAlleAnsatte(ansRes.data.map(mapAnsatt));
+    if (!butRes.error && butRes.data) setButikkar(butRes.data.map(mapButikk));
     setLoading(false);
   }, []);
 
@@ -48,6 +57,10 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
   const findAnsatt = useCallback(
     (id: EmployeeId | null | undefined): Employee => alleAnsatte.find((a) => a.id === id) || { ...TOMT_ANSATT, id: id || '' },
     [alleAnsatte]
+  );
+  const finnButikk = useCallback(
+    (id?: string | null): Butikk | undefined => butikkar.find((b) => b.id === id),
+    [butikkar]
   );
   const isLeder = useCallback(
     (id: EmployeeId | null | undefined): boolean => !!alleAnsatte.find((a) => a.id === id)?.leder,
@@ -94,8 +107,8 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
   };
 
   const value = useMemo<AnsatteState>(
-    () => ({ loading, ansatte, alleAnsatte, findAnsatt, isLeder, refreshAnsatte, createAnsatt, updateAnsatt, setAktiv, resetPin, updateEmail }),
-    [loading, ansatte, alleAnsatte, findAnsatt, isLeder, refreshAnsatte]
+    () => ({ loading, ansatte, alleAnsatte, butikkar, finnButikk, findAnsatt, isLeder, refreshAnsatte, createAnsatt, updateAnsatt, setAktiv, resetPin, updateEmail }),
+    [loading, ansatte, alleAnsatte, butikkar, finnButikk, findAnsatt, isLeder, refreshAnsatte]
   );
 
   return <AnsatteContext.Provider value={value}>{children}</AnsatteContext.Provider>;

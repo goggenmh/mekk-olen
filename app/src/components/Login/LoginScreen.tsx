@@ -7,7 +7,14 @@ const PAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 export function LoginScreen() {
   const { pick, pin, feil, pickUser, back, pressDigit, backspace } = useAuth();
-  const { ansatte, loading } = useAnsatte();
+  const { ansatte, butikkar, finnButikk, loading } = useAnsatte();
+
+  // Vald butikk (berre relevant når det finst fleire butikkar).
+  const [valdButikk, setValdButikk] = useState<string | null>(null);
+  const effektivButikk = valdButikk ?? (butikkar.length === 1 ? butikkar[0].id : null);
+  const maaVeljeButikk = butikkar.length > 1 && !valdButikk;
+  const synlege = effektivButikk ? ansatte.filter((a) => a.butikk_id === effektivButikk) : ansatte;
+  const merke = finnButikk(effektivButikk ?? undefined)?.namn?.toUpperCase() || 'MEKK';
 
   // Levande klokke
   const [now, setNow] = useState(() => new Date());
@@ -35,13 +42,12 @@ export function LoginScreen() {
       style={{
         minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
         padding: 'clamp(28px, 6vh, 60px) 24px 48px', gap: 6,
-        background: 'var(--login-bg)',
-        color: 'var(--login-text)',
+        background: 'var(--login-bg)', color: 'var(--login-text)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-        <img src="/assets/mekk-logo.png" alt="MEKK Ølen" style={{ width: 38, height: 38, borderRadius: 11 }} />
-        <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: '0.6px', color: 'var(--login-text)' }}>MEKK ØLEN</span>
+        <img src="/assets/mekk-logo.png" alt="MEKK" style={{ width: 38, height: 38, borderRadius: 11 }} />
+        <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: '0.6px', color: 'var(--login-text)' }}>{merke}</span>
       </div>
 
       <div style={{ fontFamily: "'Geist Mono'", fontWeight: 700, fontSize: 'clamp(54px, 10vw, 78px)', color: 'var(--login-text)', letterSpacing: '-1px', lineHeight: 1 }}>
@@ -103,13 +109,31 @@ export function LoginScreen() {
         ) : loading ? (
           <div style={{ padding: '30px 0 18px', textAlign: 'center' }}>
             <div className="loginspinner" />
-            <div style={{ fontSize: 13, color: 'var(--login-sub)', marginTop: 14 }}>Lastar brukarar…</div>
+            <div style={{ fontSize: 13, color: 'var(--login-sub)', marginTop: 14 }}>Lastar…</div>
           </div>
+        ) : maaVeljeButikk ? (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'var(--login-faint)', marginBottom: 18, textAlign: 'center' }}>Vel butikk</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {butikkar.map((b) => (
+                <button key={b.id} className="glassrow" onClick={() => setValdButikk(b.id)} style={rowBtn}>
+                  <div style={{ flex: 'none', width: 42, height: 42, borderRadius: 13, background: b.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff' }}>
+                    {b.namn.replace(/^MEKK\s*/i, '').charAt(0).toUpperCase() || 'M'}
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--login-text)', textAlign: 'left' }}>{b.namn}</div>
+                  <span style={{ marginLeft: 'auto', color: 'var(--login-faint)', fontSize: 18 }}>›</span>
+                </button>
+              ))}
+            </div>
+          </>
         ) : (
           <>
+            {butikkar.length > 1 && (
+              <button onClick={() => setValdButikk(null)} style={backBtn}>‹ Byt butikk</button>
+            )}
             <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'var(--login-faint)', marginBottom: 18, textAlign: 'center' }}>Vel kven du er</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {ansatte.map((u) => (
+              {synlege.map((u) => (
                 <button key={u.id} className="glassrow" onClick={() => pickUser(u.id)} style={rowBtn}>
                   <div style={{ flex: 'none', width: 42, height: 42, borderRadius: 13, background: u.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#fff' }}>
                     {u.init}
@@ -122,9 +146,9 @@ export function LoginScreen() {
                 </button>
               ))}
             </div>
-            {ansatte.length === 0 && (
+            {synlege.length === 0 && (
               <div style={{ marginTop: 16, padding: '10px 13px', background: 'var(--login-surface)', borderRadius: 12, fontSize: 11.5, color: 'var(--login-sub)', lineHeight: 1.4, textAlign: 'center' }}>
-                Ingen ansatte funne. Sjekk Supabase-oppsettet.
+                Ingen tilsette i denne butikken enno.
               </div>
             )}
           </>
