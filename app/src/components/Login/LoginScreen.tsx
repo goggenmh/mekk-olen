@@ -9,21 +9,17 @@ export function LoginScreen() {
   const { pick, pin, feil, pickUser, back, pressDigit, backspace } = useAuth();
   const { ansatte, butikkar, finnButikk, loading } = useAnsatte();
 
-  // Vald butikk (berre relevant når det finst fleire val).
+  // Butikk-val + eige admin-modus (konsern-admin er ikkje del av nokon butikk).
   const [valdButikk, setValdButikk] = useState<string | null>(null);
-  const KONSERN_ID = '__konsern__';
-  // Konsern-leiarar høyrer ikkje til nokon butikk – dei får si eiga «rad».
+  const [adminModus, setAdminModus] = useState(false);
   const konsernLeiarar = ansatte.filter((a) => a.konsern_admin && !a.butikk_id);
-  const valbare = [
-    ...butikkar.map((b) => ({ id: b.id, namn: b.namn, farge: b.farge })),
-    ...(konsernLeiarar.length > 0 ? [{ id: KONSERN_ID, namn: 'Konsern-leiing', farge: '#0c5a69' }] : []),
-  ];
-  const effektivButikk = valdButikk ?? (valbare.length === 1 ? valbare[0].id : null);
-  const maaVeljeButikk = valbare.length > 1 && !valdButikk;
-  const synlege = effektivButikk === KONSERN_ID
+  const effektivButikk = valdButikk ?? (butikkar.length === 1 ? butikkar[0].id : null);
+  const maaVeljeButikk = butikkar.length > 1 && !valdButikk && !adminModus;
+  const synlege = adminModus
     ? konsernLeiarar
     : effektivButikk ? ansatte.filter((a) => a.butikk_id === effektivButikk) : ansatte;
-  const merke = effektivButikk === KONSERN_ID ? 'MEKK KONSERN' : (finnButikk(effektivButikk ?? undefined)?.namn?.toUpperCase() || 'MEKK');
+  const merke = adminModus ? 'MEKK ADMIN' : (finnButikk(effektivButikk ?? undefined)?.namn?.toUpperCase() || 'MEKK');
+  const visAdminKnapp = !pick && !loading && !adminModus && konsernLeiarar.length > 0;
 
   // Levande klokke
   const [now, setNow] = useState(() => new Date());
@@ -49,11 +45,28 @@ export function LoginScreen() {
   return (
     <div
       style={{
+        position: 'relative',
         minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
         padding: 'clamp(28px, 6vh, 60px) 24px 48px', gap: 6,
         background: 'var(--login-bg)', color: 'var(--login-text)',
       }}
     >
+      {visAdminKnapp && (
+        <button
+          onClick={() => { setAdminModus(true); setValdButikk(null); }}
+          title="Konsern-admin"
+          style={{
+            position: 'absolute', top: 'clamp(18px, 4vh, 32px)', right: 'clamp(18px, 4vw, 34px)',
+            display: 'flex', alignItems: 'center', gap: 8, padding: '9px 15px', borderRadius: 12,
+            border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)',
+            color: 'var(--login-sub)', fontFamily: "'Geist'", fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          }}
+        >
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--login-accent)' }} />
+          Admin
+        </button>
+      )}
+
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
         <img src="/assets/mekk-logo.png" alt="MEKK" style={{ width: 38, height: 38, borderRadius: 11 }} />
         <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: '0.6px', color: 'var(--login-text)' }}>{merke}</span>
@@ -124,14 +137,13 @@ export function LoginScreen() {
           <>
             <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'var(--login-faint)', marginBottom: 16, textAlign: 'center' }}>Vel butikk</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              {valbare.map((b) => {
-                const erKonsern = b.id === KONSERN_ID;
-                const antal = erKonsern ? konsernLeiarar.length : ansatte.filter((a) => a.butikk_id === b.id).length;
+              {butikkar.map((b) => {
+                const antal = ansatte.filter((a) => a.butikk_id === b.id).length;
                 return (
                   <button key={b.id} className="glassrow" onClick={() => setValdButikk(b.id)} style={{ ...tileBtn, borderLeft: `3px solid ${b.farge}` }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--login-text)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.namn}</div>
-                      <div style={{ fontSize: 11.5, color: 'var(--login-sub)', fontWeight: 500, marginTop: 2 }}>{antal} {erKonsern ? (antal === 1 ? 'leiar' : 'leiarar') : (antal === 1 ? 'tilsett' : 'tilsette')}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--login-sub)', fontWeight: 500, marginTop: 2 }}>{antal} {antal === 1 ? 'tilsett' : 'tilsette'}</div>
                     </div>
                     <span style={{ color: 'var(--login-faint)', fontSize: 18, flex: 'none' }}>›</span>
                   </button>
@@ -141,10 +153,12 @@ export function LoginScreen() {
           </>
         ) : (
           <>
-            {valbare.length > 1 && (
+            {adminModus ? (
+              <button onClick={() => setAdminModus(false)} style={backBtn}>‹ Tilbake</button>
+            ) : butikkar.length > 1 ? (
               <button onClick={() => setValdButikk(null)} style={backBtn}>‹ Byt butikk</button>
-            )}
-            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'var(--login-faint)', marginBottom: 18, textAlign: 'center' }}>Vel kven du er</div>
+            ) : null}
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'var(--login-faint)', marginBottom: 18, textAlign: 'center' }}>{adminModus ? 'Vel konsern-admin' : 'Vel kven du er'}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {synlege.map((u) => (
                 <button key={u.id} className="glassrow" onClick={() => pickUser(u.id)} style={rowBtn}>
@@ -161,7 +175,7 @@ export function LoginScreen() {
             </div>
             {synlege.length === 0 && (
               <div style={{ marginTop: 16, padding: '10px 13px', background: 'var(--login-surface)', borderRadius: 12, fontSize: 11.5, color: 'var(--login-sub)', lineHeight: 1.4, textAlign: 'center' }}>
-                Ingen tilsette i denne butikken enno.
+                {adminModus ? 'Ingen konsern-admin enno.' : 'Ingen tilsette i denne butikken enno.'}
               </div>
             )}
           </>
