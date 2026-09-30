@@ -48,8 +48,10 @@ create or replace function public.konsern_oversikt()
 returns table (
   butikk uuid,
   namn text,
+  farge text,
   tilsette bigint,
   timar_veka numeric,
+  til_godkjenning bigint,
   opne_oppgaver bigint,
   aktive_bestillingar bigint,
   vakter_i_dag bigint
@@ -58,6 +60,7 @@ language sql security definer stable set search_path = public as $$
   select
     b.id,
     b.namn,
+    b.farge,
     (select count(*) from ansatte a where a.butikk_id = b.id and a.aktiv),
     coalesce((
       select sum(extract(epoch from (te.slutt::time - te.start::time)) / 3600.0 - coalesce(te.pause, 0) / 60.0)
@@ -66,6 +69,7 @@ language sql security definer stable set search_path = public as $$
         and te.date::date >= date_trunc('week', current_date)::date
         and te.date::date <  date_trunc('week', current_date)::date + 7
     ), 0),
+    (select count(*) from time_entries te2 where te2.butikk_id = b.id and te2.status = 'venter'),
     (select count(*) from tasks t where t.butikk_id = b.id and not t.ferdig),
     (select count(*) from orders o where o.butikk_id = b.id and o.status <> 'henta'),
     (select count(*) from shifts s where s.butikk_id = b.id and s.date::date = current_date)

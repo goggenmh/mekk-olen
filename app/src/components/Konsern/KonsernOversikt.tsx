@@ -8,14 +8,26 @@ import { NyKonsernAdminModal } from './NyKonsernAdminModal';
 interface ButikkStat {
   butikk: string;
   namn: string;
+  farge: string;
   tilsette: number;
   timar_veka: number;
+  til_godkjenning: number;
   opne_oppgaver: number;
   aktive_bestillingar: number;
   vakter_i_dag: number;
 }
 
 const card = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow-card)' } as const;
+const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 12 } as const;
+
+function Metric({ lab, val, sterk }: { lab: string; val: string; sterk?: boolean }) {
+  return (
+    <div style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 11, padding: '9px 11px' }}>
+      <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "'Geist Mono'", letterSpacing: '-0.4px', color: sterk ? 'var(--accent)' : 'var(--text)' }}>{val}</div>
+      <div style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text-muted)', marginTop: 1 }}>{lab}</div>
+    </div>
+  );
+}
 
 export function KonsernOversikt() {
   const { user } = useAuth();
@@ -36,16 +48,19 @@ export function KonsernOversikt() {
   useEffect(() => { lastInn(); }, []);
 
   const sum = (f: (b: ButikkStat) => number) => (rader || []).reduce((a, b) => a + f(b), 0);
+  const totalGodkjenning = sum((b) => b.til_godkjenning);
   const kpi = [
     { lab: 'Butikkar', val: String((rader || []).length), farge: '#11788a' },
-    { lab: 'Tilsette totalt', val: String(sum((b) => b.tilsette)), farge: '#2f9e6f' },
+    { lab: 'Tilsette', val: String(sum((b) => b.tilsette)), farge: '#2f9e6f' },
     { lab: 'Timar denne veka', val: `${fmt(sum((b) => Number(b.timar_veka)))} t`, farge: '#6a5acd' },
-    { lab: 'Opne oppgåver', val: String(sum((b) => b.opne_oppgaver)), farge: '#c8811a' },
-    { lab: 'Aktive bestillingar', val: String(sum((b) => b.aktive_bestillingar)), farge: '#c0392b' },
+    { lab: 'Til godkjenning', val: String(totalGodkjenning), farge: '#c8811a' },
+    { lab: 'Opne oppgåver', val: String(sum((b) => b.opne_oppgaver)), farge: '#c0392b' },
+    { lab: 'Aktive bestillingar', val: String(sum((b) => b.aktive_bestillingar)), farge: '#0c5a69' },
   ];
+  const maxTimar = Math.max(1, ...(rader || []).map((b) => Number(b.timar_veka)));
 
   return (
-    <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1000 }}>
+    <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 1100 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 30, letterSpacing: '-0.6px' }}>
@@ -54,18 +69,8 @@ export function KonsernOversikt() {
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4 }}>Konsern-oversikt · alle butikkane · {fullDatoTekst(today())}</div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button
-            onClick={() => setNyAdminOpen(true)}
-            style={{ padding: '10px 15px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
-          >
-            + Ny konsern-admin
-          </button>
-          <button
-            onClick={() => setNyOpen(true)}
-            style={{ padding: '10px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}
-          >
-            + Ny butikk
-          </button>
+          <button onClick={() => setNyAdminOpen(true)} style={{ padding: '10px 15px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Ny konsern-admin</button>
+          <button onClick={() => setNyOpen(true)} style={{ padding: '10px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>+ Ny butikk</button>
         </div>
       </div>
 
@@ -74,35 +79,55 @@ export function KonsernOversikt() {
       ) : feil ? (
         <div style={{ fontSize: 13, color: 'var(--danger)' }}>Kunne ikkje laste oversikta: {feil}</div>
       ) : rader.length === 0 ? (
-        <div style={{ ...card, padding: '18px 20px', fontSize: 13, color: 'var(--text-muted)' }}>Ingen butikkar å vise.</div>
+        <div style={{ ...card, padding: '18px 20px', fontSize: 13, color: 'var(--text-muted)' }}>Ingen butikkar å vise enno. Trykk «+ Ny butikk» for å komme i gang.</div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14 }}>
-            {kpi.map((k) => (
-              <div key={k.lab} style={{ ...card, padding: '17px 19px' }}>
+          {/* KPI-stripe */}
+          <div style={{ ...card, padding: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))' }}>
+            {kpi.map((k, i) => (
+              <div key={k.lab} style={{ padding: '15px 18px', borderLeft: i === 0 ? 'none' : '1px solid var(--divider)' }}>
                 <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Geist Mono'", color: k.farge, letterSpacing: '-0.5px' }}>{k.val}</div>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', marginTop: 4 }}>{k.lab}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{k.lab}</div>
               </div>
             ))}
           </div>
 
-          <div style={{ ...card, overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr', padding: '12px 18px', fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.4px', borderBottom: '1px solid var(--divider)', background: 'var(--surface-alt)' }}>
-              <span>Butikk</span>
-              <span style={{ textAlign: 'right' }}>Tilsette</span>
-              <span style={{ textAlign: 'right' }}>Timar/veka</span>
-              <span style={{ textAlign: 'right' }}>Vakter i dag</span>
-              <span style={{ textAlign: 'right' }}>Opne oppg.</span>
-              <span style={{ textAlign: 'right' }}>Bestillingar</span>
+          {/* Timar per butikk */}
+          <div style={card}>
+            <div style={{ padding: '16px 18px 4px' }}><div style={labelStyle}>Timar denne veka · per butikk</div></div>
+            <div style={{ padding: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {rader.map((b) => (
+                <div key={b.butikk} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ width: 130, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.namn}</span>
+                  <div style={{ flex: 1, height: 12, borderRadius: 7, background: 'var(--surface-alt)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${Math.max(3, (Number(b.timar_veka) / maxTimar) * 100)}%`, background: b.farge, borderRadius: 7 }} />
+                  </div>
+                  <span style={{ width: 58, textAlign: 'right', fontFamily: "'Geist Mono'", fontSize: 13, fontWeight: 700 }}>{fmt(Number(b.timar_veka))} t</span>
+                </div>
+              ))}
             </div>
+          </div>
+
+          {/* Butikk-kort */}
+          <div style={labelStyle}>Butikkane</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 14 }}>
             {rader.map((b) => (
-              <div key={b.butikk} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr', alignItems: 'center', padding: '13px 18px', borderBottom: '1px solid var(--divider)' }}>
-                <span style={{ fontSize: 14, fontWeight: 700 }}>{b.namn}</span>
-                <span style={{ fontFamily: "'Geist Mono'", fontSize: 13.5, textAlign: 'right' }}>{b.tilsette}</span>
-                <span style={{ fontFamily: "'Geist Mono'", fontSize: 13.5, textAlign: 'right' }}>{fmt(Number(b.timar_veka))} t</span>
-                <span style={{ fontFamily: "'Geist Mono'", fontSize: 13.5, textAlign: 'right' }}>{b.vakter_i_dag}</span>
-                <span style={{ fontFamily: "'Geist Mono'", fontSize: 13.5, textAlign: 'right', color: b.opne_oppgaver > 0 ? 'var(--text)' : 'var(--text-faint)' }}>{b.opne_oppgaver}</span>
-                <span style={{ fontFamily: "'Geist Mono'", fontSize: 13.5, textAlign: 'right', color: b.aktive_bestillingar > 0 ? 'var(--text)' : 'var(--text-faint)' }}>{b.aktive_bestillingar}</span>
+              <div key={b.butikk} style={{ ...card, borderLeft: `4px solid ${b.farge}`, padding: '16px 17px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 13 }}>
+                  <span style={{ width: 34, height: 34, borderRadius: 10, background: `${b.farge}22`, color: b.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flex: 'none' }}>
+                    {b.namn.replace(/^MEKK\s*/i, '').charAt(0).toUpperCase() || 'M'}
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 15.5, fontWeight: 800, letterSpacing: '-0.2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.namn}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{b.tilsette} tilsette · {b.vakter_i_dag} på vakt i dag</div>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <Metric lab="Timar denne veka" val={`${fmt(Number(b.timar_veka))} t`} />
+                  <Metric lab="Til godkjenning" val={String(b.til_godkjenning)} sterk={b.til_godkjenning > 0} />
+                  <Metric lab="Opne oppgåver" val={String(b.opne_oppgaver)} />
+                  <Metric lab="Aktive bestillingar" val={String(b.aktive_bestillingar)} />
+                </div>
               </div>
             ))}
           </div>
