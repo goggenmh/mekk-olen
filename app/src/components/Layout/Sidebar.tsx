@@ -23,6 +23,10 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   const { user } = useAuth();
   const { finnButikk } = useAnsatte();
   const merke = finnButikk(user?.butikk_id)?.namn?.toUpperCase() || 'MEKK ØLEN';
+  const konsernAdmin = !!user?.konsern_admin;
+  const synlegeGrupper = NAV_GROUPS
+    .map((g) => ({ ...g, punkt: g.punkt.filter((k) => k !== 'konsern' || konsernAdmin) }))
+    .filter((g) => g.punkt.length > 0);
   const [collapsed, setCollapsed] = useState(readCollapsed);
 
   const toggleCollapsed = () => {
@@ -61,7 +65,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
         )}
       </div>
 
-      {NAV_GROUPS.map((grp, gi) => (
+      {synlegeGrupper.map((grp, gi) => (
         <div key={gi} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {grp.seksjon && !smal && (
             <div className="rail-label" style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: 'var(--rail-section)', padding: '11px 12px 4px' }}>

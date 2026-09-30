@@ -12,6 +12,7 @@ import { Oppgaver } from './components/Oppgaver/Oppgaver';
 import { Bestillinger } from './components/Bestillinger/Bestillinger';
 import { Dokument } from './components/Dokument/Dokument';
 import { Rapporter } from './components/Rapporter/Rapporter';
+import { KonsernOversikt } from './components/Konsern/KonsernOversikt';
 import { Innstillinger } from './components/Innstillinger/Innstillinger';
 import { useIsMobile } from './lib/useIsMobile';
 import { useIdleLogout } from './lib/useIdleLogout';
@@ -76,6 +77,7 @@ function App() {
                 {view === 'bestilling' && <Bestillinger />}
                 {view === 'dokument' && <Dokument />}
                 {view === 'rapporter' && <Rapporter />}
+                {view === 'konsern' && <KonsernOversikt />}
                 {view === 'innstillinger' && <Innstillinger setView={go} />}
               </>
             )}

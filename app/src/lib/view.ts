@@ -7,6 +7,7 @@ export type View =
   | 'bestilling'
   | 'dokument'
   | 'rapporter'
+  | 'konsern'
   | 'innstillinger';
 
 export const VIEWS: { key: View; label: string; ikon: string }[] = [
@@ -18,6 +19,7 @@ export const VIEWS: { key: View; label: string; ikon: string }[] = [
   { key: 'bestilling', label: 'Bestillingar', ikon: 'bestilling' },
   { key: 'dokument', label: 'Dokumenter', ikon: 'dokument' },
   { key: 'rapporter', label: 'Rapporter', ikon: 'rapporter' },
+  { key: 'konsern', label: 'Konsern-oversikt', ikon: 'ansatte' },
   { key: 'innstillinger', label: 'Innstillingar', ikon: 'innstillinger' },
 ];
 
@@ -27,5 +29,6 @@ export const NAV_GROUPS: { seksjon: string | null; punkt: View[] }[] = [
   { seksjon: 'Drift', punkt: ['vaktplan', 'timeliste', 'oppgaver'] },
   { seksjon: 'Butikk', punkt: ['bestilling', 'dokument'] },
   { seksjon: 'Analyse', punkt: ['rapporter', 'ansatte'] },
+  { seksjon: 'Konsern', punkt: ['konsern'] },
   { seksjon: null, punkt: ['innstillinger'] },
 ];
