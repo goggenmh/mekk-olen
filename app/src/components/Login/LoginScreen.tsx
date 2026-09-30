@@ -118,17 +118,12 @@ export function LoginScreen() {
               {butikkar.map((b) => {
                 const antal = ansatte.filter((a) => a.butikk_id === b.id).length;
                 return (
-                  <button key={b.id} className="glassrow" onClick={() => setValdButikk(b.id)} style={tileBtn}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                      <span style={{ width: 46, height: 46, borderRadius: 13, background: `${b.farge}22`, color: b.farge, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l1.5-5h15L21 9M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M4 9h16M9 20v-6h6v6" /></svg>
-                      </span>
-                      <span style={{ color: 'var(--login-faint)', fontSize: 18 }}>›</span>
+                  <button key={b.id} className="glassrow" onClick={() => setValdButikk(b.id)} style={{ ...tileBtn, borderLeft: `3px solid ${b.farge}` }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--login-text)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.namn}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--login-sub)', fontWeight: 500, marginTop: 2 }}>{antal} {antal === 1 ? 'tilsett' : 'tilsette'}</div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--login-text)', lineHeight: 1.2 }}>{b.namn}</div>
-                      <div style={{ fontSize: 11.5, color: 'var(--login-sub)', fontWeight: 500 }}>{antal} {antal === 1 ? 'tilsett' : 'tilsette'}</div>
-                    </div>
+                    <span style={{ color: 'var(--login-faint)', fontSize: 18, flex: 'none' }}>›</span>
                   </button>
                 );
               })}
@@ -173,5 +168,5 @@ const glass: CSSProperties = {
 };
 const backBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--login-sub)', fontFamily: "'Geist'", fontSize: 13, fontWeight: 600, marginBottom: 14 };
 const rowBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', transition: 'all 0.15s ease' };
-const tileBtn: CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 11, padding: '16px 15px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 16, cursor: 'pointer', transition: 'all 0.15s ease', textAlign: 'left' };
+const tileBtn: CSSProperties = { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, padding: '14px 15px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', transition: 'all 0.15s ease', textAlign: 'left' };
 const padKey: CSSProperties = { height: 54, border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', fontFamily: "'Geist Mono'", fontSize: 20, fontWeight: 600, color: 'var(--login-text)', transition: 'all 0.12s ease' };
