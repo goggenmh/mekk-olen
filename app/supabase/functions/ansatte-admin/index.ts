@@ -52,13 +52,17 @@ Deno.serve(async (req) => {
     const { action } = body;
 
     if (action === 'create') {
-      const { id, navn, rolle, lonn, sats, farge, init, telefon, leder, password, email: customEmail, butikk_id } = body;
+      const { id, navn, rolle, lonn, sats, farge, init, telefon, leder, password, email: customEmail, butikk_id, konsern_admin } = body;
       if (!id || !navn || !password) return json({ error: 'Manglar id, navn eller passord.' }, 400);
       const email = customEmail || `${id}@mekk-olen.internal`;
 
-      // Ein konsern-admin kan opprette i kva butikk som helst (t.d. ein ny
-      // butikk under onboarding). Ein vanleg leiar er alltid bunden til sin eigen.
-      const nyButikk = (callerAnsatt.konsern_admin && butikk_id) ? butikk_id : callerAnsatt.butikk_id;
+      // Berre ein konsern-admin kan opprette ein ny konsern-admin (utan butikk),
+      // eller opprette tilsette i ein annan butikk (onboarding). Ein vanleg
+      // leiar er alltid bunden til sin eigen butikk.
+      const vilKonsern = !!(callerAnsatt.konsern_admin && konsern_admin);
+      const nyButikk = vilKonsern
+        ? null
+        : ((callerAnsatt.konsern_admin && butikk_id) ? butikk_id : callerAnsatt.butikk_id);
 
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email,
@@ -69,7 +73,7 @@ Deno.serve(async (req) => {
 
       const { error: insertErr } = await admin.from('ansatte').insert({
         id, navn, rolle, lonn, sats, farge, init, telefon, leder: !!leder, email, aktiv: true,
-        butikk_id: nyButikk,
+        butikk_id: nyButikk, konsern_admin: vilKonsern,
       });
       if (insertErr) {
         // Roll back the auth user so we don't leave an orphaned login.

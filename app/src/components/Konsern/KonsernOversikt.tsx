@@ -3,6 +3,7 @@ import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import { fmt, fullDatoTekst, today } from '../../lib/dates';
 import { NyButikkModal } from './NyButikkModal';
+import { NyKonsernAdminModal } from './NyKonsernAdminModal';
 
 interface ButikkStat {
   butikk: string;
@@ -21,6 +22,7 @@ export function KonsernOversikt() {
   const [rader, setRader] = useState<ButikkStat[] | null>(null);
   const [feil, setFeil] = useState<string | null>(null);
   const [nyOpen, setNyOpen] = useState(false);
+  const [nyAdminOpen, setNyAdminOpen] = useState(false);
   const time = new Date().getHours();
   const helsing = time < 10 ? 'God morgon' : time < 18 ? 'God dag' : 'God kveld';
   const fornamn = (user?.navn || '').split(' ')[0];
@@ -51,12 +53,20 @@ export function KonsernOversikt() {
           </div>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4 }}>Konsern-oversikt · alle butikkane · {fullDatoTekst(today())}</div>
         </div>
-        <button
-          onClick={() => setNyOpen(true)}
-          style={{ padding: '10px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}
-        >
-          + Ny butikk
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setNyAdminOpen(true)}
+            style={{ padding: '10px 15px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          >
+            + Ny konsern-admin
+          </button>
+          <button
+            onClick={() => setNyOpen(true)}
+            style={{ padding: '10px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}
+          >
+            + Ny butikk
+          </button>
+        </div>
       </div>
 
       {rader === null ? (
@@ -100,6 +110,7 @@ export function KonsernOversikt() {
       )}
 
       {nyOpen && <NyButikkModal onClose={() => { setNyOpen(false); lastInn(); }} />}
+      {nyAdminOpen && <NyKonsernAdminModal onClose={() => { setNyAdminOpen(false); lastInn(); }} />}
     </div>
   );
 }

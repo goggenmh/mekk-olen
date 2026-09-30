@@ -14,7 +14,7 @@ interface AnsatteState {
   findAnsatt: (id: EmployeeId | null | undefined) => Employee;
   isLeder: (id: EmployeeId | null | undefined) => boolean;
   refreshAnsatte: () => Promise<void>;
-  createAnsatt: (input: { navn: string; rolle: string; lonn: 'fast' | 'time'; sats: number; farge: string; init: string; telefon: string; leder: boolean; pin: string; email?: string; butikk_id?: string }) => Promise<void>;
+  createAnsatt: (input: { navn: string; rolle: string; lonn: 'fast' | 'time'; sats: number; farge: string; init: string; telefon: string; leder: boolean; pin: string; email?: string; butikk_id?: string; konsern_admin?: boolean }) => Promise<void>;
   createButikk: (namn: string, farge: string) => Promise<string>;
   updateAnsatt: (id: EmployeeId, patch: Partial<Pick<Employee, 'navn' | 'rolle' | 'lonn' | 'sats' | 'farge' | 'init' | 'telefon' | 'leder'>>) => Promise<void>;
   setAktiv: (id: EmployeeId, aktiv: boolean) => Promise<void>;
