@@ -65,6 +65,13 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshAnsatte();
+    // Hent lista på nytt når innlogginga endrar seg. Utan dette ville
+    // alleAnsatte spegle økta ved oppstart (typisk tom / anon), og ikkje
+    // den innlogga brukaren sin butikk – så namn viste «?» etter innlogging.
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      refreshAnsatte();
+    });
+    return () => sub.subscription.unsubscribe();
   }, [refreshAnsatte]);
 
   const ansatte = useMemo(() => alleAnsatte.filter((a) => a.aktiv), [alleAnsatte]);
