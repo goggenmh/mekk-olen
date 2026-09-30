@@ -44,6 +44,7 @@ create policy "permissions_write_leder" on permissions for all to authenticated
 
 -- 3) Samla oversikt per butikk. SECURITY DEFINER (les utan RLS), men gir
 --    berre tal til ein konsern-admin – returnerer 0 rader for alle andre.
+drop function if exists public.konsern_oversikt();
 create or replace function public.konsern_oversikt()
 returns table (
   butikk uuid,
