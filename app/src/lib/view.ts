@@ -29,6 +29,5 @@ export const NAV_GROUPS: { seksjon: string | null; punkt: View[] }[] = [
   { seksjon: 'Drift', punkt: ['vaktplan', 'timeliste', 'oppgaver'] },
   { seksjon: 'Butikk', punkt: ['bestilling', 'dokument'] },
   { seksjon: 'Analyse', punkt: ['rapporter', 'ansatte'] },
-  { seksjon: 'Konsern', punkt: ['konsern'] },
   { seksjon: null, punkt: ['innstillinger'] },
 ];

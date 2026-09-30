@@ -28,15 +28,10 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   // 'konsern' berre for konsern-admin. Butikk-spesifikke sider berre for dei
   // som faktisk høyrer til ein butikk (ein konsern-leiar utan butikk ser berre
   // konsern-oversikta + innstillingar).
+  // Butikk-spesifikke sider berre for dei som høyrer til ein butikk. Ein
+  // konsern-admin utan butikk ser berre Innstillingar + «Admin»-knappen nedst.
   const synlegeGrupper = NAV_GROUPS
-    .map((g) => ({
-      ...g,
-      punkt: g.punkt.filter((k) => {
-        if (k === 'konsern') return konsernAdmin;
-        if (k === 'innstillinger') return true;
-        return harButikk;
-      }),
-    }))
+    .map((g) => ({ ...g, punkt: g.punkt.filter((k) => k === 'innstillinger' || harButikk) }))
     .filter((g) => g.punkt.length > 0);
   const [collapsed, setCollapsed] = useState(readCollapsed);
 
@@ -124,21 +119,40 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
         </div>
       ))}
 
-      {!isMobile && (
-        <button
-          onClick={toggleCollapsed}
-          title={smal ? 'Utvid meny' : 'Kollaps meny'}
-          style={{
-            marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            border: '1px solid var(--rail-border)', background: 'transparent', cursor: 'pointer',
-            color: 'var(--rail-section)', borderRadius: 9, padding: smal ? '8px 0' : '8px 11px',
-            fontFamily: "'Geist'", fontSize: 12, fontWeight: 600,
-          }}
-        >
-          <span style={{ fontSize: 14, lineHeight: 1 }}>{smal ? '»' : '«'}</span>
-          {!smal && <span className="rail-label">Kollaps</span>}
-        </button>
-      )}
+      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {konsernAdmin && (
+          <button
+            onClick={() => setView('konsern')}
+            title="Admin – konsern-oversikt"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: smal ? 'center' : 'flex-start', gap: 11,
+              padding: smal ? '9px 0' : '9px 11px', borderRadius: 10, cursor: 'pointer',
+              border: `1px solid ${view === 'konsern' ? 'transparent' : 'var(--rail-border)'}`,
+              background: view === 'konsern' ? 'var(--rail-active-bg)' : 'transparent',
+              color: view === 'konsern' ? 'var(--rail-active-fg)' : 'var(--rail-fg)',
+              fontFamily: "'Geist'", fontSize: 13, fontWeight: 700,
+            }}
+          >
+            <span style={{ width: 20, display: 'flex', justifyContent: 'center', flex: 'none' }}><Icon name="rapporter" size={18} /></span>
+            {!smal && <span className="rail-label">Admin</span>}
+          </button>
+        )}
+        {!isMobile && (
+          <button
+            onClick={toggleCollapsed}
+            title={smal ? 'Utvid meny' : 'Kollaps meny'}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              border: '1px solid var(--rail-border)', background: 'transparent', cursor: 'pointer',
+              color: 'var(--rail-section)', borderRadius: 9, padding: smal ? '8px 0' : '8px 11px',
+              fontFamily: "'Geist'", fontSize: 12, fontWeight: 600,
+            }}
+          >
+            <span style={{ fontSize: 14, lineHeight: 1 }}>{smal ? '»' : '«'}</span>
+            {!smal && <span className="rail-label">Kollaps</span>}
+          </button>
+        )}
+      </div>
     </>
   );
 
