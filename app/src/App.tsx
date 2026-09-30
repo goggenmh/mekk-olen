@@ -53,6 +53,12 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Konsern-admin landar på si eiga konsern-oversikt; andre på dashbordet.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setView(user?.konsern_admin ? 'konsern' : 'dashbord');
+  }, [user?.id, user?.konsern_admin]);
+
   if (authLoading) return null;
   if (!user) return <LoginScreen />;
 

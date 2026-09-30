@@ -9,12 +9,21 @@ export function LoginScreen() {
   const { pick, pin, feil, pickUser, back, pressDigit, backspace } = useAuth();
   const { ansatte, butikkar, finnButikk, loading } = useAnsatte();
 
-  // Vald butikk (berre relevant når det finst fleire butikkar).
+  // Vald butikk (berre relevant når det finst fleire val).
   const [valdButikk, setValdButikk] = useState<string | null>(null);
-  const effektivButikk = valdButikk ?? (butikkar.length === 1 ? butikkar[0].id : null);
-  const maaVeljeButikk = butikkar.length > 1 && !valdButikk;
-  const synlege = effektivButikk ? ansatte.filter((a) => a.butikk_id === effektivButikk) : ansatte;
-  const merke = finnButikk(effektivButikk ?? undefined)?.namn?.toUpperCase() || 'MEKK';
+  const KONSERN_ID = '__konsern__';
+  // Konsern-leiarar høyrer ikkje til nokon butikk – dei får si eiga «rad».
+  const konsernLeiarar = ansatte.filter((a) => a.konsern_admin && !a.butikk_id);
+  const valbare = [
+    ...butikkar.map((b) => ({ id: b.id, namn: b.namn, farge: b.farge })),
+    ...(konsernLeiarar.length > 0 ? [{ id: KONSERN_ID, namn: 'Konsern-leiing', farge: '#0c5a69' }] : []),
+  ];
+  const effektivButikk = valdButikk ?? (valbare.length === 1 ? valbare[0].id : null);
+  const maaVeljeButikk = valbare.length > 1 && !valdButikk;
+  const synlege = effektivButikk === KONSERN_ID
+    ? konsernLeiarar
+    : effektivButikk ? ansatte.filter((a) => a.butikk_id === effektivButikk) : ansatte;
+  const merke = effektivButikk === KONSERN_ID ? 'MEKK KONSERN' : (finnButikk(effektivButikk ?? undefined)?.namn?.toUpperCase() || 'MEKK');
 
   // Levande klokke
   const [now, setNow] = useState(() => new Date());
@@ -115,13 +124,14 @@ export function LoginScreen() {
           <>
             <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'var(--login-faint)', marginBottom: 16, textAlign: 'center' }}>Vel butikk</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              {butikkar.map((b) => {
-                const antal = ansatte.filter((a) => a.butikk_id === b.id).length;
+              {valbare.map((b) => {
+                const erKonsern = b.id === KONSERN_ID;
+                const antal = erKonsern ? konsernLeiarar.length : ansatte.filter((a) => a.butikk_id === b.id).length;
                 return (
                   <button key={b.id} className="glassrow" onClick={() => setValdButikk(b.id)} style={{ ...tileBtn, borderLeft: `3px solid ${b.farge}` }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--login-text)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.namn}</div>
-                      <div style={{ fontSize: 11.5, color: 'var(--login-sub)', fontWeight: 500, marginTop: 2 }}>{antal} {antal === 1 ? 'tilsett' : 'tilsette'}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--login-sub)', fontWeight: 500, marginTop: 2 }}>{antal} {erKonsern ? (antal === 1 ? 'leiar' : 'leiarar') : (antal === 1 ? 'tilsett' : 'tilsette')}</div>
                     </div>
                     <span style={{ color: 'var(--login-faint)', fontSize: 18, flex: 'none' }}>›</span>
                   </button>
@@ -131,7 +141,7 @@ export function LoginScreen() {
           </>
         ) : (
           <>
-            {butikkar.length > 1 && (
+            {valbare.length > 1 && (
               <button onClick={() => setValdButikk(null)} style={backBtn}>‹ Byt butikk</button>
             )}
             <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'var(--login-faint)', marginBottom: 18, textAlign: 'center' }}>Vel kven du er</div>

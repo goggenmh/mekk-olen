@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
-import { fmt } from '../../lib/dates';
+import { useAuth } from '../../context/AuthContext';
+import { fmt, fullDatoTekst, today } from '../../lib/dates';
 
 interface ButikkStat {
   butikk: string;
@@ -15,8 +16,12 @@ interface ButikkStat {
 const card = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow-card)' } as const;
 
 export function KonsernOversikt() {
+  const { user } = useAuth();
   const [rader, setRader] = useState<ButikkStat[] | null>(null);
   const [feil, setFeil] = useState<string | null>(null);
+  const time = new Date().getHours();
+  const helsing = time < 10 ? 'God morgon' : time < 18 ? 'God dag' : 'God kveld';
+  const fornamn = (user?.navn || '').split(' ')[0];
 
   useEffect(() => {
     supabase.rpc('konsern_oversikt').then(({ data, error }) => {
@@ -37,8 +42,10 @@ export function KonsernOversikt() {
   return (
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1000 }}>
       <div>
-        <h1 style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Konsern-oversikt</h1>
-        <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Alle butikkane · timar for denne veka</div>
+        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 30, letterSpacing: '-0.6px' }}>
+          {helsing}, <span style={{ background: 'linear-gradient(120deg, var(--brand), var(--brand-strong))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{fornamn}</span>
+        </div>
+        <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4 }}>Konsern-oversikt · alle butikkane · {fullDatoTekst(today())}</div>
       </div>
 
       {rader === null ? (

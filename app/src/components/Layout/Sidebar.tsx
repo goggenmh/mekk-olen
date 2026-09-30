@@ -22,10 +22,21 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   const { entries, swaps, tasks, orders } = useAppData();
   const { user } = useAuth();
   const { finnButikk } = useAnsatte();
-  const merke = finnButikk(user?.butikk_id)?.namn?.toUpperCase() || 'MEKK ØLEN';
   const konsernAdmin = !!user?.konsern_admin;
+  const merke = finnButikk(user?.butikk_id)?.namn?.toUpperCase() || (konsernAdmin ? 'MEKK KONSERN' : 'MEKK ØLEN');
+  const harButikk = !!user?.butikk_id;
+  // 'konsern' berre for konsern-admin. Butikk-spesifikke sider berre for dei
+  // som faktisk høyrer til ein butikk (ein konsern-leiar utan butikk ser berre
+  // konsern-oversikta + innstillingar).
   const synlegeGrupper = NAV_GROUPS
-    .map((g) => ({ ...g, punkt: g.punkt.filter((k) => k !== 'konsern' || konsernAdmin) }))
+    .map((g) => ({
+      ...g,
+      punkt: g.punkt.filter((k) => {
+        if (k === 'konsern') return konsernAdmin;
+        if (k === 'innstillinger') return true;
+        return harButikk;
+      }),
+    }))
     .filter((g) => g.punkt.length > 0);
   const [collapsed, setCollapsed] = useState(readCollapsed);
 
