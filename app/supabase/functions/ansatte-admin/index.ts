@@ -40,21 +40,25 @@ Deno.serve(async (req) => {
 
     const { data: callerAnsatt } = await admin
       .from('ansatte')
-      .select('id, leder, aktiv, butikk_id')
+      .select('id, leder, aktiv, butikk_id, konsern_admin')
       .eq('email', callerData.user.email)
       .maybeSingle();
 
-    if (!callerAnsatt?.leder || !callerAnsatt?.aktiv) {
-      return json({ error: 'Berre leiarar kan administrere ansatte.' }, 403);
+    if (!callerAnsatt?.aktiv || (!callerAnsatt?.leder && !callerAnsatt?.konsern_admin)) {
+      return json({ error: 'Berre leiarar eller konsern-admin kan administrere ansatte.' }, 403);
     }
 
     const body = await req.json();
     const { action } = body;
 
     if (action === 'create') {
-      const { id, navn, rolle, lonn, sats, farge, init, telefon, leder, password, email: customEmail } = body;
+      const { id, navn, rolle, lonn, sats, farge, init, telefon, leder, password, email: customEmail, butikk_id } = body;
       if (!id || !navn || !password) return json({ error: 'Manglar id, navn eller passord.' }, 400);
       const email = customEmail || `${id}@mekk-olen.internal`;
+
+      // Ein konsern-admin kan opprette i kva butikk som helst (t.d. ein ny
+      // butikk under onboarding). Ein vanleg leiar er alltid bunden til sin eigen.
+      const nyButikk = (callerAnsatt.konsern_admin && butikk_id) ? butikk_id : callerAnsatt.butikk_id;
 
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email,
@@ -63,10 +67,9 @@ Deno.serve(async (req) => {
       });
       if (createErr) return json({ error: createErr.message }, 400);
 
-      // Nye tilsette blir oppretta i same butikk som leiaren som opprettar dei.
       const { error: insertErr } = await admin.from('ansatte').insert({
         id, navn, rolle, lonn, sats, farge, init, telefon, leder: !!leder, email, aktiv: true,
-        butikk_id: callerAnsatt.butikk_id,
+        butikk_id: nyButikk,
       });
       if (insertErr) {
         // Roll back the auth user so we don't leave an orphaned login.

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import { fmt, fullDatoTekst, today } from '../../lib/dates';
+import { NyButikkModal } from './NyButikkModal';
 
 interface ButikkStat {
   butikk: string;
@@ -19,16 +20,18 @@ export function KonsernOversikt() {
   const { user } = useAuth();
   const [rader, setRader] = useState<ButikkStat[] | null>(null);
   const [feil, setFeil] = useState<string | null>(null);
+  const [nyOpen, setNyOpen] = useState(false);
   const time = new Date().getHours();
   const helsing = time < 10 ? 'God morgon' : time < 18 ? 'God dag' : 'God kveld';
   const fornamn = (user?.navn || '').split(' ')[0];
 
-  useEffect(() => {
+  const lastInn = () => {
     supabase.rpc('konsern_oversikt').then(({ data, error }) => {
       if (error) { setFeil(error.message); setRader([]); return; }
       setRader((data as ButikkStat[]) || []);
     });
-  }, []);
+  };
+  useEffect(() => { lastInn(); }, []);
 
   const sum = (f: (b: ButikkStat) => number) => (rader || []).reduce((a, b) => a + f(b), 0);
   const kpi = [
@@ -41,11 +44,19 @@ export function KonsernOversikt() {
 
   return (
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1000 }}>
-      <div>
-        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 30, letterSpacing: '-0.6px' }}>
-          {helsing}, <span style={{ background: 'linear-gradient(120deg, var(--brand), var(--brand-strong))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{fornamn}</span>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 30, letterSpacing: '-0.6px' }}>
+            {helsing}, <span style={{ background: 'linear-gradient(120deg, var(--brand), var(--brand-strong))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{fornamn}</span>
+          </div>
+          <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4 }}>Konsern-oversikt · alle butikkane · {fullDatoTekst(today())}</div>
         </div>
-        <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4 }}>Konsern-oversikt · alle butikkane · {fullDatoTekst(today())}</div>
+        <button
+          onClick={() => setNyOpen(true)}
+          style={{ padding: '10px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}
+        >
+          + Ny butikk
+        </button>
       </div>
 
       {rader === null ? (
@@ -87,6 +98,8 @@ export function KonsernOversikt() {
           </div>
         </>
       )}
+
+      {nyOpen && <NyButikkModal onClose={() => { setNyOpen(false); lastInn(); }} />}
     </div>
   );
 }
