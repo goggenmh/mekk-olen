@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { fmt, fullDatoTekst, today } from '../../lib/dates';
 import { NyButikkModal } from './NyButikkModal';
 import { NyKonsernAdminModal } from './NyKonsernAdminModal';
+import { ButikkDetalj } from './ButikkDetalj';
 
 interface ButikkStat {
   butikk: string;
@@ -35,6 +36,7 @@ export function KonsernOversikt() {
   const [feil, setFeil] = useState<string | null>(null);
   const [nyOpen, setNyOpen] = useState(false);
   const [nyAdminOpen, setNyAdminOpen] = useState(false);
+  const [detalj, setDetalj] = useState<{ id: string; namn: string } | null>(null);
   const time = new Date().getHours();
   const helsing = time < 10 ? 'God morgon' : time < 18 ? 'God dag' : 'God kveld';
   const fornamn = (user?.navn || '').split(' ')[0];
@@ -58,6 +60,10 @@ export function KonsernOversikt() {
     { lab: 'Aktive bestillingar', val: String(sum((b) => b.aktive_bestillingar)), farge: '#0c5a69' },
   ];
   const maxTimar = Math.max(1, ...(rader || []).map((b) => Number(b.timar_veka)));
+
+  if (detalj) {
+    return <ButikkDetalj butikkId={detalj.id} namn={detalj.namn} onBack={() => setDetalj(null)} />;
+  }
 
   return (
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 1100 }}>
@@ -112,7 +118,7 @@ export function KonsernOversikt() {
           <div style={labelStyle}>Butikkane</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 14 }}>
             {rader.map((b) => (
-              <div key={b.butikk} style={{ ...card, borderLeft: `4px solid ${b.farge}`, padding: '16px 17px' }}>
+              <div key={b.butikk} className="hoverable" onClick={() => setDetalj({ id: b.butikk, namn: b.namn })} style={{ ...card, borderLeft: `4px solid ${b.farge}`, padding: '16px 17px', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 13 }}>
                   <span style={{ width: 34, height: 34, borderRadius: 10, background: `${b.farge}22`, color: b.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flex: 'none' }}>
                     {b.namn.replace(/^MEKK\s*/i, '').charAt(0).toUpperCase() || 'M'}

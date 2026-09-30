@@ -79,3 +79,40 @@ language sql security definer stable set search_path = public as $$
   order by b.namn;
 $$;
 grant execute on function public.konsern_oversikt() to authenticated;
+
+-- =====================================================================
+-- Detaljar for éin butikk (drill-in). SECURITY DEFINER, berre konsern-admin.
+-- =====================================================================
+create or replace function public.butikk_detalj(bid uuid)
+returns jsonb
+language sql security definer stable set search_path = public as $$
+  select case when not public.er_konsern_admin() then jsonb_build_object() else jsonb_build_object(
+    'namn', (select namn from butikkar where id = bid),
+    'vakter', (
+      select coalesce(jsonb_agg(jsonb_build_object('navn', a.navn, 'farge', a.farge, 'start', s.start, 'slutt', s.slutt, 'skift', s.skift) order by s.start), '[]'::jsonb)
+      from shifts s join ansatte a on a.id = s.ansatt
+      where s.butikk_id = bid and s.date::date = current_date
+    ),
+    'timar', (
+      select coalesce(jsonb_agg(jsonb_build_object('navn', q.navn, 'farge', q.farge, 'timar', q.t) order by q.t desc), '[]'::jsonb)
+      from (
+        select a.navn, a.farge,
+          sum(extract(epoch from (te.slutt::time - te.start::time)) / 3600.0 - coalesce(te.pause, 0) / 60.0) as t
+        from time_entries te join ansatte a on a.id = te.ansatt
+        where te.butikk_id = bid
+          and te.date::date >= date_trunc('week', current_date)::date
+          and te.date::date <  date_trunc('week', current_date)::date + 7
+        group by a.navn, a.farge
+      ) q
+    ),
+    'oppgaver', (
+      select coalesce(jsonb_agg(jsonb_build_object('tittel', t.tittel, 'prioritet', t.prioritet) order by t.tittel), '[]'::jsonb)
+      from tasks t where t.butikk_id = bid and not t.ferdig
+    ),
+    'bestillingar', (
+      select coalesce(jsonb_agg(jsonb_build_object('kunde', o.kunde, 'vare', o.vare, 'status', o.status) order by o.dato desc), '[]'::jsonb)
+      from orders o where o.butikk_id = bid and o.status <> 'henta'
+    )
+  ) end;
+$$;
+grant execute on function public.butikk_detalj(uuid) to authenticated;
