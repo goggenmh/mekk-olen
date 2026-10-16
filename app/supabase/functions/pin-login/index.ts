@@ -61,7 +61,12 @@ Deno.serve(async (req) => {
     if (!ansatt?.email) return json({ error: 'Feil PIN.', kode: 'feil_pin' }, 401);
     if (!ansatt.aktiv) return json({ error: 'Kontoen er deaktivert.', kode: 'deaktivert' }, 403);
 
-    const { data: status } = await admin.from('innlogging_status').select('v2, feil, laast_til').eq('ansatt_id', id).maybeSingle();
+    // Kan vi ikkje lese sperra, stoppar vi heller enn å sleppe gjennom utan.
+    const { data: status, error: statusFeil } = await admin.from('innlogging_status').select('v2, feil, laast_til').eq('ansatt_id', id).maybeSingle();
+    if (statusFeil) {
+      console.error('innlogging_status les:', statusFeil.message);
+      return json({ error: 'Innlogginga er mellombels utilgjengeleg.', kode: 'servarfeil' }, 500);
+    }
     const laastTil = status?.laast_til ? new Date(status.laast_til).getTime() : 0;
     if (laastTil > Date.now()) {
       return json({ error: 'For mange feil forsøk.', kode: 'sperra', sekund: Math.ceil((laastTil - Date.now()) / 1000) }, 429);
@@ -90,12 +95,17 @@ Deno.serve(async (req) => {
     if (!res || res.error || !res.data.session) {
       const feil = (status?.feil ?? 0) + 1;
       const sperr = feil >= MAKS_FEIL;
-      await admin.from('innlogging_status').upsert({
+      const { error: skrivFeil } = await admin.from('innlogging_status').upsert({
         ansatt_id: id,
         v2: status?.v2 ?? false,
         feil: sperr ? 0 : feil,
         laast_til: sperr ? new Date(Date.now() + SPERRE_MIN * 60_000).toISOString() : null,
       });
+      // Feilforsøket må bli registrert, elles kunne ein gjette i det uendelege.
+      if (skrivFeil) {
+        console.error('innlogging_status skriv:', skrivFeil.message);
+        return json({ error: 'Innlogginga er mellombels utilgjengeleg.', kode: 'servarfeil' }, 500);
+      }
       if (sperr) return json({ error: 'For mange feil forsøk.', kode: 'sperra', sekund: SPERRE_MIN * 60 }, 429);
       return json({ error: 'Feil PIN.', kode: 'feil_pin', att: MAKS_FEIL - feil }, 401);
     }

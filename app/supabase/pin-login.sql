@@ -10,6 +10,9 @@ create table if not exists public.innlogging_status (
   laast_til timestamptz
 );
 alter table public.innlogging_status enable row level security;
+-- Prosjektet gir ikkje nye tabellar API-rettar automatisk, så servarrolla
+-- (edge-funksjonane) må få dei eksplisitt. anon/authenticated får ingenting.
+grant select, insert, update, delete on public.innlogging_status to service_role;
 
 -- Innloggings-lista utan e-post (namn/initial er nok til å velje seg sjølv).
 create or replace function public.login_liste()
