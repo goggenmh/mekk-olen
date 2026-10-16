@@ -22,14 +22,9 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   const { entries, swaps, tasks, orders } = useAppData();
   const { user } = useAuth();
   const { finnButikk } = useAnsatte();
-  const konsernAdmin = !!user?.konsern_admin;
-  const merke = finnButikk(user?.butikk_id)?.namn?.toUpperCase() || (konsernAdmin ? 'MEKK KONSERN' : 'MEKK ØLEN');
+  const merke = finnButikk(user?.butikk_id)?.namn?.toUpperCase() || 'MEKK ØLEN';
   const harButikk = !!user?.butikk_id;
-  // 'konsern' berre for konsern-admin. Butikk-spesifikke sider berre for dei
-  // som faktisk høyrer til ein butikk (ein konsern-leiar utan butikk ser berre
-  // konsern-oversikta + innstillingar).
-  // Butikk-spesifikke sider berre for dei som høyrer til ein butikk. Ein
-  // konsern-admin utan butikk ser berre Innstillingar + «Admin»-knappen nedst.
+  // Butikk-spesifikke sider berre for dei som høyrer til ein butikk.
   const synlegeGrupper = NAV_GROUPS
     .map((g) => ({ ...g, punkt: g.punkt.filter((k) => k === 'innstillinger' || harButikk) }))
     .filter((g) => g.punkt.length > 0);
@@ -120,23 +115,6 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
       ))}
 
       <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {konsernAdmin && (
-          <button
-            onClick={() => setView('konsern')}
-            title="Admin – konsern-oversikt"
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: smal ? 'center' : 'flex-start', gap: 11,
-              padding: smal ? '9px 0' : '9px 11px', borderRadius: 10, cursor: 'pointer',
-              border: `1px solid ${view === 'konsern' ? 'transparent' : 'var(--rail-border)'}`,
-              background: view === 'konsern' ? 'var(--rail-active-bg)' : 'transparent',
-              color: view === 'konsern' ? 'var(--rail-active-fg)' : 'var(--rail-fg)',
-              fontFamily: "'Geist'", fontSize: 13, fontWeight: 700,
-            }}
-          >
-            <span style={{ width: 20, display: 'flex', justifyContent: 'center', flex: 'none' }}><Icon name="rapporter" size={18} /></span>
-            {!smal && <span className="rail-label">Admin</span>}
-          </button>
-        )}
         {!isMobile && (
           <button
             onClick={toggleCollapsed}

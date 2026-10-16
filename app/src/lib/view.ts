@@ -7,7 +7,6 @@ export type View =
   | 'bestilling'
   | 'dokument'
   | 'rapporter'
-  | 'konsern'
   | 'innstillinger';
 
 export const VIEWS: { key: View; label: string; ikon: string }[] = [
@@ -19,7 +18,6 @@ export const VIEWS: { key: View; label: string; ikon: string }[] = [
   { key: 'bestilling', label: 'Bestillingar', ikon: 'bestilling' },
   { key: 'dokument', label: 'Dokumenter', ikon: 'dokument' },
   { key: 'rapporter', label: 'Rapporter', ikon: 'rapporter' },
-  { key: 'konsern', label: 'Konsern-oversikt', ikon: 'ansatte' },
   { key: 'innstillinger', label: 'Innstillingar', ikon: 'innstillinger' },
 ];
 

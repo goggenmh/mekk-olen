@@ -12,7 +12,6 @@ import { Oppgaver } from './components/Oppgaver/Oppgaver';
 import { Bestillinger } from './components/Bestillinger/Bestillinger';
 import { Dokument } from './components/Dokument/Dokument';
 import { Rapporter } from './components/Rapporter/Rapporter';
-import { KonsernOversikt } from './components/Konsern/KonsernOversikt';
 import { Innstillinger } from './components/Innstillinger/Innstillinger';
 import { useIsMobile } from './lib/useIsMobile';
 import { useIdleLogout } from './lib/useIdleLogout';
@@ -53,11 +52,11 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Konsern-admin landar på si eiga konsern-oversikt; andre på dashbordet.
+  // Alle brukarar landar på dashbordet ved innlogging.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setView(user?.konsern_admin ? 'konsern' : 'dashbord');
-  }, [user?.id, user?.konsern_admin]);
+    setView('dashbord');
+  }, [user?.id]);
 
   if (authLoading) return null;
   if (!user) return <LoginScreen />;
@@ -83,7 +82,6 @@ function App() {
                 {view === 'bestilling' && <Bestillinger />}
                 {view === 'dokument' && <Dokument />}
                 {view === 'rapporter' && <Rapporter />}
-                {view === 'konsern' && <KonsernOversikt />}
                 {view === 'innstillinger' && <Innstillinger setView={go} />}
               </>
             )}
