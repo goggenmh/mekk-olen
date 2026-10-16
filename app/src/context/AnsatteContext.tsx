@@ -18,7 +18,6 @@ interface AnsatteState {
   isLeder: (id: EmployeeId | null | undefined) => boolean;
   refreshAnsatte: () => Promise<void>;
   createAnsatt: (input: { navn: string; rolle: string; lonn: 'fast' | 'time'; sats: number; farge: string; init: string; telefon: string; leder: boolean; pin: string; email?: string; butikk_id?: string; konsern_admin?: boolean }) => Promise<void>;
-  createButikk: (namn: string, farge: string) => Promise<string>;
   updateAnsatt: (id: EmployeeId, patch: Partial<Pick<Employee, 'navn' | 'rolle' | 'lonn' | 'sats' | 'farge' | 'init' | 'telefon' | 'leder'>>) => Promise<void>;
   setAktiv: (id: EmployeeId, aktiv: boolean) => Promise<void>;
   resetPin: (id: EmployeeId, pin: string) => Promise<void>;
@@ -104,13 +103,6 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
     toast('Ansatt oppretta');
   };
 
-  const createButikk: AnsatteState['createButikk'] = async (namn, farge) => {
-    const { data, error } = await supabase.from('butikkar').insert({ namn, farge }).select().single();
-    if (error) throw error;
-    await refreshAnsatte();
-    toast('Butikk oppretta');
-    return data.id as string;
-  };
 
   const updateAnsatt: AnsatteState['updateAnsatt'] = async (id, patch) => {
     const { data, error } = await supabase.from('ansatte').update(patch).eq('id', id).select().single();
@@ -137,7 +129,7 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
   };
 
   const value = useMemo<AnsatteState>(
-    () => ({ loading, ansatte, alleAnsatte, loginAnsatte, butikkar, finnButikk, findAnsatt, isLeder, refreshAnsatte, createAnsatt, createButikk, updateAnsatt, setAktiv, resetPin, updateEmail }),
+    () => ({ loading, ansatte, alleAnsatte, loginAnsatte, butikkar, finnButikk, findAnsatt, isLeder, refreshAnsatte, createAnsatt, updateAnsatt, setAktiv, resetPin, updateEmail }),
     [loading, ansatte, alleAnsatte, loginAnsatte, butikkar, finnButikk, findAnsatt, isLeder, refreshAnsatte]
   );
 

@@ -102,9 +102,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [meldinger, setMeldinger] = useState<Melding[]>([]);
 
-  const refreshAll = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // `stille` = oppdater i bakgrunnen utan lasteskjerm (brukt av live-oppdatering).
+  const hent = useCallback(async (stille: boolean) => {
+    if (!stille) {
+      setLoading(true);
+      setError(null);
+    }
     const [e, s, sw, f, t, o, d, p, m, u, sv] = await Promise.all([
       supabase.from('time_entries').select('*'),
       supabase.from('shifts').select('*'),
@@ -120,7 +123,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     ]);
     const firstError = [e, s, sw, f, t, o, d, p, m, u, sv].find((r) => r.error)?.error;
     if (firstError) {
-      setError(firstError.message);
+      if (!stille) setError(firstError.message);
     } else {
       setEntries((e.data || []).map(mapEntry));
       setShifts((s.data || []).map(mapShift));
@@ -141,12 +144,34 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setUnavailable((u.data || []).map(mapUnavail));
       setStandardveke((sv.data || []).map(mapStandard));
     }
-    setLoading(false);
+    if (!stille) setLoading(false);
   }, []);
+
+  const refreshAll = useCallback(() => hent(false), [hent]);
 
   useEffect(() => {
     refreshAll();
   }, [refreshAll]);
+
+  // Live-oppdatering: når nokon endrar vakter, timar, oppgåver o.l., hentar
+  // vi stille på nytt, så alle ser same bilete utan å laste sida. RLS gjeld
+  // òg her, så kvar brukar får berre varsel om sin eigen butikk.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const planlegg = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => hent(true), 400);
+    };
+    const kanal = supabase.channel('appdata-live');
+    for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke']) {
+      kanal.on('postgres_changes', { event: '*', schema: 'public', table }, planlegg);
+    }
+    kanal.subscribe();
+    return () => {
+      clearTimeout(timer);
+      supabase.removeChannel(kanal);
+    };
+  }, [hent]);
 
   // ---- time entries ----
   const saveEntry: AppData['saveEntry'] = async (entry) => {

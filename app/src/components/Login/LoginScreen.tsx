@@ -12,17 +12,12 @@ export function LoginScreen() {
   // gammal økt som elles ville gitt «0 tilsette»).
   const ansatte = loginAnsatte;
 
-  // Butikk-val + eige admin-modus (konsern-admin er ikkje del av nokon butikk).
+  // Butikk-val (berre synleg viss det finst meir enn éin aktiv butikk).
   const [valdButikk, setValdButikk] = useState<string | null>(null);
-  const [adminModus, setAdminModus] = useState(false);
-  const konsernLeiarar = ansatte.filter((a) => a.konsern_admin && !a.butikk_id);
   const effektivButikk = valdButikk ?? (butikkar.length === 1 ? butikkar[0].id : null);
-  const maaVeljeButikk = butikkar.length > 1 && !valdButikk && !adminModus;
-  const synlege = adminModus
-    ? konsernLeiarar
-    : effektivButikk ? ansatte.filter((a) => a.butikk_id === effektivButikk) : ansatte;
-  const merke = adminModus ? 'MEKK ADMIN' : (finnButikk(effektivButikk ?? undefined)?.namn?.toUpperCase() || 'MEKK');
-  const visAdminKnapp = !pick && !loading && !adminModus && konsernLeiarar.length > 0;
+  const maaVeljeButikk = butikkar.length > 1 && !valdButikk;
+  const synlege = effektivButikk ? ansatte.filter((a) => a.butikk_id === effektivButikk) : ansatte;
+  const merke = finnButikk(effektivButikk ?? undefined)?.namn?.toUpperCase() || 'MEKK';
 
   // Levande klokke
   const [now, setNow] = useState(() => new Date());
@@ -54,21 +49,6 @@ export function LoginScreen() {
         background: 'var(--login-bg)', color: 'var(--login-text)',
       }}
     >
-      {visAdminKnapp && (
-        <button
-          onClick={() => { setAdminModus(true); setValdButikk(null); }}
-          title="Konsern-admin"
-          style={{
-            position: 'absolute', top: 'clamp(18px, 4vh, 32px)', right: 'clamp(18px, 4vw, 34px)',
-            display: 'flex', alignItems: 'center', gap: 8, padding: '9px 15px', borderRadius: 12,
-            border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)',
-            color: 'var(--login-sub)', fontFamily: "'Geist'", fontSize: 13, fontWeight: 700, cursor: 'pointer',
-          }}
-        >
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--login-accent)' }} />
-          Admin
-        </button>
-      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
         <img src="/assets/mekk-logo.png" alt="MEKK" style={{ width: 38, height: 38, borderRadius: 11 }} />
@@ -156,12 +136,10 @@ export function LoginScreen() {
           </>
         ) : (
           <>
-            {adminModus ? (
-              <button onClick={() => setAdminModus(false)} style={backBtn}>‹ Tilbake</button>
-            ) : butikkar.length > 1 ? (
+            {butikkar.length > 1 && (
               <button onClick={() => setValdButikk(null)} style={backBtn}>‹ Byt butikk</button>
-            ) : null}
-            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'var(--login-faint)', marginBottom: 18, textAlign: 'center' }}>{adminModus ? 'Vel konsern-admin' : 'Vel kven du er'}</div>
+            )}
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'var(--login-faint)', marginBottom: 18, textAlign: 'center' }}>Vel kven du er</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {synlege.map((u) => (
                 <button key={u.id} className="glassrow" onClick={() => pickUser(u.id)} style={rowBtn}>
@@ -178,7 +156,7 @@ export function LoginScreen() {
             </div>
             {synlege.length === 0 && (
               <div style={{ marginTop: 16, padding: '10px 13px', background: 'var(--login-surface)', borderRadius: 12, fontSize: 11.5, color: 'var(--login-sub)', lineHeight: 1.4, textAlign: 'center' }}>
-                {adminModus ? 'Ingen konsern-admin enno.' : 'Ingen tilsette i denne butikken enno.'}
+                Ingen tilsette i denne butikken enno.
               </div>
             )}
           </>

@@ -1,18 +1,19 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useAppData } from './context/AppDataContext';
 import { LoginScreen } from './components/Login/LoginScreen';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import { Dashboard } from './components/Dashboard/Dashboard';
-import { Ansatte } from './components/Ansatte/Ansatte';
-import { Timeliste } from './components/Timeliste/Timeliste';
-import { Vaktplan } from './components/Vaktplan/Vaktplan';
-import { Oppgaver } from './components/Oppgaver/Oppgaver';
-import { Bestillinger } from './components/Bestillinger/Bestillinger';
-import { Dokument } from './components/Dokument/Dokument';
-import { Rapporter } from './components/Rapporter/Rapporter';
-import { Innstillinger } from './components/Innstillinger/Innstillinger';
+// Sidene blir lasta først når dei blir opna, så oppstarten blir raskare.
+const Ansatte = lazy(() => import('./components/Ansatte/Ansatte').then((m) => ({ default: m.Ansatte })));
+const Timeliste = lazy(() => import('./components/Timeliste/Timeliste').then((m) => ({ default: m.Timeliste })));
+const Vaktplan = lazy(() => import('./components/Vaktplan/Vaktplan').then((m) => ({ default: m.Vaktplan })));
+const Oppgaver = lazy(() => import('./components/Oppgaver/Oppgaver').then((m) => ({ default: m.Oppgaver })));
+const Bestillinger = lazy(() => import('./components/Bestillinger/Bestillinger').then((m) => ({ default: m.Bestillinger })));
+const Dokument = lazy(() => import('./components/Dokument/Dokument').then((m) => ({ default: m.Dokument })));
+const Rapporter = lazy(() => import('./components/Rapporter/Rapporter').then((m) => ({ default: m.Rapporter })));
+const Innstillinger = lazy(() => import('./components/Innstillinger/Innstillinger').then((m) => ({ default: m.Innstillinger })));
 import { useIsMobile } from './lib/useIsMobile';
 import { useIdleLogout } from './lib/useIdleLogout';
 import { Toaster } from './components/ui/Toaster';
@@ -73,7 +74,7 @@ function App() {
             ) : error ? (
               <div style={{ padding: 40, textAlign: 'center', color: 'var(--danger)' }}>Kunne ikkje laste data: {error}</div>
             ) : (
-              <>
+              <Suspense fallback={<DashboardSkeleton />}>
                 {view === 'dashbord' && <Dashboard setView={go} />}
                 {view === 'ansatte' && <Ansatte />}
                 {view === 'timeliste' && <Timeliste />}
@@ -83,7 +84,7 @@ function App() {
                 {view === 'dokument' && <Dokument />}
                 {view === 'rapporter' && <Rapporter />}
                 {view === 'innstillinger' && <Innstillinger setView={go} />}
-              </>
+              </Suspense>
             )}
           </div>
         </div>
