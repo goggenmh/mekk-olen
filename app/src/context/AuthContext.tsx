@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase, pinToPassword } from '../supabaseClient';
 import type { Employee } from '../constants';
-import { useAnsatte } from './AnsatteContext';
+import { useAnsatte, mapAnsatt } from './AnsatteContext';
 
 interface AuthState {
   loading: boolean;
@@ -34,68 +35,91 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [feil, setFeil] = useState<string | null>(null);
   // Hindrar at same PIN blir sendt inn to gonger samtidig.
   const submitting = useRef(false);
-  // Enkel brute-force-sperre: låser PIN-panelet etter fleire feil forsøk.
-  const feilForsok = useRef(0);
+  // Låser PIN-panelet medan servaren har sperra kontoen (sjå pin-login).
   const [laastTil, setLaastTil] = useState(0);
 
+  // «Kven er eg?» blir henta frå databasen (min_profil) ut frå økta, så
+  // innloggings-lista treng ikkje innehalde e-postar.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      const email = data.session?.user?.email;
-      const match = email ? loginAnsatte.find((a) => a.email === email) : null;
-      // Foreldrelaus økt (ingen ansatt med den e-posten) – tøm ho lokalt så
-      // ho ikkje ligg i vegen for neste innlogging.
-      if (email && !match && loginAnsatte.length > 0) {
-        supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+    let levande = true;
+    const synk = async (harOkt: boolean) => {
+      if (!harOkt) {
+        if (levande) { setUser(null); setLoading(false); }
+        return;
       }
-      setUser(match ?? null);
+      const { data, error } = await supabase.rpc('min_profil');
+      if (!levande) return;
+      if (!error) {
+        const rad = (data as unknown[] | null)?.[0];
+        if (!rad) {
+          // Foreldrelaus økt (ingen aktiv tilsett for denne innlogginga) – tøm
+          // ho lokalt så ho ikkje ligg i vegen for neste innlogging.
+          await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+          setUser(null);
+        } else {
+          const ny = mapAnsatt(rad);
+          // Behald same objekt når ingenting er endra (t.d. ved token-fornying),
+          // elles hentar appen alle data på nytt.
+          setUser((prev) => (prev && JSON.stringify(prev) === JSON.stringify(ny) ? prev : ny));
+        }
+      }
       setLoading(false);
-    });
+    };
+    supabase.auth.getSession().then(({ data }) => synk(!!data.session));
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      const email = session?.user?.email;
-      const match = email ? loginAnsatte.find((a) => a.email === email) : null;
-      setUser(match ?? null);
+      // Utsett: Supabase-kall direkte inne i denne callbacken kan låse auth-klienten.
+      setTimeout(() => synk(!!session), 0);
     });
-    return () => sub.subscription.unsubscribe();
-  }, [loginAnsatte]);
+    return () => {
+      levande = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   const tryLogin = async (employee: Employee, candidatePin: string) => {
     if (submitting.current) return;
     submitting.current = true;
-    const creds = { email: employee.email, password: pinToPassword(candidatePin) };
-    const erFeilPin = (e: { message?: string } | null) => !!e && /invalid login credentials/i.test(e.message || '');
     try {
-      // Start alltid frå rein tilstand. Ei gammal økt som ligg lagra i
-      // nettlesaren (typisk Georg, som oftast er den innlogga) kan elles
-      // kollidere med ny innlogging og få rett PIN til å bli avvist.
+      // Start alltid frå rein tilstand, så ei gammal økt ikkje kolliderer.
       await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
-      let { error } = await supabase.auth.signInWithPassword(creds);
-      // Mellombels feil (auth-klienten ikkje klar, nettverk) – prøv ein gong
-      // til, slik at ein rett PIN ikkje blir avvist ved uhell.
-      if (error && !erFeilPin(error)) {
+      // Servaren sjekkar PIN, tel feil forsøk og gir tilbake ei økt. Det gamle
+      // passordet blir sendt med så servaren kan flytte brukaren over til det
+      // nye, sikre passordet første gong.
+      const kall = () => supabase.functions.invoke('pin-login', {
+        body: { id: employee.id, pin: candidatePin, legacy: pinToPassword(candidatePin) },
+      });
+      let { data, error } = await kall();
+      // Nettverksfeil (ikkje svar frå servaren) – prøv éin gong til.
+      if (error && !(error instanceof FunctionsHttpError)) {
         await new Promise((r) => setTimeout(r, 400));
-        ({ error } = await supabase.auth.signInWithPassword(creds));
+        ({ data, error } = await kall());
       }
-      if (error) {
-        if (erFeilPin(error)) {
-          feilForsok.current += 1;
-          if (feilForsok.current >= 5) {
-            feilForsok.current = 0;
-            setLaastTil(Date.now() + 30000);
-            setFeil('For mange forsøk – vent 30 sekund før du prøver igjen.');
-            setPin('');
-            return;
-          }
-          setFeil('Feil PIN – prøv igjen');
+      if (error || !data?.access_token) {
+        let svar: { kode?: string; sekund?: number; att?: number } = {};
+        if (error instanceof FunctionsHttpError) svar = await error.context.json().catch(() => ({}));
+        if (svar.kode === 'sperra') {
+          const sek = svar.sekund ?? 900;
+          setLaastTil(Date.now() + sek * 1000);
+          setFeil(`For mange feil forsøk – prøv igjen om ${Math.ceil(sek / 60)} min.`);
+        } else if (svar.kode === 'feil_pin') {
+          setFeil(svar.att !== undefined && svar.att <= 2 ? `Feil PIN – ${svar.att} forsøk att` : 'Feil PIN – prøv igjen');
+        } else if (svar.kode === 'deaktivert') {
+          setFeil('Kontoen er deaktivert.');
         } else {
           setFeil('Innlogging feila – prøv igjen');
         }
         setPin('');
-      } else {
-        feilForsok.current = 0;
-        setPick(null);
-        setPin('');
-        setFeil(null);
+        return;
       }
+      const { error: oktFeil } = await supabase.auth.setSession({ access_token: data.access_token, refresh_token: data.refresh_token });
+      if (oktFeil) {
+        setFeil('Innlogging feila – prøv igjen');
+        setPin('');
+        return;
+      }
+      setPick(null);
+      setPin('');
+      setFeil(null);
     } finally {
       submitting.current = false;
     }
@@ -110,11 +134,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       feil,
       pickUser: (id: string) => {
         const emp = findAnsatt(id);
-        // Ikkje vel ein ukjend/tom brukar (kan skje viss lista ikkje er lasta).
-        if (!emp || !emp.email) return;
+        // Ikkje vel ein ukjend brukar (kan skje viss lista ikkje er lasta).
+        if (!emp) return;
         setPick(emp);
         setPin('');
         setFeil(null);
+        setLaastTil(0); // Sperra gjeld per tilsett; servaren avgjer for den nye.
       },
       back: () => {
         setPick(null);

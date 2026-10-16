@@ -44,6 +44,27 @@ Function is the only place that key is used.
 Whenever `index.ts` changes in the repo, repeat steps 2–3 (paste + deploy) to
 push the change live — there's no CLI deploy step in this workflow.
 
+## 3b. Deploy the `pin-login` Edge Function (PIN-innlogging)
+
+All PIN login goes through `supabase/functions/pin-login/index.ts`. It counts
+failed attempts per employee in `innlogging_status` and locks the account for
+15 minutes after 5 failures, so the limit can't be bypassed from the browser.
+
+- Deploy it like `ansatte-admin`, but turn **"Verify JWT" off** — it is the
+  login itself, so callers have no session yet.
+- Set the Edge Function secret **`PIN_PEPPER`** to a long random value. The
+  real Auth password is then `HMAC(PIN_PEPPER, "<ansatt-id>:<pin>")`, which
+  only the server can compute, so guessing PINs directly against Supabase Auth
+  no longer works. `ansatte-admin` uses the same secret for new employees and
+  PIN resets.
+- **Never change or delete `PIN_PEPPER` once set** — every migrated employee
+  would be locked out and would need a new PIN.
+- Without `PIN_PEPPER` the function runs in transition mode: it only tries the
+  old `<PIN_SALT><pin>` password (still with the lockout). Once the secret is
+  set, each employee is moved to the new password automatically the first
+  time they log in — nobody needs a new PIN. `innlogging_status.v2` shows who
+  has been moved.
+
 ## 3a. Create the 3 starting employee logins
 
 The app's PIN pad is a UI layer on top of real Supabase Auth accounts. The

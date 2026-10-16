@@ -23,6 +23,27 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
+/** Same avleiing som i pin-login: HMAC-SHA256(PIN_PEPPER, "<ansatt-id>:<pin>"). */
+async function v2Passord(pepper: string, ansattId: string, pin: string): Promise<string> {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pepper), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${ansattId}:${pin}`)));
+  return 'v2.' + btoa(String.fromCharCode(...sig)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/**
+ * Vel passord for ein ny/endra PIN. Med PIN_PEPPER og ein gyldig PIN blir det
+ * det sikre v2-passordet; elles (eldre klient / nøkkel manglar) det gamle.
+ * Returnerer òg om brukaren då er på v2, så pin-login veit kva som gjeld.
+ */
+async function velPassord(ansattId: string, pin: unknown, password: unknown): Promise<{ passord: string; v2: boolean } | null> {
+  const pepper = Deno.env.get('PIN_PEPPER');
+  if (pepper && typeof pin === 'string' && /^\d{4}$/.test(pin)) {
+    return { passord: await v2Passord(pepper, ansattId, pin), v2: true };
+  }
+  if (typeof password === 'string' && password) return { passord: password, v2: false };
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -52,8 +73,9 @@ Deno.serve(async (req) => {
     const { action } = body;
 
     if (action === 'create') {
-      const { id, navn, rolle, lonn, sats, farge, init, telefon, leder, password, email: customEmail, butikk_id, konsern_admin } = body;
-      if (!id || !navn || !password) return json({ error: 'Manglar id, navn eller passord.' }, 400);
+      const { id, navn, rolle, lonn, sats, farge, init, telefon, leder, pin, password, email: customEmail, butikk_id, konsern_admin } = body;
+      const valt = id ? await velPassord(id, pin, password) : null;
+      if (!id || !navn || !valt) return json({ error: 'Manglar id, navn eller PIN.' }, 400);
       const email = customEmail || `${id}@mekk-olen.internal`;
 
       // Berre ein konsern-admin kan opprette ein ny konsern-admin (utan butikk),
@@ -66,7 +88,7 @@ Deno.serve(async (req) => {
 
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email,
-        password,
+        password: valt.passord,
         email_confirm: true,
       });
       if (createErr) return json({ error: createErr.message }, 400);
@@ -80,6 +102,7 @@ Deno.serve(async (req) => {
         await admin.auth.admin.deleteUser(created.user.id);
         return json({ error: insertErr.message }, 400);
       }
+      await admin.from('innlogging_status').upsert({ ansatt_id: id, v2: valt.v2, feil: 0, laast_til: null });
       return json({ ok: true });
     }
 
@@ -101,14 +124,18 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'resetpin') {
-      const { id, password } = body;
+      const { id, pin, password } = body;
+      const valt = id ? await velPassord(id, pin, password) : null;
+      if (!valt) return json({ error: 'Manglar PIN.' }, 400);
       const { data: target } = await admin.from('ansatte').select('email').eq('id', id).maybeSingle();
       if (!target) return json({ error: 'Fann ikkje ansatt.' }, 404);
       const { data: usersPage } = await admin.auth.admin.listUsers();
       const authUser = usersPage?.users.find((u) => u.email === target.email);
       if (!authUser) return json({ error: 'Fann ikkje innlogging for denne ansatte.' }, 404);
-      const { error: pwErr } = await admin.auth.admin.updateUserById(authUser.id, { password });
+      const { error: pwErr } = await admin.auth.admin.updateUserById(authUser.id, { password: valt.passord });
       if (pwErr) return json({ error: pwErr.message }, 400);
+      // Ny PIN opphevar òg ei eventuell sperre.
+      await admin.from('innlogging_status').upsert({ ansatt_id: id, v2: valt.v2, feil: 0, laast_til: null });
       return json({ ok: true });
     }
 

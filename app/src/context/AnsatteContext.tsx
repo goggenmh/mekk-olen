@@ -26,7 +26,7 @@ interface AnsatteState {
 
 const AnsatteContext = createContext<AnsatteState | null>(null);
 
-const mapAnsatt = (r: any): Employee => ({
+export const mapAnsatt = (r: any): Employee => ({
   id: r.id, navn: r.navn, rolle: r.rolle, lonn: r.lonn, sats: r.sats, farge: r.farge, init: r.init,
   email: r.email, telefon: r.telefon || '', leder: r.leder, aktiv: r.aktiv,
   butikk_id: r.butikk_id ?? undefined, konsern_admin: r.konsern_admin ?? false,
@@ -46,8 +46,8 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
     const [ansRes, butRes, loginRes] = await Promise.all([
       supabase.from('ansatte').select('*').order('created_at', { ascending: true }),
       supabase.from('butikkar').select('*').eq('aktiv', true).order('created_at', { ascending: true }),
-      // Økt-uavhengig liste til innloggings-skjermen (SECURITY DEFINER).
-      supabase.rpc('login_ansatte'),
+      // Økt-uavhengig liste til innloggings-skjermen (SECURITY DEFINER, utan e-post).
+      supabase.rpc('login_liste'),
     ]);
     if (!ansRes.error && ansRes.data) setAlleAnsatte(ansRes.data.map(mapAnsatt));
     if (!butRes.error && butRes.data) setButikkar(butRes.data.map(mapButikk));
@@ -98,7 +98,9 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
   const createAnsatt: AnsatteState['createAnsatt'] = async (input) => {
     const id = input.navn.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const { pin, ...rest } = input;
-    await callAdmin('create', { id, ...rest, password: pinToPassword(pin) });
+    // Servaren lagar det sikre passordet av PIN-en; `password` er reserve for
+    // ein servar utan PIN_PEPPER.
+    await callAdmin('create', { id, ...rest, pin, password: pinToPassword(pin) });
     await refreshAnsatte();
     toast('Ansatt oppretta');
   };
@@ -118,7 +120,7 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
   };
 
   const resetPin: AnsatteState['resetPin'] = async (id, pin) => {
-    await callAdmin('resetpin', { id, password: pinToPassword(pin) });
+    await callAdmin('resetpin', { id, pin, password: pinToPassword(pin) });
     toast('PIN nullstilt');
   };
 
