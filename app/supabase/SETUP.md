@@ -148,3 +148,19 @@ since they're baked in at build time. Then deploy `dist/`.
   through the **Ansatte** module in the app — no code changes or redeploy
   needed. `src/constants.ts` only provides the fallback defaults used the
   very first time the `ansatte` table is seeded.
+
+## Push-varsel (`send-push`)
+
+Tilsette skrur på varsel under **Innstillingar → Varsel på denne eininga**.
+Varsel blir sende ved ny vakt, bytteønske, svar på vaktbyte og godkjende timar.
+
+- Deploy `supabase/functions/send-push/index.ts` med **"Verify JWT" av**
+  (appen hentar den offentlege nøkkelen før innlogging; alle andre kall
+  sjekkar økta i funksjonen sjølv).
+- Ingen secrets trengst: VAPID-nøkkelparet blir laga automatisk første gong
+  og lagra i `push_noklar` (berre service_role). Slett ikkje den rada – då
+  sluttar alle eksisterande abonnement å verke.
+- Klienten sender berre *kva* som skjedde (id-ar). Mottakarar og tekst blir
+  henta frå databasen, avgrensa til butikken til den som kallar.
+- iPhone: berre når appen er lagt til på heimeskjermen (iOS 16.4+).
+- SQL: `supabase/push-varsel.sql`.

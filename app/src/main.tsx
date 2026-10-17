@@ -6,6 +6,9 @@ import { AuthProvider } from './context/AuthContext'
 import { AppDataProvider } from './context/AppDataContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { AnsatteProvider } from './context/AnsatteContext'
+import { registrerServiceWorker } from './lib/push'
+
+registrerServiceWorker()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

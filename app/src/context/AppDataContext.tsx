@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from '../supabaseClient';
+import { varsle } from '../lib/push';
 import type { EmployeeId } from '../constants';
 import { parseDate, ymd, today, addDays, DAG_IDX, skiftFraTid } from '../lib/dates';
 import { toast } from '../lib/toast';
@@ -202,23 +203,27 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { error: err } = await supabase.from('time_entries').update({ status: 'godkjent' }).in('id', ids);
     if (err) throw err;
     setEntries((prev) => prev.map((e) => (ids.includes(e.id) ? { ...e, status: 'godkjent' } : e)));
+    varsle({ type: 'timar_godkjent', entry_ids: ids });
     toast('Timar godkjende');
   };
 
   // ---- shifts ----
   const saveShift: AppData['saveShift'] = async (shift) => {
     if (shift.id) {
+      const forrigeAnsatt = shifts.find((x) => x.id === shift.id)?.ansatt;
       const { data, error: err } = await supabase.from('shifts').update({
         ansatt: shift.ansatt, date: shift.date, start: shift.start, slutt: shift.slutt, skift: shift.skift,
       }).eq('id', shift.id).select().single();
       if (err) throw err;
       setShifts((prev) => prev.map((x) => (x.id === shift.id ? mapShift(data) : x)));
+      if (forrigeAnsatt !== shift.ansatt) varsle({ type: 'ny_vakt', shift_ids: [data.id] });
     } else {
       const { data, error: err } = await supabase.from('shifts').insert({
         ansatt: shift.ansatt, date: shift.date, start: shift.start, slutt: shift.slutt, skift: shift.skift,
       }).select().single();
       if (err) throw err;
       setShifts((prev) => [...prev, mapShift(data)]);
+      varsle({ type: 'ny_vakt', shift_ids: [data.id] });
     }
     toast('Vakt lagra');
   };
@@ -261,6 +266,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const { data, error: err } = await supabase.from('shifts').insert(nye).select();
       if (err) throw err;
       innsette = (data || []).map(mapShift);
+      varsle({ type: 'ny_vakt', shift_ids: innsette.map((x) => x.id) });
     }
     setShifts((prev) => [...prev.filter((x) => !dates.includes(x.date)), ...innsette]);
     toast('Veka fylt frå standardveke');
@@ -273,6 +279,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }).select().single();
     if (err) throw err;
     setSwaps((prev) => [...prev, mapSwap(data)]);
+    varsle({ type: 'bytteonske', swap_id: data.id });
   };
   const approveSwap: AppData['approveSwap'] = async (id) => {
     const swap = swaps.find((x) => x.id === id);
@@ -283,11 +290,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     if (err2) throw err2;
     setShifts((prev) => prev.map((x) => (x.id === swap.shiftId ? { ...x, ansatt: swap.til } : x)));
     setSwaps((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'godkjent' } : x)));
+    varsle({ type: 'bytte_svar', swap_id: id });
   };
   const declineSwap: AppData['declineSwap'] = async (id) => {
     const { error: err } = await supabase.from('shift_swaps').update({ status: 'avvist' }).eq('id', id);
     if (err) throw err;
     setSwaps((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'avvist' } : x)));
+    varsle({ type: 'bytte_svar', swap_id: id });
   };
 
   // ---- ferie ----
