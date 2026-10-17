@@ -32,3 +32,6 @@ language sql security definer stable set search_path = public as $$
   select * from public.ansatte where email = auth.email() and aktiv limit 1;
 $$;
 grant execute on function public.min_profil() to authenticated;
+
+-- Den gamle lista (med e-post) er erstatta av login_liste() og stengd.
+revoke execute on function public.login_ansatte() from anon, authenticated, public;
