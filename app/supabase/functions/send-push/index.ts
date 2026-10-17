@@ -5,6 +5,9 @@
 //   bytteonske      – nokon vil bytte vakt med deg (leiarane får òg varsel)
 //   bytte_svar      – vaktbytet ditt er godkjent eller avvist
 //   timar_godkjent  – timane dine er godkjende
+//   timar_venter    – nokon har ført timar som ventar på godkjenning
+//                     (til alle med godkjenne-rett; blir slått saman til
+//                     eitt varsel som blir oppdatert)
 //
 // Tryggleik: klienten seier berre KVA som skjedde (id-ar). Mottakarar og
 // tekst blir henta frå databasen her, avgrensa til butikken til den som
@@ -57,7 +60,18 @@ const idListe = (v: unknown, maks: number): string[] =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, maks) : [];
 
 // url: kva side appen opnar på når ein trykkjer på varselet.
-interface Melding { til: string[]; title: string; body: string; url: string }
+// tag: varsel med same tag erstattar kvarandre i staden for å hope seg opp.
+interface Melding { til: string[]; title: string; body: string; url: string; tag?: string }
+
+/** Aktive tilsette i butikken som kan godkjenne: leiarar og dei med delegert rett. */
+async function godkjennarar(admin: SupabaseClient, butikkId: string): Promise<string[]> {
+  const [{ data: aktive }, { data: delegerte }] = await Promise.all([
+    admin.from('ansatte').select('id, leder').eq('butikk_id', butikkId).eq('aktiv', true),
+    admin.from('permissions').select('ansatt').eq('butikk_id', butikkId).eq('kan_godkjenne', true),
+  ]);
+  const delegertSet = new Set((delegerte || []).map((d) => d.ansatt));
+  return (aktive || []).filter((a) => a.leder || delegertSet.has(a.id)).map((a) => a.id);
+}
 
 // Opnar sida på veka/månaden hendinga gjeld (dato = ÅÅÅÅ-MM-DD).
 const vaktplan = (dato?: string | null) => `/?vis=vaktplan${dato ? `&dato=${dato}` : ''}`;
@@ -111,10 +125,8 @@ Deno.serve(async (req) => {
         : { data: null };
       const url = vaktplan(vakt?.date);
       if (s && type === 'bytteonske' && s.status === 'pending' && s.fra === meg.id) {
-        const { data: leiarar } = await admin.from('ansatte').select('id')
-          .eq('butikk_id', meg.butikk_id).eq('leder', true).eq('aktiv', true);
         meldingar.push({
-          til: ikkjeMeg([s.til, ...(leiarar || []).map((l) => l.id)]),
+          til: ikkjeMeg([s.til, ...(await godkjennarar(admin, meg.butikk_id))]),
           title: 'Bytteønske',
           body: `${meg.navn} vil bytte vakt ${s.dag} ${s.tid}.`,
           url,
@@ -131,6 +143,24 @@ Deno.serve(async (req) => {
         const datoar = (timar || []).filter((t) => t.ansatt === ansatt).map((t) => t.date);
         meldingar.push({ til: [ansatt], title: 'Timar godkjende', body: 'Timane dine er no godkjende.', url: timeliste(tidlegast(datoar)) });
       }
+    } else if (type === 'timar_venter') {
+      // Berre eigne, nye føringar som faktisk ventar på godkjenning.
+      const { data: nye } = await admin.from('time_entries').select('date')
+        .in('id', idListe(body.entry_ids, 50)).eq('butikk_id', meg.butikk_id)
+        .eq('ansatt', meg.id).eq('status', 'venter');
+      if (nye?.length) {
+        const { count } = await admin.from('time_entries').select('id', { count: 'exact', head: true })
+          .eq('butikk_id', meg.butikk_id).eq('status', 'venter');
+        const dato = tidlegast(nye.map((t) => t.date));
+        const n = count ?? nye.length;
+        meldingar.push({
+          til: ikkjeMeg(await godkjennarar(admin, meg.butikk_id)),
+          title: 'Timar til godkjenning',
+          body: `${meg.navn} har ført timar ${datoTekst(dato)}. ${n} ${n === 1 ? 'timeføring ventar' : 'timeføringar ventar'} no.`,
+          url: timeliste(dato),
+          tag: 'timar-venter',
+        });
+      }
     } else {
       return json({ error: 'Ukjend type.' }, 400);
     }
@@ -140,7 +170,7 @@ Deno.serve(async (req) => {
     for (const m of meldingar) {
       if (m.til.length === 0) continue;
       const { data: abonnement } = await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').in('ansatt', m.til);
-      const payload = JSON.stringify({ title: m.title, body: m.body, url: m.url });
+      const payload = JSON.stringify({ title: m.title, body: m.body, url: m.url, tag: m.tag });
       await Promise.all((abonnement || []).map(async (a) => {
         try {
           await webpush.sendNotification({ endpoint: a.endpoint, keys: { p256dh: a.p256dh, auth: a.auth } }, payload);

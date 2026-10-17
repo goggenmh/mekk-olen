@@ -34,3 +34,6 @@ begin
 end $$;
 revoke execute on function public.registrer_push(text, text, text) from public, anon;
 grant execute on function public.registrer_push(text, text, text) to authenticated;
+
+-- send-push må vite kven som har delegert godkjenne-rett.
+grant select on public.permissions to service_role;

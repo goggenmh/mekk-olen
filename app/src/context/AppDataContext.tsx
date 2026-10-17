@@ -202,6 +202,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       }).select().single();
       if (err) throw err;
       setEntries((prev) => [...prev, mapEntry(data)]);
+      // Servaren varslar berre om føringa faktisk ventar på godkjenning.
+      if (data.status === 'venter') varsle({ type: 'timar_venter', entry_ids: [data.id] });
     }
     toast('Timeføring lagra');
   };

@@ -10,7 +10,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  let data = { title: 'MEKK Ølen', body: '', url: '/' };
+  let data = { title: 'MEKK Ølen', body: '', url: '/', tag: undefined };
   try {
     if (event.data) data = { ...data, ...event.data.json() };
   } catch {
@@ -22,6 +22,9 @@ self.addEventListener('push', (event) => {
       icon: '/assets/icon-192.png',
       badge: '/assets/icon-192.png',
       data: { url: data.url || '/' },
+      // Same tag (t.d. «timar-venter») erstattar det førre varselet i staden
+      // for å hope seg opp; renotify gjer at telefonen likevel seier ifrå.
+      ...(data.tag ? { tag: data.tag, renotify: true } : {}),
     })
   );
 });

@@ -153,6 +153,8 @@ since they're baked in at build time. Then deploy `dist/`.
 
 Tilsette skrur på varsel under **Innstillingar → Varsel på denne eininga**.
 Varsel blir sende ved ny vakt, bytteønske, svar på vaktbyte og godkjende timar.
+Alle med godkjenne-rett (leiarar og dei med delegert `kan_godkjenne`) får òg
+bytteønske og «Timar til godkjenning» (slått saman til eitt varsel som blir oppdatert).
 
 - Deploy `supabase/functions/send-push/index.ts` med **"Verify JWT" av**
   (appen hentar den offentlege nøkkelen før innlogging; alle andre kall
