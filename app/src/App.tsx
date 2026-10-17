@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useAppData } from './context/AppDataContext';
 import { LoginScreen } from './components/Login/LoginScreen';
@@ -17,7 +17,10 @@ const Innstillinger = lazy(() => import('./components/Innstillinger/Innstillinge
 import { useIsMobile } from './lib/useIsMobile';
 import { useIdleLogout } from './lib/useIdleLogout';
 import { Toaster } from './components/ui/Toaster';
-import type { View } from './lib/view';
+import { VIEWS, type View } from './lib/view';
+
+const gyldigVis = (v: unknown): View | null =>
+  typeof v === 'string' && VIEWS.some((x) => x.key === v) ? (v as View) : null;
 
 function DashboardSkeleton() {
   return (
@@ -53,11 +56,31 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Alle brukarar landar på dashbordet ved innlogging.
+  // Eit push-varsel kan opne appen på ei bestemt side (?vis=vaktplan). Sida
+  // blir hugsa gjennom innlogginga, om økta har gått ut i mellomtida.
+  const ventandeVis = useRef<View | null>(gyldigVis(new URLSearchParams(window.location.search).get('vis')));
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setView('dashbord');
+    if (ventandeVis.current) window.history.replaceState(null, '', window.location.pathname);
+  }, []);
+
+  // Ved innlogging: gå til sida frå varselet, elles til dashbordet.
+  useEffect(() => {
+    setView(ventandeVis.current ?? 'dashbord');
+    if (user?.id) ventandeVis.current = null;
   }, [user?.id]);
+
+  // Varsel trykt medan appen alt var open: service workeren ber oss byte side.
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const vedMelding = (e: MessageEvent) => {
+      const vis = e.data?.type === 'naviger' ? gyldigVis(e.data.vis) : null;
+      if (!vis) return;
+      if (user) { setView(vis); setMenuOpen(false); }
+      else ventandeVis.current = vis;
+    };
+    navigator.serviceWorker.addEventListener('message', vedMelding);
+    return () => navigator.serviceWorker.removeEventListener('message', vedMelding);
+  }, [user]);
 
   if (authLoading) return null;
   if (!user) return <LoginScreen />;

@@ -56,7 +56,11 @@ function datoTekst(dato: string) {
 const idListe = (v: unknown, maks: number): string[] =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, maks) : [];
 
-interface Melding { til: string[]; title: string; body: string }
+// url: kva side appen opnar på når ein trykkjer på varselet.
+interface Melding { til: string[]; title: string; body: string; url: string }
+
+const VAKTPLAN = '/?vis=vaktplan';
+const TIMELISTE = '/?vis=timeliste';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -93,8 +97,8 @@ Deno.serve(async (req) => {
       }
       for (const [ansatt, vs] of perAnsatt) {
         meldingar.push(vs.length === 1
-          ? { til: [ansatt], title: 'Ny vakt', body: `Du har fått ei vakt ${datoTekst(vs[0].date)} kl. ${vs[0].start}–${vs[0].slutt}.` }
-          : { til: [ansatt], title: 'Vaktplanen er oppdatert', body: `Du har ${vs.length} vakter i den oppdaterte vaktplanen.` });
+          ? { til: [ansatt], title: 'Ny vakt', body: `Du har fått ei vakt ${datoTekst(vs[0].date)} kl. ${vs[0].start}–${vs[0].slutt}.`, url: VAKTPLAN }
+          : { til: [ansatt], title: 'Vaktplanen er oppdatert', body: `Du har ${vs.length} vakter i den oppdaterte vaktplanen.`, url: VAKTPLAN });
       }
     } else if (type === 'bytteonske' || type === 'bytte_svar') {
       const { data: s } = await admin.from('shift_swaps').select('fra, til, dag, tid, status')
@@ -106,17 +110,18 @@ Deno.serve(async (req) => {
           til: ikkjeMeg([s.til, ...(leiarar || []).map((l) => l.id)]),
           title: 'Bytteønske',
           body: `${meg.navn} vil bytte vakt ${s.dag} ${s.tid}.`,
+          url: VAKTPLAN,
         });
       } else if (s && type === 'bytte_svar' && s.status === 'godkjent') {
-        meldingar.push({ til: ikkjeMeg([s.fra, s.til]), title: 'Vaktbyte godkjent', body: `Vaktbytet ${s.dag} ${s.tid} er godkjent.` });
+        meldingar.push({ til: ikkjeMeg([s.fra, s.til]), title: 'Vaktbyte godkjent', body: `Vaktbytet ${s.dag} ${s.tid} er godkjent.`, url: VAKTPLAN });
       } else if (s && type === 'bytte_svar' && s.status === 'avvist') {
-        meldingar.push({ til: ikkjeMeg([s.fra]), title: 'Vaktbyte avvist', body: `Vaktbytet ${s.dag} ${s.tid} vart ikkje godkjent.` });
+        meldingar.push({ til: ikkjeMeg([s.fra]), title: 'Vaktbyte avvist', body: `Vaktbytet ${s.dag} ${s.tid} vart ikkje godkjent.`, url: VAKTPLAN });
       }
     } else if (type === 'timar_godkjent') {
       const { data: timar } = await admin.from('time_entries').select('ansatt')
         .in('id', idListe(body.entry_ids, 500)).eq('butikk_id', meg.butikk_id).eq('status', 'godkjent');
       const til = ikkjeMeg((timar || []).map((t) => t.ansatt));
-      if (til.length) meldingar.push({ til, title: 'Timar godkjende', body: 'Timane dine er no godkjende.' });
+      if (til.length) meldingar.push({ til, title: 'Timar godkjende', body: 'Timane dine er no godkjende.', url: TIMELISTE });
     } else {
       return json({ error: 'Ukjend type.' }, 400);
     }
@@ -126,7 +131,7 @@ Deno.serve(async (req) => {
     for (const m of meldingar) {
       if (m.til.length === 0) continue;
       const { data: abonnement } = await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').in('ansatt', m.til);
-      const payload = JSON.stringify({ title: m.title, body: m.body, url: '/' });
+      const payload = JSON.stringify({ title: m.title, body: m.body, url: m.url });
       await Promise.all((abonnement || []).map(async (a) => {
         try {
           await webpush.sendNotification({ endpoint: a.endpoint, keys: { p256dh: a.p256dh, auth: a.auth } }, payload);

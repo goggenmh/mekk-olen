@@ -26,14 +26,19 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// Trykk på varselet: hent fram appen om ho er open, elles opne ho.
+// Trykk på varselet: opne appen på sida varselet gjeld (url: '/?vis=vaktplan').
+// Er appen open frå før, hentar vi ho fram og ber ho byte side.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const url = event.notification.data?.url || '/';
+  const vis = new URL(url, self.location.origin).searchParams.get('vis');
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((vindauge) => {
       const ope = vindauge.find((c) => c.url.startsWith(self.location.origin));
-      if (ope) return ope.focus();
+      if (ope) {
+        if (vis) ope.postMessage({ type: 'naviger', vis });
+        return ope.focus();
+      }
       return self.clients.openWindow(url);
     })
   );
