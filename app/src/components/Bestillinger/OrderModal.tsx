@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
 import { useAppData } from '../../context/AppDataContext';
+import { useAnsatte } from '../../context/AnsatteContext';
 import { ORDER_FLOW, ORDER_STATUS } from '../../constants';
 import { today } from '../../lib/dates';
 import type { Order } from '../../types';
 
 export function OrderModal({ existing, onClose }: { existing?: Order; onClose: () => void }) {
   const { saveOrder, deleteOrder } = useAppData();
+  const { findAnsatt } = useAnsatte();
+  const funnen = existing?.registrertAv ? findAnsatt(existing.registrertAv) : null;
+  const lagtInnAv = funnen?.navn ? funnen : null;
 
   const [kunde, setKunde] = useState(existing?.kunde || '');
   const [telefon, setTelefon] = useState(existing?.telefon || '');
@@ -43,6 +47,9 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
         </>
       }
     >
+      {lagtInnAv && (
+        <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Lagt inn av <b style={{ color: 'var(--text-secondary)' }}>{lagtInnAv.navn}</b></div>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Field label="Kunde">
           <input value={kunde} onChange={(e) => { setKunde(e.target.value); setFeil(false); }} style={inputStyle} />

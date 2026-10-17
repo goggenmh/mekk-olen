@@ -82,7 +82,7 @@ const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type,
 const mapUnavail = (r: any): Unavailable => ({ id: r.id, ansatt: r.ansatt, dato: r.dato, grunn: r.grunn ?? null });
 const mapStandard = (r: any): StandardvekeEntry => ({ id: r.id, ansatt: r.ansatt, dag: r.dag, start: r.start, slutt: r.slutt });
 const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [] });
-const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla });
+const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla, registrertAv: r.registrert_av ?? null });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
 const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne: r.kan_godkjenne });
 const mapMelding = (r: any): Melding => ({ id: r.id, fra: r.fra, til: r.til, tekst: r.tekst, created_at: r.created_at });

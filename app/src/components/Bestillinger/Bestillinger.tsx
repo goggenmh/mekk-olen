@@ -5,6 +5,8 @@ import { datoKort, MND } from '../../lib/dates';
 import { OrderModal } from './OrderModal';
 import { NotifyModal } from './NotifyModal';
 import { useIsMobile } from '../../lib/useIsMobile';
+import { useAnsatte } from '../../context/AnsatteContext';
+import { Avatar } from '../ui/Avatar';
 import type { Order } from '../../types';
 
 const FILTERS: { key: string; label: string }[] = [
@@ -17,6 +19,12 @@ const FILTERS: { key: string; label: string }[] = [
 
 export function Bestillinger() {
   const { orders, advanceOrder } = useAppData();
+  const { findAnsatt } = useAnsatte();
+  // Kven la inn bestillinga (eldre bestillingar har ingen registrert).
+  const lagtInnAv = (o: Order) => {
+    const a = o.registrertAv ? findAnsatt(o.registrertAv) : null;
+    return a?.navn ? a : null;
+  };
   const isMobile = useIsMobile();
   const [filter, setFilter] = useState('aktive');
   const [orderTarget, setOrderTarget] = useState<Order | 'new' | null>(null);
@@ -103,6 +111,12 @@ export function Bestillinger() {
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 5 }}>{o.vare}{o.antal > 1 ? ` · ${o.antal} stk` : ''}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{o.leverandor} · {datoKort(o.dato)}{o.varsla ? ` · varsla ${datoKort(o.varsla)}` : ''}</div>
+                {lagtInnAv(o) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
+                    <Avatar init={lagtInnAv(o)!.init} farge={lagtInnAv(o)!.farge} size={18} fontSize={8.5} />
+                    Lagt inn av {lagtInnAv(o)!.navn}
+                  </div>
+                )}
                 {o.lenke && (
                   <a href={lenkeHref(o.lenke)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 7, fontSize: 12.5, fontWeight: 600, color: 'var(--brand)', textDecoration: 'none' }}>Opne produkt ↗</a>
                 )}
@@ -135,6 +149,7 @@ export function Bestillinger() {
               <th style={th}>Leverandør</th>
               <th style={th}>Dato</th>
               <th style={th}>Antal</th>
+              <th style={th}>Lagt inn av</th>
               <th style={th}>Status</th>
               <th style={th}></th>
             </tr>
@@ -157,6 +172,14 @@ export function Bestillinger() {
                   <td style={td}>{o.leverandor}</td>
                   <td style={td}>{datoKort(o.dato)}</td>
                   <td style={td}>{o.antal}</td>
+                  <td style={td}>
+                    {lagtInnAv(o) ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap' }}>
+                        <Avatar init={lagtInnAv(o)!.init} farge={lagtInnAv(o)!.farge} size={22} fontSize={9.5} />
+                        {lagtInnAv(o)!.navn.split(' ')[0]}
+                      </span>
+                    ) : <span style={{ color: 'var(--text-faint)' }}>–</span>}
+                  </td>
                   <td style={td}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 9, textTransform: 'uppercase' }}>{s.tekst}</span>
                     {o.varsla && <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 3 }}>Varsla {datoKort(o.varsla)}</div>}
@@ -246,6 +269,11 @@ export function Bestillinger() {
                                     >↗</span>
                                   )}
                                   {o.antal > 1 && <span style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>×{o.antal}</span>}
+                                  {lagtInnAv(o) && (
+                                    <span title={`Lagt inn av ${lagtInnAv(o)!.navn}`} style={{ flex: 'none', display: 'flex' }}>
+                                      <Avatar init={lagtInnAv(o)!.init} farge={lagtInnAv(o)!.farge} size={18} fontSize={8.5} />
+                                    </span>
+                                  )}
                                   <span style={{ fontSize: 11.5, color: 'var(--text-faint)', flex: 'none' }}>{datoKort(o.dato)}</span>
                                 </button>
                               ))}
