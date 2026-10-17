@@ -167,9 +167,22 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke']) {
       kanal.on('postgres_changes', { event: '*', schema: 'public', table }, planlegg);
     }
-    kanal.subscribe();
+    // Mobilen set appen på pause i bakgrunnen, og då går endringar tapt.
+    // Hent på nytt når sambandet blir kopla til igjen, når appen kjem fram
+    // på skjermen (t.d. frå eit push-varsel), og når nettet er tilbake.
+    let forsteGong = true;
+    kanal.subscribe((status) => {
+      if (status !== 'SUBSCRIBED') return;
+      if (forsteGong) { forsteGong = false; return; }
+      planlegg();
+    });
+    const vedSynleg = () => { if (document.visibilityState === 'visible') planlegg(); };
+    document.addEventListener('visibilitychange', vedSynleg);
+    window.addEventListener('online', planlegg);
     return () => {
       clearTimeout(timer);
+      document.removeEventListener('visibilitychange', vedSynleg);
+      window.removeEventListener('online', planlegg);
       supabase.removeChannel(kanal);
     };
   }, [hent]);
