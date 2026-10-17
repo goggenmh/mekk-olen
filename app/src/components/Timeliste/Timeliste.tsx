@@ -21,15 +21,16 @@ function downloadCsv(filename: string, rows: (string | number)[][]) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function Timeliste() {
+/** startDato: opne på veka/månaden til denne datoen (t.d. frå eit push-varsel). */
+export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
   const { entries, approveEmployeeEntries, canApprove } = useAppData();
   const { ansatte } = useAnsatte();
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const maaGodkjenne = canApprove(user?.id);
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
-  const [weekStart, setWeekStart] = useState(mondayOf(today()));
-  const [monthAnchor, setMonthAnchor] = useState(today().slice(0, 7));
+  const [weekStart, setWeekStart] = useState(mondayOf(startDato ?? today()));
+  const [monthAnchor, setMonthAnchor] = useState((startDato ?? today()).slice(0, 7));
   const [editTarget, setEditTarget] = useState<{ ansatt: TimeEntry['ansatt']; date: string } | null>(null);
 
   const dates = useMemo(() => weekDates(weekStart), [weekStart]);

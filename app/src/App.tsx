@@ -21,6 +21,15 @@ import { VIEWS, type View } from './lib/view';
 
 const gyldigVis = (v: unknown): View | null =>
   typeof v === 'string' && VIEWS.some((x) => x.key === v) ? (v as View) : null;
+const gyldigDato = (d: unknown): string | null =>
+  typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
+
+/** Kvar eit push-varsel vil ta brukaren: side + eventuelt dato (veka/månaden). */
+interface Mal { vis: View; dato: string | null }
+const lesMal = (vis: unknown, dato: unknown): Mal | null => {
+  const v = gyldigVis(vis);
+  return v ? { vis: v, dato: gyldigDato(dato) } : null;
+};
 
 function DashboardSkeleton() {
   return (
@@ -44,9 +53,12 @@ function App() {
   const { loading: authLoading, user, logout } = useAuth();
   const { loading: dataLoading, error, refreshAll } = useAppData();
   const [view, setView] = useState<View>('dashbord');
+  // Dato frå eit varsel: Vaktplan/Timeliste opnar på den veka/månaden.
+  const [visDato, setVisDato] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
-  const go = (v: View) => { setView(v); setMenuOpen(false); };
+  const go = (v: View) => { setView(v); setVisDato(null); setMenuOpen(false); };
+  const gaaTil = (m: Mal) => { setView(m.vis); setVisDato(m.dato); setMenuOpen(false); };
 
   // Automatisk utlogging etter 5 minutt utan aktivitet.
   useIdleLogout(!!user, logout, 5);
@@ -58,14 +70,17 @@ function App() {
 
   // Eit push-varsel kan opne appen på ei bestemt side (?vis=vaktplan). Sida
   // blir hugsa gjennom innlogginga, om økta har gått ut i mellomtida.
-  const ventandeVis = useRef<View | null>(gyldigVis(new URLSearchParams(window.location.search).get('vis')));
+  const ventandeVis = useRef<Mal | null>((() => {
+    const q = new URLSearchParams(window.location.search);
+    return lesMal(q.get('vis'), q.get('dato'));
+  })());
   useEffect(() => {
     if (ventandeVis.current) window.history.replaceState(null, '', window.location.pathname);
   }, []);
 
   // Ved innlogging: gå til sida frå varselet, elles til dashbordet.
   useEffect(() => {
-    setView(ventandeVis.current ?? 'dashbord');
+    gaaTil(ventandeVis.current ?? { vis: 'dashbord', dato: null });
     if (user?.id) ventandeVis.current = null;
   }, [user?.id]);
 
@@ -73,10 +88,10 @@ function App() {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
     const vedMelding = (e: MessageEvent) => {
-      const vis = e.data?.type === 'naviger' ? gyldigVis(e.data.vis) : null;
-      if (!vis) return;
-      if (user) { setView(vis); setMenuOpen(false); }
-      else ventandeVis.current = vis;
+      const mal = e.data?.type === 'naviger' ? lesMal(e.data.vis, e.data.dato) : null;
+      if (!mal) return;
+      if (user) gaaTil(mal);
+      else ventandeVis.current = mal;
     };
     navigator.serviceWorker.addEventListener('message', vedMelding);
     return () => navigator.serviceWorker.removeEventListener('message', vedMelding);
@@ -100,8 +115,8 @@ function App() {
               <Suspense fallback={<DashboardSkeleton />}>
                 {view === 'dashbord' && <Dashboard setView={go} />}
                 {view === 'ansatte' && <Ansatte />}
-                {view === 'timeliste' && <Timeliste />}
-                {view === 'vaktplan' && <Vaktplan />}
+                {view === 'timeliste' && <Timeliste key={visDato ?? 'i-dag'} startDato={visDato} />}
+                {view === 'vaktplan' && <Vaktplan key={visDato ?? 'i-dag'} startDato={visDato} />}
                 {view === 'oppgaver' && <Oppgaver />}
                 {view === 'bestilling' && <Bestillinger />}
                 {view === 'dokument' && <Dokument />}

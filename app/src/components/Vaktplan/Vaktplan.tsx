@@ -19,7 +19,8 @@ const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 const ferieStyl = (type: string) => FERIE_STYL[type] || FERIE_STYL.Fri;
 const ferieForDag = (ferie: Ferie[], dato: string) => ferie.filter((f) => f.fra && f.til && f.fra <= dato && dato <= f.til);
 
-export function Vaktplan() {
+/** startDato: opne på veka til denne datoen (t.d. frå eit push-varsel). */
+export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
   const { shifts, swaps, ferie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, saveShift, deleteShift, saveFerie } = useAppData();
   const { user } = useAuth();
   const { findAnsatt, ansatte } = useAnsatte();
@@ -31,7 +32,7 @@ export function Vaktplan() {
   const kanLageVakt = canApprove(user?.id);
   const opneFerie = (f: Ferie) => { if (kanStyreFerie || f.ansatt === user?.id) setFerieTarget(f); };
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
-  const [vpWeek, setVpWeek] = useState(mondayOf(today()));
+  const [vpWeek, setVpWeek] = useState(mondayOf(startDato ?? today()));
   const [monthAnchor, setMonthAnchor] = useState(today().slice(0, 7));
   const [shiftTarget, setShiftTarget] = useState<{ date: string; shift?: Shift } | null>(null);
   const [swapTarget, setSwapTarget] = useState<Shift | null>(null);

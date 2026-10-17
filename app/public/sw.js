@@ -31,12 +31,14 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const url = event.notification.data?.url || '/';
-  const vis = new URL(url, self.location.origin).searchParams.get('vis');
+  const q = new URL(url, self.location.origin).searchParams;
+  const vis = q.get('vis');
+  const dato = q.get('dato');
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((vindauge) => {
       const ope = vindauge.find((c) => c.url.startsWith(self.location.origin));
       if (ope) {
-        if (vis) ope.postMessage({ type: 'naviger', vis });
+        if (vis) ope.postMessage({ type: 'naviger', vis, dato });
         return ope.focus();
       }
       return self.clients.openWindow(url);

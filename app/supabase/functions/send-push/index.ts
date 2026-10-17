@@ -59,8 +59,10 @@ const idListe = (v: unknown, maks: number): string[] =>
 // url: kva side appen opnar på når ein trykkjer på varselet.
 interface Melding { til: string[]; title: string; body: string; url: string }
 
-const VAKTPLAN = '/?vis=vaktplan';
-const TIMELISTE = '/?vis=timeliste';
+// Opnar sida på veka/månaden hendinga gjeld (dato = ÅÅÅÅ-MM-DD).
+const vaktplan = (dato?: string | null) => `/?vis=vaktplan${dato ? `&dato=${dato}` : ''}`;
+const timeliste = (dato?: string | null) => `/?vis=timeliste${dato ? `&dato=${dato}` : ''}`;
+const tidlegast = (datoar: string[]) => [...datoar].sort()[0];
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -96,13 +98,18 @@ Deno.serve(async (req) => {
         perAnsatt.set(v.ansatt, [...(perAnsatt.get(v.ansatt) || []), v]);
       }
       for (const [ansatt, vs] of perAnsatt) {
+        const url = vaktplan(tidlegast(vs.map((v) => v.date)));
         meldingar.push(vs.length === 1
-          ? { til: [ansatt], title: 'Ny vakt', body: `Du har fått ei vakt ${datoTekst(vs[0].date)} kl. ${vs[0].start}–${vs[0].slutt}.`, url: VAKTPLAN }
-          : { til: [ansatt], title: 'Vaktplanen er oppdatert', body: `Du har ${vs.length} vakter i den oppdaterte vaktplanen.`, url: VAKTPLAN });
+          ? { til: [ansatt], title: 'Ny vakt', body: `Du har fått ei vakt ${datoTekst(vs[0].date)} kl. ${vs[0].start}–${vs[0].slutt}.`, url }
+          : { til: [ansatt], title: 'Vaktplanen er oppdatert', body: `Du har ${vs.length} vakter i den oppdaterte vaktplanen.`, url });
       }
     } else if (type === 'bytteonske' || type === 'bytte_svar') {
-      const { data: s } = await admin.from('shift_swaps').select('fra, til, dag, tid, status')
+      const { data: s } = await admin.from('shift_swaps').select('fra, til, dag, tid, status, shift_id')
         .eq('id', String(body.swap_id || '')).eq('butikk_id', meg.butikk_id).maybeSingle();
+      const { data: vakt } = s?.shift_id
+        ? await admin.from('shifts').select('date').eq('id', s.shift_id).maybeSingle()
+        : { data: null };
+      const url = vaktplan(vakt?.date);
       if (s && type === 'bytteonske' && s.status === 'pending' && s.fra === meg.id) {
         const { data: leiarar } = await admin.from('ansatte').select('id')
           .eq('butikk_id', meg.butikk_id).eq('leder', true).eq('aktiv', true);
@@ -110,18 +117,20 @@ Deno.serve(async (req) => {
           til: ikkjeMeg([s.til, ...(leiarar || []).map((l) => l.id)]),
           title: 'Bytteønske',
           body: `${meg.navn} vil bytte vakt ${s.dag} ${s.tid}.`,
-          url: VAKTPLAN,
+          url,
         });
       } else if (s && type === 'bytte_svar' && s.status === 'godkjent') {
-        meldingar.push({ til: ikkjeMeg([s.fra, s.til]), title: 'Vaktbyte godkjent', body: `Vaktbytet ${s.dag} ${s.tid} er godkjent.`, url: VAKTPLAN });
+        meldingar.push({ til: ikkjeMeg([s.fra, s.til]), title: 'Vaktbyte godkjent', body: `Vaktbytet ${s.dag} ${s.tid} er godkjent.`, url });
       } else if (s && type === 'bytte_svar' && s.status === 'avvist') {
-        meldingar.push({ til: ikkjeMeg([s.fra]), title: 'Vaktbyte avvist', body: `Vaktbytet ${s.dag} ${s.tid} vart ikkje godkjent.`, url: VAKTPLAN });
+        meldingar.push({ til: ikkjeMeg([s.fra]), title: 'Vaktbyte avvist', body: `Vaktbytet ${s.dag} ${s.tid} vart ikkje godkjent.`, url });
       }
     } else if (type === 'timar_godkjent') {
-      const { data: timar } = await admin.from('time_entries').select('ansatt')
+      const { data: timar } = await admin.from('time_entries').select('ansatt, date')
         .in('id', idListe(body.entry_ids, 500)).eq('butikk_id', meg.butikk_id).eq('status', 'godkjent');
-      const til = ikkjeMeg((timar || []).map((t) => t.ansatt));
-      if (til.length) meldingar.push({ til, title: 'Timar godkjende', body: 'Timane dine er no godkjende.', url: TIMELISTE });
+      for (const ansatt of ikkjeMeg((timar || []).map((t) => t.ansatt))) {
+        const datoar = (timar || []).filter((t) => t.ansatt === ansatt).map((t) => t.date);
+        meldingar.push({ til: [ansatt], title: 'Timar godkjende', body: 'Timane dine er no godkjende.', url: timeliste(tidlegast(datoar)) });
+      }
     } else {
       return json({ error: 'Ukjend type.' }, 400);
     }
