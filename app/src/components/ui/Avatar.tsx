@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { tekstPaFarge } from '../../lib/farge';
 
 export function Avatar({ init, farge, size = 34, fontSize = 12 }: { init: string; farge: string; size?: number; fontSize?: number }) {
   const style: CSSProperties = {
@@ -12,7 +13,7 @@ export function Avatar({ init, farge, size = 34, fontSize = 12 }: { init: string
     justifyContent: 'center',
     fontWeight: 700,
     fontSize,
-    color: '#fff',
+    color: tekstPaFarge(farge),
   };
   return <div style={style}>{init}</div>;
 }

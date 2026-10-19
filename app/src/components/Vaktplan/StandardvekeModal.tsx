@@ -21,7 +21,7 @@ const DUMMY_DATO: Record<string, string> = {
 
 interface Rad { ansatt: string; dag: string; start: string; slutt: string; }
 
-const sel: CSSProperties = { padding: '8px 9px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 9, fontFamily: "'Geist'", fontSize: 13, color: 'var(--text)' };
+const sel: CSSProperties = { padding: '8px 9px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 9, fontFamily: "'Geist Variable'", fontSize: 13, color: 'var(--text)' };
 
 export function StandardvekeModal({ onClose }: { onClose: () => void }) {
   const { standardveke, saveStandardveke } = useAppData();
@@ -63,8 +63,8 @@ export function StandardvekeModal({ onClose }: { onClose: () => void }) {
               <select value={r.dag} onChange={(e) => oppdater(i, { dag: e.target.value })} style={{ ...sel, flex: '0 1 110px' }}>
                 {DAGAR.map((d) => <option key={d.key} value={d.key}>{d.namn}</option>)}
               </select>
-              <input type="time" value={r.start} onChange={(e) => oppdater(i, { start: e.target.value })} style={{ ...sel, fontFamily: "'Geist Mono'", width: 92 }} />
-              <input type="time" value={r.slutt} onChange={(e) => oppdater(i, { slutt: e.target.value })} style={{ ...sel, fontFamily: "'Geist Mono'", width: 92 }} />
+              <input type="time" value={r.start} onChange={(e) => oppdater(i, { start: e.target.value })} style={{ ...sel, fontFamily: "'Geist Mono Variable'", width: 92 }} />
+              <input type="time" value={r.slutt} onChange={(e) => oppdater(i, { slutt: e.target.value })} style={{ ...sel, fontFamily: "'Geist Mono Variable'", width: 92 }} />
               <span style={{ fontSize: 11, fontWeight: 700, minWidth: 62, color: skift ? (SKIFT_FARGE[skift] || 'var(--text-muted)') : 'var(--danger)' }}>{skift || 'ugyldig'}</span>
               <button onClick={() => fjern(i)} title="Fjern" style={{ width: 30, height: 30, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 9, cursor: 'pointer', color: 'var(--danger)', fontSize: 15, flex: 'none' }}>✕</button>
             </div>

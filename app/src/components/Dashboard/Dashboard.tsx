@@ -154,14 +154,14 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
     <div style={{ padding: isMobile ? '16px 16px 28px' : '24px 28px 34px', display: 'flex', flexDirection: 'column', gap: 15 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: isMobile ? 24 : 30, letterSpacing: '-0.6px' }}>
+          <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: isMobile ? 24 : 30, letterSpacing: '-0.6px' }}>
             {helsing}, <span style={{ background: 'linear-gradient(120deg, var(--brand), var(--brand-strong))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{fornamn}</span>
           </div>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4 }}>{fullDatoTekst(t)}</div>
         </div>
         {!isMobile && (
           <div style={{ textAlign: 'right', lineHeight: 1.1 }}>
-            <div style={{ fontFamily: "'Geist Mono'", fontSize: 26, fontWeight: 600, letterSpacing: '-0.5px' }}>{klokke}</div>
+            <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 26, fontWeight: 600, letterSpacing: '-0.5px' }}>{klokke}</div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginTop: 2 }}>Veke {isoWeek(t)}</div>
           </div>
         )}
@@ -194,7 +194,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             return (
               <div key={k.lab} style={{ padding: '13px 18px', borderLeft: forsteIKol ? 'none' : '1px solid var(--divider)', borderTop: nyRad ? '1px solid var(--divider)' : 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
-                  <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Geist Mono'", color: 'var(--brand-strong)', letterSpacing: '-0.5px' }}>{k.verdi}</div>
+                  <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Geist Mono Variable'", color: 'var(--brand-strong)', letterSpacing: '-0.5px' }}>{k.verdi}</div>
                   {k.trend !== null && (
                     <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 999, color: k.trend >= 0 ? '#2f9e6f' : 'var(--danger)', background: k.trend >= 0 ? 'rgba(47,158,111,0.12)' : 'rgba(192,57,43,0.10)' }}>
                       {k.trend >= 0 ? '↑' : '↓'} {Math.abs(k.trend)}%
@@ -217,7 +217,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
           </span>
           {nesteVakt ? (
             <>
-              <div style={{ fontFamily: "'Geist Mono'", fontSize: isMobile ? 30 : 34, fontWeight: 600, letterSpacing: '-1px', margin: '8px 0 1px' }}>{nesteVakt.start} – {nesteVakt.slutt}</div>
+              <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: isMobile ? 30 : 34, fontWeight: 600, letterSpacing: '-1px', margin: '8px 0 1px' }}>{nesteVakt.start} – {nesteVakt.slutt}</div>
               <div style={{ fontSize: 13.5, color: 'var(--hero-sub)', fontWeight: 500, textTransform: 'capitalize' }}>{nesteVakt.skift || 'Vakt'}</div>
               <div style={{ display: 'flex', gap: 10, marginTop: 13, flexWrap: 'wrap' }}>
                 {nesteKollegaer.length > 0 && (
@@ -293,7 +293,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                   <div key={g.dato} style={{ display: 'flex', gap: 11, alignItems: 'flex-start' }}>
                     <div style={{ flex: 'none', width: 44, textAlign: 'center', padding: '5px 0', borderRadius: 10, background: erIDag ? 'var(--brand-soft)' : 'var(--surface-alt)', border: '1px solid var(--border)' }}>
                       <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)' }}>{UKE_KORT[weekdayIdx(g.dato)]}</div>
-                      <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(g.dato).getDate()}</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "'Geist Variable'", color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(g.dato).getDate()}</div>
                     </div>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5, paddingTop: 1, minWidth: 0 }}>
                       {g.vakter.map((s) => {
@@ -302,7 +302,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                           <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                             <span style={{ width: 8, height: 8, borderRadius: '50%', background: a.farge, flex: 'none' }} />
                             <span style={{ fontSize: 12.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.navn}</span>
-                            <span style={{ marginLeft: 'auto', fontFamily: "'Geist Mono'", fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', flex: 'none' }}>{s.start}–{s.slutt}</span>
+                            <span style={{ marginLeft: 'auto', fontFamily: "'Geist Mono Variable'", fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', flex: 'none' }}>{s.start}–{s.slutt}</span>
                           </div>
                         );
                       })}
@@ -323,7 +323,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                 <div key={a.id}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 4 }}>
                     <span style={{ fontWeight: 600 }}>{a.navn}</span>
-                    <span style={{ fontFamily: "'Geist Mono'", color: 'var(--text-muted)' }}>{fmt(tt)} t</span>
+                    <span style={{ fontFamily: "'Geist Mono Variable'", color: 'var(--text-muted)' }}>{fmt(tt)} t</span>
                   </div>
                   <div style={{ height: 7, borderRadius: 6, background: 'var(--surface-alt)', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${(tt / maxTimar) * 100}%`, background: a.farge, borderRadius: 6 }} />

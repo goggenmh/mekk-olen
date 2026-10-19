@@ -28,7 +28,7 @@ export function BottomNav({ view, setView, onMeir }: { view: View; setView: (v: 
       aria-current={aktiv ? 'page' : undefined}
       style={{
         flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '8px 0 6px',
-        border: 'none', background: 'none', cursor: 'pointer', fontFamily: "'Geist'", fontSize: 10.5, fontWeight: 600,
+        border: 'none', background: 'none', cursor: 'pointer', fontFamily: "'Geist Variable'", fontSize: 10.5, fontWeight: 600,
         color: aktiv ? 'var(--brand-strong)' : 'var(--text-muted)', position: 'relative',
       }}
     >

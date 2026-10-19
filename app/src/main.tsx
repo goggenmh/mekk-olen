@@ -1,5 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+// Fonten blir levert frå eigen server (ikkje Google), så ho blokkerer ikkje første visning.
+import '@fontsource-variable/geist'
+import '@fontsource-variable/geist-mono'
 import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './context/AuthContext'

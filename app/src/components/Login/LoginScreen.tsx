@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { pad, fullDatoTekst, today } from '../../lib/dates';
+import { tekstPaFarge } from '../../lib/farge';
 
 const PAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
@@ -55,7 +56,7 @@ export function LoginScreen() {
         <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: '0.6px', color: 'var(--login-text)' }}>{merke}</span>
       </div>
 
-      <div style={{ fontFamily: "'Geist Mono'", fontWeight: 700, fontSize: 'clamp(54px, 10vw, 78px)', color: 'var(--login-text)', letterSpacing: '-1px', lineHeight: 1 }}>
+      <div style={{ fontFamily: "'Geist Mono Variable'", fontWeight: 700, fontSize: 'clamp(54px, 10vw, 78px)', color: 'var(--login-text)', letterSpacing: '-1px', lineHeight: 1 }}>
         {pad(now.getHours())}:{pad(now.getMinutes())}<span style={{ color: 'var(--login-accent-2)' }}>:{pad(now.getSeconds())}</span>
       </div>
       <div style={{ fontSize: 16, color: 'var(--login-sub)', fontWeight: 500, marginTop: 12, letterSpacing: '0.3px' }}>{dateStr}</div>
@@ -65,7 +66,7 @@ export function LoginScreen() {
           <>
             <button onClick={back} style={backBtn}>‹ Byt brukar</button>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: 58, height: 58, borderRadius: 17, background: pick.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 12 }}>
+              <div style={{ width: 58, height: 58, borderRadius: 17, background: pick.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: tekstPaFarge(pick.farge), marginBottom: 12 }}>
                 {pick.init}
               </div>
               <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--login-text)' }}>Hei, {pick.navn.split(' ')[0]}</div>
@@ -80,7 +81,7 @@ export function LoginScreen() {
                       key={i}
                       style={{
                         width: 48, height: 56, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontFamily: "'Geist Mono'", fontSize: 24, fontWeight: 700, color: 'var(--login-text)',
+                        fontFamily: "'Geist Mono Variable'", fontSize: 24, fontWeight: 700, color: 'var(--login-text)',
                         border: `1.5px solid ${fylt || aktiv ? 'var(--login-accent)' : 'var(--login-surface-border)'}`,
                         background: 'var(--login-pin-bg)',
                         boxShadow: aktiv ? '0 0 0 3px var(--ring)' : 'none',
@@ -107,7 +108,7 @@ export function LoginScreen() {
                 ))}
                 <div />
                 <button className="glasskey" onClick={() => pressDigit('0')} style={padKey}>0</button>
-                <button className="glasskey" onClick={backspace} style={{ ...padKey, color: 'var(--login-sub)', fontSize: 17, fontFamily: "'Geist'" }}>⌫</button>
+                <button className="glasskey" onClick={backspace} style={{ ...padKey, color: 'var(--login-sub)', fontSize: 17, fontFamily: "'Geist Variable'" }}>⌫</button>
               </div>
             </div>
           </>
@@ -143,7 +144,7 @@ export function LoginScreen() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {synlege.map((u) => (
                 <button key={u.id} className="glassrow" onClick={() => pickUser(u.id)} style={rowBtn}>
-                  <div style={{ flex: 'none', width: 42, height: 42, borderRadius: 13, background: u.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#fff' }}>
+                  <div style={{ flex: 'none', width: 42, height: 42, borderRadius: 13, background: u.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: tekstPaFarge(u.farge) }}>
                     {u.init}
                   </div>
                   <div style={{ lineHeight: 1.25, textAlign: 'left' }}>
@@ -171,7 +172,7 @@ const glass: CSSProperties = {
   background: 'var(--login-card-bg)', border: '1px solid var(--login-card-border)',
   boxShadow: 'var(--login-card-shadow)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
 };
-const backBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--login-sub)', fontFamily: "'Geist'", fontSize: 13, fontWeight: 600, marginBottom: 14 };
+const backBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--login-sub)', fontFamily: "'Geist Variable'", fontSize: 13, fontWeight: 600, marginBottom: 14 };
 const rowBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', transition: 'all 0.15s ease' };
 const tileBtn: CSSProperties = { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, padding: '14px 15px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', transition: 'all 0.15s ease', textAlign: 'left' };
-const padKey: CSSProperties = { height: 54, border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', fontFamily: "'Geist Mono'", fontSize: 20, fontWeight: 600, color: 'var(--login-text)', transition: 'all 0.12s ease' };
+const padKey: CSSProperties = { height: 54, border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', fontFamily: "'Geist Mono Variable'", fontSize: 20, fontWeight: 600, color: 'var(--login-text)', transition: 'all 0.12s ease' };

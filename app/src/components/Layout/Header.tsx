@@ -102,7 +102,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           aria-label="Søk"
           style={{
             width: '100%', padding: '8px 13px', border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 9, fontFamily: "'Geist'", fontSize: 13, color: 'var(--topbar-ctl-fg)',
+            borderRadius: 9, fontFamily: "'Geist Variable'", fontSize: 13, color: 'var(--topbar-ctl-fg)',
           }}
         />
         {hits.length > 0 && (
@@ -207,7 +207,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           title="Logg ut" aria-label="Logg ut"
           style={{
             marginLeft: 6, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 9, cursor: 'pointer', fontFamily: "'Geist'", fontSize: 13, fontWeight: 600, color: 'var(--topbar-ctl-fg)',
+            borderRadius: 9, cursor: 'pointer', fontFamily: "'Geist Variable'", fontSize: 13, fontWeight: 600, color: 'var(--topbar-ctl-fg)',
             ...(isMobile
               ? { width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }
               : { padding: '8px 14px' }),

@@ -44,7 +44,7 @@ export function Rapporter() {
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 920 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Rapportar</h1>
+          <h1 style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Rapportar</h1>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Nøkkeltal for {periode === 'uke' ? 'denne veka' : 'denne månaden'}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -66,7 +66,7 @@ export function Rapporter() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 14 }}>
         {kort.map((k) => (
           <div key={k.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '17px 19px', boxShadow: 'var(--shadow-card)' }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: k.farge, fontFamily: "'Geist Mono'", letterSpacing: '-0.5px' }}>{k.verdi}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: k.farge, fontFamily: "'Geist Mono Variable'", letterSpacing: '-0.5px' }}>{k.verdi}</div>
             <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', marginTop: 4 }}>{k.label}</div>
           </div>
         ))}
@@ -85,9 +85,9 @@ export function Rapporter() {
               <Avatar init={a.init} farge={a.farge} size={28} fontSize={10.5} />
               <span style={{ fontSize: 13.5, fontWeight: 600 }}>{a.navn}</span>
             </div>
-            <span style={{ fontFamily: "'Geist Mono'", fontSize: 13 }}>{fmt(totalTimar)} t</span>
-            <span style={{ fontFamily: "'Geist Mono'", fontSize: 13, color: ventar > 0 ? 'var(--danger)' : 'var(--text-muted)' }}>{ventar}</span>
-            <span style={{ fontFamily: "'Geist Mono'", fontSize: 13 }}>{kr !== null ? fmtKr(kr) : 'Fastløn'}</span>
+            <span style={{ fontFamily: "'Geist Mono Variable'", fontSize: 13 }}>{fmt(totalTimar)} t</span>
+            <span style={{ fontFamily: "'Geist Mono Variable'", fontSize: 13, color: ventar > 0 ? 'var(--danger)' : 'var(--text-muted)' }}>{ventar}</span>
+            <span style={{ fontFamily: "'Geist Mono Variable'", fontSize: 13 }}>{kr !== null ? fmtKr(kr) : 'Fastløn'}</span>
           </div>
         ))}
       </div>

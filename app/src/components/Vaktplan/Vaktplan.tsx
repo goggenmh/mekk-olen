@@ -14,6 +14,7 @@ import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { useIsMobile } from '../../lib/useIsMobile';
 import type { Shift, Ferie, Unavailable } from '../../types';
+import { tekstPaFarge } from '../../lib/farge';
 
 const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 const ferieStyl = (type: string) => FERIE_STYL[type] || FERIE_STYL.Fri;
@@ -99,7 +100,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
   return (
     <div style={{ padding: isMobile ? 16 : 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Vaktplan</div>
+        <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Vaktplan</div>
         <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
           {(['uke', 'manad'] as const).map((m) => (
             <button
@@ -160,7 +161,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, paddingBottom: 7, borderBottom: '1px solid var(--divider)' }}>
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : heilagdag ? 'var(--dag-raud-tekst)' : halvdag ? 'var(--dag-amber-tekst)' : 'var(--text)', lineHeight: 1, letterSpacing: '-0.7px' }}>{parseDate(d.date).getDate()}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'Geist Variable'", color: erIDag ? 'var(--brand-strong)' : heilagdag ? 'var(--dag-raud-tekst)' : halvdag ? 'var(--dag-amber-tekst)' : 'var(--text)', lineHeight: 1, letterSpacing: '-0.7px' }}>{parseDate(d.date).getDate()}</div>
                   <div style={{ fontSize: 10.5, fontWeight: 700, color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.6px', marginTop: 3 }}>{d.kort}</div>
                   {heilagdag ? (
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--dag-raud-tekst)', marginTop: 1 }}>{heilagdag}</div>
@@ -186,9 +187,9 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                     title="Høgreklikk for val"
                     style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 11, padding: '9px 11px', cursor: kanLageVakt ? 'grab' : kanOpne ? 'pointer' : 'default', boxShadow: 'var(--shadow-card)' }}
                   >
-                    <div style={{ fontFamily: "'Geist Mono'", fontSize: 15.5, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.6px', fontVariantNumeric: 'tabular-nums' }}>{s.start}–{s.slutt}</div>
+                    <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 15.5, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.6px', fontVariantNumeric: 'tabular-nums' }}>{s.start}–{s.slutt}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 6 }}>
-                      <span style={{ width: 20, height: 20, borderRadius: 6, background: farge, color: '#fff', fontSize: 9.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{a.init}</span>
+                      <span style={{ width: 20, height: 20, borderRadius: 6, background: farge, color: tekstPaFarge(farge), fontSize: 9.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{a.init}</span>
                       <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.navn}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
@@ -441,7 +442,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                       <span style={{ width: 8, height: 8, borderRadius: '50%', background: a.farge, flex: 'none' }} />
                       <span style={{ fontSize: 13, fontWeight: 700 }}>{a.navn}</span>
                     </div>
-                    <div style={{ fontFamily: "'Geist Mono'", fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>{s.start}–{s.slutt}</div>
+                    <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>{s.start}–{s.slutt}</div>
                   </div>
                   {items.map((it, idx) => (
                     <div key={it.tekst}>

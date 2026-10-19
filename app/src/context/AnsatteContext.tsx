@@ -31,6 +31,8 @@ export const mapAnsatt = (r: any): Employee => ({
   email: r.email, telefon: r.telefon || '', leder: r.leder, aktiv: r.aktiv,
   butikk_id: r.butikk_id ?? undefined, konsern_admin: r.konsern_admin ?? false,
 });
+// Alle kolonnar utanom timesatsen (sats), som berre leiarar får lese.
+const KOLONNER = 'id, navn, rolle, lonn, farge, init, email, telefon, leder, aktiv, created_at, butikk_id, konsern_admin';
 const mapButikk = (r: any): Butikk => ({ id: r.id, namn: r.namn, farge: r.farge || '#11788a', aktiv: r.aktiv });
 
 export function AnsatteProvider({ children }: { children: ReactNode }) {
@@ -46,13 +48,18 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
     // Tabellane krev innlogging (401 utan); innloggings-lista gjer ikkje det.
     const { data: okt } = await supabase.auth.getSession();
     const tomt = Promise.resolve({ data: null, error: { message: 'ikkje innlogga' } });
-    const [ansRes, butRes, loginRes] = await Promise.all([
-      okt.session ? supabase.from('ansatte').select('*').order('created_at', { ascending: true }) : tomt,
+    const [ansRes, butRes, loginRes, satsRes] = await Promise.all([
+      okt.session ? supabase.from('ansatte').select(KOLONNER).order('created_at', { ascending: true }) : tomt,
       okt.session ? supabase.from('butikkar').select('*').eq('aktiv', true).order('created_at', { ascending: true }) : tomt,
       // Økt-uavhengig liste til innloggings-skjermen (SECURITY DEFINER, utan e-post).
       supabase.rpc('login_liste'),
+      // Timesatsar er private: berre leiarar får rader her (tomt for andre).
+      okt.session ? supabase.rpc('lonssatsar') : tomt,
     ]);
-    if (!ansRes.error && ansRes.data) setAlleAnsatte(ansRes.data.map(mapAnsatt));
+    if (!ansRes.error && ansRes.data) {
+      const satsar = new Map(((satsRes.data as { id: string; sats: number }[] | null) || []).map((r) => [r.id, r.sats]));
+      setAlleAnsatte(ansRes.data.map((r: any) => mapAnsatt({ ...r, sats: satsar.get(r.id) ?? 0 })));
+    }
     if (!butRes.error && butRes.data) setButikkar(butRes.data.map(mapButikk));
     // Bruk RPC-en når han finst; elles fall tilbake på det vanlege
     // uttrekket (så innlogging verkar sjølv før fase5-SQL-en er køyrd).
@@ -110,9 +117,9 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
 
 
   const updateAnsatt: AnsatteState['updateAnsatt'] = async (id, patch) => {
-    const { data, error } = await supabase.from('ansatte').update(patch).eq('id', id).select().single();
+    const { data, error } = await supabase.from('ansatte').update(patch).eq('id', id).select(KOLONNER).single();
     if (error) throw error;
-    setAlleAnsatte((prev) => prev.map((a) => (a.id === id ? mapAnsatt(data) : a)));
+    setAlleAnsatte((prev) => prev.map((a) => (a.id === id ? mapAnsatt({ ...data, sats: patch.sats ?? a.sats }) : a)));
     toast('Tilsett oppdatert');
   };
 

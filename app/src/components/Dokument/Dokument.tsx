@@ -32,7 +32,7 @@ export function Dokument() {
   return (
     <div style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Dokument</div>
+        <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Dokument</div>
         <button
           onClick={() => setDocTarget('new')}
           style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}

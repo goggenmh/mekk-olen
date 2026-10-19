@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap');
-
 :root {
   --bg: #f4f7f6;
   --surface: #ffffff;
@@ -69,7 +67,7 @@
     linear-gradient(170deg,#f3f7f6 0%,#eaf1f0 60%,#eef3f2 100%);
   --login-text: #14202a;
   --login-sub: #65727d;
-  --login-faint: #8a97a0;
+  --login-faint: #65727d;
   --login-accent: #11788a;
   --login-accent-2: #11788a;
   --login-card-bg: #ffffff;
@@ -173,7 +171,7 @@ html, body, #root {
 }
 
 body {
-  font-family: 'Geist', system-ui, sans-serif;
+  font-family: 'Geist Variable', system-ui, sans-serif;
   background: var(--bg);
   background-image: var(--body-img);
   background-attachment: fixed;

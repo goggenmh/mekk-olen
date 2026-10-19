@@ -102,7 +102,7 @@ export function Bestillinger() {
   return (
     <div style={{ padding: isMobile ? 16 : 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Bestillingar</div>
+        <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Bestillingar</div>
         <button
           onClick={() => setOrderTarget('new')}
           style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
@@ -117,7 +117,7 @@ export function Bestillinger() {
         onChange={(e) => setSok(e.target.value)}
         placeholder="Søk på kunde, vare, varenr eller telefon …"
         aria-label="Søk i bestillingar"
-        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontFamily: "'Geist'", fontSize: 14, color: 'var(--text)', maxWidth: 460 }}
+        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontFamily: "'Geist Variable'", fontSize: 14, color: 'var(--text)', maxWidth: 460 }}
       />
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -284,7 +284,7 @@ export function Bestillinger() {
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
                 >
                   <span style={{ fontSize: 12, color: 'var(--text-faint)', width: 14 }}>{arOpen ? '▾' : '▸'}</span>
-                  <span style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Geist'" }}>{g.ar}</span>
+                  <span style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Geist Variable'" }}>{g.ar}</span>
                   <span style={{ marginLeft: 'auto', fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--surface-alt)', borderRadius: 10, padding: '2px 9px' }}>{g.tal} henta</span>
                 </button>
 

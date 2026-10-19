@@ -36,7 +36,7 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
 
   return (
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 920 }}>
-      <button onClick={onBack} style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontFamily: "'Geist'", fontSize: 13, fontWeight: 600 }}>
+      <button onClick={onBack} style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontFamily: "'Geist Variable'", fontSize: 13, fontWeight: 600 }}>
         ‹ Tilbake til ansatte
       </button>
 
@@ -61,7 +61,7 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14 }}>
         {nokkeltal.map((k) => (
           <div key={k.lab} style={cardStyle}>
-            <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Geist Mono'", color: 'var(--brand-strong)', letterSpacing: '-0.3px' }}>{k.verdi}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Geist Mono Variable'", color: 'var(--brand-strong)', letterSpacing: '-0.3px' }}>{k.verdi}</div>
             <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 3 }}>{k.lab}</div>
           </div>
         ))}
@@ -90,10 +90,10 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
                 <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ flex: 'none', width: 46, textAlign: 'center', padding: '6px 0', borderRadius: 10, background: erIDag ? 'var(--brand-soft)' : 'var(--surface-alt)', border: '1px solid var(--border)' }}>
                     <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)' }}>{UKE_KORT[weekdayIdx(s.date)]}</div>
-                    <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "'Geist'", color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(s.date).getDate()}</div>
+                    <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "'Geist Variable'", color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(s.date).getDate()}</div>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Geist Mono'", fontSize: 14, fontWeight: 700 }}>{s.start}–{s.slutt}</div>
+                    <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 14, fontWeight: 700 }}>{s.start}–{s.slutt}</div>
                     {s.skift && (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: farge, marginTop: 2 }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: farge }} />{s.skift}
@@ -148,5 +148,5 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
 
 const btn = {
   padding: '9px 14px', background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)',
-  borderRadius: 10, fontFamily: "'Geist'", fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+  borderRadius: 10, fontFamily: "'Geist Variable'", fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
 } as const;

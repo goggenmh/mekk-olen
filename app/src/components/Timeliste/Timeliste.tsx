@@ -4,11 +4,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import {
   weekDates, mondayOf, today, isoWeek, addDays, shiftMonth, MND,
-  fmt, fmtKr, timar, UKE_KORT, parseDate, weekdayIdx,
+  fmt, timar, UKE_KORT, parseDate, weekdayIdx,
 } from '../../lib/dates';
 import { TimeEntryModal } from './TimeEntryModal';
 import { useIsMobile } from '../../lib/useIsMobile';
+import { useLonTekst } from '../../lib/lon';
+import { erLeiar } from '../../lib/view';
 import type { TimeEntry } from '../../types';
+import { tekstPaFarge } from '../../lib/farge';
 
 function downloadCsv(filename: string, rows: (string | number)[][]) {
   const csv = '﻿' + rows.map((r) => r.join(';')).join('\n');
@@ -81,7 +84,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
   return (
     <div style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-        <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Timeliste</div>
+        <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Timeliste</div>
         <div className="no-print" style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
           {(['uke', 'manad'] as const).map((m) => (
             <button
@@ -97,7 +100,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
           ))}
         </div>
         <div className="no-print" style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-          <button onClick={exportLonn} style={btnGhost}>Lønnsfil</button>
+          {erLeiar(user) && <button onClick={exportLonn} style={btnGhost}>Lønsfil</button>}
           <button onClick={exportCsv} style={btnGhost}>CSV</button>
           <button onClick={exportPdf} style={btnGhost}>PDF</button>
         </div>
@@ -159,6 +162,7 @@ const NORMALTID = 37.5;
 
 function WeekSummary({ dates, prevDates, entries }: { dates: string[]; prevDates: string[]; entries: TimeEntry[] }) {
   const { ansatte } = useAnsatte();
+  const lonTekst = useLonTekst();
   return (
     <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: 14 }}>
       {ansatte.map((a) => {
@@ -178,8 +182,8 @@ function WeekSummary({ dates, prevDates, entries }: { dates: string[]; prevDates
               )}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 8 }}>
-              <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Geist Mono'", color: a.farge, letterSpacing: '-0.5px' }}>{fmt(sum)} t</div>
-              <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)' }}>{a.lonn === 'time' ? fmtKr(sum * a.sats) : 'Fastløn'}</div>
+              <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Geist Mono Variable'", color: a.farge, letterSpacing: '-0.5px' }}>{fmt(sum)} t</div>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)' }}>{lonTekst(a, sum)}</div>
             </div>
             <div style={{ height: 9, borderRadius: 6, background: 'var(--surface-alt)', overflow: 'hidden', marginTop: 8 }}>
               <div style={{ height: '100%', width: `${Math.min(100, pct)}%`, background: pct >= 100 ? '#2f9e6f' : a.farge, borderRadius: 6 }} />
@@ -230,7 +234,7 @@ function WeekTable({
               <tr key={a.id} style={{ borderTop: '1px solid var(--divider)' }}>
                 <td style={{ ...td, paddingLeft: 18 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 26, height: 26, borderRadius: 8, background: a.farge, color: '#fff', fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{a.init}</span>
+                    <span style={{ width: 26, height: 26, borderRadius: 8, background: a.farge, color: tekstPaFarge(a.farge), fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{a.init}</span>
                     <span style={{ fontWeight: 700 }}>{a.navn}</span>
                   </div>
                 </td>
@@ -243,7 +247,7 @@ function WeekTable({
                     <td key={d} style={{ ...td, textAlign: 'center', cursor: 'pointer', background: erIdag ? 'var(--brand-soft)' : undefined }} onClick={() => onCellClick(a.id, d)}>
                       {es.length > 0 ? (
                         <div style={{ lineHeight: 1.15 }}>
-                          <span style={{ fontFamily: "'Geist Mono'", fontWeight: 600, color: dagVentar ? '#b7830b' : 'var(--text)' }}>{fmt(dagSum)}</span>
+                          <span style={{ fontFamily: "'Geist Mono Variable'", fontWeight: 600, color: dagVentar ? '#b7830b' : 'var(--text)' }}>{fmt(dagSum)}</span>
                           {es.length > 1 && <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--brand)' }}>{es.length} bolkar</div>}
                         </div>
                       ) : (
@@ -252,7 +256,7 @@ function WeekTable({
                     </td>
                   );
                 })}
-                <td style={{ ...td, textAlign: 'right', fontFamily: "'Geist Mono'", fontWeight: 700, whiteSpace: 'nowrap' }}>
+                <td style={{ ...td, textAlign: 'right', fontFamily: "'Geist Mono Variable'", fontWeight: 700, whiteSpace: 'nowrap' }}>
                   {fmt(sum)} t
                   {sum > 37.5 && <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--danger)', marginLeft: 5 }}>+{fmt(sum - 37.5)}</span>}
                 </td>
@@ -292,6 +296,7 @@ function WeekCards({
   onApprove: (ansatt: TimeEntry['ansatt']) => void;
 }) {
   const { ansatte } = useAnsatte();
+  const lonTekst = useLonTekst();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {ansatte.map((a) => {
@@ -299,13 +304,13 @@ function WeekCards({
         const sum = dagBolkar.reduce((acc, es) => acc + es.reduce((s2, e) => s2 + timar(e), 0), 0);
         const ventarN = dagBolkar.reduce((acc, es) => acc + es.filter((e) => e.status === 'venter').length, 0);
         const harTimar = dagBolkar.some((es) => es.length > 0);
-        const lonn = a.lonn === 'time' ? fmtKr(sum * a.sats) : 'Fastløn';
+        const lonn = lonTekst(a, sum);
         return (
           <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 15px', boxShadow: 'var(--shadow-card)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: a.farge, flex: 'none' }} />
               <span style={{ fontSize: 14.5, fontWeight: 700, flex: 1 }}>{a.navn}</span>
-              <span style={{ fontFamily: "'Geist Mono'", fontWeight: 700, fontSize: 15 }}>{fmt(sum)} t</span>
+              <span style={{ fontFamily: "'Geist Mono Variable'", fontWeight: 700, fontSize: 15 }}>{fmt(sum)} t</span>
               {harTimar && (
                 <span style={{ fontSize: 15, fontWeight: 800, color: ventarN > 0 ? '#d8920f' : '#2f9e6f', width: 16, textAlign: 'center' }}>{ventarN > 0 ? '!' : '✓'}</span>
               )}
@@ -327,7 +332,7 @@ function WeekCards({
                     }}
                   >
                     <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.2px' }}>{UKE_KORT[weekdayIdx(d)]}</span>
-                    <span style={{ fontFamily: "'Geist Mono'", fontSize: 12.5, fontWeight: 600, color: es.length > 0 ? 'var(--text)' : 'var(--text-faint2)' }}>{es.length > 0 ? fmt(dagSum) : '–'}</span>
+                    <span style={{ fontFamily: "'Geist Mono Variable'", fontSize: 12.5, fontWeight: 600, color: es.length > 0 ? 'var(--text)' : 'var(--text-faint2)' }}>{es.length > 0 ? fmt(dagSum) : '–'}</span>
                     {es.length > 1 && <span style={{ fontSize: 8.5, fontWeight: 700, color: 'var(--brand)' }}>×{es.length}</span>}
                   </button>
                 );
@@ -335,7 +340,7 @@ function WeekCards({
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
-              <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{lonn}{sum > 37.5 ? ` · +${fmt(sum - 37.5)} t overtid` : ''}</span>
+              <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{[lonn, sum > 37.5 ? `+${fmt(sum - 37.5)} t overtid` : ''].filter(Boolean).join(' · ')}</span>
               {maaGodkjenne && ventarN > 0 && (
                 <button
                   onClick={() => onApprove(a.id)}
@@ -360,6 +365,7 @@ function MonthView({
   onDayClick: (date: string) => void;
 }) {
   const { ansatte, findAnsatt } = useAnsatte();
+  const lonTekst = useLonTekst();
   const mm = Number(monthAnchor.split('-')[1]);
   const firstOfMonth = `${monthAnchor}-01`;
   const gridStart = mondayOf(firstOfMonth);
@@ -375,7 +381,7 @@ function MonthView({
 
   const manadKort = ansatte.map((a) => {
     const tot = entries.filter((e) => e.ansatt === a.id && e.date.slice(0, 7) === monthAnchor && e.status === 'godkjent').reduce((acc, e) => acc + timar(e), 0);
-    const lonn = a.lonn === 'time' ? fmtKr(tot * a.sats) : 'Fastløn';
+    const lonn = lonTekst(a, tot);
     return { a, tot, lonn };
   });
 
@@ -421,8 +427,8 @@ function MonthView({
         {manadKort.map(({ a, tot, lonn }) => (
           <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
             <div style={{ fontSize: 13.5, fontWeight: 700 }}>{a.navn}</div>
-            <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Geist Mono'", color: a.farge, marginTop: 4 }}>{fmt(tot)} t</div>
-            <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>{lonn}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Geist Mono Variable'", color: a.farge, marginTop: 4 }}>{fmt(tot)} t</div>
+            {lonn && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>{lonn}</div>}
           </div>
         ))}
       </div>
