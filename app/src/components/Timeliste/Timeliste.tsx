@@ -11,6 +11,7 @@ import { useIsMobile } from '../../lib/useIsMobile';
 import { useLonTekst } from '../../lib/lon';
 import { erLeiar } from '../../lib/view';
 import { lastNedLonsfil } from '../../lib/lonsfil';
+import { lastNedTimelistePdf } from '../../lib/timelistePdf';
 import { toast } from '../../lib/toast';
 import type { TimeEntry } from '../../types';
 import { tekstPaFarge } from '../../lib/farge';
@@ -32,6 +33,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
   const { ansatte, finnButikk } = useAnsatte();
   const { user } = useAuth();
   const [lagarLonsfil, setLagarLonsfil] = useState(false);
+  const [lagarPdf, setLagarPdf] = useState(false);
   const isMobile = useIsMobile();
   const maaGodkjenne = canApprove(user?.id);
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
@@ -68,7 +70,29 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
     downloadCsv(`mekk-olen-timeliste-veke${isoWeek(weekStart)}.csv`, rows);
   };
 
-  const exportPdf = () => window.print();
+  const exportPdf = async () => {
+    setLagarPdf(true);
+    try {
+      // Månadsvisning: alle dagar i månaden. Vekevisning: dagane som er viste.
+      const [ar, mnd] = monthAnchor.split('-').map(Number);
+      const datoar = mode === 'manad'
+        ? Array.from({ length: new Date(ar, mnd, 0).getDate() }, (_, i) => `${monthAnchor}-${String(i + 1).padStart(2, '0')}`)
+        : dates;
+      await lastNedTimelistePdf({
+        // Den som kan godkjenne får alle; andre berre si eiga timeliste.
+        ansatte: maaGodkjenne ? ansatte : ansatte.filter((a) => a.id === user?.id),
+        entries, datoar,
+        tittel: periodTittel, undertittel: periodUnder,
+        butikk: finnButikk(user?.butikk_id)?.namn || 'MEKK Ølen',
+        medLon: erLeiar(user) && mode === 'manad',
+        maaned: mode === 'manad' ? monthAnchor : null,
+      });
+    } catch {
+      toast('Kunne ikkje lage PDF – prøv igjen', 'feil');
+    } finally {
+      setLagarPdf(false);
+    }
+  };
 
   const ventandeVeke = entries.filter((e) => dates.includes(e.date) && e.status === 'venter').length;
   const godkjennAlle = async () => {
@@ -114,7 +138,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
             <button onClick={godkjennAlle} style={{ ...btnGhost, background: '#2f9e6f', color: '#fff', borderColor: '#2f9e6f' }}>Godkjenn alle ({ventandeVeke})</button>
           )}
           <button onClick={exportCsv} style={btnGhost}>CSV</button>
-          <button onClick={exportPdf} style={btnGhost}>PDF</button>
+          <button onClick={exportPdf} disabled={lagarPdf} title="Timeliste med signaturlinjer som PDF" style={btnGhost}>{lagarPdf ? 'Lagar…' : 'PDF'}</button>
         </div>
       </div>
 
