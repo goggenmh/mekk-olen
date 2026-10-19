@@ -21,6 +21,13 @@
   --brand-soft: #e7f3f4;
   /* Tekst på brand-/accent-fargar (knappar, merke) */
   --on-brand: #ffffff;
+  /* Statusmerke og kategoriar */
+  --pill-gra-fg: #5f6e79;   --pill-gra-bg: #eef2f4;
+  --pill-teal-fg: #0e6c7c;  --pill-teal-bg: #e7f6f8;
+  --pill-gronn-fg: #1e7550; --pill-gronn-bg: #e8f5ee;
+  --pill-amber-fg: #94650f; --pill-amber-bg: #fdf2e0;
+  --pill-raud-fg: #b3261e;  --pill-raud-bg: #fbe9e4;
+  --pill-lilla-fg: #5a4abf; --pill-lilla-bg: #eee9fb;
   --skift-kveld-bg: #efe9fb;
   --skift-kveld-fg: #6a49c4;
   /* Raude dagar (utilgjengeleg + heilagdagar) og "halve" dagar (gul) */
@@ -104,6 +111,13 @@
   --brand-soft: rgba(32, 201, 184, 0.13);
   /* Mørk tekst på den lyse turkise/gule fargen – kvit gav berre 2:1 */
   --on-brand: #04211e;
+  /* Statusmerke: dempa bakgrunn, lys tekst */
+  --pill-gra-fg: #c6d2d5;   --pill-gra-bg: rgba(180, 194, 198, 0.13);
+  --pill-teal-fg: #6fe3d6;  --pill-teal-bg: rgba(32, 201, 184, 0.15);
+  --pill-gronn-fg: #7ddcae; --pill-gronn-bg: rgba(47, 158, 111, 0.2);
+  --pill-amber-fg: #f2c46f; --pill-amber-bg: rgba(244, 183, 64, 0.15);
+  --pill-raud-fg: #ff9a90;  --pill-raud-bg: rgba(224, 88, 74, 0.18);
+  --pill-lilla-fg: #c2b2ff; --pill-lilla-bg: rgba(150, 120, 255, 0.18);
   --skift-kveld-bg: rgba(150, 120, 255, 0.16);
   --skift-kveld-fg: #b9a6ff;
   /* Raude/gule dagar – lysare tekst og litt sterkare tint i mørk modus */
@@ -221,6 +235,10 @@ button:active {
   border-radius: 10px;
   animation: skeletonPulse 1.2s ease-in-out infinite;
 }
+
+/* Marg rundt innhaldet på sidene – mindre på telefon */
+.side { padding: 28px; }
+@media (max-width: 859px) { .side { padding: 16px; } }
 
 /* Kollapsbar sidemeny: skjul tekst når smal */
 .rail-collapsed .rail-label { display: none; }

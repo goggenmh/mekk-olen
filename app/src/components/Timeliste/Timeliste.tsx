@@ -82,7 +82,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
   };
 
   return (
-    <div style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div className="side" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
         <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Timeliste</div>
         <div className="no-print" style={{ display: 'flex', gap: 6, marginLeft: 8 }}>

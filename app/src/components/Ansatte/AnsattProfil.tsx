@@ -35,7 +35,7 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
   ];
 
   return (
-    <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 920 }}>
+    <div className="side" style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 920 }}>
       <button onClick={onBack} style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontFamily: "'Geist Variable'", fontSize: 13, fontWeight: 600 }}>
         ‹ Tilbake til ansatte
       </button>

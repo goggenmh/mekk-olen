@@ -317,7 +317,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                     <span style={{ width: 9, height: 9, borderRadius: '50%', background: a.farge, flex: 'none' }} />
                     <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{a.navn}</span>
                     <span style={{ fontSize: 10.5, fontWeight: 700, color: st.fg, background: st.bg, border: `1px solid ${st.kant}`, borderRadius: 8, padding: '1px 8px' }}>{f.type}</span>
-                    {paagaar && <span style={{ fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.3px', color: '#fff', background: st.fg, borderRadius: 999, padding: '2px 7px' }}>Pågår</span>}
+                    {paagaar && <span style={{ fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.3px', color: 'var(--surface)', background: st.fg, borderRadius: 999, padding: '2px 7px' }}>Pågår</span>}
                     {kommande && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)' }}>om {talDagar(iDag, f.fra!) - 1} d</span>}
                   </div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

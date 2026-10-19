@@ -28,7 +28,12 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const [quickAction, setQuickAction] = useState<'timer' | 'vakt' | 'oppgave' | 'bestilling' | null>(null);
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
+    // Klokka viser berre timar og minutt: teikn oversikta på nytt når
+    // minuttet skiftar, ikkje kvart sekund.
+    const id = setInterval(() => setNow((prev) => {
+      const d = new Date();
+      return d.getMinutes() === prev.getMinutes() && d.getHours() === prev.getHours() ? prev : d;
+    }), 1000);
     return () => clearInterval(id);
   }, []);
   const klokke = now.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });

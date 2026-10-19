@@ -123,7 +123,7 @@ export function Ansatte() {
   }
 
   return (
-    <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 880 }}>
+    <div className="side" style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 880 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <h1 style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Tilsette</h1>

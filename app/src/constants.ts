@@ -68,37 +68,37 @@ export const SHIFT_TEMPLATE: ShiftTemplateEntry[] = [
 ];
 
 export const FERIE_TYPE: Record<string, { fg: string; bg: string }> = {
-  Ferie: { fg: '#11788a', bg: '#e7f6f8' },
-  Fri: { fg: '#2f9e6f', bg: '#e8f5ee' },
-  Kurs: { fg: '#b07b1a', bg: '#fdf2e0' },
-  Sjukmeld: { fg: '#c0392b', bg: '#fbe9e4' },
+  Ferie: { fg: 'var(--pill-teal-fg)', bg: 'var(--pill-teal-bg)' },
+  Fri: { fg: 'var(--pill-gronn-fg)', bg: 'var(--pill-gronn-bg)' },
+  Kurs: { fg: 'var(--pill-amber-fg)', bg: 'var(--pill-amber-bg)' },
+  Sjukmeld: { fg: 'var(--pill-raud-fg)', bg: 'var(--pill-raud-bg)' },
 };
 export const FERIE_TYPER = ['Ferie', 'Fri', 'Kurs', 'Sjukmeld'] as const;
 
 // Fargar og ikon per ferie/fri-type — brukt på vaktplanen og i oversikta.
 export const FERIE_STYL: Record<string, { fg: string; bg: string; kant: string; ikon: string }> = {
-  Ferie: { fg: '#0c5a69', bg: '#e6f3f5', kant: 'rgba(17,120,138,0.35)', ikon: 'sun' },
-  Fri: { fg: '#5a4b8a', bg: '#ece9f6', kant: 'rgba(90,75,138,0.3)', ikon: 'vaktplan' },
-  Kurs: { fg: '#8a5a08', bg: '#f7edda', kant: 'rgba(198,126,30,0.35)', ikon: 'dokument' },
-  Sjukmeld: { fg: '#b03a2e', bg: '#fbe4e0', kant: 'rgba(192,57,43,0.35)', ikon: 'alert' },
+  Ferie: { fg: 'var(--pill-teal-fg)', bg: 'var(--pill-teal-bg)', kant: 'rgba(17,120,138,0.35)', ikon: 'sun' },
+  Fri: { fg: 'var(--pill-lilla-fg)', bg: 'var(--pill-lilla-bg)', kant: 'rgba(90,75,138,0.3)', ikon: 'vaktplan' },
+  Kurs: { fg: 'var(--pill-amber-fg)', bg: 'var(--pill-amber-bg)', kant: 'rgba(198,126,30,0.35)', ikon: 'dokument' },
+  Sjukmeld: { fg: 'var(--pill-raud-fg)', bg: 'var(--pill-raud-bg)', kant: 'rgba(192,57,43,0.35)', ikon: 'alert' },
 };
 
 export const ORDER_FLOW = ['ny', 'tinga', 'komen', 'henta'] as const;
 export type OrderStatus = (typeof ORDER_FLOW)[number];
 
 export const ORDER_STATUS: Record<OrderStatus, { tekst: string; fg: string; bg: string; neste: string }> = {
-  ny: { tekst: 'Ny', fg: '#6e7d88', bg: '#eef2f4', neste: 'Marker bestilt' },
-  tinga: { tekst: 'Bestilt', fg: '#b07b1a', bg: '#fdf2e0', neste: 'Komen i butikk' },
-  komen: { tekst: 'Komen', fg: '#11788a', bg: '#e7f6f8', neste: 'Marker henta' },
-  henta: { tekst: 'Henta', fg: '#2f9e6f', bg: '#e8f5ee', neste: '' },
+  ny: { tekst: 'Ny', fg: 'var(--pill-gra-fg)', bg: 'var(--pill-gra-bg)', neste: 'Marker bestilt' },
+  tinga: { tekst: 'Bestilt', fg: 'var(--pill-amber-fg)', bg: 'var(--pill-amber-bg)', neste: 'Komen i butikk' },
+  komen: { tekst: 'Komen', fg: 'var(--pill-teal-fg)', bg: 'var(--pill-teal-bg)', neste: 'Marker henta' },
+  henta: { tekst: 'Henta', fg: 'var(--pill-gronn-fg)', bg: 'var(--pill-gronn-bg)', neste: '' },
 };
 
 export const DOC_KAT: Record<string, { fg: string; bg: string; ikon: string }> = {
-  HMS: { fg: '#c0392b', bg: '#fbe9e4', ikon: 'HMS' },
-  Rutine: { fg: '#11788a', bg: '#e7f6f8', ikon: 'Rutine' },
-  Avtale: { fg: '#6a5acd', bg: '#eee9fb', ikon: 'Avtale' },
-  Skjema: { fg: '#b07b1a', bg: '#fdf2e0', ikon: 'Skjema' },
-  Anna: { fg: '#6e7d88', bg: '#eef2f4', ikon: 'Anna' },
+  HMS: { fg: 'var(--pill-raud-fg)', bg: 'var(--pill-raud-bg)', ikon: 'HMS' },
+  Rutine: { fg: 'var(--pill-teal-fg)', bg: 'var(--pill-teal-bg)', ikon: 'Rutine' },
+  Avtale: { fg: 'var(--pill-lilla-fg)', bg: 'var(--pill-lilla-bg)', ikon: 'Avtale' },
+  Skjema: { fg: 'var(--pill-amber-fg)', bg: 'var(--pill-amber-bg)', ikon: 'Skjema' },
+  Anna: { fg: 'var(--pill-gra-fg)', bg: 'var(--pill-gra-bg)', ikon: 'Anna' },
 };
 export const DOC_KATEGORIER = ['HMS', 'Rutine', 'Avtale', 'Skjema', 'Anna'] as const;
 
@@ -112,18 +112,18 @@ export const DAGER_VAKTPLAN = [
 ];
 
 export const PRIORITET = {
-  høg: { bg: '#fbe9e4', fg: '#c0392b', tekst: 'Høg' },
-  medium: { bg: '#fdf2e0', fg: '#b07b1a', tekst: 'Medium' },
-  låg: { bg: '#eef0ee', fg: '#6b7368', tekst: 'Låg' },
+  høg: { bg: 'var(--pill-raud-bg)', fg: 'var(--pill-raud-fg)', tekst: 'Høg' },
+  medium: { bg: 'var(--pill-amber-bg)', fg: 'var(--pill-amber-fg)', tekst: 'Medium' },
+  låg: { bg: 'var(--pill-gra-bg)', fg: 'var(--pill-gra-fg)', tekst: 'Låg' },
 } as const;
 export type Prioritet = keyof typeof PRIORITET;
 
 // Kategoriar for oppgåver.
 export const OPPGAVE_KAT: Record<string, { fg: string; bg: string }> = {
-  Butikk: { fg: '#11788a', bg: '#e7f6f8' },
-  Lager: { fg: '#b07b1a', bg: '#fdf2e0' },
-  Kampanje: { fg: '#6a5acd', bg: '#eee9fb' },
-  Anna: { fg: '#6e7d88', bg: '#eef2f4' },
+  Butikk: { fg: 'var(--pill-teal-fg)', bg: 'var(--pill-teal-bg)' },
+  Lager: { fg: 'var(--pill-amber-fg)', bg: 'var(--pill-amber-bg)' },
+  Kampanje: { fg: 'var(--pill-lilla-fg)', bg: 'var(--pill-lilla-bg)' },
+  Anna: { fg: 'var(--pill-gra-fg)', bg: 'var(--pill-gra-bg)' },
 };
 export const OPPGAVE_KATEGORIAR = ['Butikk', 'Lager', 'Kampanje', 'Anna'] as const;
 

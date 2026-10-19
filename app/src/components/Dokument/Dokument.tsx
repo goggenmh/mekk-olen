@@ -30,7 +30,7 @@ export function Dokument() {
   const filtered = docs.filter((d) => filter === 'Alle' || d.kategori === filter);
 
   return (
-    <div style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div className="side" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Dokument</div>
         <button
