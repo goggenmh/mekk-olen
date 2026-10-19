@@ -159,7 +159,6 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
       <div style={{ display: 'flex', gap: 18, alignItems: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={dot('#2f9e6f')} /> Godkjent</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={dot('#d8920f')} /> Ventar</span>
-        <span><b style={{ color: 'var(--pill-amber-fg)' }}>plan</b> = avvik mot vaktplanen</span>
         <span><b style={{ color: 'var(--danger)' }}>manglar</b> = vakt utan registrerte timar</span>
         <span>Normaltid 37,5 t/veke</span>
       </div>
@@ -260,9 +259,6 @@ function WeekTable({
                   const dagVentar = es.some((e) => e.status === 'venter');
                   const erIdag = d === today();
                   const p = plan(a.id, d);
-                  // Vaktplanen har ikkje pause, så samanlikn tid frå start til slutt.
-                  const brutto = es.reduce((s2, e) => s2 + timar(e) + (e.pause || 0) / 60, 0);
-                  const avvik = es.length > 0 && p > 0 && Math.abs(brutto - p) >= 0.25;
                   const manglar = es.length === 0 && p > 0 && d < today();
                   return (
                     <td key={d} title={p > 0 ? `Planlagt ${fmt(p)} t` : undefined} style={{ ...td, textAlign: 'center', cursor: 'pointer', background: erIdag ? 'var(--brand-soft)' : undefined }} onClick={() => onCellClick(a.id, d)}>
@@ -270,12 +266,11 @@ function WeekTable({
                         <div style={{ lineHeight: 1.15 }}>
                           <span style={{ fontFamily: "'Geist Mono Variable'", fontWeight: 600, color: dagVentar ? '#b7830b' : 'var(--text)' }}>{fmt(dagSum)}</span>
                           {es.length > 1 && <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--brand)' }}>{es.length} bolkar</div>}
-                          {avvik && <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--pill-amber-fg)' }}>plan {fmt(p)}</div>}
                         </div>
                       ) : manglar ? (
                         <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--danger)' }}>manglar</span>
                       ) : (
-                        <span style={{ color: 'var(--text-faint2)' }}>{p > 0 ? <span style={{ fontSize: 10.5 }}>plan {fmt(p)}</span> : '–'}</span>
+                        <span style={{ color: 'var(--text-faint2)' }}>–</span>
                       )}
                     </td>
                   );
