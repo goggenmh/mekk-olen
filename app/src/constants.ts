@@ -19,6 +19,12 @@ export interface Employee {
   butikk_id?: string;
   /** Konsern-admin kan sjå og styre alle butikkar. */
   konsern_admin?: boolean;
+  /** Skatteform (berre synleg for leiarar, som satsen). Tom = ikkje registrert. */
+  skattetype?: 'skattekort' | 'frikort' | null;
+  /** Prosenttrekk frå skattekortet. */
+  skatteprosent?: number | null;
+  /** Frikortbeløpet for året (kr). */
+  frikortgrense?: number | null;
 }
 
 export interface Butikk {

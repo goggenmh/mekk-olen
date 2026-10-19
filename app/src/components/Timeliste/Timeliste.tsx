@@ -9,6 +9,7 @@ import {
 import { TimeEntryModal } from './TimeEntryModal';
 import { useIsMobile } from '../../lib/useIsMobile';
 import { useLonTekst } from '../../lib/lon';
+import { trekkForPeriode } from '../../lib/skatt';
 import { erLeiar } from '../../lib/view';
 import type { TimeEntry } from '../../types';
 import { tekstPaFarge } from '../../lib/farge';
@@ -76,14 +77,20 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
   const exportLonn = () => {
     const [my, mm] = monthAnchor.split('-').map(Number);
     const inMonth = (dt: string) => dt.slice(0, 7) === monthAnchor;
-    const rows: (string | number)[][] = [['Tilsett', 'Maaned', 'Timar', 'Sats (kr/t)', 'Brutto (kr)', 'Lonstype']];
+    const rows: (string | number)[][] = [['Tilsett', 'Maaned', 'Timar', 'Sats (kr/t)', 'Brutto (kr)', 'Forskotstrekk (kr)', 'Netto (kr)', 'Skatt', 'Lonstype']];
+    const fra = `${monthAnchor}-01`;
+    const til = `${mm === 12 ? my + 1 : my}-${String(mm === 12 ? 1 : mm + 1).padStart(2, '0')}-01`;
     ansatte.forEach((a) => {
       const tot = entries.filter((e) => e.ansatt === a.id && inMonth(e.date) && e.status === 'godkjent').reduce((acc, e) => acc + timar(e), 0);
-      const brutto = a.lonn === 'time' ? Math.round(tot * a.sats) : '';
-      rows.push([a.navn, `${MND[mm - 1]} ${my}`, fmt(tot), a.lonn === 'time' ? a.sats : '', brutto, a.lonn === 'time' ? 'Timeløn' : 'Fastløn']);
+      if (a.lonn !== 'time') {
+        rows.push([a.navn, `${MND[mm - 1]} ${my}`, fmt(tot), '', '', '', '', '', 'Fastløn']);
+        return;
+      }
+      const s = trekkForPeriode(a, entries, fra, til);
+      rows.push([a.navn, `${MND[mm - 1]} ${my}`, fmt(tot), a.sats, Math.round(s.brutto), s.trekk, Math.round(s.netto), s.forklaring, 'Timeløn']);
     });
     rows.push([]);
-    rows.push(['Berre godkjende timar er tatt med.', '', '', '', '', '']);
+    rows.push(['Berre godkjende timar er tatt med. Forskotstrekket er eit anslag ut frå skatteopplysningane under Tilsette – lønssystemet/a-meldinga er fasit.']);
     downloadCsv(`mekk-olen-lonn-${monthAnchor}.csv`, rows);
   };
 

@@ -17,8 +17,8 @@ interface AnsatteState {
   findAnsatt: (id: EmployeeId | null | undefined) => Employee;
   isLeder: (id: EmployeeId | null | undefined) => boolean;
   refreshAnsatte: () => Promise<void>;
-  createAnsatt: (input: { navn: string; rolle: string; lonn: 'fast' | 'time'; sats: number; farge: string; init: string; telefon: string; leder: boolean; pin: string; email?: string; butikk_id?: string; konsern_admin?: boolean }) => Promise<void>;
-  updateAnsatt: (id: EmployeeId, patch: Partial<Pick<Employee, 'navn' | 'rolle' | 'lonn' | 'sats' | 'farge' | 'init' | 'telefon' | 'leder'>>) => Promise<void>;
+  createAnsatt: (input: { navn: string; rolle: string; lonn: 'fast' | 'time'; sats: number; farge: string; init: string; telefon: string; leder: boolean; pin: string; email?: string; butikk_id?: string; konsern_admin?: boolean }) => Promise<string>;
+  updateAnsatt: (id: EmployeeId, patch: Partial<Pick<Employee, 'navn' | 'rolle' | 'lonn' | 'sats' | 'farge' | 'init' | 'telefon' | 'leder' | 'skattetype' | 'skatteprosent' | 'frikortgrense'>>) => Promise<void>;
   setAktiv: (id: EmployeeId, aktiv: boolean) => Promise<void>;
   resetPin: (id: EmployeeId, pin: string) => Promise<void>;
   updateEmail: (id: EmployeeId, email: string) => Promise<void>;
@@ -30,6 +30,7 @@ export const mapAnsatt = (r: any): Employee => ({
   id: r.id, navn: r.navn, rolle: r.rolle, lonn: r.lonn, sats: r.sats, farge: r.farge, init: r.init,
   email: r.email, telefon: r.telefon || '', leder: r.leder, aktiv: r.aktiv,
   butikk_id: r.butikk_id ?? undefined, konsern_admin: r.konsern_admin ?? false,
+  skattetype: r.skattetype ?? null, skatteprosent: r.skatteprosent ?? null, frikortgrense: r.frikortgrense ?? null,
 });
 // Alle kolonnar utanom timesatsen (sats), som berre leiarar får lese.
 const KOLONNER = 'id, navn, rolle, lonn, farge, init, email, telefon, leder, aktiv, created_at, butikk_id, konsern_admin';
@@ -57,8 +58,9 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
       okt.session ? supabase.rpc('lonssatsar') : tomt,
     ]);
     if (!ansRes.error && ansRes.data) {
-      const satsar = new Map(((satsRes.data as { id: string; sats: number }[] | null) || []).map((r) => [r.id, r.sats]));
-      setAlleAnsatte(ansRes.data.map((r: any) => mapAnsatt({ ...r, sats: satsar.get(r.id) ?? 0 })));
+      // Leiarar får sats og skatteopplysningar herfrå; andre får ingenting.
+      const privat = new Map(((satsRes.data as { id: string }[] | null) || []).map((r) => [r.id, r]));
+      setAlleAnsatte(ansRes.data.map((r: any) => mapAnsatt({ sats: 0, ...r, ...privat.get(r.id) })));
     }
     if (!butRes.error && butRes.data) setButikkar(butRes.data.map(mapButikk));
     // Bruk RPC-en når han finst; elles fall tilbake på det vanlege
@@ -113,13 +115,14 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
     await callAdmin('create', { id, ...rest, pin, password: pinToPassword(pin) });
     await refreshAnsatte();
     toast('Tilsett oppretta');
+    return id;
   };
 
 
   const updateAnsatt: AnsatteState['updateAnsatt'] = async (id, patch) => {
     const { data, error } = await supabase.from('ansatte').update(patch).eq('id', id).select(KOLONNER).single();
     if (error) throw error;
-    setAlleAnsatte((prev) => prev.map((a) => (a.id === id ? mapAnsatt({ ...data, sats: patch.sats ?? a.sats }) : a)));
+    setAlleAnsatte((prev) => prev.map((a) => (a.id === id ? mapAnsatt({ ...data, sats: patch.sats ?? a.sats, skattetype: patch.skattetype !== undefined ? patch.skattetype : a.skattetype, skatteprosent: patch.skatteprosent !== undefined ? patch.skatteprosent : a.skatteprosent, frikortgrense: patch.frikortgrense !== undefined ? patch.frikortgrense : a.frikortgrense }) : a)));
     toast('Tilsett oppdatert');
   };
 

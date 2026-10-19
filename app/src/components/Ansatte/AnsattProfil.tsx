@@ -5,6 +5,9 @@ import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { Pill } from '../ui/Pill';
 import type { Employee } from '../../constants';
+import { trekkForPeriode } from '../../lib/skatt';
+
+const nesteManad = (m: string) => { const [y, mm] = m.split('-').map(Number); return mm === 12 ? `${y + 1}-01-01` : `${y}-${String(mm + 1).padStart(2, '0')}-01`; };
 
 const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', boxShadow: 'var(--shadow-card)' } as const;
 const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 12 } as const;
@@ -27,10 +30,15 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
   const kommendeVakter = shifts.filter((s) => s.ansatt === ansatt.id && s.date >= t).slice().sort((a, b) => (a.date < b.date ? -1 : 1)).slice(0, 6);
   const fravaer = ferie.filter((f) => f.ansatt === ansatt.id);
 
+  const skatt = ansatt.lonn === 'time' ? trekkForPeriode(ansatt, entries, `${manad}-01`, nesteManad(manad)) : null;
+  const skatteTekst = ansatt.skattetype === 'skattekort' ? `Skattekort · ${String(ansatt.skatteprosent ?? 0).replace('.', ',')} % trekk`
+    : ansatt.skattetype === 'frikort' ? `Frikort · ${fmtKr(ansatt.frikortgrense ?? 0)}` : 'Skattekort ikkje registrert (50 % trekk)';
+
   const nokkeltal = [
     { verdi: `${fmt(timarUke)} t`, lab: 'Timar denne veka' },
     { verdi: `${fmt(timarManad)} t`, lab: 'Timar denne månaden' },
-    { verdi: ansatt.lonn === 'time' ? fmtKr(godkjentManad * ansatt.sats) : 'Fastløn', lab: ansatt.lonn === 'time' ? 'Løn (godkjent, mnd)' : 'Lønstype' },
+    { verdi: ansatt.lonn === 'time' ? fmtKr(godkjentManad * ansatt.sats) : 'Fastløn', lab: ansatt.lonn === 'time' ? 'Brutto løn (godkjent, mnd)' : 'Lønstype' },
+    ...(skatt ? [{ verdi: fmtKr(skatt.netto), lab: `Netto etter trekk (anslag)` }] : []),
     { verdi: String(opneOppg.length), lab: 'Opne oppgåver' },
   ];
 
@@ -75,6 +83,8 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}><span style={{ display: 'flex', color: 'var(--brand)' }}><Icon name="phone" size={15} /></span>{ansatt.telefon || '—'}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}><span style={{ display: 'flex', color: 'var(--brand)' }}><Icon name="mail" size={15} /></span>{ansatt.email}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}><span style={{ display: 'flex', color: 'var(--brand)' }}><Icon name="timeliste" size={15} /></span>{ansatt.lonn === 'time' ? `Timeløn · ${fmtKr(ansatt.sats)}/t` : 'Fastløn'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: ansatt.skattetype ? undefined : 'var(--danger)' }}><span style={{ display: 'flex', color: 'var(--brand)' }}><Icon name="dokument" size={15} /></span>{skatteTekst}</div>
+            {skatt && skatt.brutto > 0 && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 24 }}>Denne månaden: {fmtKr(skatt.brutto)} brutto − {fmtKr(skatt.trekk)} trekk = {fmtKr(skatt.netto)}</div>}
           </div>
         </div>
 

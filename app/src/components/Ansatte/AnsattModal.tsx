@@ -18,6 +18,9 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
   const [lonn, setLonn] = useState<'fast' | 'time'>(existing?.lonn || 'time');
   const [sats, setSats] = useState(existing?.sats || 0);
   const [leder, setLeder] = useState(existing?.leder || false);
+  const [skattetype, setSkattetype] = useState<'' | 'skattekort' | 'frikort'>(existing?.skattetype || '');
+  const [skatteprosent, setSkatteprosent] = useState(existing?.skatteprosent ?? 0);
+  const [frikortgrense, setFrikortgrense] = useState(existing?.frikortgrense ?? 0);
   const [pin, setPin] = useState('');
   const [feil, setFeil] = useState('');
   const [lagrar, setLagrar] = useState(false);
@@ -28,19 +31,27 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
     if (!navn.trim()) { setFeil('Skriv inn navn.'); return; }
     if (!existing && pin.length !== 4) { setFeil('PIN må vere 4 siffer.'); return; }
     if (epost.trim() && !EPOST_REGEX.test(epost.trim())) { setFeil('E-posten ser ikkje gyldig ut.'); return; }
+    if (skattetype === 'skattekort' && (skatteprosent < 0 || skatteprosent > 60)) { setFeil('Prosenttrekket må vere mellom 0 og 60.'); return; }
+    if (skattetype === 'frikort' && frikortgrense <= 0) { setFeil('Skriv inn frikortbeløpet som står på frikortet.'); return; }
     setLagrar(true);
     setFeil('');
+    const skatt = {
+      skattetype: skattetype || null,
+      skatteprosent: skattetype === 'skattekort' ? skatteprosent : null,
+      frikortgrense: skattetype === 'frikort' ? frikortgrense : null,
+    };
     try {
       if (existing) {
-        await updateAnsatt(existing.id, { navn: navn.trim(), rolle, telefon, farge, lonn, sats, leder, init });
+        await updateAnsatt(existing.id, { navn: navn.trim(), rolle, telefon, farge, lonn, sats, leder, init, ...skatt });
         if (epost.trim() && epost.trim() !== existing.email) {
           await updateEmail(existing.id, epost.trim());
         }
       } else {
-        await createAnsatt({
+        const id = await createAnsatt({
           navn: navn.trim(), rolle, telefon, farge, lonn, sats, init, leder, pin,
           ...(epost.trim() ? { email: epost.trim() } : {}),
         });
+        if (skatt.skattetype) await updateAnsatt(id, skatt);
       }
       onClose();
     } catch (e) {
@@ -89,6 +100,30 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
         <Field label={lonn === 'time' ? 'Sats (kr/t)' : 'Sats'}>
           <input type="number" min={0} value={sats} onChange={(e) => setSats(Number(e.target.value))} style={monoInputStyle} />
         </Field>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <Field label="Skatt">
+          <select value={skattetype} onChange={(e) => setSkattetype(e.target.value as '' | 'skattekort' | 'frikort')} style={inputStyle}>
+            <option value="">Ikkje registrert</option>
+            <option value="skattekort">Skattekort</option>
+            <option value="frikort">Frikort</option>
+          </select>
+        </Field>
+        {skattetype === 'skattekort' && (
+          <Field label="Prosenttrekk (%)">
+            <input type="number" min={0} max={60} step={0.5} value={skatteprosent} onChange={(e) => setSkatteprosent(Number(e.target.value))} style={monoInputStyle} />
+          </Field>
+        )}
+        {skattetype === 'frikort' && (
+          <Field label="Frikortbeløp i år (kr)">
+            <input type="number" min={0} step={100} value={frikortgrense} onChange={(e) => setFrikortgrense(Number(e.target.value))} style={monoInputStyle} />
+          </Field>
+        )}
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: -4 }}>
+        {skattetype === 'skattekort' && 'Står det tabelltrekk på skattekortet, skriv inn prosentsatsen frå kortet. Trekket blir då eit anslag.'}
+        {skattetype === 'frikort' && 'Ikkje trekk før frikortbeløpet er brukt opp i år. Deretter blir 50 % trekt.'}
+        {!skattetype && 'Utan registrert skattekort skal arbeidsgivar trekkje 50 %.'}
       </div>
       <Field label="Farge">
         <div style={{ display: 'flex', gap: 8 }}>

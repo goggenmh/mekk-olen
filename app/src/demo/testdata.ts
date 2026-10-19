@@ -17,9 +17,9 @@ export function lagTestdata(): Record<string, Rad[]> {
 
   const ansatte: Rad[] = [
     { id: 'kari', navn: 'Kari Nordmann', rolle: 'Dagleg leiar', lonn: 'fast', sats: 0, farge: '#11788a', init: 'KN', email: 'kari@demo.local', telefon: '900 11 222', leder: true, aktiv: true, butikk_id: B, konsern_admin: false, created_at: '2026-01-01' },
-    { id: 'ola', navn: 'Ola Haugland', rolle: 'Butikkmedarbeidar', lonn: 'time', sats: 168, farge: '#e08a1e', init: 'OH', email: 'ola@demo.local', telefon: '900 33 444', leder: false, aktiv: true, butikk_id: B, konsern_admin: false, created_at: '2026-01-02' },
-    { id: 'ingrid', navn: 'Ingrid Vik', rolle: 'Butikkmedarbeidar', lonn: 'time', sats: 152, farge: '#2f9e6f', init: 'IV', email: 'ingrid@demo.local', telefon: '900 55 666', leder: false, aktiv: true, butikk_id: B, konsern_admin: false, created_at: '2026-01-03' },
-    { id: 'jonas', navn: 'Jonas Berg', rolle: 'Helgehjelp', lonn: 'time', sats: 145, farge: '#6a5acd', init: 'JB', email: 'jonas@demo.local', telefon: '900 77 888', leder: false, aktiv: true, butikk_id: B, konsern_admin: false, created_at: '2026-01-04' },
+    { id: 'ola', navn: 'Ola Haugland', rolle: 'Butikkmedarbeidar', lonn: 'time', sats: 168, skattetype: 'skattekort', skatteprosent: 31, farge: '#e08a1e', init: 'OH', email: 'ola@demo.local', telefon: '900 33 444', leder: false, aktiv: true, butikk_id: B, konsern_admin: false, created_at: '2026-01-02' },
+    { id: 'ingrid', navn: 'Ingrid Vik', rolle: 'Butikkmedarbeidar', lonn: 'time', sats: 152, skattetype: 'frikort', frikortgrense: 4000, farge: '#2f9e6f', init: 'IV', email: 'ingrid@demo.local', telefon: '900 55 666', leder: false, aktiv: true, butikk_id: B, konsern_admin: false, created_at: '2026-01-03' },
+    { id: 'jonas', navn: 'Jonas Berg', rolle: 'Helgehjelp', lonn: 'time', sats: 145, skattetype: null, farge: '#6a5acd', init: 'JB', email: 'jonas@demo.local', telefon: '900 77 888', leder: false, aktiv: true, butikk_id: B, konsern_admin: false, created_at: '2026-01-04' },
     { id: 'siri', navn: 'Siri Lund', rolle: 'Sommarvikar', lonn: 'time', sats: 140, farge: '#c0392b', init: 'SL', email: 'siri@demo.local', telefon: '', leder: false, aktiv: false, butikk_id: B, konsern_admin: false, created_at: '2026-01-05' },
   ];
 

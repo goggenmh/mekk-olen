@@ -3,6 +3,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { weekDates, mondayOf, today, timar, fmt, fmtKr, addDays, talDagar, MND, parseDate } from '../../lib/dates';
 import { alder } from '../../lib/bestilling';
+import { trekkForPeriode, type Trekk } from '../../lib/skatt';
 import { Avatar } from '../ui/Avatar';
 
 type Periode = 'uke' | 'manad';
@@ -53,6 +54,10 @@ export function Rapporter() {
     return n;
   };
 
+  // Periodegrenser for skatteutrekninga [fra, til).
+  const periodeFra = periode === 'uke' ? vekeDatoar[0] : `${t.slice(0, 7)}-01`;
+  const periodeTil = periode === 'uke' ? addDays(vekeDatoar[0], 7) : (() => { const [y, m] = t.slice(0, 7).split('-').map(Number); return m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, '0')}-01`; })();
+
   const rader = ansatte.map((a) => {
     const mine = entries.filter((e) => e.ansatt === a.id && innenPeriode(e.date));
     const registrert = mine.reduce((acc, e) => acc + timar(e), 0);
@@ -64,11 +69,14 @@ export function Rapporter() {
     const planHittil = shifts.filter((s) => s.ansatt === a.id && innenPeriode(s.date) && s.date <= t).reduce((acc, s) => acc + vaktTimar(s), 0);
     const bruttoHittil = mine.filter((e) => e.date <= t).reduce((acc, e) => acc + timar(e) + (e.pause || 0) / 60, 0);
     const avvik = planHittil > 0 && Math.abs(bruttoHittil - planHittil) >= 1;
-    return { a, planlagt, registrert, godkjent, ventar, overtid: overtid(a.id), fravaer: fravaerDagar(a.id), kr, avvik };
+    const skatt: Trekk | null = a.lonn === 'time' ? trekkForPeriode(a, entries, periodeFra, periodeTil) : null;
+    return { a, planlagt, registrert, godkjent, ventar, overtid: overtid(a.id), fravaer: fravaerDagar(a.id), kr, avvik, skatt };
   });
 
   const sum = (k: 'planlagt' | 'registrert' | 'godkjent' | 'overtid') => rader.reduce((acc, r) => acc + r[k], 0);
   const totalKrAlle = rader.reduce((acc, r) => acc + (r.kr || 0), 0);
+  const totalTrekk = rader.reduce((acc, r) => acc + (r.skatt?.trekk || 0), 0);
+  const manglarKort = rader.filter((r) => r.skatt?.manglarKort && r.skatt.brutto > 0).map((r) => r.a.navn);
   const totalVentar = rader.reduce((acc, r) => acc + r.ventar, 0);
   const fullforteOppgaver = tasks.filter((x) => x.ferdig).length;
   const aktiveBestillingar = orders.filter((o) => o.status !== 'henta').length;
@@ -79,7 +87,9 @@ export function Rapporter() {
     { label: 'Registrerte timar', verdi: fmt(sum('registrert')), farge: 'var(--brand-strong)' },
     { label: 'Godkjende timar', verdi: fmt(sum('godkjent')), farge: 'var(--pill-gronn-fg)' },
     { label: 'Overtid', verdi: fmt(sum('overtid')), farge: 'var(--pill-raud-fg)' },
-    { label: 'Løn (godkjent, timeløna)', verdi: fmtKr(totalKrAlle), farge: 'var(--pill-gronn-fg)' },
+    { label: 'Brutto løn (godkjent)', verdi: fmtKr(totalKrAlle), farge: 'var(--pill-gronn-fg)' },
+    { label: 'Forskotstrekk (anslag)', verdi: fmtKr(totalTrekk), farge: 'var(--pill-raud-fg)' },
+    { label: 'Netto utbetalt (anslag)', verdi: fmtKr(totalKrAlle - totalTrekk), farge: 'var(--brand-strong)' },
     { label: 'Ventar godkjenning', verdi: String(totalVentar), farge: 'var(--pill-amber-fg)' },
     { label: 'Fullførte oppgåver', verdi: String(fullforteOppgaver), farge: 'var(--pill-lilla-fg)' },
     { label: 'Aktive bestillingar', verdi: `${aktiveBestillingar}${gamleBestillingar ? ` (${gamleBestillingar} lenge)` : ''}`, farge: 'var(--accent)' },
@@ -90,14 +100,14 @@ export function Rapporter() {
     lastNedCsv(`mekk-olen-rapport-${periode === 'uke' ? `veke-${vekeDatoar[0]}` : t.slice(0, 7)}.csv`, [
       [`Rapport for ${periodeTekst}`, `Generert ${generert}`],
       [],
-      ['Tilsett', 'Planlagt (t)', 'Registrert (t)', 'Godkjent (t)', 'Overtid (t)', 'Fråværsdagar', 'Ventar godkjenning', 'Løn godkjent (kr)'],
-      ...rader.map((r) => [r.a.navn, fmt(r.planlagt), fmt(r.registrert), fmt(r.godkjent), fmt(r.overtid), r.fravaer, r.ventar, r.kr !== null ? Math.round(r.kr) : 'Fastløn']),
+      ['Tilsett', 'Planlagt (t)', 'Registrert (t)', 'Godkjent (t)', 'Overtid (t)', 'Fråværsdagar', 'Ventar godkjenning', 'Brutto (kr)', 'Forskotstrekk (kr)', 'Netto (kr)', 'Skatt'],
+      ...rader.map((r) => [r.a.navn, fmt(r.planlagt), fmt(r.registrert), fmt(r.godkjent), fmt(r.overtid), r.fravaer, r.ventar, r.kr !== null ? Math.round(r.kr) : 'Fastløn', r.skatt ? r.skatt.trekk : '', r.skatt ? Math.round(r.skatt.netto) : '', r.skatt ? r.skatt.forklaring : '']),
       [],
-      ['Løn er rekna av godkjende timar. Overtid = timar over 37,5 per veke.'],
+      ['Løn er rekna av godkjende timar. Overtid = timar over 37,5 per veke. Forskotstrekket er eit anslag – lønssystemet/a-meldinga er fasit.'],
     ]);
   };
 
-  const kol = '1.6fr repeat(6, 1fr)';
+  const kol = '1.6fr repeat(5, 0.85fr) 1.1fr 1.1fr';
 
   return (
     <div className="side" style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1100 }}>
@@ -136,7 +146,7 @@ export function Rapporter() {
       </div>
 
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'auto', boxShadow: 'var(--shadow-card)' }}>
-        <div style={{ minWidth: 720 }}>
+        <div style={{ minWidth: 900 }}>
           <div style={{ display: 'grid', gridTemplateColumns: kol, padding: '12px 18px', fontSize: 11, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.4px', borderBottom: '1px solid var(--divider)', background: 'var(--surface-alt)' }}>
             <span>Tilsett</span>
             <span>Planlagt</span>
@@ -144,7 +154,8 @@ export function Rapporter() {
             <span>Godkjent</span>
             <span>Overtid</span>
             <span>Fråvær</span>
-            <span>Løn</span>
+            <span>Brutto</span>
+            <span>Netto</span>
           </div>
           {rader.map((r) => {
             const avvik = r.avvik;
@@ -160,13 +171,18 @@ export function Rapporter() {
                 <span style={{ color: r.overtid > 0 ? 'var(--danger)' : 'var(--text-muted)' }}>{r.overtid > 0 ? `${fmt(r.overtid)} t` : '–'}</span>
                 <span style={{ color: r.fravaer > 0 ? 'var(--text)' : 'var(--text-muted)' }}>{r.fravaer > 0 ? `${r.fravaer} d` : '–'}</span>
                 <span>{r.kr !== null ? fmtKr(r.kr) : 'Fastløn'}</span>
+                <span title={r.skatt?.forklaring} style={{ color: r.skatt?.manglarKort ? 'var(--danger)' : undefined }}>
+                  {r.skatt ? fmtKr(r.skatt.netto) : '–'}
+                  {r.skatt && <div style={{ fontFamily: "'Geist Variable'", fontSize: 10.5, color: r.skatt.manglarKort ? 'var(--danger)' : 'var(--text-muted)' }}>{r.skatt.forklaring}</div>}
+                </span>
               </div>
             );
           })}
         </div>
       </div>
       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-        Løn er rekna av godkjende timar. Overtid er timar over 37,5 per veke. ⚠ = registrerte timar avvik minst éin time frå vaktplanen.
+        {manglarKort.length > 0 && <div style={{ color: 'var(--danger)', fontWeight: 600, marginBottom: 6 }}>⚠ Manglar skattekort: {manglarKort.join(', ')}. Registrer det under Tilsette, elles skal det trekkjast 50 %.</div>}
+        Forskotstrekk er eit anslag ut frå skatteopplysningane under Tilsette – lønssystemet/a-meldinga er fasit. Løn er rekna av godkjende timar. Overtid er timar over 37,5 per veke. ⚠ = registrerte timar avvik minst éin time frå vaktplanen.
       </div>
     </div>
   );
