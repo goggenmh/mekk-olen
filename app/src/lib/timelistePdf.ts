@@ -33,6 +33,8 @@ export interface TimelistePdfVal {
   /** T.d. «19.–24. oktober 2026» (kan vere tom). */
   undertittel: string;
   butikk: string;
+  /** Tilsette der løn og skatt for perioden skal stå på sida deira. */
+  visLon: string[];
   /** Leiar: tek med lønsgrunnlag (berre når maaned er sett). */
   medLon: boolean;
   /** ÅÅÅÅ-MM når perioden er ein heil månad, elles null. */
@@ -45,6 +47,14 @@ export const timelistePdfNamn = ({ butikk, tittel }: Pick<TimelistePdfVal, 'buti
 export async function lagTimelistePdf(val: TimelistePdfVal): Promise<ArrayBuffer> {
   const [{ jsPDF }, { autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')]);
   const { ansatte, entries, datoar, tittel, undertittel, butikk, medLon, maaned } = val;
+  const visLon = new Set(val.visLon);
+  const nesteDag = (iso: string) => {
+    const d = new Date(`${iso}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().slice(0, 10);
+  };
+  const periodeFra = datoar[0];
+  const periodeTil = nesteDag(datoar[datoar.length - 1]);
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const B = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -158,26 +168,66 @@ export async function lagTimelistePdf(val: TimelistePdfVal): Promise<ArrayBuffer
       },
     });
 
-    // Signaturar: flytt til ny side om det ikkje er plass.
-    let sy = sisteY() + 14;
-    if (sy > H - 60) { doc.addPage(); sy = topp(false, x.a.navn) + 8; }
+    // Under tabellen: lønsboks til venstre (når løna kan visast) og
+    // signaturlinjer til høgre, så signaturen står på same side som timane.
+    const medLonsboks = visLon.has(x.a.id);
+    const blokkH = medLonsboks ? 58 : 34;
+    let by = sisteY() + 10;
+    if (by + blokkH > H - 16) { doc.addPage(); by = topp(false, x.a.navn) + 4; }
+
+    if (medLonsboks) {
+      const s = x.a.lonn === 'time' ? trekkForPeriode(x.a, entries, periodeFra, periodeTil) : null;
+      autoTable(doc, {
+        ...tabellStil,
+        startY: by,
+        tableWidth: 96,
+        styles: { ...tabellStil.styles, fontSize: 9, cellPadding: { top: 1.8, bottom: 1.8, left: 2.5, right: 2.5 } },
+        head: [['Løn for perioden (anslag)', '']],
+        body: s ? [
+          ['Godkjende timar', `${t2(x.godkjent)} × ${krSats(x.a.sats || 0)}`],
+          ['Brutto', kr(s.brutto)],
+          ['Forskotstrekk', s.trekk ? `– ${kr(s.trekk)}` : '–'],
+          ['Skatt', s.forklaring],
+        ] : [['Fastløn', 'Blir ikkje rekna her']],
+        foot: s ? [['Netto', kr(s.netto)]] : undefined,
+        columnStyles: { 0: { cellWidth: 32 }, 1: { halign: 'right' } },
+        didParseCell: (d) => {
+          if (d.section === 'head' && d.column.index === 0) d.cell.colSpan = 2;
+          if (d.section === 'foot' && d.column.index === 1) d.cell.styles.halign = 'right';
+          if (d.section === 'body' && d.row.index === 2 && d.column.index === 1 && s?.trekk) d.cell.styles.textColor = RAUD;
+          if (d.section === 'body' && d.row.index === 3 && d.column.index === 1 && s?.manglarKort) {
+            d.cell.styles.textColor = RAUD; d.cell.styles.fontStyle = 'bold';
+          }
+        },
+      });
+    }
+
+    // Signaturar: stabla til høgre ved lønsboksen, elles på éi linje.
+    const stadfest = `Eg stadfestar at timane over er rette (${t2(x.total)} timar).`;
+    doc.setDrawColor(...NAVY);
+    doc.setLineWidth(0.35);
+    const signaturLinje = (lx: number, ly: number, w: number, tekst: string) => {
+      doc.line(lx, ly, lx + w, ly);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...GRAA);
+      doc.text(tekst, lx, ly + 4.2);
+    };
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
     doc.setTextColor(40, 40, 40);
-    doc.text(`Eg stadfestar at timane over er rette (${t2(x.total)} timar).`, M, sy);
-    const felt = [
-      { tekst: 'Stad og dato', x: M, w: 46 },
-      { tekst: `Signatur ${x.a.navn}`, x: M + 54, w: 60 },
-      { tekst: 'Signatur leiar', x: M + 122, w: B - M - (M + 122) },
-    ];
-    const linjeY = sy + 22;
-    doc.setDrawColor(...NAVY);
-    doc.setLineWidth(0.35);
-    for (const f of felt) {
-      doc.line(f.x, linjeY, f.x + f.w, linjeY);
-      doc.setFontSize(8.5);
-      doc.setTextColor(...GRAA);
-      doc.text(f.tekst, f.x, linjeY + 4.5);
+    if (medLonsboks) {
+      const sx = M + 106;
+      const sw = B - M - sx;
+      doc.text(doc.splitTextToSize(stadfest, sw), sx, by + 4);
+      signaturLinje(sx, by + 22, sw, 'Stad og dato');
+      signaturLinje(sx, by + 37, sw, `Signatur ${x.a.navn}`);
+      signaturLinje(sx, by + 52, sw, 'Signatur leiar');
+    } else {
+      doc.text(stadfest, M, by + 4);
+      signaturLinje(M, by + 24, 46, 'Stad og dato');
+      signaturLinje(M + 54, by + 24, 60, `Signatur ${x.a.navn}`);
+      signaturLinje(M + 122, by + 24, B - M - (M + 122), 'Signatur leiar');
     }
   }
 

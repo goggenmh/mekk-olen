@@ -4,11 +4,11 @@ import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import {
   weekDates, mondayOf, today, isoWeek, addDays, shiftMonth, MND,
-  fmt, timar, UKE_KORT, parseDate, weekdayIdx,
+  fmt, fmtKr, timar, UKE_KORT, parseDate, weekdayIdx,
 } from '../../lib/dates';
 import { TimeEntryModal } from './TimeEntryModal';
 import { useIsMobile } from '../../lib/useIsMobile';
-import { useLonTekst } from '../../lib/lon';
+import { useLonTekst, useLonsTilgang, useLonsTrekk } from '../../lib/lon';
 import { erLeiar } from '../../lib/view';
 import { lastNedLonsfil } from '../../lib/lonsfil';
 import { lastNedTimelistePdf } from '../../lib/timelistePdf';
@@ -34,6 +34,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
   const { user } = useAuth();
   const [lagarLonsfil, setLagarLonsfil] = useState(false);
   const [lagarPdf, setLagarPdf] = useState(false);
+  const lonsTilgang = useLonsTilgang();
   const isMobile = useIsMobile();
   const maaGodkjenne = canApprove(user?.id);
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
@@ -78,9 +79,12 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
       const datoar = mode === 'manad'
         ? Array.from({ length: new Date(ar, mnd, 0).getDate() }, (_, i) => `${monthAnchor}-${String(i + 1).padStart(2, '0')}`)
         : dates;
+      // Den som kan godkjenne får alle; andre berre si eiga timeliste.
+      const utval = maaGodkjenne ? ansatte : ansatte.filter((a) => a.id === user?.id);
       await lastNedTimelistePdf({
-        // Den som kan godkjenne får alle; andre berre si eiga timeliste.
-        ansatte: maaGodkjenne ? ansatte : ansatte.filter((a) => a.id === user?.id),
+        // Med sats/skatt der den innlogga har lov å sjå løna.
+        ansatte: utval.map((a) => lonsTilgang(a) ?? a),
+        visLon: utval.filter((a) => lonsTilgang(a)).map((a) => a.id),
         entries, datoar,
         tittel: periodTittel, undertittel: periodUnder,
         butikk: finnButikk(user?.butikk_id)?.namn || 'MEKK Ølen',
@@ -425,10 +429,14 @@ function MonthView({
 
   const inMonth = (d: string) => Number(d.split('-')[1]) === mm;
 
+  const lonsTrekk = useLonsTrekk();
+  const manadFra = `${monthAnchor}-01`;
+  const manadTil = `${shiftMonth(monthAnchor, 1)}-01`;
   const manadKort = ansatte.map((a) => {
     const tot = entries.filter((e) => e.ansatt === a.id && e.date.slice(0, 7) === monthAnchor && e.status === 'godkjent').reduce((acc, e) => acc + timar(e), 0);
     const lonn = lonTekst(a, tot);
-    return { a, tot, lonn };
+    const trekk = lonsTrekk(a, entries, manadFra, manadTil);
+    return { a, tot, lonn, trekk };
   });
 
   return (
@@ -470,11 +478,23 @@ function MonthView({
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14 }}>
-        {manadKort.map(({ a, tot, lonn }) => (
+        {manadKort.map(({ a, tot, lonn, trekk }) => (
           <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
             <div style={{ fontSize: 13.5, fontWeight: 700 }}>{a.navn}</div>
             <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Geist Mono Variable'", color: a.farge, marginTop: 4 }}>{fmt(tot)} t</div>
-            {lonn && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>{lonn}</div>}
+            {trekk && trekk !== 'fast' ? (
+              <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: 'auto 1fr', columnGap: 10, rowGap: 2, fontSize: 12.5 }}>
+                <span style={{ color: 'var(--text-muted)' }}>Brutto</span>
+                <span style={{ textAlign: 'right', fontFamily: "'Geist Mono Variable'" }}>{fmtKr(trekk.brutto)}</span>
+                <span style={{ color: 'var(--text-muted)' }}>Forskotstrekk</span>
+                <span style={{ textAlign: 'right', fontFamily: "'Geist Mono Variable'", color: trekk.trekk ? 'var(--danger)' : 'var(--text-muted)' }}>{trekk.trekk ? `−${fmtKr(trekk.trekk)}` : '–'}</span>
+                <span style={{ fontWeight: 700 }}>Netto</span>
+                <span style={{ textAlign: 'right', fontWeight: 700, fontFamily: "'Geist Mono Variable'" }}>{fmtKr(trekk.netto)}</span>
+                <span style={{ gridColumn: '1 / -1', marginTop: 4, fontSize: 11.5, color: trekk.manglarKort ? 'var(--danger)' : 'var(--text-faint)', fontWeight: trekk.manglarKort ? 700 : 400 }}>{trekk.forklaring}</span>
+              </div>
+            ) : (
+              lonn && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>{lonn}</div>
+            )}
           </div>
         ))}
       </div>

@@ -1,5 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import type { Employee } from '../constants';
+import type { TimeEntry } from '../types';
+import { trekkForPeriode, type Trekk } from './skatt';
 import { fmtKr } from './dates';
 import { erLeiar } from './view';
 
@@ -17,5 +19,38 @@ export function useLonTekst() {
     if (a.lonn !== 'time') return 'Fastløn';
     const sats = eigen ? user?.sats ?? a.sats : a.sats;
     return fmtKr(timar * (sats || 0));
+  };
+}
+
+/**
+ * Den tilsette slik den innlogga har lov å sjå hen: leiarar ser alle med
+ * sats og skatt; andre får berre seg sjølv (med eigne private felt frå
+ * profilen). Returnerer null når løna ikkje skal visast.
+ */
+export function useLonsTilgang() {
+  const { user } = useAuth();
+  const leiar = erLeiar(user);
+  return (a: Employee): Employee | null => {
+    const eigen = a.id === user?.id;
+    if (!leiar && !eigen) return null;
+    if (!eigen || !user) return a;
+    return {
+      ...a,
+      sats: user.sats ?? a.sats,
+      skattetype: user.skattetype ?? a.skattetype,
+      skatteprosent: user.skatteprosent ?? a.skatteprosent,
+      frikortgrense: user.frikortgrense ?? a.frikortgrense,
+    };
+  };
+}
+
+/** Brutto, forskotstrekk og netto for perioden [fra, til), eller 'fast'/null. */
+export function useLonsTrekk() {
+  const tilgang = useLonsTilgang();
+  return (a: Employee, entries: TimeEntry[], fra: string, til: string): Trekk | 'fast' | null => {
+    const synleg = tilgang(a);
+    if (!synleg) return null;
+    if (synleg.lonn !== 'time') return 'fast';
+    return trekkForPeriode(synleg, entries, fra, til);
   };
 }
