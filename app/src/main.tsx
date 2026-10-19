@@ -10,8 +10,11 @@ import { AppDataProvider } from './context/AppDataContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { AnsatteProvider } from './context/AnsatteContext'
 import { registrerServiceWorker } from './lib/push'
+import { DEMO } from './lib/view'
+import { DemoMerke } from './demo/DemoMerke'
 
-registrerServiceWorker()
+// Demo-fila blir opna lokalt utan nett: ingen service worker/push der.
+if (!DEMO) registrerServiceWorker()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -20,6 +23,7 @@ createRoot(document.getElementById('root')!).render(
         <AuthProvider>
           <AppDataProvider>
             <App />
+            {DEMO && <DemoMerke />}
           </AppDataProvider>
         </AuthProvider>
       </AnsatteProvider>

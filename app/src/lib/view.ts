@@ -43,6 +43,21 @@ export const harTilgang = (v: View, u: Pick<Employee, 'leder' | 'konsern_admin'>
 
 export const stiFor = (v: View) => VIEWS.find((x) => x.key === v)?.sti ?? '/';
 
+/** Demo-fila (npm run build:demo) blir opna som ei lokal fil, der adressa ikkje
+ *  kan endrast. Der ligg sida i #-delen i staden: mekk-olen-demo.html#/vaktplan. */
+export const DEMO = import.meta.env.MODE === 'demo';
+
+export const lesSti = () => (DEMO ? window.location.hash.slice(1) || '/' : window.location.pathname);
+
+export function skrivSti(sti: string, erstatt = false) {
+  if (lesSti() === sti) return;
+  if (DEMO) {
+    if (erstatt) window.history.replaceState(null, '', `#${sti}`);
+    else window.location.hash = sti;
+  } else if (erstatt) window.history.replaceState(null, '', sti);
+  else window.history.pushState(null, '', sti);
+}
+
 /** Finn sida ut frå adressa; ukjende adresser går til oversikta. */
 export const viewFraSti = (sti: string): View => {
   const reinsa = sti.replace(/\/+$/, '') || '/';

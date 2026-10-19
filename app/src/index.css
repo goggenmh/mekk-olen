@@ -240,6 +240,10 @@ button:active {
 .side { padding: 28px; }
 @media (max-width: 859px) { .side { padding: 16px; } }
 
+/* Demo-merket: nede i hjørnet på PC, oppe på telefon (der er botnmenyen) */
+.demo-merke { bottom: 14px; }
+@media (max-width: 859px) { .demo-merke { bottom: auto; top: 64px; } }
+
 /* Kollapsbar sidemeny: skjul tekst når smal */
 .rail-collapsed .rail-label { display: none; }
 

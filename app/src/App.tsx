@@ -17,7 +17,7 @@ const Innstillinger = lazy(() => import('./components/Innstillinger/Innstillinge
 import { useIsMobile } from './lib/useIsMobile';
 import { useIdleLogout } from './lib/useIdleLogout';
 import { Toaster } from './components/ui/Toaster';
-import { VIEWS, harTilgang, stiFor, viewFraSti, type View } from './lib/view';
+import { VIEWS, DEMO, harTilgang, lesSti, skrivSti, stiFor, viewFraSti, type View } from './lib/view';
 import { BottomNav } from './components/Layout/BottomNav';
 import { VarselTips } from './components/Layout/VarselTips';
 
@@ -56,7 +56,7 @@ function App() {
   const { loading: dataLoading, error, refreshAll } = useAppData();
   // Sida følgjer adressa (/vaktplan, /bestillingar …), så tilbake-knappen,
   // bokmerke og oppdatering av sida tek deg til same stad.
-  const [view, setView] = useState<View>(() => viewFraSti(window.location.pathname));
+  const [view, setView] = useState<View>(() => viewFraSti(lesSti()));
   // Dato frå eit varsel: Vaktplan/Timeliste opnar på den veka/månaden.
   const [visDato, setVisDato] = useState<string | null>(null);
   const isMobile = useIsMobile();
@@ -65,22 +65,23 @@ function App() {
     setView(v);
     setVisDato(dato);
     setMenuOpen(false);
-    if (window.location.pathname !== stiFor(v)) window.history.pushState(null, '', stiFor(v));
+    skrivSti(stiFor(v));
   };
   const go = (v: View) => byttSide(v, null);
   const gaaTil = (m: Mal) => byttSide(m.vis, m.dato);
 
   // Tilbake/fram i nettlesaren.
   useEffect(() => {
-    const vedPop = () => { setView(viewFraSti(window.location.pathname)); setVisDato(null); setMenuOpen(false); };
-    window.addEventListener('popstate', vedPop);
-    return () => window.removeEventListener('popstate', vedPop);
+    const vedPop = () => { setView(viewFraSti(lesSti())); setVisDato(null); setMenuOpen(false); };
+    const hending = DEMO ? 'hashchange' : 'popstate';
+    window.addEventListener(hending, vedPop);
+    return () => window.removeEventListener(hending, vedPop);
   }, []);
 
   // Sider berre for leiarar: send andre til oversikta.
   const synlegView: View = harTilgang(view, user) ? view : 'dashbord';
   useEffect(() => {
-    if (user && synlegView !== view) window.history.replaceState(null, '', stiFor(synlegView));
+    if (user && synlegView !== view) skrivSti(stiFor(synlegView), true);
   }, [user, view, synlegView]);
 
   // Automatisk utlogging etter 5 minutt utan aktivitet.
