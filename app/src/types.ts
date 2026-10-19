@@ -88,6 +88,14 @@ export interface Doc {
   fil_namn: string | null;
 }
 
+/** Ein tilsett har stadfesta at hen har lese eit dokument. */
+export interface Stadfesting {
+  id: string;
+  docId: string;
+  ansatt: EmployeeId;
+  stadfestaAt: string;
+}
+
 export interface Permission {
   ansatt: EmployeeId;
   kan_godkjenne: boolean;

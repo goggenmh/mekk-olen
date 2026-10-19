@@ -5,7 +5,7 @@ import type { EmployeeId } from '../constants';
 import { parseDate, ymd, today, addDays, DAG_IDX, skiftFraTid } from '../lib/dates';
 import { toast } from '../lib/toast';
 import { useAnsatte } from './AnsatteContext';
-import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Task, TimeEntry, Unavailable, StandardvekeEntry } from '../types';
+import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Stadfesting, Task, TimeEntry, Unavailable, StandardvekeEntry } from '../types';
 
 // Neste forfallsdato for ei gjentakande oppgåve.
 const nesteFrist = (frist: string | null, gjentak: string): string | null => {
@@ -27,6 +27,8 @@ interface AppData {
   tasks: Task[];
   orders: Order[];
   docs: Doc[];
+  stadfestingar: Stadfesting[];
+  stadfestDoc: (docId: string) => Promise<void>;
   permissions: Permission[];
   meldinger: Melding[];
   unavailable: Unavailable[];
@@ -84,6 +86,7 @@ const mapStandard = (r: any): StandardvekeEntry => ({ id: r.id, ansatt: r.ansatt
 const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [] });
 const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla, notat: r.notat ?? '', registrertAv: r.registrert_av ?? null });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
+const mapStadfesting = (r: any): Stadfesting => ({ id: r.id, docId: r.doc_id, ansatt: r.ansatt, stadfestaAt: r.stadfesta_at });
 const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne: r.kan_godkjenne });
 const mapMelding = (r: any): Melding => ({ id: r.id, fra: r.fra, til: r.til, tekst: r.tekst, created_at: r.created_at });
 
@@ -100,6 +103,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [docs, setDocs] = useState<Doc[]>([]);
+  const [stadfestingar, setStadfestingar] = useState<Stadfesting[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [meldinger, setMeldinger] = useState<Melding[]>([]);
 
@@ -112,7 +116,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
     }
-    const [e, s, sw, f, t, o, d, p, m, u, sv] = await Promise.all([
+    const [e, s, sw, f, t, o, d, p, m, u, sv, st] = await Promise.all([
       supabase.from('time_entries').select('*'),
       supabase.from('shifts').select('*'),
       supabase.from('shift_swaps').select('*'),
@@ -124,6 +128,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       supabase.from('meldinger').select('*').order('created_at', { ascending: false }),
       supabase.from('utilgjengeleg').select('*'),
       supabase.from('standardveke').select('*'),
+      supabase.from('doc_stadfesting').select('*'),
     ]);
     const firstError = [e, s, sw, f, t, o, d, p, m, u, sv].find((r) => r.error)?.error;
     if (firstError) {
@@ -147,6 +152,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setMeldinger((m.data || []).map(mapMelding));
       setUnavailable((u.data || []).map(mapUnavail));
       setStandardveke((sv.data || []).map(mapStandard));
+      // Tabellen kjem med dokument-stadfesting.sql; manglar han, blir lista tom.
+      setStadfestingar(st.error ? [] : (st.data || []).map(mapStadfesting));
     }
     if (!stille) setLoading(false);
   }, []);
@@ -164,7 +171,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       timer = setTimeout(() => hent(true), 400);
     };
     const kanal = supabase.channel('appdata-live');
-    for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke']) {
+    for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting']) {
       kanal.on('postgres_changes', { event: '*', schema: 'public', table }, planlegg);
     }
     // Mobilen set appen på pause i bakgrunnen, og då går endringar tapt.
@@ -457,6 +464,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     return { url: data.publicUrl, namn: file.name };
   };
 
+  // Kven og når blir sett av databasen ut frå innlogga brukar.
+  const stadfestDoc: AppData['stadfestDoc'] = async (docId) => {
+    const { data, error: err } = await supabase.from('doc_stadfesting').insert({ doc_id: docId }).select().single();
+    if (err) throw err;
+    setStadfestingar((prev) => [...prev, mapStadfesting(data)]);
+    toast('Stadfesta – takk!');
+  };
+
   // ---- permissions & delegation ----
   const canApprove: AppData['canApprove'] = useCallback(
     (ansatt) => !!ansatt && (isLeder(ansatt) || permissions.some((p) => p.ansatt === ansatt && p.kan_godkjenne)),
@@ -482,7 +497,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppData>(
     () => ({
-      loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, unavailable, standardveke, refreshAll,
+      loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, stadfestingar, stadfestDoc, permissions, meldinger, unavailable, standardveke, refreshAll,
       canApprove, setKanGodkjenne,
       sendMelding, deleteMelding,
       saveEntry, deleteEntry, approveEmployeeEntries,
@@ -494,7 +509,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveDoc, deleteDoc, uploadDocFile,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, permissions, meldinger, unavailable, standardveke, canApprove]
+    [loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, stadfestingar, permissions, meldinger, unavailable, standardveke, canApprove]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

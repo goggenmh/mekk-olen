@@ -9,6 +9,7 @@ import { AdminPanel } from '../Admin/AdminPanel';
 import { weekDates, mondayOf, today } from '../../lib/dates';
 import { erLeiar, type View } from '../../lib/view';
 import { alder } from '../../lib/bestilling';
+import { ustadfesta } from '../../lib/dokument';
 
 interface Varsel {
   key: string;
@@ -28,7 +29,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
   const { user, logout } = useAuth();
   const { dark, toggle } = useTheme();
   const { isLeder, ansatte, findAnsatt } = useAnsatte();
-  const { docs, tasks, swaps, entries, orders } = useAppData();
+  const { docs, tasks, swaps, entries, orders, stadfestingar } = useAppData();
   const [adminOpen, setAdminOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [notifOpen, setNotifOpen] = useState(false);
@@ -41,14 +42,16 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
     const ufordelte = tasks.filter((x) => x.ansatt === 'ufordelt').length;
     const ankomne = orders.filter((o) => o.status === 'komen' && !o.varsla);
     const gamle = orders.filter((o) => alder(o, t).gammal).length;
+    const ulesne = ustadfesta(docs, stadfestingar, user?.id);
     return [
       ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønskjer å bytte vakt ${s.dag}`, view: 'vaktplan' as View })),
       ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${ventandeTimar} timelister ventar godkjenning`, view: 'timeliste' as View }] : []),
       ...ankomne.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),
       ...(gamle > 0 ? [{ key: 'gamle', tekst: `${gamle} bestillingar har stått lenge – sjekk dei`, view: 'bestilling' as View }] : []),
+      ...(ulesne > 0 ? [{ key: 'hms', tekst: `${ulesne} HMS-dokument ventar på at du stadfestar at du har lese`, view: 'dokument' as View }] : []),
       ...(ufordelte > 0 ? [{ key: 'oppgaver', tekst: `${ufordelte} ufordelte oppgåver`, view: 'oppgaver' as View }] : []),
     ].slice(0, 8);
-  }, [swaps, entries, tasks, orders, findAnsatt]);
+  }, [swaps, entries, tasks, orders, docs, stadfestingar, user?.id, findAnsatt]);
 
   const hits = useMemo<SearchHit[]>(() => {
     const q = query.trim().toLowerCase();
