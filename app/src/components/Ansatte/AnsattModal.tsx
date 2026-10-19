@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Modal, Field, inputStyle, monoInputStyle, CancelButton, SaveButton } from '../ui/Modal';
 import { useAnsatte } from '../../context/AnsatteContext';
 import type { Employee } from '../../constants';
+import { FERIEPENGESATSAR, STANDARD_FERIEPENGESATS } from '../../lib/skatt';
 
 const FARGAR = ['#11788a', '#e08a1e', '#2f9e6f', '#6a5acd', '#c0392b', '#b07b1a', '#9aa4b2', '#1d6fa5'];
 
@@ -21,6 +22,12 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
   const [skattetype, setSkattetype] = useState<'' | 'skattekort' | 'frikort'>(existing?.skattetype || '');
   const [skatteprosent, setSkatteprosent] = useState(existing?.skatteprosent ?? 0);
   const [frikortgrense, setFrikortgrense] = useState(existing?.frikortgrense ?? 0);
+  const [feriepengesats, setFeriepengesats] = useState(existing?.feriepengesats ?? STANDARD_FERIEPENGESATS);
+  // Tidlegare løn gjeld for inneverande år; gamle tal frå i fjor blir ikkje viste.
+  const iAar = new Date().getFullYear();
+  const gjeldIAar = existing?.tidlegare_ar === iAar;
+  const [tidlegareMekk, setTidlegareMekk] = useState(gjeldIAar ? existing?.tidlegare_mekk ?? 0 : 0);
+  const [tidlegareAndre, setTidlegareAndre] = useState(gjeldIAar ? existing?.tidlegare_andre ?? 0 : 0);
   const [pin, setPin] = useState('');
   const [feil, setFeil] = useState('');
   const [lagrar, setLagrar] = useState(false);
@@ -33,12 +40,17 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
     if (epost.trim() && !EPOST_REGEX.test(epost.trim())) { setFeil('E-posten ser ikkje gyldig ut.'); return; }
     if (skattetype === 'skattekort' && (skatteprosent < 0 || skatteprosent > 60)) { setFeil('Prosenttrekket må vere mellom 0 og 60.'); return; }
     if (skattetype === 'frikort' && frikortgrense <= 0) { setFeil('Skriv inn frikortbeløpet som står på frikortet.'); return; }
+    if (tidlegareMekk < 0 || tidlegareAndre < 0) { setFeil('Tidlegare løn kan ikkje vere negativ.'); return; }
     setLagrar(true);
     setFeil('');
     const skatt = {
       skattetype: skattetype || null,
       skatteprosent: skattetype === 'skattekort' ? skatteprosent : null,
       frikortgrense: skattetype === 'frikort' ? frikortgrense : null,
+      feriepengesats,
+      tidlegare_ar: iAar,
+      tidlegare_mekk: tidlegareMekk,
+      tidlegare_andre: tidlegareAndre,
     };
     try {
       if (existing) {
@@ -51,7 +63,7 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
           navn: navn.trim(), rolle, telefon, farge, lonn, sats, init, leder, pin,
           ...(epost.trim() ? { email: epost.trim() } : {}),
         });
-        if (skatt.skattetype) await updateAnsatt(id, skatt);
+        await updateAnsatt(id, skatt);
       }
       onClose();
     } catch (e) {
@@ -125,6 +137,27 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
         {skattetype === 'frikort' && 'Ikkje trekk før frikortbeløpet er brukt opp i år. Deretter blir 50 % trekt.'}
         {!skattetype && 'Utan registrert skattekort skal arbeidsgivar trekkje 50 %.'}
       </div>
+      {lonn === 'time' && (
+        <>
+          <Field label="Feriepengar">
+            <select value={feriepengesats} onChange={(e) => setFeriepengesats(Number(e.target.value))} style={inputStyle}>
+              {FERIEPENGESATSAR.map((f) => <option key={f.sats} value={f.sats}>{f.tekst}</option>)}
+            </select>
+          </Field>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Field label={`Løn frå MEKK før appen i ${iAar} (kr)`}>
+              <input type="number" min={0} step={100} value={tidlegareMekk} onChange={(e) => setTidlegareMekk(Number(e.target.value))} style={monoInputStyle} />
+            </Field>
+            <Field label={`Anna skattbar inntekt i ${iAar} (kr)`}>
+              <input type="number" min={0} step={100} value={tidlegareAndre} onChange={(e) => setTidlegareAndre(Number(e.target.value))} style={monoInputStyle} />
+            </Field>
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: -4 }}>
+            Brukt i frikort og feriepengar. «Løn frå MEKK før appen» er løn i år før timane vart førte her (utan feriepengar) –
+            tel for både frikort og feriepengar. «Anna skattbar inntekt» er t.d. andre arbeidsgivarar og feriepengar utbetalt i år – tel berre for frikortet.
+          </div>
+        </>
+      )}
       <Field label="Farge">
         <div style={{ display: 'flex', gap: 8 }}>
           {FARGAR.map((f) => (

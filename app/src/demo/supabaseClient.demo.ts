@@ -64,7 +64,7 @@ class Sporjing implements PromiseLike<{ data: unknown; error: unknown }> {
     if (this.op === 'select') {
       ut = rader.filter(this.treff);
       // Timesatsen er privat for andre enn leiarar, som i den ekte databasen.
-      if (this.t === 'ansatte') ut = ut.map((r) => utan(r, 'sats', 'skattetype', 'skatteprosent', 'frikortgrense'));
+      if (this.t === 'ansatte') ut = ut.map((r) => utan(r, 'sats', 'skattetype', 'skatteprosent', 'frikortgrense', 'feriepengesats', 'tidlegare_ar', 'tidlegare_mekk', 'tidlegare_andre'));
     } else if (this.op === 'insert') {
       const liste = Array.isArray(this.nytt) ? this.nytt : [this.nytt!];
       ut = liste.map((r) => utfyll(this.t, r));
@@ -106,13 +106,17 @@ const rpc = async (namn: string): Promise<{ data: unknown; error: unknown }> => 
   const a = meg();
   switch (namn) {
     case 'login_liste':
-      return ok(tabell('ansatte').filter((x) => x.aktiv).map((r) => utan(r, 'sats', 'email', 'skattetype', 'skatteprosent', 'frikortgrense')));
+      return ok(tabell('ansatte').filter((x) => x.aktiv).map((r) => utan(r, 'sats', 'email', 'skattetype', 'skatteprosent', 'frikortgrense', 'feriepengesats', 'tidlegare_ar', 'tidlegare_mekk', 'tidlegare_andre')));
     case 'min_profil':
       return ok(a && a.aktiv ? [JSON.parse(JSON.stringify(a))] : []);
     case 'min_butikk':
       return ok(a?.butikk_id ?? null);
     case 'lonssatsar':
-      return ok(a && (a.leder || a.konsern_admin) ? tabell('ansatte').map((x) => ({ id: x.id, sats: x.sats, skattetype: x.skattetype ?? null, skatteprosent: x.skatteprosent ?? null, frikortgrense: x.frikortgrense ?? null })) : []);
+    case 'lonsdata':
+      return ok(a && (a.leder || a.konsern_admin) ? tabell('ansatte').map((x) => ({
+        id: x.id, sats: x.sats, skattetype: x.skattetype ?? null, skatteprosent: x.skatteprosent ?? null, frikortgrense: x.frikortgrense ?? null,
+        feriepengesats: x.feriepengesats ?? 10.2, tidlegare_ar: x.tidlegare_ar ?? null, tidlegare_mekk: x.tidlegare_mekk ?? 0, tidlegare_andre: x.tidlegare_andre ?? 0,
+      })) : []);
     default:
       return ok(null);
   }

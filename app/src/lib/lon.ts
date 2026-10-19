@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import type { Employee } from '../constants';
 import type { TimeEntry } from '../types';
-import { trekkForPeriode, type Trekk } from './skatt';
+import { feriepengar, trekkForPeriode, type Feriepengar, type Trekk } from './skatt';
 import { fmtKr } from './dates';
 import { erLeiar } from './view';
 
@@ -40,6 +40,10 @@ export function useLonsTilgang() {
       skattetype: user.skattetype ?? a.skattetype,
       skatteprosent: user.skatteprosent ?? a.skatteprosent,
       frikortgrense: user.frikortgrense ?? a.frikortgrense,
+      feriepengesats: user.feriepengesats ?? a.feriepengesats,
+      tidlegare_ar: user.tidlegare_ar ?? a.tidlegare_ar,
+      tidlegare_mekk: user.tidlegare_mekk ?? a.tidlegare_mekk,
+      tidlegare_andre: user.tidlegare_andre ?? a.tidlegare_andre,
     };
   };
 }
@@ -52,5 +56,14 @@ export function useLonsTrekk() {
     if (!synleg) return null;
     if (synleg.lonn !== 'time') return 'fast';
     return trekkForPeriode(synleg, entries, fra, til);
+  };
+}
+
+/** Opptente feriepengar for perioden og hittil i år, med same tilgang som løna. */
+export function useFeriepengar() {
+  const tilgang = useLonsTilgang();
+  return (a: Employee, entries: TimeEntry[], fra: string, til: string): Feriepengar | null => {
+    const synleg = tilgang(a);
+    return synleg ? feriepengar(synleg, entries, fra, til) : null;
   };
 }

@@ -1,7 +1,7 @@
 import type { Employee } from '../constants';
 import type { TimeEntry } from '../types';
 import { MND, timar, weekdayIdx } from './dates';
-import { trekkForPeriode } from './skatt';
+import { feriepengar, trekkForPeriode } from './skatt';
 
 // Lønsgrunnlaget som ei ekte Excel-fil (.xlsx) med formatering, summar og
 // eit eige ark med timane dag for dag. exceljs er stort, så det blir berre
@@ -82,7 +82,7 @@ export async function lagLonsfil({ ansatte, entries, maaned, butikk }: Val): Pro
       c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: TEAL } };
       c.alignment = { vertical: 'middle', horizontal: talKolonnar.includes(i + 1) ? 'right' : 'left', wrapText: true, indent: 1 };
     });
-    h.height = 22;
+    h.height = 32; // plass til overskrifter over to linjer
     ark.views = [{ state: 'frozen', ySplit: 4, showGridLines: false }];
     ark.pageSetup = {
       orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0,
@@ -109,11 +109,12 @@ export async function lagLonsfil({ ansatte, entries, maaned, butikk }: Val): Pro
 
   // ---- Ark 1: lønsgrunnlag per tilsett ----
   const ark = wb.addWorksheet('Lønsgrunnlag', { properties: { tabColor: { argb: TEAL } } });
-  const hovud = ['Tilsett', 'Lønstype', 'Timar', 'Sats', 'Brutto', 'Forskotstrekk', 'Netto', 'Skatt'];
-  toppen(ark, `${butikk} – lønsgrunnlag ${mndNamn} ${ar}`, `Berre godkjende timar · Laga ${laga}`, hovud, [3, 4, 5, 6, 7]);
+  const hovud = ['Tilsett', 'Lønstype', 'Timar', 'Sats', 'Brutto', 'Forskotstrekk', 'Netto', 'Feriepengar (mnd)', 'Feriepengar i år', 'Skatt'];
+  toppen(ark, `${butikk} – lønsgrunnlag ${mndNamn} ${ar}`, `Berre godkjende timar · Laga ${laga}`, hovud, [3, 4, 5, 6, 7, 8, 9]);
   ark.columns = [
     { width: 26 }, { width: 12 }, { width: 10, style: { numFmt: TIMAR } }, { width: 13, style: { numFmt: SATS } },
-    { width: 14, style: { numFmt: KR } }, { width: 15, style: { numFmt: KR } }, { width: 14, style: { numFmt: KR } }, { width: 38 },
+    { width: 14, style: { numFmt: KR } }, { width: 15, style: { numFmt: KR } }, { width: 14, style: { numFmt: KR } },
+    { width: 13, style: { numFmt: KR } }, { width: 13, style: { numFmt: KR } }, { width: 38 },
   ];
 
   const sortert = [...ansatte].sort((a, b) => a.navn.localeCompare(b.navn, 'nb'));
@@ -122,17 +123,19 @@ export async function lagLonsfil({ ansatte, entries, maaned, butikk }: Val): Pro
     const tot = rund2(godkjende.filter((e) => e.ansatt === a.id).reduce((s, e) => s + timar(e), 0));
     const r = ark.getRow(radNr);
     if (a.lonn !== 'time') {
-      r.values = [a.navn, 'Fastløn', tot, null, null, null, null, 'Fastløn – blir ikkje rekna her'];
-      r.getCell(8).font = { name: 'Calibri', color: { argb: GRAA }, italic: true };
+      r.values = [a.navn, 'Fastløn', tot, null, null, null, null, null, null, 'Fastløn – blir ikkje rekna her'];
+      r.getCell(10).font = { name: 'Calibri', color: { argb: GRAA }, italic: true };
     } else {
       const s = trekkForPeriode(a, entries, fra, til);
-      r.values = [a.navn, 'Timeløn', tot, a.sats || 0, Math.round(s.brutto), s.trekk, Math.round(s.netto), s.forklaring];
-      if (s.manglarKort) r.getCell(8).font = { name: 'Calibri', color: { argb: RAUD }, bold: true };
+      const f = feriepengar(a, entries, fra, til);
+      r.values = [a.navn, 'Timeløn', tot, a.sats || 0, Math.round(s.brutto), s.trekk, Math.round(s.netto),
+        Math.round(f?.periode ?? 0), Math.round(f?.iAar ?? 0), s.forklaring];
+      if (s.manglarKort) r.getCell(10).font = { name: 'Calibri', color: { argb: RAUD }, bold: true };
     }
     r.height = 20;
     // Innrykk per celle, så tal og tekst ikkje står klistra inntil kvarandre.
     for (let c = 1; c <= hovud.length; c++) {
-      r.getCell(c).alignment = { vertical: 'middle', indent: 1, horizontal: c >= 3 && c <= 7 ? 'right' : 'left' };
+      r.getCell(c).alignment = { vertical: 'middle', indent: 1, horizontal: c >= 3 && c <= 9 ? 'right' : 'left' };
     }
     r.getCell(1).font = { name: 'Calibri', bold: true };
     sebra(r, i, hovud.length);
@@ -144,16 +147,16 @@ export async function lagLonsfil({ ansatte, entries, maaned, butikk }: Val): Pro
 
   const s = sumRad(ark, radNr, hovud.length);
   s.getCell(1).value = 'Sum';
-  for (const [kol, bokstav] of [[3, 'C'], [5, 'E'], [6, 'F'], [7, 'G']] as const) {
+  for (const [kol, bokstav] of [[3, 'C'], [5, 'E'], [6, 'F'], [7, 'G'], [8, 'H'], [9, 'I']] as const) {
     s.getCell(kol).value = { formula: `SUM(${bokstav}5:${bokstav}${Math.max(5, sisteData)})` };
   }
 
   ark.mergeCells(radNr + 2, 1, radNr + 2, hovud.length);
   const merk = ark.getCell(radNr + 2, 1);
-  merk.value = 'Forskotstrekket er eit anslag ut frå skatteopplysningane under Tilsette. Lønssystemet/a-meldinga er fasit. Raud skatt = manglar skattekort (50 % trekk).';
+  merk.value = 'Forskotstrekket er eit anslag ut frå skatteopplysningane under Tilsette. Lønssystemet/a-meldinga er fasit. Raud skatt = manglar skattekort (50 % trekk). Feriepengar er opptent av godkjende timar (i år: inkl. løn frå MEKK før appen) og blir utbetalt neste år.';
   merk.font = { name: 'Calibri', size: 9, italic: true, color: { argb: GRAA } };
   merk.alignment = { wrapText: true, vertical: 'top', indent: 1 };
-  ark.getRow(radNr + 2).height = 30;
+  ark.getRow(radNr + 2).height = 44;
 
   // ---- Ark 2: timane dag for dag ----
   const dag = wb.addWorksheet('Timar per dag', { properties: { tabColor: { argb: NAVY } } });

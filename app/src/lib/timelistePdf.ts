@@ -1,7 +1,7 @@
 import type { Employee } from '../constants';
 import type { TimeEntry } from '../types';
 import { timar, weekdayIdx } from './dates';
-import { trekkForPeriode } from './skatt';
+import { feriepengar, trekkForPeriode } from './skatt';
 
 // Timelista som ein ekte PDF (A4) med samandrag, éi side per tilsett, og – for leiarar i månadsvisning – lønsgrunnlaget.
 // jsPDF er stort, så det blir berre lasta ned når nokon trykkjer på knappen.
@@ -170,8 +170,9 @@ export async function lagTimelistePdf(val: TimelistePdfVal): Promise<ArrayBuffer
     // Under tabellen: lønsboks for perioden, når løna kan visast.
     if (visLon.has(x.a.id)) {
       let by = sisteY() + 10;
-      if (by + 48 > H - 16) { doc.addPage(); by = topp(false, x.a.navn) + 4; }
+      if (by + 55 > H - 16) { doc.addPage(); by = topp(false, x.a.navn) + 4; }
       const s = x.a.lonn === 'time' ? trekkForPeriode(x.a, entries, periodeFra, periodeTil) : null;
+      const f = feriepengar(x.a, entries, periodeFra, periodeTil);
       autoTable(doc, {
         ...tabellStil,
         startY: by,
@@ -183,6 +184,7 @@ export async function lagTimelistePdf(val: TimelistePdfVal): Promise<ArrayBuffer
           ['Brutto', kr(s.brutto)],
           ['Forskotstrekk', s.trekk ? `– ${kr(s.trekk)}` : '–'],
           ['Skatt', s.forklaring],
+          ...(f ? [['Feriepengar', `${String(f.sats).replace('.', ',')} %: ${kr(f.periode)} · i år ${kr(f.iAar)}`]] : []),
         ] : [['Fastløn', 'Blir ikkje rekna her']],
         foot: s ? [['Netto', kr(s.netto)]] : undefined,
         columnStyles: { 0: { cellWidth: 32 }, 1: { halign: 'right' } },
@@ -209,8 +211,8 @@ export async function lagTimelistePdf(val: TimelistePdfVal): Promise<ArrayBuffer
       .map((a) => {
         const godkjent = entries.filter((e) => e.ansatt === a.id && e.status === 'godkjent' && e.date >= fra && e.date < til)
           .reduce((s, e) => s + timar(e), 0);
-        if (a.lonn !== 'time') return { a, godkjent, s: null };
-        return { a, godkjent, s: trekkForPeriode(a, entries, fra, til) };
+        if (a.lonn !== 'time') return { a, godkjent, s: null, f: null };
+        return { a, godkjent, s: trekkForPeriode(a, entries, fra, til), f: feriepengar(a, entries, fra, til) };
       });
     doc.addPage();
     y = topp(false, 'Lønsgrunnlag');
@@ -223,16 +225,16 @@ export async function lagTimelistePdf(val: TimelistePdfVal): Promise<ArrayBuffer
       ...tabellStil,
       startY: y + 5,
       styles: { ...tabellStil.styles, fontSize: 9 },
-      head: [['Tilsett', 'Timar', 'Sats', 'Brutto', 'Trekk', 'Netto', 'Skatt']],
+      head: [['Tilsett', 'Timar', 'Sats', 'Brutto', 'Trekk', 'Netto', 'Feriep.', 'Skatt']],
       body: rader.map((r) => r.s
-        ? [r.a.navn, t2(r.godkjent), krSats(r.a.sats || 0), kr(r.s.brutto), r.s.trekk ? kr(r.s.trekk) : '–', kr(r.s.netto), r.s.forklaring]
-        : [r.a.navn, t2(r.godkjent), '', '', '', '', 'Fastløn']),
-      foot: [['Sum', t2(sum((r) => r.godkjent)), '', kr(sum((r) => r.s?.brutto ?? 0)), kr(sum((r) => r.s?.trekk ?? 0)), kr(sum((r) => r.s?.netto ?? 0)), '']],
-      columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' }, 6: { cellWidth: 52 } },
+        ? [r.a.navn, t2(r.godkjent), krSats(r.a.sats || 0), kr(r.s.brutto), r.s.trekk ? kr(r.s.trekk) : '–', kr(r.s.netto), kr(r.f?.periode ?? 0), r.s.forklaring]
+        : [r.a.navn, t2(r.godkjent), '', '', '', '', '', 'Fastløn']),
+      foot: [['Sum', t2(sum((r) => r.godkjent)), '', kr(sum((r) => r.s?.brutto ?? 0)), kr(sum((r) => r.s?.trekk ?? 0)), kr(sum((r) => r.s?.netto ?? 0)), kr(sum((r) => r.f?.periode ?? 0)), '']],
+      columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' }, 6: { halign: 'right' }, 7: { cellWidth: 46 } },
       didParseCell: (d) => {
-        if ((d.section === 'head' || d.section === 'foot') && d.column.index >= 1 && d.column.index <= 5) d.cell.styles.halign = 'right';
+        if ((d.section === 'head' || d.section === 'foot') && d.column.index >= 1 && d.column.index <= 6) d.cell.styles.halign = 'right';
         const r = rader[d.row.index];
-        if (d.section === 'body' && d.column.index === 6) {
+        if (d.section === 'body' && d.column.index === 7) {
           if (r?.s?.manglarKort) { d.cell.styles.textColor = RAUD; d.cell.styles.fontStyle = 'bold'; }
           if (!r?.s) { d.cell.styles.textColor = GRAA; d.cell.styles.fontStyle = 'italic'; }
         }
@@ -241,7 +243,7 @@ export async function lagTimelistePdf(val: TimelistePdfVal): Promise<ArrayBuffer
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(8.5);
     doc.setTextColor(...GRAA);
-    doc.text(doc.splitTextToSize('Forskotstrekket er eit anslag ut frå skatteopplysningane under Tilsette. Lønssystemet/a-meldinga er fasit. Raud skatt = manglar skattekort (50 % trekk).', B - 2 * M), M, sisteY() + 7);
+    doc.text(doc.splitTextToSize('Forskotstrekket er eit anslag ut frå skatteopplysningane under Tilsette. Lønssystemet/a-meldinga er fasit. Raud skatt = manglar skattekort (50 % trekk). Feriep. = feriepengar opptent denne månaden, utbetalt neste år.', B - 2 * M), M, sisteY() + 7);
   }
 
   // ---- Botntekst på alle sider ----

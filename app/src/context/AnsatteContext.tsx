@@ -18,7 +18,7 @@ interface AnsatteState {
   isLeder: (id: EmployeeId | null | undefined) => boolean;
   refreshAnsatte: () => Promise<void>;
   createAnsatt: (input: { navn: string; rolle: string; lonn: 'fast' | 'time'; sats: number; farge: string; init: string; telefon: string; leder: boolean; pin: string; email?: string; butikk_id?: string; konsern_admin?: boolean }) => Promise<string>;
-  updateAnsatt: (id: EmployeeId, patch: Partial<Pick<Employee, 'navn' | 'rolle' | 'lonn' | 'sats' | 'farge' | 'init' | 'telefon' | 'leder' | 'skattetype' | 'skatteprosent' | 'frikortgrense'>>) => Promise<void>;
+  updateAnsatt: (id: EmployeeId, patch: Partial<Pick<Employee, 'navn' | 'rolle' | 'lonn' | 'farge' | 'init' | 'telefon' | 'leder' | PrivatFelt>>) => Promise<void>;
   setAktiv: (id: EmployeeId, aktiv: boolean) => Promise<void>;
   resetPin: (id: EmployeeId, pin: string) => Promise<void>;
   updateEmail: (id: EmployeeId, email: string) => Promise<void>;
@@ -31,7 +31,13 @@ export const mapAnsatt = (r: any): Employee => ({
   email: r.email, telefon: r.telefon || '', leder: r.leder, aktiv: r.aktiv,
   butikk_id: r.butikk_id ?? undefined, konsern_admin: r.konsern_admin ?? false,
   skattetype: r.skattetype ?? null, skatteprosent: r.skatteprosent ?? null, frikortgrense: r.frikortgrense ?? null,
+  feriepengesats: r.feriepengesats ?? null, tidlegare_ar: r.tidlegare_ar ?? null,
+  tidlegare_mekk: r.tidlegare_mekk ?? null, tidlegare_andre: r.tidlegare_andre ?? null,
 });
+
+/** Private lønsfelt: berre leiarar (via lonsdata()) og den tilsette sjølv (via min_profil()). */
+const PRIVATE_FELT = ['sats', 'skattetype', 'skatteprosent', 'frikortgrense', 'feriepengesats', 'tidlegare_ar', 'tidlegare_mekk', 'tidlegare_andre'] as const;
+type PrivatFelt = typeof PRIVATE_FELT[number];
 // Alle kolonnar utanom timesatsen (sats), som berre leiarar får lese.
 const KOLONNER = 'id, navn, rolle, lonn, farge, init, email, telefon, leder, aktiv, created_at, butikk_id, konsern_admin';
 const mapButikk = (r: any): Butikk => ({ id: r.id, namn: r.namn, farge: r.farge || '#11788a', aktiv: r.aktiv });
@@ -55,7 +61,7 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
       // Økt-uavhengig liste til innloggings-skjermen (SECURITY DEFINER, utan e-post).
       supabase.rpc('login_liste'),
       // Timesatsar er private: berre leiarar får rader her (tomt for andre).
-      okt.session ? supabase.rpc('lonssatsar') : tomt,
+      okt.session ? supabase.rpc('lonsdata') : tomt,
     ]);
     if (!ansRes.error && ansRes.data) {
       // Leiarar får sats og skatteopplysningar herfrå; andre får ingenting.
@@ -122,7 +128,9 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
   const updateAnsatt: AnsatteState['updateAnsatt'] = async (id, patch) => {
     const { data, error } = await supabase.from('ansatte').update(patch).eq('id', id).select(KOLONNER).single();
     if (error) throw error;
-    setAlleAnsatte((prev) => prev.map((a) => (a.id === id ? mapAnsatt({ ...data, sats: patch.sats ?? a.sats, skattetype: patch.skattetype !== undefined ? patch.skattetype : a.skattetype, skatteprosent: patch.skatteprosent !== undefined ? patch.skatteprosent : a.skatteprosent, frikortgrense: patch.frikortgrense !== undefined ? patch.frikortgrense : a.frikortgrense }) : a)));
+    // Svaret har ikkje dei private felta (ikkje lesbare), så dei kjem frå patch/førre verdi.
+    const privat = (a: Employee) => Object.fromEntries(PRIVATE_FELT.map((k) => [k, patch[k] !== undefined ? patch[k] : a[k]]));
+    setAlleAnsatte((prev) => prev.map((a) => (a.id === id ? mapAnsatt({ ...data, ...privat(a) }) : a)));
     toast('Tilsett oppdatert');
   };
 

@@ -25,6 +25,14 @@ export interface Employee {
   skatteprosent?: number | null;
   /** Frikortbeløpet for året (kr). */
   frikortgrense?: number | null;
+  /** Feriepengesats i prosent (10,2 som standard). Privat som satsen. */
+  feriepengesats?: number | null;
+  /** Året dei to tidlegare-beløpa under gjeld for. */
+  tidlegare_ar?: number | null;
+  /** Løn frå MEKK i tidlegare_ar før appen (utan feriepengar). Tel for frikort og feriepengar. */
+  tidlegare_mekk?: number | null;
+  /** Anna skattbar inntekt i tidlegare_ar (andre arbeidsgivarar, utbetalte feriepengar). Berre frikort. */
+  tidlegare_andre?: number | null;
 }
 
 export interface Butikk {

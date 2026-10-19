@@ -3,7 +3,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { weekDates, mondayOf, today, timar, fmt, fmtKr, addDays, talDagar, MND, parseDate } from '../../lib/dates';
 import { alder } from '../../lib/bestilling';
-import { trekkForPeriode, type Trekk } from '../../lib/skatt';
+import { feriepengar, trekkForPeriode, type Trekk } from '../../lib/skatt';
 import { Avatar } from '../ui/Avatar';
 
 type Periode = 'uke' | 'manad';
@@ -70,12 +70,14 @@ export function Rapporter() {
     const bruttoHittil = mine.filter((e) => e.date <= t).reduce((acc, e) => acc + timar(e) + (e.pause || 0) / 60, 0);
     const avvik = planHittil > 0 && Math.abs(bruttoHittil - planHittil) >= 1;
     const skatt: Trekk | null = a.lonn === 'time' ? trekkForPeriode(a, entries, periodeFra, periodeTil) : null;
-    return { a, planlagt, registrert, godkjent, ventar, overtid: overtid(a.id), fravaer: fravaerDagar(a.id), kr, avvik, skatt };
+    const ferie = feriepengar(a, entries, periodeFra, periodeTil);
+    return { a, planlagt, registrert, godkjent, ventar, overtid: overtid(a.id), fravaer: fravaerDagar(a.id), kr, avvik, skatt, ferie };
   });
 
   const sum = (k: 'planlagt' | 'registrert' | 'godkjent' | 'overtid') => rader.reduce((acc, r) => acc + r[k], 0);
   const totalKrAlle = rader.reduce((acc, r) => acc + (r.kr || 0), 0);
   const totalTrekk = rader.reduce((acc, r) => acc + (r.skatt?.trekk || 0), 0);
+  const totalFerie = rader.reduce((acc, r) => acc + (r.ferie?.periode || 0), 0);
   const manglarKort = rader.filter((r) => r.skatt?.manglarKort && r.skatt.brutto > 0).map((r) => r.a.navn);
   const totalVentar = rader.reduce((acc, r) => acc + r.ventar, 0);
   const fullforteOppgaver = tasks.filter((x) => x.ferdig).length;
@@ -90,6 +92,7 @@ export function Rapporter() {
     { label: 'Brutto løn (godkjent)', verdi: fmtKr(totalKrAlle), farge: 'var(--pill-gronn-fg)' },
     { label: 'Forskotstrekk (anslag)', verdi: fmtKr(totalTrekk), farge: 'var(--pill-raud-fg)' },
     { label: 'Netto utbetalt (anslag)', verdi: fmtKr(totalKrAlle - totalTrekk), farge: 'var(--brand-strong)' },
+    { label: 'Feriepengar opptent', verdi: fmtKr(totalFerie), farge: 'var(--pill-teal-fg)' },
     { label: 'Ventar godkjenning', verdi: String(totalVentar), farge: 'var(--pill-amber-fg)' },
     { label: 'Fullførte oppgåver', verdi: String(fullforteOppgaver), farge: 'var(--pill-lilla-fg)' },
     { label: 'Aktive bestillingar', verdi: `${aktiveBestillingar}${gamleBestillingar ? ` (${gamleBestillingar} lenge)` : ''}`, farge: 'var(--accent)' },
@@ -100,10 +103,10 @@ export function Rapporter() {
     lastNedCsv(`mekk-olen-rapport-${periode === 'uke' ? `veke-${vekeDatoar[0]}` : t.slice(0, 7)}.csv`, [
       [`Rapport for ${periodeTekst}`, `Generert ${generert}`],
       [],
-      ['Tilsett', 'Planlagt (t)', 'Registrert (t)', 'Godkjent (t)', 'Overtid (t)', 'Fråværsdagar', 'Ventar godkjenning', 'Brutto (kr)', 'Forskotstrekk (kr)', 'Netto (kr)', 'Skatt'],
-      ...rader.map((r) => [r.a.navn, fmt(r.planlagt), fmt(r.registrert), fmt(r.godkjent), fmt(r.overtid), r.fravaer, r.ventar, r.kr !== null ? Math.round(r.kr) : 'Fastløn', r.skatt ? r.skatt.trekk : '', r.skatt ? Math.round(r.skatt.netto) : '', r.skatt ? r.skatt.forklaring : '']),
+      ['Tilsett', 'Planlagt (t)', 'Registrert (t)', 'Godkjent (t)', 'Overtid (t)', 'Fråværsdagar', 'Ventar godkjenning', 'Brutto (kr)', 'Forskotstrekk (kr)', 'Netto (kr)', 'Feriepengar opptent (kr)', 'Skatt'],
+      ...rader.map((r) => [r.a.navn, fmt(r.planlagt), fmt(r.registrert), fmt(r.godkjent), fmt(r.overtid), r.fravaer, r.ventar, r.kr !== null ? Math.round(r.kr) : 'Fastløn', r.skatt ? r.skatt.trekk : '', r.skatt ? Math.round(r.skatt.netto) : '', r.ferie ? Math.round(r.ferie.periode) : '', r.skatt ? r.skatt.forklaring : '']),
       [],
-      ['Løn er rekna av godkjende timar. Overtid = timar over 37,5 per veke. Forskotstrekket er eit anslag – lønssystemet/a-meldinga er fasit.'],
+      ['Løn er rekna av godkjende timar. Overtid = timar over 37,5 per veke. Forskotstrekket er eit anslag – lønssystemet/a-meldinga er fasit. Feriepengar er opptent i perioden og blir utbetalt neste år.'],
     ]);
   };
 

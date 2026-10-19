@@ -8,7 +8,7 @@ import {
 } from '../../lib/dates';
 import { TimeEntryModal } from './TimeEntryModal';
 import { useIsMobile } from '../../lib/useIsMobile';
-import { useLonTekst, useLonsTilgang, useLonsTrekk } from '../../lib/lon';
+import { useFeriepengar, useLonTekst, useLonsTilgang, useLonsTrekk } from '../../lib/lon';
 import { erLeiar } from '../../lib/view';
 import { lastNedLonsfil } from '../../lib/lonsfil';
 import { lastNedTimelistePdf } from '../../lib/timelistePdf';
@@ -430,13 +430,15 @@ function MonthView({
   const inMonth = (d: string) => Number(d.split('-')[1]) === mm;
 
   const lonsTrekk = useLonsTrekk();
+  const feriepengarFor = useFeriepengar();
   const manadFra = `${monthAnchor}-01`;
   const manadTil = `${shiftMonth(monthAnchor, 1)}-01`;
   const manadKort = ansatte.map((a) => {
     const tot = entries.filter((e) => e.ansatt === a.id && e.date.slice(0, 7) === monthAnchor && e.status === 'godkjent').reduce((acc, e) => acc + timar(e), 0);
     const lonn = lonTekst(a, tot);
     const trekk = lonsTrekk(a, entries, manadFra, manadTil);
-    return { a, tot, lonn, trekk };
+    const ferie = feriepengarFor(a, entries, manadFra, manadTil);
+    return { a, tot, lonn, trekk, ferie };
   });
 
   return (
@@ -478,7 +480,7 @@ function MonthView({
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14 }}>
-        {manadKort.map(({ a, tot, lonn, trekk }) => (
+        {manadKort.map(({ a, tot, lonn, trekk, ferie }) => (
           <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
             <div style={{ fontSize: 13.5, fontWeight: 700 }}>{a.navn}</div>
             <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Geist Mono Variable'", color: a.farge, marginTop: 4 }}>{fmt(tot)} t</div>
@@ -491,6 +493,11 @@ function MonthView({
                 <span style={{ fontWeight: 700 }}>Netto</span>
                 <span style={{ textAlign: 'right', fontWeight: 700, fontFamily: "'Geist Mono Variable'" }}>{fmtKr(trekk.netto)}</span>
                 <span style={{ gridColumn: '1 / -1', marginTop: 4, fontSize: 11.5, color: trekk.manglarKort ? 'var(--danger)' : 'var(--text-faint)', fontWeight: trekk.manglarKort ? 700 : 400 }}>{trekk.forklaring}</span>
+                {ferie && (
+                  <span style={{ gridColumn: '1 / -1', fontSize: 11.5, color: 'var(--text-faint)' }}>
+                    Feriepengar {String(ferie.sats).replace('.', ',')} %: {fmtKr(ferie.periode)} · i år {fmtKr(ferie.iAar)}
+                  </span>
+                )}
               </div>
             ) : (
               lonn && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>{lonn}</div>

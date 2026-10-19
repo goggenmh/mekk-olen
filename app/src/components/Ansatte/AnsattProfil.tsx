@@ -5,7 +5,7 @@ import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { Pill } from '../ui/Pill';
 import type { Employee } from '../../constants';
-import { trekkForPeriode } from '../../lib/skatt';
+import { feriepengar, tidlegareIAar, trekkForPeriode } from '../../lib/skatt';
 
 const nesteManad = (m: string) => { const [y, mm] = m.split('-').map(Number); return mm === 12 ? `${y + 1}-01-01` : `${y}-${String(mm + 1).padStart(2, '0')}-01`; };
 
@@ -31,6 +31,8 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
   const fravaer = ferie.filter((f) => f.ansatt === ansatt.id);
 
   const skatt = ansatt.lonn === 'time' ? trekkForPeriode(ansatt, entries, `${manad}-01`, nesteManad(manad)) : null;
+  const feriepengarManad = feriepengar(ansatt, entries, `${manad}-01`, nesteManad(manad));
+  const tidlegare = tidlegareIAar(ansatt, Number(manad.slice(0, 4)));
   const skatteTekst = ansatt.skattetype === 'skattekort' ? `Skattekort · ${String(ansatt.skatteprosent ?? 0).replace('.', ',')} % trekk`
     : ansatt.skattetype === 'frikort' ? `Frikort · ${fmtKr(ansatt.frikortgrense ?? 0)}` : 'Skattekort ikkje registrert (50 % trekk)';
 
@@ -85,6 +87,16 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}><span style={{ display: 'flex', color: 'var(--brand)' }}><Icon name="timeliste" size={15} /></span>{ansatt.lonn === 'time' ? `Timeløn · ${fmtKr(ansatt.sats)}/t` : 'Fastløn'}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: ansatt.skattetype ? undefined : 'var(--danger)' }}><span style={{ display: 'flex', color: 'var(--brand)' }}><Icon name="dokument" size={15} /></span>{skatteTekst}</div>
             {skatt && skatt.brutto > 0 && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 24 }}>Denne månaden: {fmtKr(skatt.brutto)} brutto − {fmtKr(skatt.trekk)} trekk = {fmtKr(skatt.netto)}</div>}
+            {feriepengarManad && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 24 }}>
+                Feriepengar {String(feriepengarManad.sats).replace('.', ',')} %: {fmtKr(feriepengarManad.periode)} denne månaden · {fmtKr(feriepengarManad.iAar)} opptent i år
+              </div>
+            )}
+            {(tidlegare.mekk > 0 || tidlegare.andre > 0) && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 24 }}>
+                Registrert før appen i år: {fmtKr(tidlegare.mekk)} frå MEKK{tidlegare.andre > 0 ? ` · ${fmtKr(tidlegare.andre)} anna inntekt` : ''}
+              </div>
+            )}
           </div>
         </div>
 
