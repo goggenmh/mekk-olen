@@ -43,7 +43,7 @@ export function Oppgaver() {
         </label>
         <button
           onClick={() => setTaskTarget({})}
-          style={{ padding: '9px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ padding: '9px 16px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           + Ny oppgåve
         </button>

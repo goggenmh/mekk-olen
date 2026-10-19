@@ -105,7 +105,7 @@ export function Bestillinger() {
         <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Bestillingar</div>
         <button
           onClick={() => setOrderTarget('new')}
-          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           + Ny bestilling
         </button>
@@ -128,7 +128,7 @@ export function Bestillinger() {
             aria-pressed={filter === f.key}
             style={{
               padding: '7px 14px', borderRadius: 9, border: f.key === 'gamle' && filter !== f.key ? '1px solid rgba(192,57,43,0.4)' : '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              background: filter === f.key ? 'var(--brand-strong)' : 'var(--surface)', color: filter === f.key ? '#fff' : f.key === 'gamle' ? 'var(--danger)' : 'var(--text-secondary)',
+              background: filter === f.key ? 'var(--brand-strong)' : 'var(--surface)', color: filter === f.key ? 'var(--on-brand)' : f.key === 'gamle' ? 'var(--danger)' : 'var(--text-secondary)',
             }}
           >
             {f.label}
@@ -173,7 +173,7 @@ export function Bestillinger() {
                       <button onClick={() => setNotifyTarget(o)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--border)', background: o.varsla ? 'var(--brand-soft)' : 'var(--accent-soft)', borderRadius: 10, fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>Varsle</button>
                     )}
                     {kanFram && (
-                      <button onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])} style={{ marginLeft: 'auto', padding: '7px 14px', background: 'var(--brand-strong)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{s.neste} →</button>
+                      <button onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])} style={{ marginLeft: 'auto', padding: '7px 14px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{s.neste} →</button>
                     )}
                   </div>
                 )}
@@ -250,7 +250,7 @@ export function Bestillinger() {
                       {kanFram && (
                         <button
                           onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])}
-                          style={{ padding: '6px 12px', background: 'var(--brand-strong)', color: '#fff', border: 'none', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          style={{ padding: '6px 12px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
                           {s.neste} →
                         </button>

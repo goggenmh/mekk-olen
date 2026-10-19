@@ -63,7 +63,7 @@ export function VarselTips({ setView }: { setView: (v: View) => void }) {
           {feil && <div style={{ fontSize: 12.5, color: 'var(--danger)', marginTop: 4 }}>{feil}</div>}
         </div>
         {!heimeskjerm && !blokkert && (
-          <button onClick={skruPa} disabled={jobbar} style={{ padding: '8px 14px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={skruPa} disabled={jobbar} style={{ padding: '8px 14px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             {jobbar ? 'Slår på …' : 'Slå på'}
           </button>
         )}

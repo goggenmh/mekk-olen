@@ -81,7 +81,7 @@ export function CancelButton({ onClick, children = 'Avbryt' }: { onClick: () => 
 
 export function SaveButton({ onClick, children = 'Lagre' }: { onClick: () => void; children?: ReactNode }) {
   return (
-    <button onClick={onClick} style={{ padding: '10px 22px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 11, fontFamily: "'Geist'", fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+    <button onClick={onClick} style={{ padding: '10px 22px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontFamily: "'Geist'", fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
       {children}
     </button>
   );

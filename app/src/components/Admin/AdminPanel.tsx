@@ -82,7 +82,7 @@ export function AdminPanel({ onClose }: { onClose: () => void }) {
               <button
                 onClick={send}
                 disabled={!tekst.trim()}
-                style={{ padding: '9px 14px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: tekst.trim() ? 1 : 0.5 }}
+                style={{ padding: '9px 14px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: tekst.trim() ? 1 : 0.5 }}
               >
                 Send
               </button>

@@ -35,7 +35,7 @@ export function Dokument() {
         <div style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Dokument</div>
         <button
           onClick={() => setDocTarget('new')}
-          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           + Nytt dokument
         </button>
@@ -54,7 +54,7 @@ export function Dokument() {
             onClick={() => setFilter(f)}
             style={{
               padding: '7px 14px', borderRadius: 9, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              background: filter === f ? 'var(--brand-strong)' : 'var(--surface)', color: filter === f ? '#fff' : 'var(--text-secondary)',
+              background: filter === f ? 'var(--brand-strong)' : 'var(--surface)', color: filter === f ? 'var(--on-brand)' : 'var(--text-secondary)',
             }}
           >
             {f}
@@ -102,7 +102,7 @@ export function Dokument() {
                       <button
                         onClick={() => stadfest(d.id)}
                         disabled={jobbar === d.id}
-                        style={{ alignSelf: 'flex-start', padding: '7px 12px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 9, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
+                        style={{ alignSelf: 'flex-start', padding: '7px 12px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 9, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
                       >
                         {jobbar === d.id ? 'Lagrar …' : 'Eg har lese dette'}
                       </button>

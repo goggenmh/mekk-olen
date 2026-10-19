@@ -89,7 +89,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
               onClick={() => setMode(m)}
               style={{
                 padding: '7px 14px', borderRadius: 9, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                background: mode === m ? 'var(--brand-strong)' : 'var(--surface)', color: mode === m ? '#fff' : 'var(--text-secondary)',
+                background: mode === m ? 'var(--brand-strong)' : 'var(--surface)', color: mode === m ? 'var(--on-brand)' : 'var(--text-secondary)',
               }}
             >
               {m === 'uke' ? 'Veke' : 'Månad'}

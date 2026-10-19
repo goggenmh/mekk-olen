@@ -123,7 +123,7 @@ export function Innstillinger({ setView }: { setView: (v: View) => void }) {
           </div>
           <button
             onClick={() => setView('ansatte')}
-            style={{ padding: '9px 14px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+            style={{ padding: '9px 14px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
           >
             Gå til Tilsette
           </button>

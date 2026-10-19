@@ -107,7 +107,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
                 </span>
                 {!smal && <span className="rail-label" style={{ flex: 1 }}>{v.label}</span>}
                 {!smal && badge && (
-                  <span className="rail-label" style={{ fontSize: 10.5, fontWeight: 700, color: '#fff', background: 'var(--accent)', borderRadius: 999, padding: '1px 7px', minWidth: 16, textAlign: 'center' }}>
+                  <span className="rail-label" style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--on-brand)', background: 'var(--accent)', borderRadius: 999, padding: '1px 7px', minWidth: 16, textAlign: 'center' }}>
                     {badge.n}
                   </span>
                 )}

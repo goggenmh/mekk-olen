@@ -144,7 +144,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           >
             <Icon name="bell" size={18} />
             {varsler.length > 0 && (
-              <span style={{ position: 'absolute', top: -5, right: -5, minWidth: 17, height: 17, padding: '0 4px', borderRadius: 999, background: 'var(--accent)', color: '#fff', fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--topbar-bg)' }}>
+              <span style={{ position: 'absolute', top: -5, right: -5, minWidth: 17, height: 17, padding: '0 4px', borderRadius: 999, background: 'var(--accent)', color: 'var(--on-brand)', fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--topbar-bg)' }}>
                 {varsler.length}
               </span>
             )}

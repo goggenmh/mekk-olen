@@ -54,7 +54,7 @@ export function Rapporter() {
               onClick={() => setPeriode(p)}
               style={{
                 padding: '8px 14px', borderRadius: 9, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                background: periode === p ? 'var(--brand-strong)' : 'var(--surface)', color: periode === p ? '#fff' : 'var(--text-secondary)',
+                background: periode === p ? 'var(--brand-strong)' : 'var(--surface)', color: periode === p ? 'var(--on-brand)' : 'var(--text-secondary)',
               }}
             >
               {p === 'uke' ? 'Denne veka' : 'Denne månaden'}

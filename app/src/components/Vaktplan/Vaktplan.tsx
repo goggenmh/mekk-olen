@@ -107,7 +107,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
               onClick={() => setMode(m)}
               style={{
                 padding: '7px 14px', borderRadius: 9, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                background: mode === m ? 'var(--brand-strong)' : 'var(--surface)', color: mode === m ? '#fff' : 'var(--text-secondary)',
+                background: mode === m ? 'var(--brand-strong)' : 'var(--surface)', color: mode === m ? 'var(--on-brand)' : 'var(--text-secondary)',
               }}
             >
               {m === 'uke' ? 'Veke' : 'Månad'}
@@ -170,7 +170,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                     <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 1 }}>Ope {d.open}</div>
                   )}
                 </div>
-                {erIDag && <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', color: '#fff', background: 'var(--brand)', borderRadius: 999, padding: '2px 8px' }}>I dag</span>}
+                {erIDag && <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--on-brand)', background: 'var(--brand)', borderRadius: 999, padding: '2px 8px' }}>I dag</span>}
               </div>
               {dayShifts.map((s) => {
                 const a = findAnsatt(s.ansatt);

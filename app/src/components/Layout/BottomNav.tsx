@@ -35,7 +35,7 @@ export function BottomNav({ view, setView, onMeir }: { view: View; setView: (v: 
       <span style={{ position: 'relative', display: 'flex' }}>
         <Icon name={ikon} size={21} />
         {n > 0 && (
-          <span style={{ position: 'absolute', top: -5, right: -9, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999, background: 'var(--accent)', color: '#fff', fontSize: 9.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{n}</span>
+          <span style={{ position: 'absolute', top: -5, right: -9, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999, background: 'var(--accent)', color: 'var(--on-brand)', fontSize: 9.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{n}</span>
         )}
       </span>
       {label}

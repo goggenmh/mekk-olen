@@ -132,7 +132,7 @@ export function Ansatte() {
         <button
           onClick={() => setModalAnsatt('new')}
           style={{
-            padding: '11px 18px', background: 'var(--brand)', color: '#fff', border: 'none',
+            padding: '11px 18px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none',
             borderRadius: 12, fontFamily: "'Geist'", fontSize: 13.5, fontWeight: 700, cursor: 'pointer',
           }}
         >
