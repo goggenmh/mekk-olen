@@ -3,8 +3,7 @@ import type { TimeEntry } from '../types';
 import { timar, weekdayIdx } from './dates';
 import { trekkForPeriode } from './skatt';
 
-// Timelista som ein ekte PDF (A4) med samandrag, éi side per tilsett med
-// signaturlinjer, og – for leiarar i månadsvisning – lønsgrunnlaget.
+// Timelista som ein ekte PDF (A4) med samandrag, éi side per tilsett, og – for leiarar i månadsvisning – lønsgrunnlaget.
 // jsPDF er stort, så det blir berre lasta ned når nokon trykkjer på knappen.
 
 type RGB = [number, number, number];
@@ -141,7 +140,7 @@ export async function lagTimelistePdf(val: TimelistePdfVal): Promise<ArrayBuffer
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(8.5);
     doc.setTextColor(...GRAA);
-    doc.text('Kvar tilsett har eiga side med alle føringar og signaturlinjer.', M, sisteY() + 7);
+    doc.text('Kvar tilsett har eiga side med alle føringar.', M, sisteY() + 7);
   }
 
   // ---- Éi side per tilsett ----
@@ -168,14 +167,10 @@ export async function lagTimelistePdf(val: TimelistePdfVal): Promise<ArrayBuffer
       },
     });
 
-    // Under tabellen: lønsboks til venstre (når løna kan visast) og
-    // signaturlinjer til høgre, så signaturen står på same side som timane.
-    const medLonsboks = visLon.has(x.a.id);
-    const blokkH = medLonsboks ? 58 : 34;
-    let by = sisteY() + 10;
-    if (by + blokkH > H - 16) { doc.addPage(); by = topp(false, x.a.navn) + 4; }
-
-    if (medLonsboks) {
+    // Under tabellen: lønsboks for perioden, når løna kan visast.
+    if (visLon.has(x.a.id)) {
+      let by = sisteY() + 10;
+      if (by + 48 > H - 16) { doc.addPage(); by = topp(false, x.a.navn) + 4; }
       const s = x.a.lonn === 'time' ? trekkForPeriode(x.a, entries, periodeFra, periodeTil) : null;
       autoTable(doc, {
         ...tabellStil,
@@ -202,33 +197,6 @@ export async function lagTimelistePdf(val: TimelistePdfVal): Promise<ArrayBuffer
       });
     }
 
-    // Signaturar: stabla til høgre ved lønsboksen, elles på éi linje.
-    const stadfest = `Eg stadfestar at timane over er rette (${t2(x.total)} timar).`;
-    doc.setDrawColor(...NAVY);
-    doc.setLineWidth(0.35);
-    const signaturLinje = (lx: number, ly: number, w: number, tekst: string) => {
-      doc.line(lx, ly, lx + w, ly);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.5);
-      doc.setTextColor(...GRAA);
-      doc.text(tekst, lx, ly + 4.2);
-    };
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9.5);
-    doc.setTextColor(40, 40, 40);
-    if (medLonsboks) {
-      const sx = M + 106;
-      const sw = B - M - sx;
-      doc.text(doc.splitTextToSize(stadfest, sw), sx, by + 4);
-      signaturLinje(sx, by + 22, sw, 'Stad og dato');
-      signaturLinje(sx, by + 37, sw, `Signatur ${x.a.navn}`);
-      signaturLinje(sx, by + 52, sw, 'Signatur leiar');
-    } else {
-      doc.text(stadfest, M, by + 4);
-      signaturLinje(M, by + 24, 46, 'Stad og dato');
-      signaturLinje(M + 54, by + 24, 60, `Signatur ${x.a.navn}`);
-      signaturLinje(M + 122, by + 24, B - M - (M + 122), 'Signatur leiar');
-    }
   }
 
   // ---- Lønsgrunnlag (berre leiarar, berre for ein heil månad) ----

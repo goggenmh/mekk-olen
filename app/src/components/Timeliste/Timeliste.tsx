@@ -142,7 +142,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
             <button onClick={godkjennAlle} style={{ ...btnGhost, background: '#2f9e6f', color: '#fff', borderColor: '#2f9e6f' }}>Godkjenn alle ({ventandeVeke})</button>
           )}
           <button onClick={exportCsv} style={btnGhost}>CSV</button>
-          <button onClick={exportPdf} disabled={lagarPdf} title="Timeliste med signaturlinjer som PDF" style={btnGhost}>{lagarPdf ? 'Lagar…' : 'PDF'}</button>
+          <button onClick={exportPdf} disabled={lagarPdf} title="Timeliste som PDF" style={btnGhost}>{lagarPdf ? 'Lagar…' : 'PDF'}</button>
         </div>
       </div>
 
