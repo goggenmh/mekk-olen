@@ -18,6 +18,8 @@ create index if not exists doc_stadfesting_ansatt_idx on public.doc_stadfesting 
 create index if not exists doc_stadfesting_butikk_id_idx on public.doc_stadfesting (butikk_id);
 
 alter table public.doc_stadfesting enable row level security;
+-- Prosjektet gir ikkje tabell-tilgang automatisk; RLS-reglane under styrer resten.
+grant select, insert on public.doc_stadfesting to authenticated;
 
 -- Set alltid tilsett, tidspunkt og butikk frå innlogginga.
 create or replace function public.doc_stadfesting_set()
