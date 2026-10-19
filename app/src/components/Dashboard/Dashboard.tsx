@@ -13,6 +13,7 @@ import { TaskModal } from '../Oppgaver/TaskModal';
 import { OrderModal } from '../Bestillinger/OrderModal';
 import type { View } from '../../lib/view';
 import { alder } from '../../lib/bestilling';
+import { tal } from '../../lib/tekst';
 import { ustadfesta } from '../../lib/dokument';
 
 const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', boxShadow: 'var(--shadow-card)' } as const;
@@ -61,12 +62,12 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
 
   const varsler: { key: string; tekst: string; view: View }[] = [
     ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønskjer å bytte vakt ${s.dag}`, view: 'vaktplan' as View })),
-    ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${ventandeTimar} timelister manglar godkjenning`, view: 'timeliste' as View }] : []),
+    ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${tal(ventandeTimar, 'timeføring', 'timeføringar')} ventar på godkjenning`, view: 'timeliste' as View }] : []),
     ...ankomneBestillingar.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),
-    ...(gamleBestillingar > 0 ? [{ key: 'gamle', tekst: `${gamleBestillingar} bestillingar har stått lenge`, view: 'bestilling' as View }] : []),
-    ...(forseinka > 0 ? [{ key: 'forseinka', tekst: `${forseinka} oppgåver har passert fristen`, view: 'oppgaver' as View }] : []),
+    ...(gamleBestillingar > 0 ? [{ key: 'gamle', tekst: `${tal(gamleBestillingar, 'bestilling', 'bestillingar')} har stått lenge`, view: 'bestilling' as View }] : []),
+    ...(forseinka > 0 ? [{ key: 'forseinka', tekst: `${tal(forseinka, 'oppgåve', 'oppgåver')} har passert fristen`, view: 'oppgaver' as View }] : []),
     ...(ulesneHms > 0 ? [{ key: 'hms', tekst: `${ulesneHms} HMS-dokument ventar på stadfesting`, view: 'dokument' as View }] : []),
-    ...(ufordelteOppgaver > 0 ? [{ key: 'oppgaver', tekst: `${ufordelteOppgaver} ufordelte oppgåver`, view: 'oppgaver' as View }] : []),
+    ...(ufordelteOppgaver > 0 ? [{ key: 'oppgaver', tekst: tal(ufordelteOppgaver, 'ufordelt oppgåve', 'ufordelte oppgåver'), view: 'oppgaver' as View }] : []),
   ].slice(0, 8);
   // Leiarar får «Treng handling» øvst på sida; tilsette ser varsla lenger ned.
   const leiarVisning = kanLageVakt;

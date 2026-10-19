@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAnsatte } from '../../context/AnsatteContext';
@@ -10,6 +10,7 @@ import { weekDates, mondayOf, today } from '../../lib/dates';
 import { erLeiar, type View } from '../../lib/view';
 import { alder } from '../../lib/bestilling';
 import { ustadfesta } from '../../lib/dokument';
+import { tal } from '../../lib/tekst';
 
 interface Varsel {
   key: string;
@@ -33,6 +34,9 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
   const [adminOpen, setAdminOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [notifOpen, setNotifOpen] = useState(false);
+  // På mobil blir lista lagd under toppen i full breidd (sjå under), målt frå klokka.
+  const klokkeRef = useRef<HTMLButtonElement>(null);
+  const [listeTopp, setListeTopp] = useState(64);
 
   const varsler = useMemo<Varsel[]>(() => {
     const t = today();
@@ -45,11 +49,11 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
     const ulesne = ustadfesta(docs, stadfestingar, user?.id);
     return [
       ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønskjer å bytte vakt ${s.dag}`, view: 'vaktplan' as View })),
-      ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${ventandeTimar} timelister ventar godkjenning`, view: 'timeliste' as View }] : []),
+      ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${tal(ventandeTimar, 'timeføring', 'timeføringar')} ventar på godkjenning`, view: 'timeliste' as View }] : []),
       ...ankomne.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),
-      ...(gamle > 0 ? [{ key: 'gamle', tekst: `${gamle} bestillingar har stått lenge – sjekk dei`, view: 'bestilling' as View }] : []),
-      ...(ulesne > 0 ? [{ key: 'hms', tekst: `${ulesne} HMS-dokument ventar på at du stadfestar at du har lese`, view: 'dokument' as View }] : []),
-      ...(ufordelte > 0 ? [{ key: 'oppgaver', tekst: `${ufordelte} ufordelte oppgåver`, view: 'oppgaver' as View }] : []),
+      ...(gamle > 0 ? [{ key: 'gamle', tekst: `${tal(gamle, 'bestilling', 'bestillingar')} har stått lenge – sjekk ${gamle === 1 ? 'henne' : 'dei'}`, view: 'bestilling' as View }] : []),
+      ...(ulesne > 0 ? [{ key: 'hms', tekst: `${ulesne} HMS-dokument ventar på at du stadfestar at du har lese ${ulesne === 1 ? 'det' : 'dei'}`, view: 'dokument' as View }] : []),
+      ...(ufordelte > 0 ? [{ key: 'oppgaver', tekst: tal(ufordelte, 'ufordelt oppgåve', 'ufordelte oppgåver'), view: 'oppgaver' as View }] : []),
     ].slice(0, 8);
   }, [swaps, entries, tasks, orders, docs, stadfestingar, user?.id, findAnsatt]);
 
@@ -135,7 +139,12 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ position: 'relative' }}>
           <button
-            onClick={() => setNotifOpen((o) => !o)}
+            ref={klokkeRef}
+            onClick={() => {
+              const r = klokkeRef.current?.getBoundingClientRect();
+              if (r) setListeTopp(Math.round(r.bottom + 8));
+              setNotifOpen((o) => !o);
+            }}
             title="Varsel" aria-label={`Varsel (${varsler.length})`} aria-expanded={notifOpen}
             style={{
               position: 'relative', width: 34, height: 34, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
@@ -152,7 +161,14 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           {notifOpen && (
             <>
               <div onClick={() => setNotifOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 49 }} />
-              <div style={{ position: 'absolute', top: '130%', right: 0, width: 300, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, boxShadow: '0 12px 30px rgba(0,0,0,0.18)', overflow: 'hidden', zIndex: 50 }}>
+              <div style={{
+                // Mobil: full breidd under toppen, så lista aldri går ut over skjermkanten.
+                ...(isMobile
+                  ? { position: 'fixed', top: listeTopp, left: 12, right: 12, maxHeight: `calc(100dvh - ${listeTopp + 90}px)` }
+                  : { position: 'absolute', top: '130%', right: 0, width: 320, maxHeight: '70vh' }),
+                overflowY: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
+                boxShadow: '0 12px 30px rgba(0,0,0,0.18)', zIndex: 50,
+              }}>
                 <div style={{ padding: '11px 14px', borderBottom: '1px solid var(--divider)', fontSize: 12, fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', color: 'var(--text-label)' }}>Varsel</div>
                 {varsler.length === 0 ? (
                   <div style={{ padding: '18px 14px', fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>Ingen nye varsel</div>
