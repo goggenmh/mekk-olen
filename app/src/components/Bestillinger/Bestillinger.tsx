@@ -95,7 +95,7 @@ export function Bestillinger() {
     const tlf = reinTelefon(o.telefon || '');
     if (!tlf) return null;
     return (
-      <a href={`tel:${tlf}`} onClick={(e) => e.stopPropagation()} style={{ color: 'var(--brand)', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>☎ {o.telefon}</a>
+      <a href={`tel:${tlf}`} onClick={(e) => e.stopPropagation()} style={{ color: 'var(--brand)', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>{o.telefon}</a>
     );
   };
 
