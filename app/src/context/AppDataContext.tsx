@@ -73,6 +73,7 @@ interface AppData {
   saveDoc: (d: Omit<Doc, 'id'> & { id?: string }) => Promise<void>;
   deleteDoc: (id: string) => Promise<void>;
   uploadDocFile: (file: File) => Promise<{ url: string; namn: string }>;
+  docFileUrl: (filUrl: string | null) => Promise<string | null>;
 }
 
 const AppDataContext = createContext<AppData | null>(null);
@@ -457,11 +458,27 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setDocs((prev) => prev.filter((x) => x.id !== id));
   };
   const uploadDocFile: AppData['uploadDocFile'] = async (file) => {
-    const path = `${Date.now()}-${file.name}`;
+    // Filene ligg i ei privat bøtte, i ei mappe per butikk. Vi lagrar berre
+    // stien; dokumentet blir opna via ei kortliva signert lenke (docFileUrl).
+    const { data: butikk } = await supabase.rpc('min_butikk');
+    const reint = file.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w.-]+/g, '_');
+    const path = `${butikk ? `${butikk}/` : ''}${Date.now()}-${reint}`;
     const { error: err } = await supabase.storage.from('docs').upload(path, file);
     if (err) throw err;
-    const { data } = supabase.storage.from('docs').getPublicUrl(path);
-    return { url: data.publicUrl, namn: file.name };
+    return { url: path, namn: file.name };
+  };
+
+  // Lag ei signert lenke (gyldig i 60 s) for eit vedlegg. Gamle rader kan ha
+  // ein offentleg storage-URL – han blir gjort om til stien. Filer under
+  // /docs/ er felles malar i appen, og andre nettadresser blir opna som dei er.
+  const docFileUrl: AppData['docFileUrl'] = async (filUrl) => {
+    if (!filUrl) return null;
+    const offentleg = filUrl.match(/\/storage\/v1\/object\/public\/docs\/(.+)$/);
+    if (!offentleg && (/^https?:\/\//i.test(filUrl) || filUrl.startsWith('/'))) return filUrl;
+    const path = offentleg ? decodeURIComponent(offentleg[1]) : filUrl;
+    const { data, error: err } = await supabase.storage.from('docs').createSignedUrl(path, 60);
+    if (err) return null;
+    return data.signedUrl;
   };
 
   // Kven og når blir sett av databasen ut frå innlogga brukar.
@@ -506,7 +523,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveFerie, deleteFerie, saveUnavailable, removeUnavailable,
       saveTask, deleteTask, moveTask, completeTask,
       saveOrder, deleteOrder, advanceOrder, markOrderVarsla,
-      saveDoc, deleteDoc, uploadDocFile,
+      saveDoc, deleteDoc, uploadDocFile, docFileUrl,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, stadfestingar, permissions, meldinger, unavailable, standardveke, canApprove]

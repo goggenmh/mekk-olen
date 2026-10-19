@@ -3,7 +3,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { DOC_KAT, DOC_KATEGORIER } from '../../constants';
 import { Icon } from '../ui/Icon';
 import { datoKort } from '../../lib/dates';
-import { safeHref } from '../../lib/url';
+import { DocLenke } from './DocLenke';
 import { DocModal } from './DocModal';
 import type { Doc } from '../../types';
 import { useAuth } from '../../context/AuthContext';
@@ -80,15 +80,9 @@ export function Dokument() {
               {d.notat && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6, lineHeight: 1.4 }}>{d.notat}</div>}
               <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{datoKort(d.dato)}</div>
               {d.fil_url && (
-                <a
-                  href={safeHref(d.fil_url)}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'var(--brand-strong)', marginTop: 6 }}
-                >
+                <DocLenke filUrl={d.fil_url} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'var(--brand-strong)', marginTop: 6 }}>
                   <Icon name="paperclip" size={13} /> {d.fil_namn}
-                </a>
+                </DocLenke>
               )}
               {krevStadfesting(d) && (() => {
                 const mi = stadfestingar.find((s) => s.docId === d.id && s.ansatt === user?.id);
