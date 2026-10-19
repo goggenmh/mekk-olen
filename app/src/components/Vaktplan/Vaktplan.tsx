@@ -39,13 +39,15 @@ function udekt(open: string, vakter: Shift[]): [string, string][] {
 
 /** startDato: opne på veka til denne datoen (t.d. frå eit push-varsel). */
 export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
-  const { shifts, swaps, ferie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, kopierVeke, saveShift, deleteShift, saveFerie } = useAppData();
+  const { shifts, swaps, ferie: alleFerie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, kopierVeke, saveShift, deleteShift, saveFerie } = useAppData();
   const { user } = useAuth();
   const { findAnsatt, ansatte } = useAnsatte();
   const isMobile = useIsMobile();
   const maaGodkjenne = canApprove(user?.id);
   // Kan berre redigere eigen ferie / standardveka / vakter – med mindre ein har delegeringsansvar.
   const kanStyreFerie = canApprove(user?.id);
+  // Vaktplanen reknar berre med godkjend fråvær (søknader ligg i Ferie & fri).
+  const ferie = alleFerie.filter((f) => f.status === 'godkjend');
   const kanStyreStandard = canApprove(user?.id);
   const kanLageVakt = canApprove(user?.id);
   const opneFerie = (f: Ferie) => { if (kanStyreFerie || f.ansatt === user?.id) setFerieTarget(f); };
@@ -97,7 +99,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
   const pendingSwaps = swaps.filter((s) => s.status === 'pending');
 
   // Pågåande/kommande først, avslutta sist; elles etter frå-dato.
-  const ferieSortert = [...ferie].sort((a, b) => {
+  const ferieSortert = ferie.filter((f) => !f.til || f.til >= iDag).sort((a, b) => {
     const aEnd = a.til && a.til < iDag ? 1 : 0;
     const bEnd = b.til && b.til < iDag ? 1 : 0;
     if (aEnd !== bEnd) return aEnd - bEnd;
@@ -416,7 +418,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
         if (kanEndre) {
           items.push({ tekst: 'Merk som sjuk', ikon: 'alert', handling: () => {
             if (window.confirm(`Merke ${a.navn} som sjuk denne dagen? Vakta blir fjerna og dagen merka «Sjukmeld».`)) {
-              saveFerie({ ansatt: s.ansatt, type: 'Sjukmeld', tekst: '', fra: meny.date, til: meny.date });
+              saveFerie({ ansatt: s.ansatt, type: 'Sjukmeld', tekst: '', fra: meny.date, til: meny.date, status: kanStyreFerie ? 'godkjend' : 'ventar' });
               deleteShift(s.id);
             }
           } });

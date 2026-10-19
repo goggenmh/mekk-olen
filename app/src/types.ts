@@ -33,6 +33,8 @@ export interface ShiftSwap {
   status: SwapStatus;
 }
 
+export type FerieStatus = 'ventar' | 'godkjend' | 'avslatt';
+
 export interface Ferie {
   id: string;
   ansatt: EmployeeId;
@@ -40,6 +42,12 @@ export interface Ferie {
   tekst: string;
   fra: string | null;
   til: string | null;
+  /** Søknader frå tilsette ventar til ein leiar har svart. */
+  status: FerieStatus;
+  /** Kommentar frå leiaren ved godkjenning/avslag. */
+  svar: string;
+  behandlaAv: EmployeeId | null;
+  createdAt: string | null;
 }
 
 export interface SjekklistePunkt {

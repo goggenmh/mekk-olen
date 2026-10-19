@@ -1,0 +1,55 @@
+import type { Employee } from '../constants';
+import type { Ferie } from '../types';
+import { addDays, parseDate, today } from './dates';
+import { helligdagFor } from './helligdagar';
+
+/** Standard etter ferielova/tariff: 25 virkedagar (5 veker) i året. */
+export const STANDARD_FERIEDAGAR = 25;
+
+/** Virkedagar i perioden: måndag–laurdag, utan raude dagar (som ferielova reknar). */
+export function virkedagar(fra: string, til: string, innanforAar?: number): number {
+  let n = 0;
+  for (let d = fra; d <= til; d = addDays(d, 1)) {
+    if (innanforAar && Number(d.slice(0, 4)) !== innanforAar) continue;
+    if (parseDate(d).getDay() === 0 || helligdagFor(d)) continue;
+    n++;
+  }
+  return n;
+}
+
+export interface Feriesaldo {
+  rett: number;
+  /** Godkjend ferie som er avvikla (til og med i dag). */
+  brukt: number;
+  /** Godkjend ferie fram i tid. */
+  planlagt: number;
+  /** Søknader som ventar på svar. */
+  sokt: number;
+  att: number;
+}
+
+/** Feriesaldo for éin tilsett i eit år (berre typen «Ferie» tel mot kvoten). */
+export function feriesaldo(a: Employee, ferie: Ferie[], aar = Number(today().slice(0, 4))): Feriesaldo {
+  const t = today();
+  const rett = a.feriedagar ?? STANDARD_FERIEDAGAR;
+  let brukt = 0, planlagt = 0, sokt = 0;
+  for (const f of ferie) {
+    if (f.ansatt !== a.id || f.type !== 'Ferie' || !f.fra || !f.til || f.status === 'avslatt') continue;
+    if (f.status === 'ventar') { sokt += virkedagar(f.fra, f.til, aar); continue; }
+    // Del perioden ved i dag: før = brukt, etter = planlagt.
+    const bruktTil = f.til < t ? f.til : t;
+    if (f.fra <= bruktTil) brukt += virkedagar(f.fra, bruktTil, aar);
+    const planFra = f.fra > t ? f.fra : addDays(t, 1);
+    if (planFra <= f.til) planlagt += virkedagar(planFra, f.til, aar);
+  }
+  return { rett, brukt, planlagt, sokt, att: rett - brukt - planlagt };
+}
+
+/** Andre tilsette som er borte (godkjend eller søkt) i same periode. */
+export function overlappar(f: Pick<Ferie, 'ansatt' | 'fra' | 'til'> & { id?: string }, alle: Ferie[]): Ferie[] {
+  if (!f.fra || !f.til) return [];
+  return alle.filter((x) => x.id !== f.id && x.ansatt !== f.ansatt && x.status !== 'avslatt' && x.fra && x.til && x.fra <= f.til! && f.fra! <= x.til);
+}
+
+/** Søknader som ventar på svar (til varsel for leiarar). */
+export const ventandeFerie = (ferie: Ferie[]) => ferie.filter((f) => f.status === 'ventar').length;

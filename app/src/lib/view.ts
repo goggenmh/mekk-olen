@@ -4,6 +4,7 @@ export type View =
   | 'dashbord'
   | 'ansatte'
   | 'vaktplan'
+  | 'ferie'
   | 'timeliste'
   | 'oppgaver'
   | 'bestilling'
@@ -17,6 +18,7 @@ export const VIEWS: { key: View; label: string; ikon: string; sti: string; berre
   { key: 'dashbord', label: 'Oversikt', ikon: 'dashbord', sti: '/' },
   { key: 'ansatte', label: 'Tilsette', ikon: 'ansatte', sti: '/tilsette', berreLeiar: true },
   { key: 'vaktplan', label: 'Vaktplan', ikon: 'vaktplan', sti: '/vaktplan' },
+  { key: 'ferie', label: 'Ferie & fri', ikon: 'sun', sti: '/ferie' },
   { key: 'timeliste', label: 'Timelister', ikon: 'timeliste', sti: '/timelister' },
   { key: 'oppgaver', label: 'Oppgåver', ikon: 'oppgaver', sti: '/oppgaver' },
   { key: 'bestilling', label: 'Bestillingar', ikon: 'bestilling', sti: '/bestillingar' },
@@ -28,7 +30,7 @@ export const VIEWS: { key: View; label: string; ikon: string; sti: string; berre
 // Gruppering av menyen i sidemenyen. `seksjon: null` = ingen overskrift.
 export const NAV_GROUPS: { seksjon: string | null; punkt: View[] }[] = [
   { seksjon: null, punkt: ['dashbord'] },
-  { seksjon: 'Drift', punkt: ['vaktplan', 'timeliste', 'oppgaver'] },
+  { seksjon: 'Drift', punkt: ['vaktplan', 'ferie', 'timeliste', 'oppgaver'] },
   { seksjon: 'Butikk', punkt: ['bestilling', 'dokument'] },
   { seksjon: 'Analyse', punkt: ['rapporter', 'ansatte'] },
   { seksjon: null, punkt: ['innstillinger'] },

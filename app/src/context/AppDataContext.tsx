@@ -58,7 +58,8 @@ interface AppData {
   approveSwap: (id: string) => Promise<void>;
   declineSwap: (id: string) => Promise<void>;
 
-  saveFerie: (f: Omit<Ferie, 'id'> & { id?: string }) => Promise<void>;
+  saveFerie: (f: Pick<Ferie, 'ansatt' | 'type' | 'tekst' | 'fra' | 'til'> & { id?: string; status?: Ferie['status'] }) => Promise<void>;
+  behandleFerie: (id: string, status: 'godkjend' | 'avslatt', svar: string) => Promise<void>;
   deleteFerie: (id: string) => Promise<void>;
 
   saveTask: (t: Omit<Task, 'id'> & { id?: string }) => Promise<void>;
@@ -82,7 +83,7 @@ const AppDataContext = createContext<AppData | null>(null);
 const mapEntry = (r: any): TimeEntry => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, pause: r.pause, status: r.status });
 const mapShift = (r: any): Shift => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift });
 const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.fra, til: r.til, dag: r.dag, tid: r.tid, status: r.status });
-const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst ?? '', fra: r.fra ?? null, til: r.til ?? null });
+const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst ?? '', fra: r.fra ?? null, til: r.til ?? null, status: r.status ?? 'godkjend', svar: r.svar ?? '', behandlaAv: r.behandla_av ?? null, createdAt: r.created_at ?? null });
 const mapUnavail = (r: any): Unavailable => ({ id: r.id, ansatt: r.ansatt, dato: r.dato, grunn: r.grunn ?? null });
 const mapStandard = (r: any): StandardvekeEntry => ({ id: r.id, ansatt: r.ansatt, dag: r.dag, start: r.start, slutt: r.slutt });
 const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [] });
@@ -139,14 +140,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setEntries((e.data || []).map(mapEntry));
       setShifts((s.data || []).map(mapShift));
       setSwaps((sw.data || []).map(mapSwap));
-      // Ferie som er over blir automatisk sletta ved innlasting.
-      const t0 = today();
-      const alleFerie = (f.data || []).map(mapFerie);
-      const utgatt = alleFerie.filter((x) => x.til && x.til < t0);
-      setFerie(alleFerie.filter((x) => !(x.til && x.til < t0)));
-      if (utgatt.length > 0) {
-        supabase.from('ferie').delete().in('id', utgatt.map((x) => x.id)).then(() => {});
-      }
+      // Ferie og fri blir tekne vare på (historikk i Ferie & fri-modulen).
+      setFerie((f.data || []).map(mapFerie));
       setTasks((t.data || []).map(mapTask));
       setOrders((o.data || []).map(mapOrder));
       setDocs((d.data || []).map(mapDoc));
@@ -344,15 +339,25 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   // ---- ferie ----
   const saveFerie: AppData['saveFerie'] = async (f) => {
+    // status: leiarar kan registrere direkte som godkjend; tilsette sender søknad
+    // (databasen tvingar òg «ventar» for dei som ikkje kan godkjenne).
+    const status = f.status ?? 'ventar';
     if (f.id) {
-      const { data, error: err } = await supabase.from('ferie').update({ ansatt: f.ansatt, type: f.type, tekst: f.tekst, fra: f.fra, til: f.til }).eq('id', f.id).select().single();
+      const { data, error: err } = await supabase.from('ferie').update({ ansatt: f.ansatt, type: f.type, tekst: f.tekst, fra: f.fra, til: f.til, status }).eq('id', f.id).select().single();
       if (err) throw err;
       setFerie((prev) => prev.map((x) => (x.id === f.id ? mapFerie(data) : x)));
     } else {
-      const { data, error: err } = await supabase.from('ferie').insert({ ansatt: f.ansatt, type: f.type, tekst: f.tekst, fra: f.fra, til: f.til }).select().single();
+      const { data, error: err } = await supabase.from('ferie').insert({ ansatt: f.ansatt, type: f.type, tekst: f.tekst, fra: f.fra, til: f.til, status }).select().single();
       if (err) throw err;
       setFerie((prev) => [...prev, mapFerie(data)]);
     }
+    toast(status === 'ventar' ? 'Søknaden er sendt til leiar' : 'Ferie/fri lagra');
+  };
+  const behandleFerie: AppData['behandleFerie'] = async (id, status, svar) => {
+    const { data, error: err } = await supabase.from('ferie').update({ status, svar }).eq('id', id).select().single();
+    if (err) throw err;
+    setFerie((prev) => prev.map((x) => (x.id === id ? mapFerie(data) : x)));
+    toast(status === 'godkjend' ? 'Søknaden er godkjend' : 'Søknaden er avslått');
   };
   const deleteFerie: AppData['deleteFerie'] = async (id) => {
     const { error: err } = await supabase.from('ferie').delete().eq('id', id);
@@ -540,7 +545,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveEntry, deleteEntry, approveEmployeeEntries,
       saveShift, deleteShift, moveShiftDate, saveStandardveke, applyStandardveke, kopierVeke,
       createSwap, approveSwap, declineSwap,
-      saveFerie, deleteFerie, saveUnavailable, removeUnavailable,
+      saveFerie, deleteFerie, behandleFerie, saveUnavailable, removeUnavailable,
       saveTask, deleteTask, moveTask, completeTask,
       saveOrder, deleteOrder, advanceOrder, markOrderVarsla,
       saveDoc, deleteDoc, uploadDocFile, docFileUrl,

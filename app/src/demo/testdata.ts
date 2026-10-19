@@ -59,9 +59,22 @@ export function lagTestdata(): Record<string, Rad[]> {
     ? [{ id: id('byte'), shift_id: kveldNeste.id, fra: 'ola', til: 'ingrid', dag: 'onsdag', tid: '14:00–18:00', status: 'pending' }]
     : [];
 
+  // Ferie og fri: historikk frå sommaren, planlagt, søknader og eitt avslag.
+  const aar = t.slice(0, 4);
+  const fr = (ansatt: string, type: string, tekst: string, fra: string, til: string, status = 'godkjend', svar = ''): Rad =>
+    ({ id: id('ferie'), ansatt, type, tekst, fra, til, status, svar, behandla_av: status === 'ventar' ? null : 'kari', created_at: addDays(fra, -30) });
   const ferie: Rad[] = [
-    { id: id('ferie'), ansatt: 'jonas', type: 'Ferie', tekst: 'Haustferie', fra: dag(14), til: dag(19) },
-    { id: id('ferie'), ansatt: 'ingrid', type: 'Kurs', tekst: 'Truckførarkurs', fra: dag(10), til: dag(10) },
+    fr('kari', 'Ferie', 'Sommarferie', `${aar}-07-06`, `${aar}-07-24`),
+    fr('ola', 'Ferie', 'Sommarferie', `${aar}-07-20`, `${aar}-08-07`),
+    fr('ingrid', 'Ferie', 'Sommarferie', `${aar}-06-29`, `${aar}-07-10`),
+    fr('jonas', 'Ferie', 'Sommarferie', `${aar}-08-03`, `${aar}-08-14`),
+    fr('ola', 'Sjukmeld', 'Influensa', addDays(t, -24), addDays(t, -22)),
+    fr('ingrid', 'Fri', 'Flytting', addDays(t, -40), addDays(t, -40)),
+    fr('jonas', 'Ferie', 'Haustferie', dag(14), dag(19)),
+    fr('ingrid', 'Kurs', 'Truckførarkurs', dag(10), dag(10)),
+    fr('ola', 'Ferie', 'Juleferie', `${aar}-12-21`, `${aar}-12-31`, 'ventar'),
+    fr('ingrid', 'Fri', 'Bryllaup i familien', dag(18), dag(18), 'ventar'),
+    fr('jonas', 'Ferie', 'Langhelg', dag(5), dag(5), 'avslatt', 'Varetelling den laurdagen – ta gjerne helga etter.'),
   ];
   // Ola har vakt denne dagen òg – blir vist som konflikt i vaktplanen.
   const utilgjengeleg: Rad[] = [{ id: id('util'), ansatt: 'ola', dato: dag(9), grunn: 'Tannlege' }];

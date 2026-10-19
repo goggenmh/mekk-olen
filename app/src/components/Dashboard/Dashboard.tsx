@@ -15,6 +15,7 @@ import type { View } from '../../lib/view';
 import { alder } from '../../lib/bestilling';
 import { tal } from '../../lib/tekst';
 import { ustadfesta } from '../../lib/dokument';
+import { ventandeFerie } from '../../lib/ferie';
 
 const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', boxShadow: 'var(--shadow-card)' } as const;
 const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 9 } as const;
@@ -22,7 +23,8 @@ const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 const PRI_RANG: Record<string, number> = { høg: 0, medium: 1, låg: 2 };
 
 export function Dashboard({ setView }: { setView: (v: View) => void }) {
-  const { entries, shifts, swaps, tasks, orders, ferie, meldinger, docs, stadfestingar, canApprove } = useAppData();
+  const { entries, shifts, swaps, tasks, orders, ferie: alleFerie, meldinger, docs, stadfestingar, canApprove } = useAppData();
+  const ferie = alleFerie.filter((f) => f.status === 'godkjend');
   const { user } = useAuth();
   const kanLageVakt = canApprove(user?.id);
   const { ansatte, findAnsatt } = useAnsatte();
@@ -65,6 +67,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
     ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${tal(ventandeTimar, 'timeføring', 'timeføringar')} ventar på godkjenning`, view: 'timeliste' as View }] : []),
     ...ankomneBestillingar.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),
     ...(gamleBestillingar > 0 ? [{ key: 'gamle', tekst: `${tal(gamleBestillingar, 'bestilling', 'bestillingar')} har stått lenge`, view: 'bestilling' as View }] : []),
+    ...(kanLageVakt && ventandeFerie(alleFerie) > 0 ? [{ key: 'ferie', tekst: `${ventandeFerie(alleFerie)} søknader om ferie/fri ventar på svar`, view: 'ferie' as View }] : []),
     ...(forseinka > 0 ? [{ key: 'forseinka', tekst: `${tal(forseinka, 'oppgåve', 'oppgåver')} har passert fristen`, view: 'oppgaver' as View }] : []),
     ...(ulesneHms > 0 ? [{ key: 'hms', tekst: `${ulesneHms} HMS-dokument ventar på stadfesting`, view: 'dokument' as View }] : []),
     ...(ufordelteOppgaver > 0 ? [{ key: 'oppgaver', tekst: tal(ufordelteOppgaver, 'ufordelt oppgåve', 'ufordelte oppgåver'), view: 'oppgaver' as View }] : []),

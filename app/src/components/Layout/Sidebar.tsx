@@ -19,7 +19,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   open?: boolean;
   onClose?: () => void;
 }) {
-  const { entries, swaps, tasks, orders } = useAppData();
+  const { entries, swaps, tasks, orders, ferie, canApprove } = useAppData();
   const { user } = useAuth();
   const { finnButikk } = useAnsatte();
   const merke = finnButikk(user?.butikk_id)?.namn?.toUpperCase() || 'MEKK ØLEN';
@@ -45,7 +45,9 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   const oppgaverBadge = tasks.filter((t) => t.ansatt === 'ufordelt').length;
   const bestillingBadge = orders.filter((o) => o.status === 'komen' && !o.varsla).length;
 
+  const ferieBadge = canApprove(user?.id) ? ferie.filter((f) => f.status === 'ventar').length : 0;
   const badges: Partial<Record<View, { n: number }>> = {
+    ferie: ferieBadge > 0 ? { n: ferieBadge } : undefined,
     timeliste: timelisteBadge > 0 ? { n: timelisteBadge } : undefined,
     vaktplan: vaktplanBadge > 0 ? { n: vaktplanBadge } : undefined,
     oppgaver: oppgaverBadge > 0 ? { n: oppgaverBadge } : undefined,

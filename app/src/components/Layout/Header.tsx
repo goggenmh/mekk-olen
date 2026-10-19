@@ -10,6 +10,7 @@ import { weekDates, mondayOf, today } from '../../lib/dates';
 import { erLeiar, type View } from '../../lib/view';
 import { alder } from '../../lib/bestilling';
 import { ustadfesta } from '../../lib/dokument';
+import { ventandeFerie } from '../../lib/ferie';
 import { tal } from '../../lib/tekst';
 
 interface Varsel {
@@ -30,7 +31,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
   const { user, logout } = useAuth();
   const { dark, toggle } = useTheme();
   const { isLeder, ansatte, findAnsatt } = useAnsatte();
-  const { docs, tasks, swaps, entries, orders, stadfestingar } = useAppData();
+  const { docs, tasks, swaps, entries, orders, stadfestingar, ferie, canApprove } = useAppData();
   const [adminOpen, setAdminOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [notifOpen, setNotifOpen] = useState(false);
@@ -47,15 +48,17 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
     const ankomne = orders.filter((o) => o.status === 'komen' && !o.varsla);
     const gamle = orders.filter((o) => alder(o, t).gammal).length;
     const ulesne = ustadfesta(docs, stadfestingar, user?.id);
+    const ferieSoknader = canApprove(user?.id) ? ventandeFerie(ferie) : 0;
     return [
       ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønskjer å bytte vakt ${s.dag}`, view: 'vaktplan' as View })),
       ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${tal(ventandeTimar, 'timeføring', 'timeføringar')} ventar på godkjenning`, view: 'timeliste' as View }] : []),
       ...ankomne.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),
       ...(gamle > 0 ? [{ key: 'gamle', tekst: `${tal(gamle, 'bestilling', 'bestillingar')} har stått lenge – sjekk ${gamle === 1 ? 'henne' : 'dei'}`, view: 'bestilling' as View }] : []),
       ...(ulesne > 0 ? [{ key: 'hms', tekst: `${ulesne} HMS-dokument ventar på at du stadfestar at du har lese ${ulesne === 1 ? 'det' : 'dei'}`, view: 'dokument' as View }] : []),
+      ...(ferieSoknader > 0 ? [{ key: 'ferie', tekst: `${ferieSoknader} ${ferieSoknader === 1 ? 'søknad' : 'søknader'} om ferie/fri ventar på svar`, view: 'ferie' as View }] : []),
       ...(ufordelte > 0 ? [{ key: 'oppgaver', tekst: tal(ufordelte, 'ufordelt oppgåve', 'ufordelte oppgåver'), view: 'oppgaver' as View }] : []),
     ].slice(0, 8);
-  }, [swaps, entries, tasks, orders, docs, stadfestingar, user?.id, findAnsatt]);
+  }, [swaps, entries, tasks, orders, docs, stadfestingar, ferie, canApprove, user?.id, findAnsatt]);
 
   const hits = useMemo<SearchHit[]>(() => {
     const q = query.trim().toLowerCase();

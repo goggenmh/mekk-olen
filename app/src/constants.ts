@@ -33,6 +33,8 @@ export interface Employee {
   tidlegare_mekk?: number | null;
   /** Anna skattbar inntekt i tidlegare_ar (andre arbeidsgivarar, utbetalte feriepengar). Berre frikort. */
   tidlegare_andre?: number | null;
+  /** Feriedagar (virkedagar) per år. Standard 25. Ikkje privat. */
+  feriedagar?: number | null;
 }
 
 export interface Butikk {

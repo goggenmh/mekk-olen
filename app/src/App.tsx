@@ -8,6 +8,7 @@ import { Dashboard } from './components/Dashboard/Dashboard';
 // Sidene blir lasta først når dei blir opna, så oppstarten blir raskare.
 const Ansatte = lazy(() => import('./components/Ansatte/Ansatte').then((m) => ({ default: m.Ansatte })));
 const Timeliste = lazy(() => import('./components/Timeliste/Timeliste').then((m) => ({ default: m.Timeliste })));
+const FerieSide = lazy(() => import('./components/Ferie/FerieSide').then((m) => ({ default: m.FerieSide })));
 const Vaktplan = lazy(() => import('./components/Vaktplan/Vaktplan').then((m) => ({ default: m.Vaktplan })));
 const Oppgaver = lazy(() => import('./components/Oppgaver/Oppgaver').then((m) => ({ default: m.Oppgaver })));
 const Bestillinger = lazy(() => import('./components/Bestillinger/Bestillinger').then((m) => ({ default: m.Bestillinger })));
@@ -142,6 +143,7 @@ function App() {
                 {synlegView === 'ansatte' && <Ansatte />}
                 {synlegView === 'timeliste' && <Timeliste key={visDato ?? 'i-dag'} startDato={visDato} />}
                 {synlegView === 'vaktplan' && <Vaktplan key={visDato ?? 'i-dag'} startDato={visDato} />}
+                {synlegView === 'ferie' && <FerieSide />}
                 {synlegView === 'oppgaver' && <Oppgaver />}
                 {synlegView === 'bestilling' && <Bestillinger />}
                 {synlegView === 'dokument' && <Dokument />}

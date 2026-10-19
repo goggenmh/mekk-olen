@@ -26,7 +26,8 @@ function lastNedCsv(namn: string, rader: (string | number)[][]) {
 }
 
 export function Rapporter() {
-  const { entries, shifts, ferie, tasks, orders } = useAppData();
+  const { entries, shifts, ferie: alleFerie, tasks, orders } = useAppData();
+  const godkjendFerie = alleFerie.filter((f) => f.status === 'godkjend');
   const { ansatte } = useAnsatte();
   const [periode, setPeriode] = useState<Periode>('uke');
 
@@ -45,7 +46,7 @@ export function Rapporter() {
   // Fråvær: dagar med ferie/fri/kurs/sjukmelding i perioden (måndag–laurdag).
   const fravaerDagar = (ansatt: string) => {
     let n = 0;
-    for (const f of ferie.filter((x) => x.ansatt === ansatt && x.fra && x.til)) {
+    for (const f of godkjendFerie.filter((x) => x.ansatt === ansatt && x.fra && x.til)) {
       for (let d = f.fra!; d <= f.til!; d = addDays(d, 1)) {
         if (innenPeriode(d) && parseDate(d).getDay() !== 0) n++;
         if (talDagar(f.fra!, d) > 400) break;

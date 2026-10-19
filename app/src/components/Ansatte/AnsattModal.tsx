@@ -19,6 +19,7 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
   const [lonn, setLonn] = useState<'fast' | 'time'>(existing?.lonn || 'time');
   const [sats, setSats] = useState(existing?.sats || 0);
   const [leder, setLeder] = useState(existing?.leder || false);
+  const [feriedagar, setFeriedagar] = useState(existing?.feriedagar ?? 25);
   const [skattetype, setSkattetype] = useState<'' | 'skattekort' | 'frikort'>(existing?.skattetype || '');
   const [skatteprosent, setSkatteprosent] = useState(existing?.skatteprosent ?? 0);
   const [frikortgrense, setFrikortgrense] = useState(existing?.frikortgrense ?? 0);
@@ -54,7 +55,7 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
     };
     try {
       if (existing) {
-        await updateAnsatt(existing.id, { navn: navn.trim(), rolle, telefon, farge, lonn, sats, leder, init, ...skatt });
+        await updateAnsatt(existing.id, { navn: navn.trim(), rolle, telefon, farge, lonn, sats, leder, init, feriedagar, ...skatt });
         if (epost.trim() && epost.trim() !== existing.email) {
           await updateEmail(existing.id, epost.trim());
         }
@@ -63,7 +64,7 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
           navn: navn.trim(), rolle, telefon, farge, lonn, sats, init, leder, pin,
           ...(epost.trim() ? { email: epost.trim() } : {}),
         });
-        await updateAnsatt(id, skatt);
+        await updateAnsatt(id, { feriedagar, ...skatt });
       }
       onClose();
     } catch (e) {
@@ -158,6 +159,9 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
           </div>
         </>
       )}
+      <Field label="Feriedagar per år (virkedagar)">
+        <input type="number" min={0} max={40} value={feriedagar} onChange={(e) => setFeriedagar(Number(e.target.value))} style={monoInputStyle} />
+      </Field>
       <Field label="Farge">
         <div style={{ display: 'flex', gap: 8 }}>
           {FARGAR.map((f) => (
