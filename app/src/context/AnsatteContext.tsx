@@ -43,9 +43,12 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
   const [butikkar, setButikkar] = useState<Butikk[]>([]);
 
   const refreshAnsatte = useCallback(async () => {
+    // Tabellane krev innlogging (401 utan); innloggings-lista gjer ikkje det.
+    const { data: okt } = await supabase.auth.getSession();
+    const tomt = Promise.resolve({ data: null, error: { message: 'ikkje innlogga' } });
     const [ansRes, butRes, loginRes] = await Promise.all([
-      supabase.from('ansatte').select('*').order('created_at', { ascending: true }),
-      supabase.from('butikkar').select('*').eq('aktiv', true).order('created_at', { ascending: true }),
+      okt.session ? supabase.from('ansatte').select('*').order('created_at', { ascending: true }) : tomt,
+      okt.session ? supabase.from('butikkar').select('*').eq('aktiv', true).order('created_at', { ascending: true }) : tomt,
       // Økt-uavhengig liste til innloggings-skjermen (SECURITY DEFINER, utan e-post).
       supabase.rpc('login_liste'),
     ]);
@@ -102,7 +105,7 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
     // ein servar utan PIN_PEPPER.
     await callAdmin('create', { id, ...rest, pin, password: pinToPassword(pin) });
     await refreshAnsatte();
-    toast('Ansatt oppretta');
+    toast('Tilsett oppretta');
   };
 
 
@@ -110,13 +113,13 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.from('ansatte').update(patch).eq('id', id).select().single();
     if (error) throw error;
     setAlleAnsatte((prev) => prev.map((a) => (a.id === id ? mapAnsatt(data) : a)));
-    toast('Ansatt oppdatert');
+    toast('Tilsett oppdatert');
   };
 
   const setAktiv: AnsatteState['setAktiv'] = async (id, aktiv) => {
     await callAdmin(aktiv ? 'reactivate' : 'deactivate', { id });
     await refreshAnsatte();
-    toast(aktiv ? 'Ansatt reaktivert' : 'Ansatt deaktivert');
+    toast(aktiv ? 'Tilsett reaktivert' : 'Tilsett deaktivert');
   };
 
   const resetPin: AnsatteState['resetPin'] = async (id, pin) => {

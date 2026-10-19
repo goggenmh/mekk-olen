@@ -8,6 +8,7 @@ import { useIsMobile } from '../../lib/useIsMobile';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { Avatar } from '../ui/Avatar';
 import type { Order } from '../../types';
+import { alder, ALDER_TEKST, reinTelefon } from '../../lib/bestilling';
 
 const FILTERS: { key: string; label: string }[] = [
   { key: 'aktive', label: 'Aktive' },
@@ -27,6 +28,7 @@ export function Bestillinger() {
   };
   const isMobile = useIsMobile();
   const [filter, setFilter] = useState('aktive');
+  const [sok, setSok] = useState('');
   const [orderTarget, setOrderTarget] = useState<Order | 'new' | null>(null);
   const [notifyTarget, setNotifyTarget] = useState<Order | null>(null);
   const [openYear, setOpenYear] = useState<string | null>(null);
@@ -34,7 +36,9 @@ export function Bestillinger() {
 
   // Henta-bestillingar grupperte i år → månad, nyaste først.
   const hentaGrupper = useMemo(() => {
-    const henta = orders.filter((o) => o.status === 'henta');
+    const s = sok.trim().toLowerCase();
+    const henta = orders.filter((o) => o.status === 'henta' &&
+      (!s || [o.kunde, o.vare, o.leverandor, o.varenr, o.telefon, o.notat].some((f) => (f || '').toLowerCase().includes(s))));
     const byAr = new Map<string, Map<string, Order[]>>();
     for (const o of henta) {
       const ar = (o.dato || '').slice(0, 4) || 'Ukjent';
@@ -57,17 +61,43 @@ export function Bestillinger() {
             ordrar: arr.slice().sort((a, b) => (a.dato < b.dato ? 1 : -1)),
           })),
       }));
-  }, [orders]);
+  }, [orders, sok]);
+
+  const q = sok.trim().toLowerCase();
+  const treff = (o: Order) => !q || [o.kunde, o.vare, o.leverandor, o.varenr, o.telefon, o.notat].some((f) => (f || '').toLowerCase().includes(q));
+  const gamleTal = orders.filter((o) => alder(o).gammal).length;
 
   const filtered = orders
-    .filter((o) => (filter === 'aktive' ? o.status !== 'henta' : o.status === filter))
+    .filter((o) => (filter === 'aktive' ? o.status !== 'henta' : filter === 'gamle' ? alder(o).gammal : o.status === filter))
+    .filter(treff)
     .slice()
     .sort((a, b) => {
+      // Det som har stått lengst over grensa kjem først.
+      const ga = alder(a), gb = alder(b);
+      if (ga.gammal !== gb.gammal) return ga.gammal ? -1 : 1;
       const ia = ORDER_FLOW.indexOf(a.status as typeof ORDER_FLOW[number]);
       const ib = ORDER_FLOW.indexOf(b.status as typeof ORDER_FLOW[number]);
       if (ia !== ib) return ia - ib;
       return a.dato < b.dato ? -1 : 1;
     });
+
+  // Merke for bestillingar som har stått for lenge i same status.
+  const AlderMerke = ({ o }: { o: Order }) => {
+    const a = alder(o);
+    if (!a.gammal) return null;
+    return (
+      <span title={`${a.dagar} dagar – ${ALDER_TEKST[o.status]}`} style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--danger)', background: 'rgba(192,57,43,0.10)', padding: '3px 8px', borderRadius: 9, whiteSpace: 'nowrap' }}>
+        {a.dagar} d · {ALDER_TEKST[o.status]}
+      </span>
+    );
+  };
+  const Kontakt = ({ o }: { o: Order }) => {
+    const tlf = reinTelefon(o.telefon || '');
+    if (!tlf) return null;
+    return (
+      <a href={`tel:${tlf}`} onClick={(e) => e.stopPropagation()} style={{ color: 'var(--brand)', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>☎ {o.telefon}</a>
+    );
+  };
 
   return (
     <div style={{ padding: isMobile ? 16 : 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -81,14 +111,24 @@ export function Bestillinger() {
         </button>
       </div>
 
+      <input
+        type="search"
+        value={sok}
+        onChange={(e) => setSok(e.target.value)}
+        placeholder="Søk på kunde, vare, varenr eller telefon …"
+        aria-label="Søk i bestillingar"
+        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontFamily: "'Geist'", fontSize: 14, color: 'var(--text)', maxWidth: 460 }}
+      />
+
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {FILTERS.map((f) => (
+        {[...FILTERS, ...(gamleTal > 0 ? [{ key: 'gamle', label: `Står lenge (${gamleTal})` }] : [])].map((f) => (
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
+            aria-pressed={filter === f.key}
             style={{
-              padding: '7px 14px', borderRadius: 9, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              background: filter === f.key ? 'var(--brand-strong)' : 'var(--surface)', color: filter === f.key ? '#fff' : 'var(--text-secondary)',
+              padding: '7px 14px', borderRadius: 9, border: f.key === 'gamle' && filter !== f.key ? '1px solid rgba(192,57,43,0.4)' : '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+              background: filter === f.key ? 'var(--brand-strong)' : 'var(--surface)', color: filter === f.key ? '#fff' : f.key === 'gamle' ? 'var(--danger)' : 'var(--text-secondary)',
             }}
           >
             {f.label}
@@ -104,13 +144,20 @@ export function Bestillinger() {
             const kanVarsle = o.status === 'komen';
             const nesteIdx = ORDER_FLOW.indexOf(o.status as typeof ORDER_FLOW[number]) + 1;
             return (
-              <div key={o.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '13px 14px', boxShadow: 'var(--shadow-card)' }}>
+              <div key={o.id} style={{ background: 'var(--surface)', border: alder(o).gammal ? '1px solid rgba(192,57,43,0.35)' : '1px solid var(--border)', borderRadius: 12, padding: '13px 14px', boxShadow: 'var(--shadow-card)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span onClick={() => setOrderTarget(o)} style={{ fontSize: 14.5, fontWeight: 700, flex: 1, cursor: 'pointer' }}>{o.kunde}</span>
+                  <button onClick={() => setOrderTarget(o)} style={{ fontSize: 14.5, fontWeight: 700, flex: 1, cursor: 'pointer', textAlign: 'left', background: 'none', border: 'none', padding: 0, color: 'var(--text)', fontFamily: 'inherit' }}>{o.kunde}</button>
                   <span style={{ fontSize: 10.5, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 9, textTransform: 'uppercase' }}>{s.tekst}</span>
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 5 }}>{o.vare}{o.antal > 1 ? ` · ${o.antal} stk` : ''}</div>
+                {o.notat && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 3, fontStyle: 'italic' }}>{o.notat}</div>}
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{o.leverandor} · {datoKort(o.dato)}{o.varsla ? ` · varsla ${datoKort(o.varsla)}` : ''}</div>
+                {(alder(o).gammal || o.telefon) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, fontSize: 12.5, flexWrap: 'wrap' }}>
+                    <AlderMerke o={o} />
+                    <Kontakt o={o} />
+                  </div>
+                )}
                 {lagtInnAv(o) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
                     <Avatar init={lagtInnAv(o)!.init} farge={lagtInnAv(o)!.farge} size={18} fontSize={8.5} />
@@ -161,10 +208,14 @@ export function Bestillinger() {
               const kanVarsle = o.status === 'komen';
               const nesteIdx = ORDER_FLOW.indexOf(o.status as typeof ORDER_FLOW[number]) + 1;
               return (
-                <tr key={o.id} style={{ borderTop: '1px solid var(--divider)' }}>
-                  <td style={{ ...td, fontWeight: 600, cursor: 'pointer' }} onClick={() => setOrderTarget(o)}>{o.kunde}</td>
+                <tr key={o.id} style={{ borderTop: '1px solid var(--divider)', background: alder(o).gammal ? 'rgba(192,57,43,0.04)' : undefined }}>
+                  <td style={td}>
+                    <button onClick={() => setOrderTarget(o)} style={{ fontWeight: 600, cursor: 'pointer', textAlign: 'left', background: 'none', border: 'none', padding: 0, color: 'var(--text)', fontFamily: 'inherit', fontSize: 13 }}>{o.kunde}</button>
+                    {o.telefon && <div style={{ fontSize: 11.5, marginTop: 2 }}><Kontakt o={o} /></div>}
+                  </td>
                   <td style={td}>
                     {o.vare}
+                    {o.notat && <div style={{ fontSize: 11.5, color: 'var(--text-muted)', fontStyle: 'italic', marginTop: 2 }}>{o.notat}</div>}
                     {o.lenke && (
                       <a href={lenkeHref(o.lenke)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title="Opne produktlenke" style={{ marginLeft: 6, color: 'var(--brand)', fontWeight: 700, textDecoration: 'none' }}>↗</a>
                     )}
@@ -183,6 +234,7 @@ export function Bestillinger() {
                   <td style={td}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 9, textTransform: 'uppercase' }}>{s.tekst}</span>
                     {o.varsla && <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 3 }}>Varsla {datoKort(o.varsla)}</div>}
+                    {alder(o).gammal && <div style={{ marginTop: 4 }}><AlderMerke o={o} /></div>}
                   </td>
                   <td style={td}>
                     <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
@@ -209,7 +261,7 @@ export function Bestillinger() {
               );
             })}
             {filtered.length === 0 && (
-              <tr><td colSpan={7} style={{ ...td, textAlign: 'center', color: 'var(--text-muted)' }}>Ingen bestillingar.</td></tr>
+              <tr><td colSpan={8}style={{ ...td, textAlign: 'center', color: 'var(--text-muted)' }}>Ingen bestillingar.</td></tr>
             )}
           </tbody>
         </table>

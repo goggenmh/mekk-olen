@@ -53,7 +53,7 @@ export function AnsattModal({ existing, onClose }: { existing?: Employee; onClos
   return (
     <Modal
       onClose={onClose}
-      title={existing ? 'Endre ansatt' : 'Ny ansatt'}
+      title={existing ? 'Endre tilsett' : 'Ny tilsett'}
       subtitle={existing ? undefined : 'Lagar ny innlogging i Supabase Auth'}
       footer={
         <>

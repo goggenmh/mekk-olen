@@ -72,6 +72,8 @@ export interface Order {
   antal: number;
   status: string;
   varsla: string | null;
+  /** Fritt notat (kjenneteikn, ønske o.l.). Tomt før bestilling-notat.sql er køyrd. */
+  notat: string;
   /** Tilsett som la inn bestillinga (blir sett av databasen; null på eldre). */
   registrertAv?: string | null;
 }

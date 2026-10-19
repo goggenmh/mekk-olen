@@ -100,7 +100,7 @@ export function Innstillinger({ setView }: { setView: (v: View) => void }) {
             onClick={() => setView('ansatte')}
             style={{ marginLeft: 'auto', padding: '9px 14px', background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 11, fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}
           >
-            Endre i Ansatte →
+            Endre under Tilsette →
           </button>
         )}
       </div>
@@ -119,13 +119,13 @@ export function Innstillinger({ setView }: { setView: (v: View) => void }) {
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>Administrasjon</div>
           <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 12 }}>
-            Delegering av godkjenning og meldingar til ansatte finn du under tannhjul-ikonet i toppmenyen.
+            Delegering av godkjenning og meldingar til tilsette finn du under tannhjul-ikonet i toppmenyen.
           </div>
           <button
             onClick={() => setView('ansatte')}
             style={{ padding: '9px 14px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
           >
-            Gå til Ansatte-modulen
+            Gå til Tilsette
           </button>
         </div>
       )}

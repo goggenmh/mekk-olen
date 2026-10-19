@@ -3,7 +3,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { weekDates, mondayOf, today } from '../../lib/dates';
-import { VIEWS, NAV_GROUPS, type View } from '../../lib/view';
+import { VIEWS, NAV_GROUPS, harTilgang, type View } from '../../lib/view';
 import { Icon } from '../ui/Icon';
 
 const META = Object.fromEntries(VIEWS.map((v) => [v.key, v])) as Record<View, typeof VIEWS[number]>;
@@ -24,9 +24,10 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   const { finnButikk } = useAnsatte();
   const merke = finnButikk(user?.butikk_id)?.namn?.toUpperCase() || 'MEKK ØLEN';
   const harButikk = !!user?.butikk_id;
-  // Butikk-spesifikke sider berre for dei som høyrer til ein butikk.
+  // Butikk-spesifikke sider berre for dei som høyrer til ein butikk, og
+  // løn/tilsett-styring berre for leiarar.
   const synlegeGrupper = NAV_GROUPS
-    .map((g) => ({ ...g, punkt: g.punkt.filter((k) => k === 'innstillinger' || harButikk) }))
+    .map((g) => ({ ...g, punkt: g.punkt.filter((k) => (k === 'innstillinger' || harButikk) && harTilgang(k, user)) }))
     .filter((g) => g.punkt.length > 0);
   const [collapsed, setCollapsed] = useState(readCollapsed);
 
@@ -85,6 +86,8 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
                 key={key}
                 onClick={() => setView(key)}
                 title={smal ? v.label : undefined}
+                aria-label={badge ? `${v.label} (${badge.n})` : v.label}
+                aria-current={active ? 'page' : undefined}
                 style={{
                   position: 'relative', display: 'flex', alignItems: 'center', gap: smal ? 0 : 11,
                   padding: smal ? '9px 0' : '7px 11px', border: 'none', cursor: 'pointer',
@@ -119,6 +122,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
           <button
             onClick={toggleCollapsed}
             title={smal ? 'Utvid meny' : 'Kollaps meny'}
+            aria-label={smal ? 'Utvid meny' : 'Kollaps meny'}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               border: '1px solid var(--rail-border)', background: 'transparent', cursor: 'pointer',

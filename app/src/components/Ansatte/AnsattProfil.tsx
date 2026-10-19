@@ -30,7 +30,7 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
   const nokkeltal = [
     { verdi: `${fmt(timarUke)} t`, lab: 'Timar denne veka' },
     { verdi: `${fmt(timarManad)} t`, lab: 'Timar denne månaden' },
-    { verdi: ansatt.lonn === 'time' ? fmtKr(godkjentManad * ansatt.sats) : 'Fastløn', lab: ansatt.lonn === 'time' ? 'Lønn (godkjent, mnd)' : 'Lønstype' },
+    { verdi: ansatt.lonn === 'time' ? fmtKr(godkjentManad * ansatt.sats) : 'Fastløn', lab: ansatt.lonn === 'time' ? 'Løn (godkjent, mnd)' : 'Lønstype' },
     { verdi: String(opneOppg.length), lab: 'Opne oppgåver' },
   ];
 

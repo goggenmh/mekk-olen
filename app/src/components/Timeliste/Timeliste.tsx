@@ -104,12 +104,12 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
       </div>
 
       <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <button onClick={prevPeriod} style={navBtn}>‹</button>
+        <button onClick={prevPeriod} style={navBtn} aria-label="Førre periode">‹</button>
         <div>
           <div style={{ fontWeight: 700, fontSize: 15 }}>{periodTittel}</div>
           {periodUnder && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{periodUnder}</div>}
         </div>
-        <button onClick={nextPeriod} style={navBtn}>›</button>
+        <button onClick={nextPeriod} style={navBtn} aria-label="Neste periode">›</button>
         <button onClick={goToday} style={{ ...btnGhost, marginLeft: 4 }}>I dag</button>
       </div>
 

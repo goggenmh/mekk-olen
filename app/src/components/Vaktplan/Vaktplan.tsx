@@ -19,6 +19,23 @@ const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 const ferieStyl = (type: string) => FERIE_STYL[type] || FERIE_STYL.Fri;
 const ferieForDag = (ferie: Ferie[], dato: string) => ferie.filter((f) => f.fra && f.til && f.fra <= dato && dato <= f.til);
 
+const tilMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
+const tilTid = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+
+/** Periodar i opningstida («09–18») der ingen vakt dekkjer. */
+function udekt(open: string, vakter: Shift[]): [string, string][] {
+  const [fra, til] = open.split('–').map((x) => tilMin(x.includes(':') ? x : `${x}:00`));
+  const bitar = vakter.map((s) => [tilMin(s.start), tilMin(s.slutt)] as const).sort((a, b) => a[0] - b[0]);
+  const hol: [string, string][] = [];
+  let dekt = fra;
+  for (const [s, e] of bitar) {
+    if (s > dekt && dekt < til) hol.push([tilTid(dekt), tilTid(Math.min(s, til))]);
+    dekt = Math.max(dekt, e);
+  }
+  if (dekt < til) hol.push([tilTid(dekt), tilTid(til)]);
+  return hol;
+}
+
 /** startDato: opne på veka til denne datoen (t.d. frå eit push-varsel). */
 export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
   const { shifts, swaps, ferie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, saveShift, deleteShift, saveFerie } = useAppData();
@@ -97,9 +114,9 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
             </button>
           ))}
         </div>
-        <button onClick={prevPeriod} style={navBtn}>‹</button>
+        <button onClick={prevPeriod} style={navBtn} aria-label={mode === 'uke' ? 'Førre veke' : 'Førre månad'}>‹</button>
         <div style={{ fontWeight: 700, fontSize: 15 }}>{periodTittel}</div>
-        <button onClick={nextPeriod} style={navBtn}>›</button>
+        <button onClick={nextPeriod} style={navBtn} aria-label={mode === 'uke' ? 'Neste veke' : 'Neste månad'}>›</button>
         <button onClick={goToday} style={btnGhost}>I dag</button>
         {mode === 'uke' && kanStyreStandard && (
           <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
@@ -314,15 +331,28 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
         </div>
       </div>
 
-      <div style={{ background: 'var(--hero-grad)', color: 'var(--hero-fg)', borderRadius: 16, padding: '16px 18px', boxShadow: '0 10px 30px rgba(12,90,105,0.28)' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--hero-sub)', marginBottom: 10 }}>Bemanningsregel</div>
-        <ul style={{ paddingLeft: 18, fontSize: 13, color: 'var(--hero-sub)', lineHeight: 1.6 }}>
-          <li>Minst éin tilsett på vakt i alle opningstider.</li>
-          <li>Sander dekkjer hovudsakleg formiddagar man–fre.</li>
-          <li>Laurdagsvakt går på rundgang mellom Georg og Christian.</li>
-          <li>Bytteønske må godkjennast før vakta blir flytta.</li>
-        </ul>
-      </div>
+      {mode === 'uke' && (() => {
+        // Sjekkar automatisk at nokon er på vakt i heile opningstida kvar dag.
+        const hol = days
+          .filter((d) => !helligdagFor(d.date))
+          .map((d) => ({ d, hol: udekt(d.open, shifts.filter((s) => s.date === d.date)) }))
+          .filter((x) => x.hol.length > 0);
+        return (
+          <div style={{ background: 'var(--hero-grad)', color: 'var(--hero-fg)', borderRadius: 16, padding: '16px 18px', boxShadow: '0 10px 30px rgba(12,90,105,0.28)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--hero-sub)', marginBottom: 10 }}>Bemanning denne veka</div>
+            {hol.length === 0 ? (
+              <div style={{ fontSize: 13.5, fontWeight: 600 }}>✓ Alle opningstider er dekte.</div>
+            ) : (
+              <ul style={{ paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6 }}>
+                {hol.map(({ d, hol: h }) => (
+                  <li key={d.key}><b>{d.kort} {parseDate(d.date).getDate()}.</b>: ingen på vakt {h.map(([a, b]) => `${a}–${b}`).join(', ')}</li>
+                ))}
+              </ul>
+            )}
+            <div style={{ fontSize: 12, color: 'var(--hero-sub)', marginTop: 10 }}>Regel: minst éin tilsett på vakt i alle opningstider. Bytteønske må godkjennast før vakta blir flytta.</div>
+          </div>
+        );
+      })()}
 
       {shiftTarget && <ShiftModal target={shiftTarget} onClose={() => setShiftTarget(null)} />}
       {swapTarget && <SwapModal shift={swapTarget} onClose={() => setSwapTarget(null)} />}

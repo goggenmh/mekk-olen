@@ -126,8 +126,8 @@ export function Ansatte() {
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 880 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Ansatte</h1>
-          <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Administrer ansatte, roller og tilgangsnivå</div>
+          <h1 style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Tilsette</h1>
+          <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Administrer tilsette, roller og tilgangsnivå</div>
         </div>
         <button
           onClick={() => setModalAnsatt('new')}
@@ -136,7 +136,7 @@ export function Ansatte() {
             borderRadius: 12, fontFamily: "'Geist'", fontSize: 13.5, fontWeight: 700, cursor: 'pointer',
           }}
         >
-          + Ny ansatt
+          + Ny tilsett
         </button>
       </div>
 
@@ -160,7 +160,7 @@ export function Ansatte() {
             onClick={() => setVisInaktive((v) => !v)}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', padding: '6px 0' }}
           >
-            {visInaktive ? '▾' : '▸'} Inaktive ansatte ({inaktive.length})
+            {visInaktive ? '▾' : '▸'} Inaktive tilsette ({inaktive.length})
           </button>
           {visInaktive && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>

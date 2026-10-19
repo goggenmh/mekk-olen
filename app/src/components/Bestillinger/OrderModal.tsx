@@ -21,11 +21,12 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
   const [dato, setDato] = useState(existing?.dato || today());
   const [antal, setAntal] = useState(existing?.antal ?? 1);
   const [status, setStatus] = useState(existing?.status || ORDER_FLOW[0]);
+  const [notat, setNotat] = useState(existing?.notat || '');
   const [feil, setFeil] = useState(false);
 
   const save = async () => {
     if (!kunde.trim()) { setFeil(true); return; }
-    await saveOrder({ id: existing?.id, kunde, telefon, vare, leverandor, varenr, lenke: lenke.trim() || null, dato, antal, status, varsla: existing?.varsla ?? null });
+    await saveOrder({ id: existing?.id, kunde, telefon, vare, leverandor, varenr, lenke: lenke.trim() || null, dato, antal, status, notat: notat.trim(), varsla: existing?.varsla ?? null });
     onClose();
   };
 
@@ -52,13 +53,16 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
       )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Field label="Kunde">
-          <input value={kunde} onChange={(e) => { setKunde(e.target.value); setFeil(false); }} style={inputStyle} />
+          <input value={kunde} onChange={(e) => { setKunde(e.target.value); setFeil(false); }} placeholder="Namn" autoComplete="off" style={inputStyle} />
         </Field>
         <Field label="Telefon">
-          <input value={telefon} onChange={(e) => setTelefon(e.target.value)} style={inputStyle} />
+          <input type="tel" inputMode="tel" value={telefon} onChange={(e) => setTelefon(e.target.value)} placeholder="For SMS når varen er komen" style={inputStyle} />
         </Field>
       </div>
       {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Skriv inn kundenamn.</div>}
+      <Field label="Notat">
+        <input value={notat} onChange={(e) => setNotat(e.target.value)} placeholder="T.d. «liten fyr med lue», ønskjer å bli ringt" style={inputStyle} />
+      </Field>
       <Field label="Vare">
         <input value={vare} onChange={(e) => setVare(e.target.value)} style={inputStyle} />
       </Field>

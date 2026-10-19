@@ -7,7 +7,8 @@ import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { AdminPanel } from '../Admin/AdminPanel';
 import { weekDates, mondayOf, today } from '../../lib/dates';
-import type { View } from '../../lib/view';
+import { erLeiar, type View } from '../../lib/view';
+import { alder } from '../../lib/bestilling';
 
 interface Varsel {
   key: string;
@@ -39,10 +40,12 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
     const ventandeTimar = entries.filter((e) => weekDays.includes(e.date) && e.status === 'venter').length;
     const ufordelte = tasks.filter((x) => x.ansatt === 'ufordelt').length;
     const ankomne = orders.filter((o) => o.status === 'komen' && !o.varsla);
+    const gamle = orders.filter((o) => alder(o, t).gammal).length;
     return [
       ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønskjer å bytte vakt ${s.dag}`, view: 'vaktplan' as View })),
       ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${ventandeTimar} timelister ventar godkjenning`, view: 'timeliste' as View }] : []),
       ...ankomne.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),
+      ...(gamle > 0 ? [{ key: 'gamle', tekst: `${gamle} bestillingar har stått lenge – sjekk dei`, view: 'bestilling' as View }] : []),
       ...(ufordelte > 0 ? [{ key: 'oppgaver', tekst: `${ufordelte} ufordelte oppgåver`, view: 'oppgaver' as View }] : []),
     ].slice(0, 8);
   }, [swaps, entries, tasks, orders, findAnsatt]);
@@ -50,17 +53,21 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
   const hits = useMemo<SearchHit[]>(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    const fraAnsatte: SearchHit[] = ansatte
+    // Tilsett-sida er berre for leiarar, så berre dei får treff der.
+    const fraAnsatte: SearchHit[] = !erLeiar(user) ? [] : ansatte
       .filter((a) => a.navn.toLowerCase().includes(q) || a.rolle.toLowerCase().includes(q))
       .map((a) => ({ key: `a-${a.id}`, tittel: a.navn, sub: a.rolle, view: 'ansatte' as View, ikon: 'user' }));
+    const fraBestillingar: SearchHit[] = orders
+      .filter((o) => [o.kunde, o.vare, o.varenr, o.telefon].some((f) => (f || '').toLowerCase().includes(q)))
+      .map((o) => ({ key: `o-${o.id}`, tittel: o.kunde, sub: `Bestilling · ${o.vare}`, view: 'bestilling' as View, ikon: 'bestilling' }));
     const fraDoks: SearchHit[] = docs
       .filter((d) => d.tittel.toLowerCase().includes(q))
       .map((d) => ({ key: `d-${d.id}`, tittel: d.tittel, sub: d.kategori, view: 'dokument' as View, ikon: 'dokument' }));
     const fraOppgaver: SearchHit[] = tasks
       .filter((t) => t.tittel.toLowerCase().includes(q))
       .map((t) => ({ key: `t-${t.id}`, tittel: t.tittel, sub: 'Oppgåve', view: 'oppgaver' as View, ikon: 'oppgaver' }));
-    return [...fraAnsatte, ...fraDoks, ...fraOppgaver].slice(0, 8);
-  }, [query, ansatte, docs, tasks]);
+    return [...fraAnsatte, ...fraBestillingar, ...fraDoks, ...fraOppgaver].slice(0, 8);
+  }, [query, ansatte, docs, tasks, orders, user]);
 
   if (!user) return null;
 
@@ -75,7 +82,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
       {isMobile && (
         <button
           onClick={onMenu}
-          title="Meny"
+          title="Meny" aria-label="Opne meny"
           style={{
             width: 36, height: 36, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
             borderRadius: 9, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none',
@@ -88,7 +95,8 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Søk etter ansatt, dokument, oppgåve…"
+          placeholder="Søk etter bestilling, dokument, oppgåve…"
+          aria-label="Søk"
           style={{
             width: '100%', padding: '8px 13px', border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
             borderRadius: 9, fontFamily: "'Geist'", fontSize: 13, color: 'var(--topbar-ctl-fg)',
@@ -125,7 +133,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setNotifOpen((o) => !o)}
-            title="Varsel"
+            title="Varsel" aria-label={`Varsel (${varsler.length})`} aria-expanded={notifOpen}
             style={{
               position: 'relative', width: 34, height: 34, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
               borderRadius: 9, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -164,7 +172,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
         {isLeder(user.id) && (
           <button
             onClick={() => setAdminOpen(true)}
-            title="Administrasjon"
+            title="Administrasjon" aria-label="Administrasjon"
             style={{
               width: 34, height: 34, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
               borderRadius: 9, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -176,6 +184,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
         <button
           onClick={toggle}
           title={dark ? 'Bytt til lys modus' : 'Bytt til mørk modus'}
+          aria-label={dark ? 'Bytt til lys modus' : 'Bytt til mørk modus'}
           style={{
             width: 34, height: 34, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
             borderRadius: 9, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -192,7 +201,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
         )}
         <button
           onClick={logout}
-          title="Logg ut"
+          title="Logg ut" aria-label="Logg ut"
           style={{
             marginLeft: 6, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
             borderRadius: 9, cursor: 'pointer', fontFamily: "'Geist'", fontSize: 13, fontWeight: 600, color: 'var(--topbar-ctl-fg)',

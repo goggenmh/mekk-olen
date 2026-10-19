@@ -17,7 +17,9 @@ const Innstillinger = lazy(() => import('./components/Innstillinger/Innstillinge
 import { useIsMobile } from './lib/useIsMobile';
 import { useIdleLogout } from './lib/useIdleLogout';
 import { Toaster } from './components/ui/Toaster';
-import { VIEWS, type View } from './lib/view';
+import { VIEWS, harTilgang, stiFor, viewFraSti, type View } from './lib/view';
+import { BottomNav } from './components/Layout/BottomNav';
+import { VarselTips } from './components/Layout/VarselTips';
 
 const gyldigVis = (v: unknown): View | null =>
   typeof v === 'string' && VIEWS.some((x) => x.key === v) ? (v as View) : null;
@@ -52,13 +54,34 @@ function DashboardSkeleton() {
 function App() {
   const { loading: authLoading, user, logout } = useAuth();
   const { loading: dataLoading, error, refreshAll } = useAppData();
-  const [view, setView] = useState<View>('dashbord');
+  // Sida følgjer adressa (/vaktplan, /bestillingar …), så tilbake-knappen,
+  // bokmerke og oppdatering av sida tek deg til same stad.
+  const [view, setView] = useState<View>(() => viewFraSti(window.location.pathname));
   // Dato frå eit varsel: Vaktplan/Timeliste opnar på den veka/månaden.
   const [visDato, setVisDato] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
-  const go = (v: View) => { setView(v); setVisDato(null); setMenuOpen(false); };
-  const gaaTil = (m: Mal) => { setView(m.vis); setVisDato(m.dato); setMenuOpen(false); };
+  const byttSide = (v: View, dato: string | null) => {
+    setView(v);
+    setVisDato(dato);
+    setMenuOpen(false);
+    if (window.location.pathname !== stiFor(v)) window.history.pushState(null, '', stiFor(v));
+  };
+  const go = (v: View) => byttSide(v, null);
+  const gaaTil = (m: Mal) => byttSide(m.vis, m.dato);
+
+  // Tilbake/fram i nettlesaren.
+  useEffect(() => {
+    const vedPop = () => { setView(viewFraSti(window.location.pathname)); setVisDato(null); setMenuOpen(false); };
+    window.addEventListener('popstate', vedPop);
+    return () => window.removeEventListener('popstate', vedPop);
+  }, []);
+
+  // Sider berre for leiarar: send andre til oversikta.
+  const synlegView: View = harTilgang(view, user) ? view : 'dashbord';
+  useEffect(() => {
+    if (user && synlegView !== view) window.history.replaceState(null, '', stiFor(synlegView));
+  }, [user, view, synlegView]);
 
   // Automatisk utlogging etter 5 minutt utan aktivitet.
   useIdleLogout(!!user, logout, 5);
@@ -78,10 +101,11 @@ function App() {
     if (ventandeVis.current) window.history.replaceState(null, '', window.location.pathname);
   }, []);
 
-  // Ved innlogging: gå til sida frå varselet, elles til dashbordet.
+  // Ved innlogging: gå til sida frå varselet, elles bli på sida i adressa.
   useEffect(() => {
-    gaaTil(ventandeVis.current ?? { vis: 'dashbord', dato: null });
+    if (ventandeVis.current) gaaTil(ventandeVis.current);
     if (user?.id) ventandeVis.current = null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   // Varsel trykt medan appen alt var open: service workeren ber oss byte side.
@@ -102,10 +126,10 @@ function App() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex' }}>
-      <Sidebar view={view} setView={go} isMobile={isMobile} open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <Sidebar view={synlegView} setView={go} isMobile={isMobile} open={menuOpen} onClose={() => setMenuOpen(false)} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <Header setView={go} isMobile={isMobile} onMenu={() => setMenuOpen(true)} />
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto' }}>
+        <main style={{ flex: 1, overflowY: 'auto', overflowX: 'auto', paddingBottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom))' : 0 }}>
           <div style={{ maxWidth: 1440, margin: '0 auto', width: '100%' }}>
             {dataLoading ? (
               <DashboardSkeleton />
@@ -113,20 +137,21 @@ function App() {
               <div style={{ padding: 40, textAlign: 'center', color: 'var(--danger)' }}>Kunne ikkje laste data: {error}</div>
             ) : (
               <Suspense fallback={<DashboardSkeleton />}>
-                {view === 'dashbord' && <Dashboard setView={go} />}
-                {view === 'ansatte' && <Ansatte />}
-                {view === 'timeliste' && <Timeliste key={visDato ?? 'i-dag'} startDato={visDato} />}
-                {view === 'vaktplan' && <Vaktplan key={visDato ?? 'i-dag'} startDato={visDato} />}
-                {view === 'oppgaver' && <Oppgaver />}
-                {view === 'bestilling' && <Bestillinger />}
-                {view === 'dokument' && <Dokument />}
-                {view === 'rapporter' && <Rapporter />}
-                {view === 'innstillinger' && <Innstillinger setView={go} />}
+                {synlegView === 'dashbord' && <><VarselTips setView={go} /><Dashboard setView={go} /></>}
+                {synlegView === 'ansatte' && <Ansatte />}
+                {synlegView === 'timeliste' && <Timeliste key={visDato ?? 'i-dag'} startDato={visDato} />}
+                {synlegView === 'vaktplan' && <Vaktplan key={visDato ?? 'i-dag'} startDato={visDato} />}
+                {synlegView === 'oppgaver' && <Oppgaver />}
+                {synlegView === 'bestilling' && <Bestillinger />}
+                {synlegView === 'dokument' && <Dokument />}
+                {synlegView === 'rapporter' && <Rapporter />}
+                {synlegView === 'innstillinger' && <Innstillinger setView={go} />}
               </Suspense>
             )}
           </div>
-        </div>
+        </main>
       </div>
+      {isMobile && <BottomNav view={synlegView} setView={go} onMeir={() => setMenuOpen(true)} />}
       <Toaster />
     </div>
   );

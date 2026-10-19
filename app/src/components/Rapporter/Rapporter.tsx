@@ -34,7 +34,7 @@ export function Rapporter() {
 
   const kort = [
     { label: 'Timar', verdi: fmt(totalTimarAlle), farge: '#11788a' },
-    { label: 'Lønn (timeansatte)', verdi: fmtKr(totalKrAlle), farge: '#2f9e6f' },
+    { label: 'Løn (timeløna)', verdi: fmtKr(totalKrAlle), farge: '#2f9e6f' },
     { label: 'Ventar godkjenning', verdi: String(totalVentar), farge: '#d8920f' },
     { label: 'Fullførte oppgåver', verdi: String(fullforteOppgaver), farge: '#6a5acd' },
     { label: 'Aktive bestillingar', verdi: String(aktiveBestillingar), farge: '#e08a1e' },
@@ -44,8 +44,8 @@ export function Rapporter() {
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 920 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Rapporter</h1>
-          <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Nøkkeltall for {periode === 'uke' ? 'denne veka' : 'denne månaden'}</div>
+          <h1 style={{ fontFamily: "'Geist'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Rapportar</h1>
+          <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Nøkkeltal for {periode === 'uke' ? 'denne veka' : 'denne månaden'}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {(['uke', 'manad'] as Periode[]).map((p) => (
@@ -74,10 +74,10 @@ export function Rapporter() {
 
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', boxShadow: 'var(--shadow-card)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', padding: '12px 18px', fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.4px', borderBottom: '1px solid var(--divider)', background: 'var(--surface-alt)' }}>
-          <span>Ansatt</span>
+          <span>Tilsett</span>
           <span>Timar</span>
           <span>Ventar</span>
-          <span>Lønn</span>
+          <span>Løn</span>
         </div>
         {rader.map(({ a, totalTimar, ventar, kr }) => (
           <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--divider)' }}>

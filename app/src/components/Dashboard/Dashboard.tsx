@@ -12,6 +12,7 @@ import { ShiftModal } from '../Vaktplan/ShiftModal';
 import { TaskModal } from '../Oppgaver/TaskModal';
 import { OrderModal } from '../Bestillinger/OrderModal';
 import type { View } from '../../lib/view';
+import { alder } from '../../lib/bestilling';
 
 const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', boxShadow: 'var(--shadow-card)' } as const;
 const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 9 } as const;
@@ -48,18 +49,25 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const ventandeTimar = entries.filter((e) => weekDays.includes(e.date) && e.status === 'venter').length;
   const ufordelteOppgaver = tasks.filter((x) => x.ansatt === 'ufordelt').length;
   const ankomneBestillingar = orders.filter((o) => o.status === 'komen' && !o.varsla);
+  const gamleBestillingar = orders.filter((o) => alder(o, t).gammal).length;
 
   const varsler: { key: string; tekst: string; view: View }[] = [
-    ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønsker å bytte vakt ${s.dag}`, view: 'vaktplan' as View })),
+    ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønskjer å bytte vakt ${s.dag}`, view: 'vaktplan' as View })),
     ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${ventandeTimar} timelister manglar godkjenning`, view: 'timeliste' as View }] : []),
     ...ankomneBestillingar.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),
+    ...(gamleBestillingar > 0 ? [{ key: 'gamle', tekst: `${gamleBestillingar} bestillingar har stått lenge`, view: 'bestilling' as View }] : []),
     ...(ufordelteOppgaver > 0 ? [{ key: 'oppgaver', tekst: `${ufordelteOppgaver} ufordelte oppgåver`, view: 'oppgaver' as View }] : []),
   ].slice(0, 6);
 
   // ---- nøkkeltal (topp) ----
   const totalTimarUke = entries.filter((e) => weekDays.includes(e.date)).reduce((acc, e) => acc + timar(e), 0);
-  const timarForrigeUke = entries.filter((e) => forrigeVeke.includes(e.date)).reduce((acc, e) => acc + timar(e), 0);
-  const timarTrend = timarForrigeUke > 0 ? Math.round(((totalTimarUke - timarForrigeUke) / timarForrigeUke) * 100) : null;
+  // Trend: samanlikn dagane som er ferdige denne veka med dei same dagane
+  // førre veke. Elles ser måndag morgon alltid ut som «↓ 100 %».
+  const ferdigeDagar = weekDays.filter((d) => d < t).length;
+  const sumDagar = (dagar: string[]) => entries.filter((e) => dagar.includes(e.date)).reduce((acc, e) => acc + timar(e), 0);
+  const hittilNo = sumDagar(weekDays.slice(0, ferdigeDagar));
+  const hittilForrige = sumDagar(forrigeVeke.slice(0, ferdigeDagar));
+  const timarTrend = ferdigeDagar > 0 && hittilForrige > 0 ? Math.round(((hittilNo - hittilForrige) / hittilForrige) * 100) : null;
   const aktiveBestillingar = orders.filter((o) => o.status !== 'henta').length;
   const opneOppgaver = tasks.filter((x) => !x.ferdig).length;
 
@@ -309,7 +317,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         {/* Kolonne 2: denne uka + oppgåver */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
           <div style={cardStyle}>
-            <div style={labelStyle}>Denne uka</div>
+            <div style={labelStyle}>Denne veka</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {timarPerAnsatt.map(({ a, t: tt }) => (
                 <div key={a.id}>
@@ -362,7 +370,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         {/* Kolonne 3: ansatte + ferie */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
           <div style={cardStyle}>
-            <div style={labelStyle}>Ansatte</div>
+            <div style={labelStyle}>Tilsette</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {ansatte.map((a) => {
                 const paJobb = jobbarIdagIds.includes(a.id);

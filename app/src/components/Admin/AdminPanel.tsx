@@ -70,7 +70,7 @@ export function AdminPanel({ onClose }: { onClose: () => void }) {
             <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 10 }}>Send melding</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <select value={til} onChange={(e) => setTil(e.target.value as 'alle' | EmployeeId)} style={inputStyle}>
-                <option value="alle">Alle ansatte</option>
+                <option value="alle">Alle tilsette</option>
                 {delegerbare.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
               </select>
               <textarea
