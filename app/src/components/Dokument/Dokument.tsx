@@ -27,7 +27,11 @@ export function Dokument() {
   const [filter, setFilter] = useState('Alle');
   const [docTarget, setDocTarget] = useState<Doc | 'new' | null>(null);
 
-  const filtered = docs.filter((d) => filter === 'Alle' || d.kategori === filter);
+  const [sok, setSok] = useState('');
+  const q = sok.trim().toLowerCase();
+  const filtered = docs
+    .filter((d) => filter === 'Alle' || d.kategori === filter)
+    .filter((d) => !q || [d.tittel, d.notat, d.fil_namn].some((f) => (f || '').toLowerCase().includes(q)));
 
   return (
     <div className="side" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -46,6 +50,15 @@ export function Dokument() {
           <b>{manglarMine} HMS-dokument</b> ventar på at du stadfestar at du har lese {manglarMine === 1 ? 'det' : 'dei'}.
         </div>
       )}
+
+      <input
+        type="search"
+        value={sok}
+        onChange={(e) => setSok(e.target.value)}
+        placeholder="Søk i dokument …"
+        aria-label="Søk i dokument"
+        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontFamily: "'Geist Variable'", fontSize: 14, color: 'var(--text)', maxWidth: 420 }}
+      />
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {FILTERS.map((f) => (

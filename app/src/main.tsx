@@ -12,9 +12,11 @@ import { AnsatteProvider } from './context/AnsatteContext'
 import { registrerServiceWorker } from './lib/push'
 import { DEMO } from './lib/view'
 import { DemoMerke } from './demo/DemoMerke'
+import { visUhandterteFeil } from './lib/toast'
 
 // Demo-fila blir opna lokalt utan nett: ingen service worker/push der.
 if (!DEMO) registrerServiceWorker()
+visUhandterteFeil()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { useAnsatte } from '../../context/AnsatteContext';
+import { useAuth } from '../../context/AuthContext';
 import { PRIORITET, OPPGAVE_KAT, type Prioritet } from '../../constants';
 import { today, datoKort } from '../../lib/dates';
 import { TaskModal } from './TaskModal';
@@ -13,15 +14,19 @@ export function Oppgaver() {
   const { tasks, moveTask, saveTask, completeTask } = useAppData();
   const { ansatte } = useAnsatte();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   const [taskTarget, setTaskTarget] = useState<{ existing?: Task; defaultAnsatt?: Task['ansatt'] } | null>(null);
   const [visFullforte, setVisFullforte] = useState(false);
+  const [utval, setUtval] = useState<'alle' | 'mine' | 'forseinka'>('alle');
   const dragTaskId = useRef<string | null>(null);
   const t = today();
 
   const KOL_DEF: { id: Task['ansatt']; tittel: string; farge: string }[] = [
     { id: 'ufordelt', tittel: 'Ufordelt', farge: '#9aa4b2' },
     ...ansatte.map((a) => ({ id: a.id, tittel: a.navn, farge: a.farge })),
-  ];
+  ].filter((k) => utval !== 'mine' || k.id === 'ufordelt' || k.id === user?.id);
+  const forseinka = (x: Task) => !x.ferdig && !!x.frist && x.frist < t;
+  const talForseinka = tasks.filter(forseinka).length;
 
   const sorter = (a: Task, b: Task) => {
     // Forfalne først, så etter frist (med frist før utan), så prioritet.
@@ -37,6 +42,22 @@ export function Oppgaver() {
     <div style={{ padding: isMobile ? 16 : 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
         <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Oppgåver</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {([['alle', 'Alle'], ['mine', 'Mine'], ['forseinka', `Forseinka (${talForseinka})`]] as const).map(([k, l]) => (
+            <button
+              key={k}
+              onClick={() => setUtval(k)}
+              aria-pressed={utval === k}
+              style={{
+                padding: '7px 13px', borderRadius: 9, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 12.5, fontWeight: 600,
+                background: utval === k ? 'var(--brand-strong)' : 'var(--surface)',
+                color: utval === k ? 'var(--on-brand)' : k === 'forseinka' && talForseinka > 0 ? 'var(--danger)' : 'var(--text-secondary)',
+              }}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
         <label style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>
           <input type="checkbox" checked={visFullforte} onChange={(e) => setVisFullforte(e.target.checked)} style={{ width: 16, height: 16, cursor: 'pointer' }} />
           Vis fullførte
@@ -52,7 +73,7 @@ export function Oppgaver() {
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `repeat(${KOL_DEF.length},minmax(190px,1fr))`, gap: 14 }}>
         {KOL_DEF.map((k) => {
           const kolTasks = tasks
-            .filter((t2) => t2.ansatt === k.id && (visFullforte || !t2.ferdig))
+            .filter((t2) => t2.ansatt === k.id && (visFullforte || !t2.ferdig) && (utval !== 'forseinka' || forseinka(t2)))
             .sort(sorter);
           if (isMobile && kolTasks.length === 0) return null;
           return (

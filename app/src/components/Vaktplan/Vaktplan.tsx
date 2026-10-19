@@ -3,7 +3,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { DAGER_VAKTPLAN, FERIE_STYL } from '../../constants';
-import { addDays, mondayOf, today, isoWeek, parseDate, weekdayIdx, shiftMonth, MND, UKE_KORT, datoIntervall, talDagar, skiftFraTid } from '../../lib/dates';
+import { addDays, mondayOf, today, isoWeek, parseDate, weekdayIdx, shiftMonth, MND, UKE_KORT, datoIntervall, talDagar, skiftFraTid, fmt } from '../../lib/dates';
 import { helligdagFor, halvdagFor } from '../../lib/helligdagar';
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
@@ -39,7 +39,7 @@ function udekt(open: string, vakter: Shift[]): [string, string][] {
 
 /** startDato: opne på veka til denne datoen (t.d. frå eit push-varsel). */
 export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
-  const { shifts, swaps, ferie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, saveShift, deleteShift, saveFerie } = useAppData();
+  const { shifts, swaps, ferie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, kopierVeke, saveShift, deleteShift, saveFerie } = useAppData();
   const { user } = useAuth();
   const { findAnsatt, ansatte } = useAnsatte();
   const isMobile = useIsMobile();
@@ -69,6 +69,13 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
     if (window.confirm('Dette slettar alle vaktene denne veka og fyller inn standardveka på nytt. Halde fram?')) {
       applyStandardveke(vpWeek);
     }
+  };
+
+  const kopierForreVeke = () => {
+    const forre = addDays(vpWeek, -7);
+    const n = shifts.filter((s) => s.date >= forre && s.date < vpWeek).length;
+    if (n === 0) { window.alert('Det er ingen vakter i førre veke å kopiere.'); return; }
+    if (window.confirm(`Kopiere ${n} vakter frå førre veke? Vaktene som alt ligg i denne veka blir erstatta.`)) kopierVeke(forre, vpWeek);
   };
 
   const lagreSomStandard = () => {
@@ -123,6 +130,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
           <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
             <button onClick={() => setStandardOpen(true)} style={btnGhost} title="Rediger malen for standardveka">Rediger standardveke</button>
             <button onClick={lagreSomStandard} style={btnGhost} title="Lagre vaktene i denne veka som standardveke">Lagre denne veka</button>
+            <button onClick={kopierForreVeke} style={btnGhost} title="Kopier alle vaktene frå førre veke">⧉ Kopier førre veke</button>
             <button onClick={fyllVeke} style={{ ...btnGhost, color: 'var(--brand-strong)', borderColor: 'var(--brand)' }}>↻ Fyll frå standardveke</button>
           </div>
         )}
@@ -169,6 +177,9 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--dag-amber-tekst)', marginTop: 1 }}>{halvdag}</div>
                   ) : (
                     <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 1 }}>Ope {d.open}</div>
+                  )}
+                  {dayShifts.length > 0 && (
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-label)', marginTop: 2 }}>{fmt(dayShifts.reduce((s, x) => s + (tilMin(x.slutt) - tilMin(x.start)) / 60, 0))} t planlagt</div>
                   )}
                 </div>
                 {erIDag && <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--on-brand)', background: 'var(--brand)', borderRadius: 999, padding: '2px 8px' }}>I dag</span>}
@@ -338,12 +349,45 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
           .filter((d) => !helligdagFor(d.date))
           .map((d) => ({ d, hol: udekt(d.open, shifts.filter((s) => s.date === d.date)) }))
           .filter((x) => x.hol.length > 0);
+        // Konfliktar: same person på to vakter samtidig, eller vakt på ein dag
+        // dei har sagt at dei ikkje kan jobbe / har ferie.
+        const konfliktar: string[] = [];
+        for (const d of days) {
+          const dagens = shifts.filter((s) => s.date === d.date);
+          for (const s of dagens) {
+            const namn = findAnsatt(s.ansatt).navn;
+            const kort = `${d.kort} ${parseDate(d.date).getDate()}.`;
+            if (dagens.some((x) => x.id > s.id && x.ansatt === s.ansatt && tilMin(x.start) < tilMin(s.slutt) && tilMin(s.start) < tilMin(x.slutt))) {
+              konfliktar.push(`${kort}: ${namn} har to vakter som overlappar`);
+            }
+            if (unavailable.some((u) => u.ansatt === s.ansatt && u.dato === d.date)) konfliktar.push(`${kort}: ${namn} har vakt, men har meldt at hen ikkje kan jobbe`);
+            const fri = ferie.find((f) => f.ansatt === s.ansatt && f.fra && f.til && f.fra <= d.date && d.date <= f.til);
+            if (fri) konfliktar.push(`${kort}: ${namn} har vakt, men er registrert med ${fri.type.toLowerCase()}`);
+          }
+        }
+        const timarPerTilsett = ansatte
+          .map((a) => ({ a, t: shifts.filter((s) => s.ansatt === a.id && days.some((d) => d.date === s.date)).reduce((sum, s) => sum + (tilMin(s.slutt) - tilMin(s.start)) / 60, 0) }))
+          .filter((x) => x.t > 0);
         return (
           <div style={{ background: 'var(--hero-grad)', color: 'var(--hero-fg)', borderRadius: 16, padding: '16px 18px', boxShadow: '0 10px 30px rgba(12,90,105,0.28)' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--hero-sub)', marginBottom: 10 }}>Bemanning denne veka</div>
-            {hol.length === 0 ? (
-              <div style={{ fontSize: 13.5, fontWeight: 600 }}>✓ Alle opningstider er dekte.</div>
-            ) : (
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--hero-sub)', marginBottom: 10 }}>Bemanning veke {isoWeek(vpWeek)}</div>
+            {timarPerTilsett.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                {timarPerTilsett.map(({ a, t }) => (
+                  <span key={a.id} style={{ fontSize: 12.5, fontWeight: 600, background: 'rgba(255,255,255,0.14)', borderRadius: 999, padding: '4px 11px' }}>
+                    {a.navn.split(' ')[0]} · {fmt(t)} t
+                  </span>
+                ))}
+              </div>
+            )}
+            {konfliktar.length > 0 && (
+              <ul style={{ paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6, marginBottom: 8 }}>
+                {konfliktar.map((k) => <li key={k}>⚠ {k}</li>)}
+              </ul>
+            )}
+            {hol.length === 0 && konfliktar.length === 0 ? (
+              <div style={{ fontSize: 13.5, fontWeight: 600 }}>✓ Alle opningstider er dekte, og ingen konfliktar.</div>
+            ) : hol.length === 0 ? null : (
               <ul style={{ paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6 }}>
                 {hol.map(({ d, hol: h }) => (
                   <li key={d.key}><b>{d.kort} {parseDate(d.date).getDate()}.</b>: ingen på vakt {h.map(([a, b]) => `${a}–${b}`).join(', ')}</li>

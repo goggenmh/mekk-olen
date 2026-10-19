@@ -52,6 +52,7 @@ interface AppData {
   standardveke: StandardvekeEntry[];
   saveStandardveke: (entries: Omit<StandardvekeEntry, 'id'>[]) => Promise<void>;
   applyStandardveke: (weekStart: string) => Promise<void>;
+  kopierVeke: (fraMandag: string, tilMandag: string) => Promise<void>;
 
   createSwap: (swap: Omit<ShiftSwap, 'id' | 'status'>) => Promise<void>;
   approveSwap: (id: string) => Promise<void>;
@@ -295,6 +296,25 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     toast('Veka fylt frå standardveke');
   };
 
+  // Kopier alle vaktene frå éi veke til ei anna (erstattar vaktene der).
+  const kopierVeke: AppData['kopierVeke'] = async (fraMandag, tilMandag) => {
+    const fraDatoar = [0, 1, 2, 3, 4, 5].map((i) => addDays(fraMandag, i));
+    const tilDatoar = [0, 1, 2, 3, 4, 5].map((i) => addDays(tilMandag, i));
+    const kjelde = shifts.filter((s) => fraDatoar.includes(s.date));
+    const { error: delErr } = await supabase.from('shifts').delete().in('date', tilDatoar);
+    if (delErr) throw delErr;
+    let innsette: Shift[] = [];
+    if (kjelde.length > 0) {
+      const nye = kjelde.map((s) => ({ ansatt: s.ansatt, date: tilDatoar[fraDatoar.indexOf(s.date)], start: s.start, slutt: s.slutt, skift: s.skift }));
+      const { data, error: err } = await supabase.from('shifts').insert(nye).select();
+      if (err) throw err;
+      innsette = (data || []).map(mapShift);
+      varsle({ type: 'ny_vakt', shift_ids: innsette.map((x) => x.id) });
+    }
+    setShifts((prev) => [...prev.filter((x) => !tilDatoar.includes(x.date)), ...innsette]);
+    toast(`Kopierte ${innsette.length} vakter`);
+  };
+
   // ---- swaps ----
   const createSwap: AppData['createSwap'] = async (swap) => {
     const { data, error: err } = await supabase.from('shift_swaps').insert({
@@ -518,7 +538,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       canApprove, setKanGodkjenne,
       sendMelding, deleteMelding,
       saveEntry, deleteEntry, approveEmployeeEntries,
-      saveShift, deleteShift, moveShiftDate, saveStandardveke, applyStandardveke,
+      saveShift, deleteShift, moveShiftDate, saveStandardveke, applyStandardveke, kopierVeke,
       createSwap, approveSwap, declineSwap,
       saveFerie, deleteFerie, saveUnavailable, removeUnavailable,
       saveTask, deleteTask, moveTask, completeTask,

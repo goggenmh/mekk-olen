@@ -45,6 +45,15 @@ export function lagTestdata(): Record<string, Rad[]> {
     .filter((s) => s.date <= t)
     .map((s) => ({ id: id('time'), ansatt: s.ansatt, date: s.date, start: s.start, slutt: s.slutt, pause: s.skift === 'Formiddag' || s.skift === 'Laurdag' ? 30 : 0, status: s.date < man ? 'godkjent' : 'venter' }));
 
+  // Litt realistisk støy: Kari jobba lenger enn planlagt i dag, og Ingrid har
+  // ikkje ført timar for ein vakt førre veke (blir vist som avvik/«manglar»).
+  const kariIdag = time_entries.find((e) => e.ansatt === 'kari' && e.date === t);
+  if (kariIdag) kariIdag.slutt = '16:30';
+  const ingridHol = time_entries.findIndex((e) => e.ansatt === 'ingrid' && e.date === dag(-6));
+  if (ingridHol >= 0) time_entries.splice(ingridHol, 1);
+  const olaForre = time_entries.find((e) => e.ansatt === 'ola' && e.date === dag(-3));
+  if (olaForre) olaForre.slutt = '19:15';
+
   const kveldNeste = shifts.find((s) => s.ansatt === 'ola' && s.date === dag(9));
   const shift_swaps: Rad[] = kveldNeste
     ? [{ id: id('byte'), shift_id: kveldNeste.id, fra: 'ola', til: 'ingrid', dag: 'onsdag', tid: '14:00–18:00', status: 'pending' }]
@@ -54,7 +63,8 @@ export function lagTestdata(): Record<string, Rad[]> {
     { id: id('ferie'), ansatt: 'jonas', type: 'Ferie', tekst: 'Haustferie', fra: dag(14), til: dag(19) },
     { id: id('ferie'), ansatt: 'ingrid', type: 'Kurs', tekst: 'Truckførarkurs', fra: dag(10), til: dag(10) },
   ];
-  const utilgjengeleg: Rad[] = [{ id: id('util'), ansatt: 'ola', dato: dag(8), grunn: 'Tannlege' }];
+  // Ola har vakt denne dagen òg – blir vist som konflikt i vaktplanen.
+  const utilgjengeleg: Rad[] = [{ id: id('util'), ansatt: 'ola', dato: dag(9), grunn: 'Tannlege' }];
 
   const tasks: Rad[] = [
     { id: id('oppg'), tittel: 'Varetelling hageavdelinga', detalj: 'Tel opp gjødsel, jord og frø før sesongslutt.', prioritet: 'høg', ansatt: 'ola', ferdig: false, frist: addDays(t, -1), kategori: 'Lager', gjentak: 'ingen', sjekkliste: [{ tekst: 'Gjødsel', ferdig: true }, { tekst: 'Jord', ferdig: false }, { tekst: 'Frø', ferdig: false }] },

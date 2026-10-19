@@ -13,6 +13,7 @@ import { TaskModal } from '../Oppgaver/TaskModal';
 import { OrderModal } from '../Bestillinger/OrderModal';
 import type { View } from '../../lib/view';
 import { alder } from '../../lib/bestilling';
+import { ustadfesta } from '../../lib/dokument';
 
 const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', boxShadow: 'var(--shadow-card)' } as const;
 const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 9 } as const;
@@ -20,7 +21,7 @@ const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 const PRI_RANG: Record<string, number> = { høg: 0, medium: 1, låg: 2 };
 
 export function Dashboard({ setView }: { setView: (v: View) => void }) {
-  const { entries, shifts, swaps, tasks, orders, ferie, meldinger, canApprove } = useAppData();
+  const { entries, shifts, swaps, tasks, orders, ferie, meldinger, docs, stadfestingar, canApprove } = useAppData();
   const { user } = useAuth();
   const kanLageVakt = canApprove(user?.id);
   const { ansatte, findAnsatt } = useAnsatte();
@@ -55,14 +56,20 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const ufordelteOppgaver = tasks.filter((x) => x.ansatt === 'ufordelt').length;
   const ankomneBestillingar = orders.filter((o) => o.status === 'komen' && !o.varsla);
   const gamleBestillingar = orders.filter((o) => alder(o, t).gammal).length;
+  const forseinka = tasks.filter((x) => !x.ferdig && x.frist && x.frist < t && (kanLageVakt || x.ansatt === user?.id)).length;
+  const ulesneHms = ustadfesta(docs, stadfestingar, user?.id);
 
   const varsler: { key: string; tekst: string; view: View }[] = [
     ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønskjer å bytte vakt ${s.dag}`, view: 'vaktplan' as View })),
     ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${ventandeTimar} timelister manglar godkjenning`, view: 'timeliste' as View }] : []),
     ...ankomneBestillingar.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),
     ...(gamleBestillingar > 0 ? [{ key: 'gamle', tekst: `${gamleBestillingar} bestillingar har stått lenge`, view: 'bestilling' as View }] : []),
+    ...(forseinka > 0 ? [{ key: 'forseinka', tekst: `${forseinka} oppgåver har passert fristen`, view: 'oppgaver' as View }] : []),
+    ...(ulesneHms > 0 ? [{ key: 'hms', tekst: `${ulesneHms} HMS-dokument ventar på stadfesting`, view: 'dokument' as View }] : []),
     ...(ufordelteOppgaver > 0 ? [{ key: 'oppgaver', tekst: `${ufordelteOppgaver} ufordelte oppgåver`, view: 'oppgaver' as View }] : []),
-  ].slice(0, 6);
+  ].slice(0, 8);
+  // Leiarar får «Treng handling» øvst på sida; tilsette ser varsla lenger ned.
+  const leiarVisning = kanLageVakt;
 
   // ---- nøkkeltal (topp) ----
   const totalTimarUke = entries.filter((e) => weekDays.includes(e.date)).reduce((acc, e) => acc + timar(e), 0);
@@ -99,7 +106,8 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
 
   // ---- neste vakt for innlogga brukar ----
   const mineFramtidige = shifts
-    .filter((s) => s.ansatt === user?.id && s.date >= t)
+    // Vakter som alt er ferdige i dag, er ikkje «neste vakt».
+    .filter((s) => s.ansatt === user?.id && (s.date > t || (s.date === t && s.slutt > klokke)))
     .slice()
     .sort((a, b) => (a.date !== b.date ? (a.date < b.date ? -1 : 1) : (a.start < b.start ? -1 : 1)));
   const nesteVakt = mineFramtidige[0];
@@ -126,6 +134,10 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
       const ao = a.frist && a.frist < t ? 0 : 1;
       const bo = b.frist && b.frist < t ? 0 : 1;
       if (ao !== bo) return ao - bo;
+      // Tilsette ser sine eigne oppgåver først.
+      const am = a.ansatt === user?.id ? 0 : 1;
+      const bm = b.ansatt === user?.id ? 0 : 1;
+      if (!kanLageVakt && am !== bm) return am - bm;
       if (a.frist && b.frist && a.frist !== b.frist) return a.frist < b.frist ? -1 : 1;
       if (!!a.frist !== !!b.frist) return a.frist ? -1 : 1;
       return (PRI_RANG[a.prioritet] ?? 1) - (PRI_RANG[b.prioritet] ?? 1);
@@ -138,7 +150,6 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const [apnTid, stengTid] = (dagDef?.open || '').split('–');
 
   // ---- ansattstatus ----
-  const jobbarIdagIds = shifts.filter((s) => s.date === t).map((s) => s.ansatt);
   // Pågåande og kommande ferie/fri først, avslutta blir droppa.
   const dashFerie = ferie
     .filter((f) => !f.til || f.til >= t)
@@ -189,6 +200,25 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
           </button>
         ))}
       </div>
+
+      {leiarVisning && varsler.length > 0 && (
+        <div style={{ ...cardStyle, borderColor: 'var(--accent)' }}>
+          <div style={{ ...labelStyle, color: 'var(--accent)' }}>Treng handling</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(230px,1fr))', gap: 8 }}>
+            {varsler.map((v) => (
+              <button
+                key={v.key}
+                onClick={() => setView(v.view)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}
+              >
+                <span style={{ display: 'flex', color: 'var(--accent)', flex: 'none' }}><Icon name="bell" size={15} /></span>
+                <span style={{ flex: 1 }}>{v.tekst}</span>
+                <span style={{ color: 'var(--text-faint)' }}>›</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* nøkkeltal – samla i eitt panel */}
       <div style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
@@ -270,7 +300,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             </div>
           )}
 
-          {varsler.length > 0 && (
+          {!leiarVisning && varsler.length > 0 && (
             <div style={cardStyle}>
               <div style={labelStyle}>Varslingssenter</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -378,13 +408,19 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             <div style={labelStyle}>Tilsette</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {ansatte.map((a) => {
-                const paJobb = jobbarIdagIds.includes(a.id);
+                // «På jobb no» ut frå klokka, ikkje berre om dei har vakt i dag.
+                const minNo = now.getHours() * 60 + now.getMinutes();
+                const tilMin = (s: string) => { const [h, m] = s.split(':').map(Number); return h * 60 + m; };
+                const dagensVakter = shifts.filter((s) => s.date === t && s.ansatt === a.id);
+                const paJobb = dagensVakter.some((s) => tilMin(s.start) <= minNo && minNo < tilMin(s.slutt));
+                const seinare = dagensVakter.filter((s) => tilMin(s.start) > minNo).sort((x, y) => (x.start < y.start ? -1 : 1))[0];
+                const statusTekst = paJobb ? 'På jobb no' : seinare ? `Kjem ${seinare.start}` : dagensVakter.length ? 'Ferdig for i dag' : 'Fri';
                 return (
                   <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', background: paJobb ? 'var(--brand)' : 'var(--border)' }} />
                     <Avatar init={a.init} farge={a.farge} size={26} fontSize={10} />
                     <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>{a.navn}</span>
-                    <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{paJobb ? 'På jobb' : 'Fri'}</span>
+                    <span style={{ fontSize: 11.5, color: paJobb ? 'var(--brand-strong)' : 'var(--text-muted)', fontWeight: paJobb ? 700 : 400 }}>{statusTekst}</span>
                   </div>
                 );
               })}

@@ -67,6 +67,12 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
 
   const exportPdf = () => window.print();
 
+  const ventandeVeke = entries.filter((e) => dates.includes(e.date) && e.status === 'venter').length;
+  const godkjennAlle = async () => {
+    if (!window.confirm(`Godkjenne alle ${ventandeVeke} timeføringane i veke ${isoWeek(weekStart)}? Sjekk avvika først.`)) return;
+    for (const a of ansatte) await approveEmployeeEntries(a.id, dates);
+  };
+
   const exportLonn = () => {
     const [my, mm] = monthAnchor.split('-').map(Number);
     const inMonth = (dt: string) => dt.slice(0, 7) === monthAnchor;
@@ -101,6 +107,9 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
         </div>
         <div className="no-print" style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           {erLeiar(user) && <button onClick={exportLonn} style={btnGhost}>Lønsfil</button>}
+          {maaGodkjenne && ventandeVeke > 0 && mode === 'uke' && (
+            <button onClick={godkjennAlle} style={{ ...btnGhost, background: '#2f9e6f', color: '#fff', borderColor: '#2f9e6f' }}>Godkjenn alle ({ventandeVeke})</button>
+          )}
           <button onClick={exportCsv} style={btnGhost}>CSV</button>
           <button onClick={exportPdf} style={btnGhost}>PDF</button>
         </div>
@@ -150,6 +159,8 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
       <div style={{ display: 'flex', gap: 18, alignItems: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={dot('#2f9e6f')} /> Godkjent</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={dot('#d8920f')} /> Ventar</span>
+        <span><b style={{ color: 'var(--pill-amber-fg)' }}>plan</b> = avvik mot vaktplanen</span>
+        <span><b style={{ color: 'var(--danger)' }}>manglar</b> = vakt utan registrerte timar</span>
         <span>Normaltid 37,5 t/veke</span>
       </div>
 
@@ -206,6 +217,11 @@ function WeekTable({
   onApprove: (ansatt: TimeEntry['ansatt']) => void;
 }) {
   const { ansatte } = useAnsatte();
+  const { shifts } = useAppData();
+  // Planlagde timar ut frå vaktplanen, så avvik mot registrert tid syner.
+  const plan = (ansatt: string, d: string) => shifts
+    .filter((s) => s.ansatt === ansatt && s.date === d)
+    .reduce((sum, s) => { const [h1, m1] = s.start.split(':').map(Number); const [h2, m2] = s.slutt.split(':').map(Number); return sum + (h2 * 60 + m2 - h1 * 60 - m1) / 60; }, 0);
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'auto', boxShadow: 'var(--shadow-card)' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -243,15 +259,23 @@ function WeekTable({
                   const dagSum = es.reduce((s2, e) => s2 + timar(e), 0);
                   const dagVentar = es.some((e) => e.status === 'venter');
                   const erIdag = d === today();
+                  const p = plan(a.id, d);
+                  // Vaktplanen har ikkje pause, så samanlikn tid frå start til slutt.
+                  const brutto = es.reduce((s2, e) => s2 + timar(e) + (e.pause || 0) / 60, 0);
+                  const avvik = es.length > 0 && p > 0 && Math.abs(brutto - p) >= 0.25;
+                  const manglar = es.length === 0 && p > 0 && d < today();
                   return (
-                    <td key={d} style={{ ...td, textAlign: 'center', cursor: 'pointer', background: erIdag ? 'var(--brand-soft)' : undefined }} onClick={() => onCellClick(a.id, d)}>
+                    <td key={d} title={p > 0 ? `Planlagt ${fmt(p)} t` : undefined} style={{ ...td, textAlign: 'center', cursor: 'pointer', background: erIdag ? 'var(--brand-soft)' : undefined }} onClick={() => onCellClick(a.id, d)}>
                       {es.length > 0 ? (
                         <div style={{ lineHeight: 1.15 }}>
                           <span style={{ fontFamily: "'Geist Mono Variable'", fontWeight: 600, color: dagVentar ? '#b7830b' : 'var(--text)' }}>{fmt(dagSum)}</span>
                           {es.length > 1 && <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--brand)' }}>{es.length} bolkar</div>}
+                          {avvik && <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--pill-amber-fg)' }}>plan {fmt(p)}</div>}
                         </div>
+                      ) : manglar ? (
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--danger)' }}>manglar</span>
                       ) : (
-                        <span style={{ color: 'var(--text-faint2)' }}>–</span>
+                        <span style={{ color: 'var(--text-faint2)' }}>{p > 0 ? <span style={{ fontSize: 10.5 }}>plan {fmt(p)}</span> : '–'}</span>
                       )}
                     </td>
                   );
