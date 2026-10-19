@@ -149,6 +149,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
           style={{
             position: 'fixed', top: 0, left: 0, bottom: 0, width: 240, zIndex: 61,
             display: 'flex', flexDirection: 'column', gap: 1, padding: '16px 11px',
+            paddingTop: 'calc(16px + env(safe-area-inset-top))', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
             background: 'var(--rail-bg)', borderRight: '1px solid var(--rail-border)', overflowY: 'auto',
             transform: open ? 'translateX(0)' : 'translateX(-100%)', transition: 'transform 0.2s ease',
             boxShadow: open ? '0 0 40px rgba(0,0,0,0.3)' : 'none',

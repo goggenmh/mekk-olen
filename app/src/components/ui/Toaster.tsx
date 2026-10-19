@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react';
 import { subscribeToasts, type ToastItem } from '../../lib/toast';
+import { useIsMobile } from '../../lib/useIsMobile';
 
 export function Toaster() {
   const [items, setItems] = useState<ToastItem[]>([]);
+  const isMobile = useIsMobile();
   useEffect(() => subscribeToasts(setItems), []);
 
   return (
-    <div className="no-print" style={{ position: 'fixed', bottom: 20, right: 20, display: 'flex', flexDirection: 'column', gap: 8, zIndex: 200 }}>
+    <div className="no-print" style={{
+      position: 'fixed', display: 'flex', flexDirection: 'column', gap: 8, zIndex: 200,
+      // Mobil: over botnmenyen og heimelinja, sentrert.
+      ...(isMobile
+        ? { bottom: 'calc(76px + env(safe-area-inset-bottom))', left: 12, right: 12, alignItems: 'center' }
+        : { bottom: 20, right: 20 }),
+    }}>
       {items.map((i) => (
         <div
           key={i.id}
