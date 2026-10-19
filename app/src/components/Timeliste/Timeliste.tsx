@@ -9,8 +9,9 @@ import {
 import { TimeEntryModal } from './TimeEntryModal';
 import { useIsMobile } from '../../lib/useIsMobile';
 import { useLonTekst } from '../../lib/lon';
-import { trekkForPeriode } from '../../lib/skatt';
 import { erLeiar } from '../../lib/view';
+import { lastNedLonsfil } from '../../lib/lonsfil';
+import { toast } from '../../lib/toast';
 import type { TimeEntry } from '../../types';
 import { tekstPaFarge } from '../../lib/farge';
 
@@ -28,8 +29,9 @@ function downloadCsv(filename: string, rows: (string | number)[][]) {
 /** startDato: opne på veka/månaden til denne datoen (t.d. frå eit push-varsel). */
 export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
   const { entries, approveEmployeeEntries, canApprove } = useAppData();
-  const { ansatte } = useAnsatte();
+  const { ansatte, finnButikk } = useAnsatte();
   const { user } = useAuth();
+  const [lagarLonsfil, setLagarLonsfil] = useState(false);
   const isMobile = useIsMobile();
   const maaGodkjenne = canApprove(user?.id);
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
@@ -74,24 +76,18 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
     for (const a of ansatte) await approveEmployeeEntries(a.id, dates);
   };
 
-  const exportLonn = () => {
-    const [my, mm] = monthAnchor.split('-').map(Number);
-    const inMonth = (dt: string) => dt.slice(0, 7) === monthAnchor;
-    const rows: (string | number)[][] = [['Tilsett', 'Maaned', 'Timar', 'Sats (kr/t)', 'Brutto (kr)', 'Forskotstrekk (kr)', 'Netto (kr)', 'Skatt', 'Lonstype']];
-    const fra = `${monthAnchor}-01`;
-    const til = `${mm === 12 ? my + 1 : my}-${String(mm === 12 ? 1 : mm + 1).padStart(2, '0')}-01`;
-    ansatte.forEach((a) => {
-      const tot = entries.filter((e) => e.ansatt === a.id && inMonth(e.date) && e.status === 'godkjent').reduce((acc, e) => acc + timar(e), 0);
-      if (a.lonn !== 'time') {
-        rows.push([a.navn, `${MND[mm - 1]} ${my}`, fmt(tot), '', '', '', '', '', 'Fastløn']);
-        return;
-      }
-      const s = trekkForPeriode(a, entries, fra, til);
-      rows.push([a.navn, `${MND[mm - 1]} ${my}`, fmt(tot), a.sats, Math.round(s.brutto), s.trekk, Math.round(s.netto), s.forklaring, 'Timeløn']);
-    });
-    rows.push([]);
-    rows.push(['Berre godkjende timar er tatt med. Forskotstrekket er eit anslag ut frå skatteopplysningane under Tilsette – lønssystemet/a-meldinga er fasit.']);
-    downloadCsv(`mekk-olen-lonn-${monthAnchor}.csv`, rows);
+  const exportLonn = async () => {
+    setLagarLonsfil(true);
+    try {
+      await lastNedLonsfil({
+        ansatte, entries, maaned: monthAnchor,
+        butikk: finnButikk(user?.butikk_id)?.namn || 'MEKK Ølen',
+      });
+    } catch {
+      toast('Kunne ikkje lage lønsfila – prøv igjen', 'feil');
+    } finally {
+      setLagarLonsfil(false);
+    }
   };
 
   return (
@@ -113,7 +109,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
           ))}
         </div>
         <div className="no-print" style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-          {erLeiar(user) && <button onClick={exportLonn} style={btnGhost}>Lønsfil</button>}
+          {erLeiar(user) && <button onClick={exportLonn} disabled={lagarLonsfil} title={`Lønsgrunnlag for ${MND[Number(monthAnchor.split('-')[1]) - 1]} som Excel-fil`} style={btnGhost}>{lagarLonsfil ? 'Lagar…' : 'Lønsfil (Excel)'}</button>}
           {maaGodkjenne && ventandeVeke > 0 && mode === 'uke' && (
             <button onClick={godkjennAlle} style={{ ...btnGhost, background: '#2f9e6f', color: '#fff', borderColor: '#2f9e6f' }}>Godkjenn alle ({ventandeVeke})</button>
           )}
