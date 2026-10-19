@@ -127,28 +127,17 @@ export function FerieSide() {
         <div style={kort}>
           <div style={etikett}>Feriedagar {aar}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {saldoListe.map(({ a, s }) => {
-              const pst = (v: number) => `${Math.max(0, Math.min(100, (v / Math.max(1, s.rett)) * 100))}%`;
-              return (
-                <div key={a.id}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 5 }}>
-                    <Avatar init={a.init} farge={a.farge} size={24} fontSize={9.5} />
-                    <span style={{ fontWeight: 700, fontSize: 13.5, flex: 1 }}>{a.navn}</span>
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: s.att < 0 ? 'var(--danger)' : 'var(--text)' }}>{s.att} av {s.rett} att</span>
-                  </div>
-                  <div style={{ display: 'flex', height: 9, borderRadius: 6, overflow: 'hidden', background: 'var(--surface-alt)' }} title={`Brukt ${s.brukt} · planlagt ${s.planlagt} · søkt ${s.sokt}`}>
-                    <span style={{ width: pst(s.brukt), background: 'var(--brand-strong)' }} />
-                    <span style={{ width: pst(s.planlagt), background: 'var(--brand)', opacity: 0.55 }} />
-                    <span style={{ width: pst(s.sokt), background: 'var(--accent)', opacity: 0.6 }} />
-                  </div>
-                  <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 4 }}>
-                    Brukt {s.brukt} · planlagt {s.planlagt}{s.sokt ? ` · søkt ${s.sokt}` : ''}
-                  </div>
-                </div>
-              );
-            })}
+            {saldoListe.map(({ a, s }) => (
+              <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+                <Avatar init={a.init} farge={a.farge} size={24} fontSize={9.5} />
+                <span style={{ fontWeight: 700, fontSize: 13.5, flex: 1, minWidth: 120 }}>{a.navn}</span>
+                <span style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>
+                  <b style={{ color: 'var(--text)' }}>{s.brukt}</b> brukt · <b style={{ color: 'var(--text)' }}>{s.planlagt}</b> planlagt{s.sokt ? <> · <b style={{ color: 'var(--pill-amber-fg)' }}>{s.sokt}</b> søkt</> : null}
+                </span>
+              </div>
+            ))}
           </div>
-          <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 10 }}>Virkedagar (måndag–laurdag, utan raude dagar). Berre typen «Ferie» tel mot kvoten.</div>
+          <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 10 }}>Virkedagar (måndag–laurdag, utan raude dagar). Berre typen «Ferie» blir talt som feriedagar.</div>
         </div>
 
         <div style={kort}>

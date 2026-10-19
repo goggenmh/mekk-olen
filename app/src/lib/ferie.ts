@@ -3,9 +3,6 @@ import type { Ferie } from '../types';
 import { addDays, parseDate, today } from './dates';
 import { helligdagFor } from './helligdagar';
 
-/** Standard etter ferielova/tariff: 25 virkedagar (5 veker) i året. */
-export const STANDARD_FERIEDAGAR = 25;
-
 /** Virkedagar i perioden: måndag–laurdag, utan raude dagar (som ferielova reknar). */
 export function virkedagar(fra: string, til: string, innanforAar?: number): number {
   let n = 0;
@@ -18,20 +15,17 @@ export function virkedagar(fra: string, til: string, innanforAar?: number): numb
 }
 
 export interface Feriesaldo {
-  rett: number;
   /** Godkjend ferie som er avvikla (til og med i dag). */
   brukt: number;
   /** Godkjend ferie fram i tid. */
   planlagt: number;
   /** Søknader som ventar på svar. */
   sokt: number;
-  att: number;
 }
 
-/** Feriesaldo for éin tilsett i eit år (berre typen «Ferie» tel mot kvoten). */
+/** Feriedagar for éin tilsett i eit år (berre typen «Ferie» blir talt). */
 export function feriesaldo(a: Employee, ferie: Ferie[], aar = Number(today().slice(0, 4))): Feriesaldo {
   const t = today();
-  const rett = a.feriedagar ?? STANDARD_FERIEDAGAR;
   let brukt = 0, planlagt = 0, sokt = 0;
   for (const f of ferie) {
     if (f.ansatt !== a.id || f.type !== 'Ferie' || !f.fra || !f.til || f.status === 'avslatt') continue;
@@ -42,7 +36,7 @@ export function feriesaldo(a: Employee, ferie: Ferie[], aar = Number(today().sli
     const planFra = f.fra > t ? f.fra : addDays(t, 1);
     if (planFra <= f.til) planlagt += virkedagar(planFra, f.til, aar);
   }
-  return { rett, brukt, planlagt, sokt, att: rett - brukt - planlagt };
+  return { brukt, planlagt, sokt };
 }
 
 /** Andre tilsette som er borte (godkjend eller søkt) i same periode. */

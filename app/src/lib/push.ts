@@ -72,7 +72,9 @@ export type Hending =
   | { type: 'bytteonske'; swap_id: string }
   | { type: 'bytte_svar'; swap_id: string }
   | { type: 'timar_godkjent'; entry_ids: string[] }
-  | { type: 'timar_venter'; entry_ids: string[] };
+  | { type: 'timar_venter'; entry_ids: string[] }
+  | { type: 'ferie_soknad'; ferie_id: string }
+  | { type: 'ferie_svar'; ferie_id: string };
 
 /**
  * Varsle om ei hending. Servaren finn sjølv ut kven som skal ha varsel og

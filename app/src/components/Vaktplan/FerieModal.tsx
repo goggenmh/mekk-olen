@@ -5,7 +5,7 @@ import { useAnsatte } from '../../context/AnsatteContext';
 import { useAuth } from '../../context/AuthContext';
 import { FERIE_TYPER } from '../../constants';
 import { today, talDagar, datoIntervall } from '../../lib/dates';
-import { feriesaldo, overlappar, virkedagar } from '../../lib/ferie';
+import { overlappar, virkedagar } from '../../lib/ferie';
 import type { Ferie } from '../../types';
 
 /**
@@ -31,7 +31,6 @@ export function FerieModal({ existing, onClose }: { existing?: Ferie; onClose: (
   const dagar = fra && til && til >= fra ? talDagar(fra, til) : 0;
   const virke = fra && til && til >= fra ? virkedagar(fra, til) : 0;
   const tilsett = findAnsatt(forAnsatt);
-  const saldo = type === 'Ferie' ? feriesaldo(tilsett, ferie.filter((f) => f.id !== existing?.id), Number(fra.slice(0, 4))) : null;
   const andre = dagar > 0 ? overlappar({ id: existing?.id, ansatt: forAnsatt, fra, til }, ferie) : [];
   const vakter = dagar > 0 ? shifts.filter((s) => s.ansatt === forAnsatt && s.date >= fra && s.date <= til).length : 0;
 
@@ -89,11 +88,7 @@ export function FerieModal({ existing, onClose }: { existing?: Ferie; onClose: (
       {dagar > 0 && (
         <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
           {dagar} {dagar === 1 ? 'dag' : 'dagar'} · {virke} {virke === 1 ? 'virkedag' : 'virkedagar'}
-          {saldo && <> · {saldo.att - (existing?.status === 'avslatt' ? 0 : virke)} feriedagar att etter dette (av {saldo.rett})</>}
         </div>
-      )}
-      {saldo && saldo.att - virke < 0 && (
-        <div style={{ fontSize: 12.5, color: 'var(--danger)', fontWeight: 600 }}>Dette er meir enn feriedagane som er att i år.</div>
       )}
       {(andre.length > 0 || vakter > 0) && (
         <div style={{ fontSize: 12.5, background: 'var(--accent-soft)', borderRadius: 10, padding: '9px 11px', display: 'flex', flexDirection: 'column', gap: 3 }}>

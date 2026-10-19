@@ -8,6 +8,9 @@
 //   timar_venter    – nokon har ført timar som ventar på godkjenning
 //                     (til alle med godkjenne-rett; blir slått saman til
 //                     eitt varsel som blir oppdatert)
+//   ferie_soknad    – ein tilsett har søkt om ferie/fri (til godkjennarane)
+//   ferie_svar      – søknaden er godkjend/avslått, eller leiar har
+//                     registrert ferie/fri for deg (til den tilsette)
 //
 // Tryggleik: klienten seier berre KVA som skjedde (id-ar). Mottakarar og
 // tekst blir henta frå databasen her, avgrensa til butikken til den som
@@ -159,6 +162,28 @@ Deno.serve(async (req) => {
           body: `${meg.navn} har ført timar ${datoTekst(dato)}. ${n} ${n === 1 ? 'timeføring ventar' : 'timeføringar ventar'} no.`,
           url: timeliste(dato),
           tag: 'timar-venter',
+        });
+      }
+    } else if (type === 'ferie_soknad' || type === 'ferie_svar') {
+      const { data: f } = await admin.from('ferie').select('ansatt, type, fra, til, status, svar, behandla_av')
+        .eq('id', String(body.ferie_id || '')).eq('butikk_id', meg.butikk_id).maybeSingle();
+      const periode = f?.fra ? (f.til && f.til !== f.fra ? `${datoTekst(f.fra)}–${datoTekst(f.til)}` : datoTekst(f.fra)) : '';
+      const kva = ({ Ferie: 'ferie', Fri: 'fri', Kurs: 'kurs', Sjukmeld: 'sjukmelding' } as Record<string, string>)[f?.type || ''] || 'fri';
+      const url = `/?vis=ferie${f?.fra ? `&dato=${f.fra}` : ''}`;
+      if (f && type === 'ferie_soknad' && f.status === 'ventar' && f.ansatt === meg.id) {
+        meldingar.push({
+          til: ikkjeMeg(await godkjennarar(admin, meg.butikk_id)),
+          title: 'Søknad om ferie/fri',
+          body: `${meg.navn} søkjer om ${kva} ${periode}.`,
+          url,
+        });
+      } else if (f && type === 'ferie_svar' && f.behandla_av === meg.id && f.status !== 'ventar') {
+        const godkjend = f.status === 'godkjend';
+        meldingar.push({
+          til: ikkjeMeg([f.ansatt]),
+          title: godkjend ? 'Ferie/fri godkjend' : 'Søknad avslått',
+          body: `${godkjend ? `Du har fått ${kva}` : `Søknaden om ${kva}`} ${periode}${godkjend ? ' godkjend.' : ' vart avslått.'}${f.svar ? ` «${f.svar}»` : ''}`,
+          url,
         });
       }
     } else {

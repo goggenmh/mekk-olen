@@ -338,6 +338,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   };
 
   // ---- ferie ----
+  // Ny søknad → leiarane får varsel. Registrert direkte av leiar → den tilsette.
+  // Servaren sjekkar sjølv status og kven som gjorde det, så feil type blir ignorert.
+  const varsleFerie = (rad: { id: string; status?: string }) =>
+    varsle(rad.status === 'ventar' ? { type: 'ferie_soknad', ferie_id: rad.id } : { type: 'ferie_svar', ferie_id: rad.id });
   const saveFerie: AppData['saveFerie'] = async (f) => {
     // status: leiarar kan registrere direkte som godkjend; tilsette sender søknad
     // (databasen tvingar òg «ventar» for dei som ikkje kan godkjenne).
@@ -346,16 +350,19 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const { data, error: err } = await supabase.from('ferie').update({ ansatt: f.ansatt, type: f.type, tekst: f.tekst, fra: f.fra, til: f.til, status }).eq('id', f.id).select().single();
       if (err) throw err;
       setFerie((prev) => prev.map((x) => (x.id === f.id ? mapFerie(data) : x)));
+      varsleFerie(data);
     } else {
       const { data, error: err } = await supabase.from('ferie').insert({ ansatt: f.ansatt, type: f.type, tekst: f.tekst, fra: f.fra, til: f.til, status }).select().single();
       if (err) throw err;
       setFerie((prev) => [...prev, mapFerie(data)]);
+      varsleFerie(data);
     }
     toast(status === 'ventar' ? 'Søknaden er sendt til leiar' : 'Ferie/fri lagra');
   };
   const behandleFerie: AppData['behandleFerie'] = async (id, status, svar) => {
     const { data, error: err } = await supabase.from('ferie').update({ status, svar }).eq('id', id).select().single();
     if (err) throw err;
+    varsle({ type: 'ferie_svar', ferie_id: id });
     setFerie((prev) => prev.map((x) => (x.id === id ? mapFerie(data) : x)));
     toast(status === 'godkjend' ? 'Søknaden er godkjend' : 'Søknaden er avslått');
   };
