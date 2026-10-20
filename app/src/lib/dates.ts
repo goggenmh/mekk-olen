@@ -102,3 +102,8 @@ export const skiftFraTid = (start: string, slutt: string, dato: string): string 
   if (startH >= 12) return 'Kveld';
   return 'Formiddag';
 };
+
+// ISO-veker: veke 1 er veka med 4. januar, og året til ei veke er året til torsdagen.
+export const isoAar = (s: string) => Number(addDays(mondayOf(s), 3).slice(0, 4));
+export const vekerIAar = (ar: number) => isoWeek(`${ar}-12-28`);
+export const mandagIVeke = (ar: number, veke: number) => addDays(mondayOf(`${ar}-01-04`), (veke - 1) * 7);

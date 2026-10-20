@@ -3,7 +3,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { DAGER_VAKTPLAN, FERIE_STYL } from '../../constants';
-import { addDays, mondayOf, today, isoWeek, parseDate, weekdayIdx, shiftMonth, MND, UKE_KORT, datoIntervall, talDagar, skiftFraTid, fmt } from '../../lib/dates';
+import { addDays, mondayOf, today, isoWeek, isoAar, parseDate, weekdayIdx, shiftMonth, MND, UKE_KORT, datoIntervall, talDagar, skiftFraTid, fmt } from '../../lib/dates';
 import { helligdagFor, halvdagFor } from '../../lib/helligdagar';
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
@@ -15,6 +15,7 @@ import { Icon } from '../ui/Icon';
 import { useIsMobile } from '../../lib/useIsMobile';
 import type { Shift, Ferie, Unavailable } from '../../types';
 import { tekstPaFarge } from '../../lib/farge';
+import { PeriodeVeljar } from '../ui/PeriodeVeljar';
 
 const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 const ferieStyl = (type: string) => FERIE_STYL[type] || FERIE_STYL.Fri;
@@ -53,7 +54,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
   const opneFerie = (f: Ferie) => { if (kanStyreFerie || f.ansatt === user?.id) setFerieTarget(f); };
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
   const [vpWeek, setVpWeek] = useState(mondayOf(startDato ?? today()));
-  const [monthAnchor, setMonthAnchor] = useState(today().slice(0, 7));
+  const [monthAnchor, setMonthAnchor] = useState((startDato ?? today()).slice(0, 7));
   const [shiftTarget, setShiftTarget] = useState<{ date: string; shift?: Shift } | null>(null);
   const [swapTarget, setSwapTarget] = useState<Shift | null>(null);
   const [meny, setMeny] = useState<{ x: number; y: number; shift: Shift; date: string } | null>(null);
@@ -93,7 +94,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
   const goToday = () => { setVpWeek(mondayOf(today())); setMonthAnchor(today().slice(0, 7)); };
 
   const periodTittel = mode === 'uke'
-    ? `Veke ${isoWeek(vpWeek)}`
+    ? `Veke ${isoWeek(vpWeek)} · ${isoAar(vpWeek)}`
     : `${MND[Number(monthAnchor.split('-')[1]) - 1].charAt(0).toUpperCase()}${MND[Number(monthAnchor.split('-')[1]) - 1].slice(1)} ${monthAnchor.split('-')[0]}`;
 
   const pendingSwaps = swaps.filter((s) => s.status === 'pending');
@@ -124,10 +125,14 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
             </button>
           ))}
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={prevPeriod} style={navBtn} aria-label={mode === 'uke' ? 'Førre veke' : 'Førre månad'}>‹</button>
-        <div style={{ fontWeight: 700, fontSize: 15 }}>{periodTittel}</div>
+        <PeriodeVeljar mode={mode} veke={vpWeek} manad={monthAnchor} onVeke={setVpWeek} onManad={setMonthAnchor}>
+          <span style={{ fontWeight: 700, fontSize: 15 }}>{periodTittel}</span>
+        </PeriodeVeljar>
         <button onClick={nextPeriod} style={navBtn} aria-label={mode === 'uke' ? 'Neste veke' : 'Neste månad'}>›</button>
         <button onClick={goToday} style={btnGhost}>I dag</button>
+        </div>
         {mode === 'uke' && kanStyreStandard && (
           <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap' }}>
             <button onClick={() => setStandardOpen(true)} style={btnGhost} title="Rediger malen for standardveka">Rediger standardveke</button>

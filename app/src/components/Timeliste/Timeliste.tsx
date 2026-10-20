@@ -15,6 +15,7 @@ import { lastNedTimelistePdf } from '../../lib/timelistePdf';
 import { toast } from '../../lib/toast';
 import type { TimeEntry } from '../../types';
 import { tekstPaFarge } from '../../lib/farge';
+import { PeriodeVeljar } from '../ui/PeriodeVeljar';
 
 function downloadCsv(filename: string, rows: (string | number)[][]) {
   const csv = '﻿' + rows.map((r) => r.join(';')).join('\n');
@@ -148,10 +149,10 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
 
       <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={prevPeriod} style={navBtn} aria-label="Førre periode">‹</button>
-        <div>
+        <PeriodeVeljar mode={mode} veke={weekStart} manad={monthAnchor} onVeke={setWeekStart} onManad={setMonthAnchor}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>{periodTittel}</div>
           {periodUnder && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{periodUnder}</div>}
-        </div>
+        </PeriodeVeljar>
         <button onClick={nextPeriod} style={navBtn} aria-label="Neste periode">›</button>
         <button onClick={goToday} style={{ ...btnGhost, marginLeft: 4 }}>I dag</button>
       </div>
