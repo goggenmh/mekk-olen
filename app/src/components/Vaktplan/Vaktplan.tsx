@@ -15,6 +15,7 @@ import { Icon } from '../ui/Icon';
 import { useIsMobile } from '../../lib/useIsMobile';
 import type { Shift, Ferie, Unavailable } from '../../types';
 import { tekstPaFarge } from '../../lib/farge';
+import { raudePeriodar } from '../../lib/ferie';
 import { PeriodeVeljar } from '../ui/PeriodeVeljar';
 
 const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
@@ -60,7 +61,9 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
   const [meny, setMeny] = useState<{ x: number; y: number; shift: Shift; date: string } | null>(null);
   const [bytOpen, setBytOpen] = useState(false);
   const [ferieTarget, setFerieTarget] = useState<Ferie | 'new' | null>(null);
-  const [utilTarget, setUtilTarget] = useState<{ dato: string; existing?: Unavailable } | null>(null);
+  const [utilTarget, setUtilTarget] = useState<{ dato: string; existing?: Unavailable[] } | null>(null);
+  // Ein raud dag opnar heile perioden han høyrer til.
+  const periodeFor = (u: Unavailable) => raudePeriodar(unavailable.filter((x) => x.ansatt === u.ansatt)).find((p) => p.dagar.some((x) => x.id === u.id))?.dagar ?? [u];
   const [standardOpen, setStandardOpen] = useState(false);
   const dragShiftId = useRef<string | null>(null);
 
@@ -233,9 +236,9 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                     return (
                       <span
                         key={u.id}
-                        onClick={eg ? () => setUtilTarget({ dato: d.date, existing: u }) : undefined}
+                        onClick={eg || maaGodkjenne ? () => setUtilTarget({ dato: d.date, existing: periodeFor(u) }) : undefined}
                         title={`${a.navn}${u.grunn ? ` – ${u.grunn}` : ' kan ikkje jobbe'}${eg ? ' (trykk for å endre)' : ''}`}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%', fontSize: 10.5, fontWeight: 700, color: 'var(--dag-raud-tekst)', background: 'var(--dag-raud-sterk)', border: '1px solid var(--dag-raud-border)', borderRadius: 8, padding: '2px 7px', cursor: eg ? 'pointer' : 'default' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%', fontSize: 10.5, fontWeight: 700, color: 'var(--dag-raud-tekst)', background: 'var(--dag-raud-sterk)', border: '1px solid var(--dag-raud-border)', borderRadius: 8, padding: '2px 7px', cursor: eg || maaGodkjenne ? 'pointer' : 'default' }}
                       >
                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.init}{u.grunn ? `: ${u.grunn}` : ''}</span>
                       </span>

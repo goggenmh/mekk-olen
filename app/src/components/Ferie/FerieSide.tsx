@@ -5,17 +5,21 @@ import { useAuth } from '../../context/AuthContext';
 import { FERIE_STYL, FERIE_TYPER } from '../../constants';
 import { datoIntervall, MND, parseDate, shiftMonth, talDagar, today, UKE_KORT, weekdayIdx } from '../../lib/dates';
 import { helligdagFor } from '../../lib/helligdagar';
-import { feriesaldo, overlappar, virkedagar } from '../../lib/ferie';
+import { feriesaldo, overlappar, raudePeriodar, virkedagar, type RaudPeriode } from '../../lib/ferie';
 import { useIsMobile } from '../../lib/useIsMobile';
 import { FerieModal } from '../Vaktplan/FerieModal';
+import { UnavailableModal } from '../Vaktplan/UnavailableModal';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
-import type { Ferie } from '../../types';
+import type { Ferie, Unavailable } from '../../types';
 
 const kort: CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', boxShadow: 'var(--shadow-card)' };
 const etikett: CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-label)', marginBottom: 10 };
 const knapp: CSSProperties = { padding: '7px 13px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)' };
 const stil = (type: string) => FERIE_STYL[type] || FERIE_STYL.Fri;
+// «Kan ikkje jobbe» (raude dagar frå vaktplanen) – eigen kategori, ikkje ein søknad.
+const KAN_IKKJE = 'Kan ikkje jobbe';
+const RAUD = { fg: 'var(--dag-raud-tekst)', bg: 'var(--dag-raud-sterk)', kant: 'var(--dag-raud-border)' };
 
 const STATUS: Record<Ferie['status'], { tekst: string; fg: string; bg: string }> = {
   ventar: { tekst: 'Ventar på svar', fg: 'var(--pill-amber-fg)', bg: 'var(--pill-amber-bg)' },
@@ -24,7 +28,7 @@ const STATUS: Record<Ferie['status'], { tekst: string; fg: string; bg: string }>
 };
 
 export function FerieSide() {
-  const { ferie, shifts, canApprove, behandleFerie } = useAppData();
+  const { ferie, shifts, unavailable, canApprove, behandleFerie } = useAppData();
   const { ansatte, findAnsatt } = useAnsatte();
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -38,6 +42,7 @@ export function FerieSide() {
   const [typeFilter, setTypeFilter] = useState<string>('alle');
   const [modal, setModal] = useState<Ferie | 'ny' | null>(null);
   const [visTidlegare, setVisTidlegare] = useState(false);
+  const [raudModal, setRaudModal] = useState<Unavailable[] | 'ny' | null>(null);
 
   // Tilsette ser eigne søknader og andre sitt godkjende fråvær (til planlegging).
   const synlege = useMemo(
@@ -47,6 +52,10 @@ export function FerieSide() {
   const filtrert = synlege
     .filter((f) => hvem === 'alle' || f.ansatt === hvem)
     .filter((f) => typeFilter === 'alle' || f.type === typeFilter);
+  const visRaude = typeFilter === 'alle' || typeFilter === KAN_IKKJE;
+  const raude = useMemo(() => unavailable.filter((u) => hvem === 'alle' || u.ansatt === hvem), [unavailable, hvem]);
+  const raudePer = useMemo(() => raudePeriodar(raude), [raude]);
+  const kommandeRaude = raudePer.filter((p) => p.til >= t);
 
   const ventande = synlege.filter((f) => f.status === 'ventar').sort((a, b) => (a.fra || '').localeCompare(b.fra || ''));
   const kommande = filtrert.filter((f) => f.status === 'godkjend' && f.til && f.til >= t).sort((a, b) => (a.fra || '').localeCompare(b.fra || ''));
@@ -68,6 +77,7 @@ export function FerieSide() {
       .filter((f) => f.status === 'godkjend' && f.type === ty && f.fra && f.til && (hvem === 'alle' ? (leiar || f.ansatt === user?.id) : f.ansatt === hvem))
       .reduce((s, f) => s + virkedagar(f.fra!, f.til!, aar), 0),
   }));
+  const raudeIAar = raude.filter((u) => u.dato.slice(0, 4) === String(aar)).length;
 
   const Rad = ({ f }: { f: Ferie }) => {
     const a = findAnsatt(f.ansatt);
@@ -99,6 +109,32 @@ export function FerieSide() {
     );
   };
 
+  const RaudRad = ({ p }: { p: RaudPeriode }) => {
+    const a = findAnsatt(p.ansatt);
+    const n = p.dagar.length;
+    const paagaar = p.fra <= t && t <= p.til;
+    const om = p.fra > t ? talDagar(t, p.fra) - 1 : 0;
+    return (
+      <button
+        onClick={() => setRaudModal(p.dagar)}
+        style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', padding: '10px 12px', border: `1px solid ${RAUD.kant}`, background: 'var(--surface-alt)', borderRadius: 12, cursor: 'pointer', color: 'var(--text)' }}
+      >
+        <span style={{ width: 34, height: 34, borderRadius: 10, background: RAUD.bg, color: RAUD.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name="alert" size={17} /></span>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <b style={{ fontSize: 13.5 }}>{a.navn}</b>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: RAUD.fg, background: RAUD.bg, borderRadius: 8, padding: '1px 8px' }}>Kan ikkje jobbe</span>
+            {paagaar && <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--surface)', background: RAUD.fg, borderRadius: 999, padding: '1px 8px' }}>{p.fra === p.til ? 'I dag' : 'Pågår'}</span>}
+            {om > 0 && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>om {om} d</span>}
+          </span>
+          <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 2 }}>
+            {datoIntervall(p.fra, p.til)} · {n} {n === 1 ? 'dag' : 'dagar'}{p.grunn ? ` — ${p.grunn}` : ''}
+          </span>
+        </span>
+      </button>
+    );
+  };
+
   // ---- månadskalender ----
   const [my, mm] = manad.split('-').map(Number);
   const dagarIManad = new Date(my, mm, 0).getDate();
@@ -119,6 +155,12 @@ export function FerieSide() {
           style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           {leiar ? '+ Registrer ferie/fri' : '+ Søk om ferie/fri'}
+        </button>
+        <button
+          onClick={() => setRaudModal('ny')}
+          style={{ padding: '9px 16px', background: 'var(--surface)', color: RAUD.fg, border: `1px solid ${RAUD.kant}`, borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+        >
+          + Kan ikkje jobbe
         </button>
       </div>
 
@@ -173,7 +215,7 @@ export function FerieSide() {
           <option value="alle">Alle tilsette</option>
           {ansatte.map((a) => <option key={a.id} value={a.id}>{a.navn}</option>)}
         </select>
-        {['alle', ...FERIE_TYPER].map((ty) => (
+        {['alle', ...FERIE_TYPER, KAN_IKKJE].map((ty) => (
           <button
             key={ty}
             onClick={() => setTypeFilter(ty)}
@@ -184,7 +226,7 @@ export function FerieSide() {
           </button>
         ))}
         <span style={{ marginLeft: 'auto', fontSize: 12.5, color: 'var(--text-muted)' }}>
-          {aar}: {fravaerIAar.filter((x) => x.dagar > 0).map((x) => `${x.ty.toLowerCase()} ${x.dagar} d`).join(' · ') || 'ingen fråvær registrert'}
+          {aar}: {[...fravaerIAar.filter((x) => x.dagar > 0).map((x) => `${x.ty.toLowerCase()} ${x.dagar} d`), ...(raudeIAar ? [`kan ikkje jobbe ${raudeIAar} d`] : [])].join(' · ') || 'ingen fråvær registrert'}
         </span>
       </div>
 
@@ -197,6 +239,7 @@ export function FerieSide() {
           <button onClick={() => setManad(t.slice(0, 7))} style={knapp}>I dag</button>
           <span style={{ marginLeft: 'auto', display: 'flex', gap: 10, fontSize: 11.5, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
             {FERIE_TYPER.map((ty) => <span key={ty} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 10, height: 10, borderRadius: 3, background: stil(ty).fg }} />{ty}</span>)}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 10, height: 10, borderRadius: 3, background: RAUD.bg, border: `1.5px solid ${RAUD.fg}` }} />Kan ikkje jobbe</span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 10, height: 10, borderRadius: 3, border: '1.5px dashed var(--text-muted)' }} />Søkt</span>
           </span>
         </div>
@@ -223,6 +266,8 @@ export function FerieSide() {
                   <td style={{ position: 'sticky', left: 0, background: 'var(--surface)', padding: '6px 12px', fontWeight: 600, fontSize: 12.5, whiteSpace: 'nowrap', zIndex: 1 }}>{a.navn}</td>
                   {datoar.map((d) => {
                     const f = synlege.find((x) => x.ansatt === a.id && x.status !== 'avslatt' && x.fra && x.til && x.fra <= d && d <= x.til && (typeFilter === 'alle' || x.type === typeFilter));
+                    const u = !f && visRaude ? raude.find((x) => x.ansatt === a.id && x.dato === d) : undefined;
+                    const up = u ? raudePer.find((p) => p.dagar.includes(u)) : undefined;
                     const sondag = parseDate(d).getDay() === 0 || !!helligdagFor(d);
                     const st = f ? stil(f.type) : null;
                     return (
@@ -232,6 +277,13 @@ export function FerieSide() {
                             onClick={() => setModal(f)}
                             title={`${a.navn}: ${f.type}${f.status === 'ventar' ? ' (søkt)' : ''}${f.tekst ? ` – ${f.tekst}` : ''}`}
                             style={{ display: 'block', width: '100%', height: 20, borderRadius: 4, cursor: 'pointer', padding: 0, background: f.status === 'ventar' ? 'transparent' : st.fg, border: f.status === 'ventar' ? `1.5px dashed ${st.fg}` : 'none', opacity: sondag ? 0.5 : 1 }}
+                          />
+                        )}
+                        {u && (
+                          <button
+                            onClick={() => setRaudModal(up?.dagar ?? [u])}
+                            title={`${a.navn}: kan ikkje jobbe${u.grunn ? ` – ${u.grunn}` : ''}`}
+                            style={{ display: 'block', width: '100%', height: 20, borderRadius: 4, cursor: 'pointer', padding: 0, background: RAUD.bg, border: `1.5px solid ${RAUD.fg}` }}
                           />
                         )}
                       </td>
@@ -248,8 +300,13 @@ export function FerieSide() {
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, alignItems: 'start' }}>
         <div style={kort}>
           <div style={etikett}>Pågår og kommande</div>
-          {kommande.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen planlagt fråvær.</div>}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{kommande.map((f) => <Rad key={f.id} f={f} />)}</div>
+          {(typeFilter === KAN_IKKJE ? 0 : kommande.length) + (visRaude ? kommandeRaude.length : 0) === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen planlagt fråvær.</div>}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              ...(typeFilter === KAN_IKKJE ? [] : kommande.map((f) => ({ fra: f.fra || '', el: <Rad key={f.id} f={f} /> }))),
+              ...(visRaude ? kommandeRaude.map((p) => ({ fra: p.fra, el: <RaudRad key={p.dagar[0].id} p={p} /> })) : []),
+            ].sort((a, b) => a.fra.localeCompare(b.fra)).map((x) => x.el)}
+          </div>
         </div>
         <div style={kort}>
           <button onClick={() => setVisTidlegare(!visTidlegare)} style={{ ...etikett, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', gap: 6 }}>
@@ -265,6 +322,7 @@ export function FerieSide() {
         </div>
       </div>
 
+      {raudModal && <UnavailableModal dato={t} existing={raudModal === 'ny' ? undefined : raudModal} ansatt={hvem !== 'alle' && leiar ? hvem : undefined} onClose={() => setRaudModal(null)} />}
       {modal && <FerieModal existing={modal === 'ny' ? undefined : modal} onClose={() => setModal(null)} />}
     </div>
   );

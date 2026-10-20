@@ -34,6 +34,9 @@ interface AppData {
   unavailable: Unavailable[];
   saveUnavailable: (ansatt: EmployeeId, dato: string, grunn: string | null) => Promise<void>;
   removeUnavailable: (id: string) => Promise<void>;
+  /** Merk fleire dagar på ein gong (fra–til). `gamle` = rader som blir erstatta (endring av periode). */
+  saveUnavailablePeriode: (ansatt: EmployeeId, fra: string, til: string, grunn: string | null, gamle?: Unavailable[]) => Promise<void>;
+  removeUnavailableMange: (ids: string[]) => Promise<void>;
   refreshAll: () => Promise<void>;
 
   canApprove: (ansatt: EmployeeId | null | undefined) => boolean;
@@ -392,6 +395,41 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     if (err) throw err;
     setUnavailable((prev) => prev.filter((x) => x.id !== id));
   };
+  const saveUnavailablePeriode: AppData['saveUnavailablePeriode'] = async (ansatt, fra, til, grunn, gamle = []) => {
+    const reit = grunn?.trim() || null;
+    const datoar: string[] = [];
+    for (let d = fra; d <= til; d = addDays(d, 1)) datoar.push(d);
+    // Gamle dagar utanfor den nye perioden blir fjerna.
+    const fjern = gamle.filter((g) => !datoar.includes(g.dato)).map((g) => g.id);
+    if (fjern.length) {
+      const { error: err } = await supabase.from('utilgjengeleg').delete().in('id', fjern);
+      if (err) throw err;
+    }
+    const finst = unavailable.filter((x) => x.ansatt === ansatt && datoar.includes(x.dato) && !fjern.includes(x.id));
+    if (finst.length) {
+      const { error: err } = await supabase.from('utilgjengeleg').update({ grunn: reit }).in('id', finst.map((x) => x.id));
+      if (err) throw err;
+    }
+    const nye = datoar.filter((d) => !finst.some((x) => x.dato === d));
+    let lagt: Unavailable[] = [];
+    if (nye.length) {
+      const { data, error: err } = await supabase.from('utilgjengeleg').insert(nye.map((dato) => ({ ansatt, dato, grunn: reit }))).select();
+      if (err) throw err;
+      lagt = (data || []).map(mapUnavail);
+    }
+    const oppdatert = new Set(finst.map((x) => x.id));
+    setUnavailable((prev) => [
+      ...prev.filter((x) => !fjern.includes(x.id)).map((x) => (oppdatert.has(x.id) ? { ...x, grunn: reit } : x)),
+      ...lagt,
+    ]);
+    toast(datoar.length === 1 ? 'Merka som utilgjengeleg' : `Merka ${datoar.length} dagar som utilgjengeleg`);
+  };
+  const removeUnavailableMange: AppData['removeUnavailableMange'] = async (ids) => {
+    const { error: err } = await supabase.from('utilgjengeleg').delete().in('id', ids);
+    if (err) throw err;
+    setUnavailable((prev) => prev.filter((x) => !ids.includes(x.id)));
+    toast('Markering fjerna');
+  };
 
   // ---- tasks ----
   const saveTask: AppData['saveTask'] = async (t) => {
@@ -552,7 +590,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveEntry, deleteEntry, approveEmployeeEntries,
       saveShift, deleteShift, moveShiftDate, saveStandardveke, applyStandardveke, kopierVeke,
       createSwap, approveSwap, declineSwap,
-      saveFerie, deleteFerie, behandleFerie, saveUnavailable, removeUnavailable,
+      saveFerie, deleteFerie, behandleFerie, saveUnavailable, removeUnavailable, saveUnavailablePeriode, removeUnavailableMange,
       saveTask, deleteTask, moveTask, completeTask,
       saveOrder, deleteOrder, advanceOrder, markOrderVarsla,
       saveDoc, deleteDoc, uploadDocFile, docFileUrl,

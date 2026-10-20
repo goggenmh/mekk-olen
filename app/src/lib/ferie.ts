@@ -1,5 +1,5 @@
 import type { Employee } from '../constants';
-import type { Ferie } from '../types';
+import type { Ferie, Unavailable } from '../types';
 import { addDays, parseDate, today } from './dates';
 import { helligdagFor } from './helligdagar';
 
@@ -47,3 +47,21 @@ export function overlappar(f: Pick<Ferie, 'ansatt' | 'fra' | 'til'> & { id?: str
 
 /** Søknader som ventar på svar (til varsel for leiarar). */
 export const ventandeFerie = (ferie: Ferie[]) => ferie.filter((f) => f.status === 'ventar').length;
+
+/** Raude dagar («kan ikkje jobbe») slått saman til periodar: same person,
+ *  same grunn og dagar på rad. */
+export interface RaudPeriode { ansatt: string; fra: string; til: string; grunn: string | null; dagar: Unavailable[] }
+export function raudePeriodar(liste: Unavailable[]): RaudPeriode[] {
+  const sortert = [...liste].sort((a, b) => a.ansatt.localeCompare(b.ansatt) || a.dato.localeCompare(b.dato));
+  const ut: RaudPeriode[] = [];
+  for (const u of sortert) {
+    const sist = ut[ut.length - 1];
+    if (sist && sist.ansatt === u.ansatt && (sist.grunn || '') === (u.grunn || '') && addDays(sist.til, 1) === u.dato) {
+      sist.til = u.dato;
+      sist.dagar.push(u);
+    } else {
+      ut.push({ ansatt: u.ansatt, fra: u.dato, til: u.dato, grunn: u.grunn, dagar: [u] });
+    }
+  }
+  return ut.sort((a, b) => a.fra.localeCompare(b.fra));
+}
