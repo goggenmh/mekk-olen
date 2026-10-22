@@ -31,7 +31,7 @@ export function PeriodeVeljar({ mode, veke, manad, onVeke, onManad, children }: 
   };
 
   const rute = (aktiv: boolean, idag: boolean) => ({
-    padding: '8px 0', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: aktiv ? 700 : 600,
+    padding: '8px 0', borderRadius: 'var(--r)', cursor: 'pointer', fontSize: 13, fontWeight: aktiv ? 700 : 600,
     border: idag && !aktiv ? '1.5px solid var(--brand-strong)' : '1px solid var(--border)',
     background: aktiv ? 'var(--brand-strong)' : 'var(--surface)',
     color: aktiv ? 'var(--on-brand)' : 'var(--text)',
@@ -44,7 +44,7 @@ export function PeriodeVeljar({ mode, veke, manad, onVeke, onManad, children }: 
         onClick={opne}
         aria-expanded={open}
         aria-label={mode === 'uke' ? 'Vel veke' : 'Vel månad'}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', padding: '4px 6px', margin: '-4px -6px', borderRadius: 8, color: 'var(--text)', textAlign: 'left', fontFamily: 'inherit' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', padding: '4px 6px', margin: '-4px -6px', borderRadius: 'var(--r)', color: 'var(--text)', textAlign: 'left', fontFamily: 'inherit' }}
       >
         <span>{children}</span>
         <span aria-hidden style={{ fontSize: 10, color: 'var(--text-muted)' }}>▼</span>
@@ -56,7 +56,7 @@ export function PeriodeVeljar({ mode, veke, manad, onVeke, onManad, children }: 
             ...(isMobile
               ? { position: 'fixed', top: topp, left: 12, right: 12, maxHeight: `calc(100dvh - ${topp + 90}px)` }
               : { position: 'absolute', top: 'calc(100% + 8px)', left: -8, width: 330, maxHeight: '70vh' }),
-            overflowY: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
+            overflowY: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)',
             boxShadow: '0 12px 30px rgba(0,0,0,0.18)', zIndex: 50, padding: 12,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -105,6 +105,6 @@ export function PeriodeVeljar({ mode, veke, manad, onVeke, onManad, children }: 
 }
 
 const pil = {
-  width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)',
+  width: 32, height: 32, borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface)',
   cursor: 'pointer', fontSize: 16, color: 'var(--text)',
 } as const;

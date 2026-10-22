@@ -62,7 +62,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   const innhald = (
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: smal ? '2px 0 14px' : '2px 8px 14px', justifyContent: smal ? 'center' : 'flex-start' }}>
-        <img src="/assets/mekk-logo.png" alt="MEKK Ølen" style={{ width: 28, height: 28, borderRadius: 9, flex: 'none' }} />
+        <img src="/assets/mekk-logo.png" alt="MEKK Ølen" style={{ width: 28, height: 28, borderRadius: 'var(--r)', flex: 'none' }} />
         {!smal && (
           <div style={{ lineHeight: 1.15 }} className="rail-label">
             <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: 14, letterSpacing: '0.3px', color: 'var(--rail-brand)' }}>{merke}</div>
@@ -95,7 +95,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
                 style={{
                   position: 'relative', display: 'flex', alignItems: 'center', gap: smal ? 0 : 11,
                   padding: smal ? '9px 0' : '7px 11px', border: 'none', cursor: 'pointer',
-                  fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, textAlign: 'left', borderRadius: 9,
+                  fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, textAlign: 'left', borderRadius: 'var(--r)',
                   justifyContent: smal ? 'center' : 'flex-start',
                   background: active ? 'var(--rail-active-bg)' : 'transparent', color: active ? 'var(--rail-active-fg)' : 'var(--rail-fg)',
                 }}
@@ -130,7 +130,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               border: '1px solid var(--rail-border)', background: 'transparent', cursor: 'pointer',
-              color: 'var(--rail-section)', borderRadius: 9, padding: smal ? '8px 0' : '8px 11px',
+              color: 'var(--rail-section)', borderRadius: 'var(--r)', padding: smal ? '8px 0' : '8px 11px',
               fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600,
             }}
           >

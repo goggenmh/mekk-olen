@@ -29,25 +29,25 @@ export function NotifyModal({ order, onClose }: { order: Order; onClose: () => v
       subtitle={order.kunde}
       footer={<><CancelButton onClick={onClose} /><SaveButton onClick={markert}>Marker som varsla</SaveButton></>}
     >
-      <div style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 12, padding: 13, fontSize: 13.5, lineHeight: 1.5 }}>{tekst}</div>
+      <div style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: 13, fontSize: 13.5, lineHeight: 1.5 }}>{tekst}</div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {tlf && (
           // Opnar meldings-appen på telefonen med teksten ferdig utfylt.
           <a
             href={`sms:${tlf}?&body=${encodeURIComponent(tekst)}`}
-            style={{ padding: '8px 14px', background: 'var(--cta)', color: 'var(--on-cta)', borderRadius: 11, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+            style={{ padding: '8px 14px', background: 'var(--cta)', color: 'var(--on-cta)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
           >
             Send SMS
           </a>
         )}
         {tlf && (
-          <a href={`tel:${tlf}`} style={{ padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontSize: 13, fontWeight: 600, color: 'var(--text)', textDecoration: 'none' }}>
+          <a href={`tel:${tlf}`} style={{ padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, color: 'var(--text)', textDecoration: 'none' }}>
             Ring {order.telefon}
           </a>
         )}
         <button
           onClick={copy}
-          style={{ padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}
+          style={{ padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}
         >
           {copied ? 'Kopiert ✓' : 'Kopier tekst'}
         </button>

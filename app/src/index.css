@@ -20,6 +20,11 @@
   --kort-label: var(--mekk-navy);
   --rail-active-bar: var(--mekk-lime);
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  /* Kantete som MEKK: kort, knappar og felt har (nesten) skarpe hjørne.
+     Piller og sirklar (999 / 50 %) er framleis runde. */
+  --r: 0px;
+  --r-sm: 0px;
+  --r-input: 2px;
   --bg: #f8fafc;
   --surface: #ffffff;
   --surface-alt: #f6f8f7;
@@ -60,8 +65,9 @@
   --dag-amber-tekst: #a6631a;
   --dag-raud-sterk: rgba(192, 57, 43, 0.13);
   --dag-amber-sterk: rgba(198, 126, 30, 0.15);
-  --shadow-card: 0 1px 2px rgba(16, 33, 40, 0.05), 0 8px 22px rgba(16, 33, 40, 0.05);
-  --shadow-hover: 0 2px 6px rgba(16, 33, 40, 0.07), 0 16px 36px rgba(16, 33, 40, 0.10);
+  /* Nesten ingen skuggar: korta blir skilde med line-ramma. */
+  --shadow-card: none;
+  --shadow-hover: 0 4px 16px rgba(10, 35, 53, 0.08);
   /* Lys, forfina sidemeny + topplinje (premium) i lys modus */
   --rail-bg: #ffffff;
   --rail-bg-solid: #ffffff;
@@ -84,7 +90,7 @@
   --radius-md: 13px;
   --radius-lg: 16px;
   /* Nye felles tokens */
-  --hero-grad: linear-gradient(140deg, var(--mekk-navy), var(--mekk-navy-800) 72%);
+  --hero-grad: linear-gradient(var(--mekk-navy), var(--mekk-navy));
   --hero-fg: #ffffff;
   --hero-sub: #b9cbd8;
   --glow-brand: none;
@@ -152,7 +158,7 @@
   --dag-amber-tekst: #e6b06a;
   --dag-raud-sterk: rgba(224, 88, 74, 0.24);
   --dag-amber-sterk: rgba(217, 149, 74, 0.24);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 26px rgba(0, 0, 0, 0.3);
+  --shadow-card: none;
   --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.4), 0 18px 40px rgba(0, 0, 0, 0.4);
   /* Mørk glass-ramme med teal-glød */
   --rail-bg: linear-gradient(180deg, #151c20, #0d1214);
@@ -257,7 +263,7 @@ button:active {
 }
 .skeleton {
   background: var(--surface-alt);
-  border-radius: 10px;
+  border-radius: var(--r);
   animation: skeletonPulse 1.2s ease-in-out infinite;
 }
 
@@ -300,8 +306,11 @@ input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-
   outline-offset: 1px;
 }
 
-/* Hovudknapp (lime) – litt mørkare ved hover */
+/* Hovudknapp (lime): versalar i Inter Black som på mekk.no, litt mørkare ved hover */
+button[style*="var(--cta)"] { text-transform: uppercase; font-weight: 900 !important; letter-spacing: 0.01em; }
 button[style*="var(--cta)"]:hover:not(:disabled) { filter: brightness(0.94); }
+/* Tastaturfokus: 2 px kvitt, så 2 px marine */
+button:focus-visible { outline: none; box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--mekk-navy); }
 
 /* Sidetitlar i MEKK-stil: versalar i Inter Black */
 .sidetittel {

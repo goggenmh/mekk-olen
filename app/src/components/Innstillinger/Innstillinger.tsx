@@ -7,7 +7,7 @@ import type { View } from '../../lib/view';
 import { hentAbonnement, pushStotta, skruAvVarsel, skruPaVarsel, trengHeimeskjerm } from '../../lib/push';
 
 const cardStyle = {
-  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '18px 20px', boxShadow: 'var(--shadow-card)',
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '18px 20px', boxShadow: 'var(--shadow-card)',
 } as const;
 
 function Brytar({ pa, onClick, avslatt }: { pa: boolean; onClick: () => void; avslatt?: boolean }) {
@@ -17,7 +17,7 @@ function Brytar({ pa, onClick, avslatt }: { pa: boolean; onClick: () => void; av
       disabled={avslatt}
       aria-pressed={pa}
       style={{
-        width: 52, height: 30, borderRadius: 12, border: 'none', cursor: avslatt ? 'default' : 'pointer', position: 'relative',
+        width: 52, height: 30, borderRadius: 'var(--r)', border: 'none', cursor: avslatt ? 'default' : 'pointer', position: 'relative',
         background: pa ? 'var(--brand)' : 'var(--border)', flex: 'none', opacity: avslatt ? 0.5 : 1,
       }}
     >
@@ -98,7 +98,7 @@ export function Innstillinger({ setView }: { setView: (v: View) => void }) {
         {isLeder(user.id) && (
           <button
             onClick={() => setView('ansatte')}
-            style={{ marginLeft: 'auto', padding: '9px 14px', background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 11, fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}
+            style={{ marginLeft: 'auto', padding: '9px 14px', background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}
           >
             Endre under Tilsette →
           </button>
@@ -123,7 +123,7 @@ export function Innstillinger({ setView }: { setView: (v: View) => void }) {
           </div>
           <button
             onClick={() => setView('ansatte')}
-            style={{ padding: '9px 14px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+            style={{ padding: '9px 14px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
           >
             Gå til Tilsette
           </button>

@@ -21,7 +21,7 @@ export function Toaster() {
           role={i.type === 'feil' ? 'alert' : 'status'}
           style={{
             background: 'var(--surface)', border: `1px solid ${i.type === 'feil' ? 'var(--danger)' : 'var(--border)'}`, boxShadow: 'var(--shadow-hover)',
-            borderRadius: 12, padding: '12px 16px', fontSize: 13, fontWeight: 600, color: 'var(--text)',
+            borderRadius: 'var(--r)', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: 'var(--text)',
             display: 'flex', alignItems: 'center', gap: 10, minWidth: 220, maxWidth: 340,
             animation: 'toastIn 0.18s ease',
           }}

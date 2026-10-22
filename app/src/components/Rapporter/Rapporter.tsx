@@ -127,14 +127,14 @@ export function Rapporter() {
               onClick={() => setPeriode(p)}
               aria-pressed={periode === p}
               style={{
-                padding: '8px 14px', borderRadius: 9, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                padding: '8px 14px', borderRadius: 'var(--r)', border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
                 background: periode === p ? 'var(--brand-strong)' : 'var(--surface)', color: periode === p ? 'var(--on-brand)' : 'var(--text-secondary)',
               }}
             >
               {p === 'uke' ? 'Denne veka' : 'Denne månaden'}
             </button>
           ))}
-          <button onClick={eksporter} style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: 'var(--surface)', color: 'var(--text)' }}>
+          <button onClick={eksporter} style={{ padding: '8px 14px', borderRadius: 'var(--r)', border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: 'var(--surface)', color: 'var(--text)' }}>
             Last ned CSV
           </button>
         </div>
@@ -142,14 +142,14 @@ export function Rapporter() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 14 }}>
         {kort.map((k) => (
-          <div key={k.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '17px 19px', boxShadow: 'var(--shadow-card)' }}>
+          <div key={k.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '17px 19px', boxShadow: 'var(--shadow-card)' }}>
             <div style={{ fontSize: 24, fontWeight: 800, color: k.farge, fontFamily: "'Geist Mono Variable'", letterSpacing: '-0.5px' }}>{k.verdi}</div>
             <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', marginTop: 4 }}>{k.label}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'auto', boxShadow: 'var(--shadow-card)' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'auto', boxShadow: 'var(--shadow-card)' }}>
         <div style={{ minWidth: 900 }}>
           <div style={{ display: 'grid', gridTemplateColumns: kol, padding: '12px 18px', fontSize: 11, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.4px', borderBottom: '1px solid var(--divider)', background: 'var(--surface-alt)' }}>
             <span>Tilsett</span>

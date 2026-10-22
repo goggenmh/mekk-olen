@@ -35,7 +35,7 @@ export function AdminPanel({ onClose }: { onClose: () => void }) {
           <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 18 }}>Administrasjon</div>
           <button
             onClick={onClose}
-            style={{ width: 30, height: 30, border: 'none', background: 'var(--bg)', borderRadius: 10, cursor: 'pointer', fontSize: 16, color: 'var(--text-secondary)' }}
+            style={{ width: 30, height: 30, border: 'none', background: 'var(--bg)', borderRadius: 'var(--r)', cursor: 'pointer', fontSize: 16, color: 'var(--text-secondary)' }}
           >
             ✕
           </button>
@@ -82,7 +82,7 @@ export function AdminPanel({ onClose }: { onClose: () => void }) {
               <button
                 onClick={send}
                 disabled={!tekst.trim()}
-                style={{ padding: '9px 14px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: tekst.trim() ? 1 : 0.5 }}
+                style={{ padding: '9px 14px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: tekst.trim() ? 1 : 0.5 }}
               >
                 Send
               </button>
@@ -94,7 +94,7 @@ export function AdminPanel({ onClose }: { onClose: () => void }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {meldinger.length === 0 && <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Ingen meldingar sendt.</div>}
               {meldinger.map((m) => (
-                <div key={m.id} style={{ border: '1px solid var(--border)', borderRadius: 13, padding: '10px 12px' }}>
+                <div key={m.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '10px 12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
                     <span>Til: {m.til ? findAnsatt(m.til).navn : 'Alle'}</span>
                     <button

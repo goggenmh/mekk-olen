@@ -120,7 +120,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
               key={m}
               onClick={() => setMode(m)}
               style={{
-                padding: '7px 14px', borderRadius: 9, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                padding: '7px 14px', borderRadius: 'var(--r)', border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
                 background: mode === m ? 'var(--brand-strong)' : 'var(--surface)', color: mode === m ? 'var(--on-brand)' : 'var(--text-secondary)',
               }}
             >
@@ -174,7 +174,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
               style={{
                 background: erIDag ? 'var(--brand-soft)' : raudTint ? 'var(--dag-raud-bg)' : halvdag ? 'var(--dag-amber-bg)' : 'var(--surface)',
                 border: erIDag ? '2px solid var(--brand)' : raudTint ? '1px solid var(--dag-raud-border)' : halvdag ? '1px solid var(--dag-amber-border)' : '1px solid var(--border)',
-                borderRadius: 12, padding: erIDag ? 9 : 10, minHeight: isMobile ? 'auto' : 220, display: 'flex', flexDirection: 'column', gap: 7,
+                borderRadius: 'var(--r)', padding: erIDag ? 9 : 10, minHeight: isMobile ? 'auto' : 220, display: 'flex', flexDirection: 'column', gap: 7,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, paddingBottom: 7, borderBottom: '1px solid var(--divider)' }}>
@@ -206,11 +206,11 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                     onClick={kanOpne ? () => setShiftTarget({ date: d.date, shift: s }) : undefined}
                     onContextMenu={(e) => { e.preventDefault(); setBytOpen(false); setMeny({ x: e.clientX, y: e.clientY, shift: s, date: d.date }); }}
                     title="Høgreklikk for val"
-                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 11, padding: '9px 11px', cursor: kanLageVakt ? 'grab' : kanOpne ? 'pointer' : 'default', boxShadow: 'var(--shadow-card)' }}
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 'var(--r)', padding: '9px 11px', cursor: kanLageVakt ? 'grab' : kanOpne ? 'pointer' : 'default', boxShadow: 'var(--shadow-card)' }}
                   >
                     <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 15.5, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.6px', fontVariantNumeric: 'tabular-nums' }}>{s.start}–{s.slutt}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 6 }}>
-                      <span style={{ width: 20, height: 20, borderRadius: 6, background: farge, color: tekstPaFarge(farge), fontSize: 9.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{a.init}</span>
+                      <span style={{ width: 20, height: 20, borderRadius: 'var(--r-sm)', background: farge, color: tekstPaFarge(farge), fontSize: 9.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{a.init}</span>
                       <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.navn}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
@@ -238,7 +238,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                         key={u.id}
                         onClick={eg || maaGodkjenne ? () => setUtilTarget({ dato: d.date, existing: periodeFor(u) }) : undefined}
                         title={`${a.navn}${u.grunn ? ` – ${u.grunn}` : ' kan ikkje jobbe'}${eg ? ' (trykk for å endre)' : ''}`}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%', fontSize: 10.5, fontWeight: 700, color: 'var(--dag-raud-tekst)', background: 'var(--dag-raud-sterk)', border: '1px solid var(--dag-raud-border)', borderRadius: 8, padding: '2px 7px', cursor: eg || maaGodkjenne ? 'pointer' : 'default' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%', fontSize: 10.5, fontWeight: 700, color: 'var(--dag-raud-tekst)', background: 'var(--dag-raud-sterk)', border: '1px solid var(--dag-raud-border)', borderRadius: 'var(--r)', padding: '2px 7px', cursor: eg || maaGodkjenne ? 'pointer' : 'default' }}
                       >
                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.init}{u.grunn ? `: ${u.grunn}` : ''}</span>
                       </span>
@@ -248,7 +248,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                     <button
                       onClick={() => setUtilTarget({ dato: d.date })}
                       title="Merk at du ikkje kan jobbe denne dagen"
-                      style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text-muted)', background: 'none', border: '1px dashed var(--border)', borderRadius: 8, padding: '2px 7px', cursor: 'pointer' }}
+                      style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text-muted)', background: 'none', border: '1px dashed var(--border)', borderRadius: 'var(--r)', padding: '2px 7px', cursor: 'pointer' }}
                     >
                       Kan ikkje jobbe
                     </button>
@@ -263,7 +263,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                     key={f.id}
                     onClick={() => opneFerie(f)}
                     title={`${a.navn} – ${f.type}${f.tekst ? ` (${f.tekst})` : ''}`}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 700, color: st.fg, background: st.bg, border: `1px solid ${st.kant}`, borderRadius: 8, padding: '3px 8px', cursor: (kanStyreFerie || f.ansatt === user?.id) ? 'pointer' : 'default' }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 700, color: st.fg, background: st.bg, border: `1px solid ${st.kant}`, borderRadius: 'var(--r)', padding: '3px 8px', cursor: (kanStyreFerie || f.ansatt === user?.id) ? 'pointer' : 'default' }}
                   >
                     <Icon name={st.ikon} size={12} />
                     {a.init} · {f.type}
@@ -273,7 +273,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
               {kanLageVakt && (
                 <button
                   onClick={() => setShiftTarget({ date: d.date })}
-                  style={{ marginTop: 'auto', border: '1px dashed var(--border)', background: 'none', borderRadius: 9, padding: '7px 0', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer' }}
+                  style={{ marginTop: 'auto', border: '1px dashed var(--border)', background: 'none', borderRadius: 'var(--r)', padding: '7px 0', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer' }}
                 >
                   + vakt
                 </button>
@@ -285,7 +285,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
       )}
 
       {pendingSwaps.length > 0 && (
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', boxShadow: 'var(--shadow-card)' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '16px 18px', boxShadow: 'var(--shadow-card)' }}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Bytteønske</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {pendingSwaps.map((s) => {
@@ -299,7 +299,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                   {maaGodkjenne ? (
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
                       <button onClick={() => declineSwap(s.id)} style={{ ...btnGhost, color: 'var(--danger)' }}>Avslå</button>
-                      <button onClick={() => approveSwap(s.id)} style={{ padding: '7px 14px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Godkjenn</button>
+                      <button onClick={() => approveSwap(s.id)} style={{ padding: '7px 14px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Godkjenn</button>
                     </div>
                   ) : (
                     <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>Ventar på godkjenning</span>
@@ -311,7 +311,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
         </div>
       )}
 
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', boxShadow: 'var(--shadow-card)' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '16px 18px', boxShadow: 'var(--shadow-card)' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
           <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px' }}>Ferie &amp; fri</div>
           <button onClick={() => setFerieTarget('new')} style={{ ...btnGhost, marginLeft: 'auto' }}>+ Legg til</button>
@@ -328,16 +328,16 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                 key={f.id}
                 onClick={() => opneFerie(f)}
                 className="hoverable"
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', border: `1px solid ${st.kant}`, background: 'var(--surface-alt)', borderRadius: 12, cursor: (kanStyreFerie || f.ansatt === user?.id) ? 'pointer' : 'default' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', border: `1px solid ${st.kant}`, background: 'var(--surface-alt)', borderRadius: 'var(--r)', cursor: (kanStyreFerie || f.ansatt === user?.id) ? 'pointer' : 'default' }}
               >
-                <span style={{ width: 38, height: 38, borderRadius: 11, background: st.bg, color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+                <span style={{ width: 38, height: 38, borderRadius: 'var(--r)', background: st.bg, color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
                   <Icon name={st.ikon} size={18} />
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ width: 9, height: 9, borderRadius: '50%', background: a.farge, flex: 'none' }} />
                     <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{a.navn}</span>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: st.fg, background: st.bg, border: `1px solid ${st.kant}`, borderRadius: 8, padding: '1px 8px' }}>{f.type}</span>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: st.fg, background: st.bg, border: `1px solid ${st.kant}`, borderRadius: 'var(--r)', padding: '1px 8px' }}>{f.type}</span>
                     {paagaar && <span style={{ fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.3px', color: 'var(--surface)', background: st.fg, borderRadius: 999, padding: '2px 7px' }}>Pågår</span>}
                     {kommande && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)' }}>om {talDagar(iDag, f.fra!) - 1} d</span>}
                   </div>
@@ -379,7 +379,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
           .map((a) => ({ a, t: shifts.filter((s) => s.ansatt === a.id && days.some((d) => d.date === s.date)).reduce((sum, s) => sum + (tilMin(s.slutt) - tilMin(s.start)) / 60, 0) }))
           .filter((x) => x.t > 0);
         return (
-          <div style={{ background: 'var(--hero-grad)', color: 'var(--hero-fg)', borderRadius: 16, padding: '16px 18px', boxShadow: '0 10px 30px rgba(12,90,105,0.28)' }}>
+          <div style={{ background: 'var(--hero-grad)', color: 'var(--hero-fg)', borderRadius: 'var(--r)', padding: '16px 18px', boxShadow: '0 10px 30px rgba(12,90,105,0.28)' }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--hero-sub)', marginBottom: 10 }}>Bemanning veke {isoWeek(vpWeek)}</div>
             {timarPerTilsett.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
@@ -464,7 +464,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
         return (
           <>
             <div onClick={() => setMeny(null)} onContextMenu={(e) => { e.preventDefault(); setMeny(null); }} style={{ position: 'fixed', inset: 0, zIndex: 70 }} />
-            <div style={{ position: 'fixed', left, top, width: MENY_BREIDD, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 12px 34px rgba(0,0,0,0.22)', overflow: 'hidden', zIndex: 71, padding: 5 }}>
+            <div style={{ position: 'fixed', left, top, width: MENY_BREIDD, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', boxShadow: '0 12px 34px rgba(0,0,0,0.22)', overflow: 'hidden', zIndex: 71, padding: 5 }}>
               {bytOpen ? (
                 <>
                   <button
@@ -477,7 +477,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                     <button
                       key={x.id}
                       onClick={() => { saveShift({ id: s.id, ansatt: x.id, date: meny.date, start: s.start, slutt: s.slutt, skift: s.skift }); setMeny(null); }}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 600, color: 'var(--text)' }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}
                       onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-alt)')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
                     >
@@ -503,7 +503,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                       {it.overskrift && <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: 'var(--text-faint)', padding: '7px 11px 4px', marginTop: idx === 0 ? 0 : 3, borderTop: idx === 0 ? 'none' : '1px solid var(--divider)' }}>{it.overskrift}</div>}
                       <button
                         onClick={() => { it.handling(); if (!it.keepOpen) setMeny(null); }}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 8, fontSize: 13, fontWeight: 600, color: it.farge || 'var(--text)' }}
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, color: it.farge || 'var(--text)' }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = it.farge ? 'rgba(192,57,43,0.08)' : 'var(--surface-alt)')}
                         onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
                       >
@@ -546,7 +546,7 @@ function MonthView({
   const inMonth = (d: string) => Number(d.split('-')[1]) === mm;
 
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'hidden' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: 'var(--surface-alt)' }}>
         {UKE_KORT.map((d) => <div key={d} style={{ ...th, textAlign: 'center' }}>{d}</div>)}
       </div>
@@ -582,7 +582,7 @@ function MonthView({
                     const a = findAnsatt(f.ansatt);
                     const st = ferieStyl(f.type);
                     return (
-                      <span key={f.id} title={`${a.navn} – ${f.type}${f.tekst ? ` (${f.tekst})` : ''}`} style={{ fontSize: 9.5, fontWeight: 700, color: st.fg, background: st.bg, border: `1px solid ${st.kant}`, borderRadius: 6, padding: '1px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span key={f.id} title={`${a.navn} – ${f.type}${f.tekst ? ` (${f.tekst})` : ''}`} style={{ fontSize: 9.5, fontWeight: 700, color: st.fg, background: st.bg, border: `1px solid ${st.kant}`, borderRadius: 'var(--r-sm)', padding: '1px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {a.init} {f.type}
                       </span>
                     );
@@ -595,7 +595,7 @@ function MonthView({
                           <span
                             key={u.id}
                             title={`${a.navn}${u.grunn ? ` – ${u.grunn}` : ' kan ikkje jobbe'}`}
-                            style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--dag-raud-tekst)', background: 'var(--dag-raud-sterk)', border: '1px solid var(--dag-raud-border)', borderRadius: 6, padding: '1px 5px' }}
+                            style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--dag-raud-tekst)', background: 'var(--dag-raud-sterk)', border: '1px solid var(--dag-raud-border)', borderRadius: 'var(--r-sm)', padding: '1px 5px' }}
                           >
                             {a.init}
                           </span>
@@ -613,6 +613,6 @@ function MonthView({
   );
 }
 
-const btnGhost: CSSProperties = { padding: '9px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' };
-const navBtn: CSSProperties = { width: 32, height: 32, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, cursor: 'pointer', fontSize: 15, color: 'var(--text-secondary)' };
+const btnGhost: CSSProperties = { padding: '9px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' };
+const navBtn: CSSProperties = { width: 32, height: 32, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', cursor: 'pointer', fontSize: 15, color: 'var(--text-secondary)' };
 const th: CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px' };

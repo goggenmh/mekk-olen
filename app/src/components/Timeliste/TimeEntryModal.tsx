@@ -106,12 +106,12 @@ export function TimeEntryModal({
           const ugyldig = mins(b.slutt) <= mins(b.start);
           const t = ugyldig ? 0 : dur(b.start, b.slutt) - b.pause / 60;
           return (
-            <div key={i} style={{ border: '1px solid var(--border)', borderRadius: 12, padding: '11px 12px', background: 'var(--surface-alt)' }}>
+            <div key={i} style={{ border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '11px 12px', background: 'var(--surface-alt)' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px', color: 'var(--text-label)' }}>Bolk {i + 1}</span>
                 <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>{ugyldig ? '–' : `${fmt(t)} t`}</span>
                 {bolkar.length > 1 && (
-                  <button onClick={() => fjern(i)} title="Fjern bolk" style={{ marginLeft: 10, width: 26, height: 26, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 8, cursor: 'pointer', color: 'var(--danger)', fontSize: 14 }}>✕</button>
+                  <button onClick={() => fjern(i)} title="Fjern bolk" style={{ marginLeft: 10, width: 26, height: 26, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', cursor: 'pointer', color: 'var(--danger)', fontSize: 14 }}>✕</button>
                 )}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
@@ -130,7 +130,7 @@ export function TimeEntryModal({
         })}
       </div>
 
-      <button onClick={leggTil} style={{ alignSelf: 'flex-start', border: '1px dashed var(--border)', background: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 600, color: 'var(--brand-strong)', cursor: 'pointer' }}>
+      <button onClick={leggTil} style={{ alignSelf: 'flex-start', border: '1px dashed var(--border)', background: 'none', borderRadius: 'var(--r)', padding: '8px 14px', fontSize: 13, fontWeight: 600, color: 'var(--brand-strong)', cursor: 'pointer' }}>
         + Legg til tidsbolk
       </button>
 
@@ -140,11 +140,11 @@ export function TimeEntryModal({
       <button
         onClick={() => setStatus(godkjent ? 'venter' : 'godkjent')}
         style={{
-          display: 'flex', alignItems: 'center', gap: 9, padding: '10px 13px', borderRadius: 12, cursor: 'pointer', textAlign: 'left',
+          display: 'flex', alignItems: 'center', gap: 9, padding: '10px 13px', borderRadius: 'var(--r)', cursor: 'pointer', textAlign: 'left',
           border: `1px solid ${godkjent ? '#bfe3cd' : 'var(--border)'}`, background: godkjent ? '#e8f5ee' : 'var(--surface-alt)',
         }}
       >
-        <span style={{ width: 18, height: 18, borderRadius: 8, border: `2px solid ${godkjent ? '#2f9e6f' : 'var(--text-faint2)'}`, background: godkjent ? '#2f9e6f' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12 }}>
+        <span style={{ width: 18, height: 18, borderRadius: 'var(--r)', border: `2px solid ${godkjent ? '#2f9e6f' : 'var(--text-faint2)'}`, background: godkjent ? '#2f9e6f' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12 }}>
           {godkjent ? '✓' : ''}
         </span>
         <span style={{ fontSize: 13.5, fontWeight: 600, color: godkjent ? '#2f9e6f' : 'var(--text-secondary)' }}>{godkjent ? 'Godkjent' : 'Ventar på godkjenning'}</span>

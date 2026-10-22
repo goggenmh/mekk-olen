@@ -39,14 +39,14 @@ function DashboardSkeleton() {
     <div style={{ padding: 26, display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div className="skeleton" style={{ width: 240, height: 30 }} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14 }}>
-        {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 74, borderRadius: 12 }} />)}
+        {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 74, borderRadius: 'var(--r)' }} />)}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14 }}>
-        {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 82, borderRadius: 12 }} />)}
+        {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 82, borderRadius: 'var(--r)' }} />)}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1.7fr 1fr', gap: 18 }}>
-        <div className="skeleton" style={{ height: 260, borderRadius: 12 }} />
-        <div className="skeleton" style={{ height: 260, borderRadius: 12 }} />
+        <div className="skeleton" style={{ height: 260, borderRadius: 'var(--r)' }} />
+        <div className="skeleton" style={{ height: 260, borderRadius: 'var(--r)' }} />
       </div>
     </div>
   );

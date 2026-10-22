@@ -101,7 +101,7 @@ export function Bestillinger() {
     const a = alder(o);
     if (!a.gammal) return null;
     return (
-      <span title={`${a.dagar} dagar – ${ALDER_TEKST[o.status]}`} style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--danger)', background: 'rgba(192,57,43,0.10)', padding: '3px 8px', borderRadius: 9, whiteSpace: 'nowrap' }}>
+      <span title={`${a.dagar} dagar – ${ALDER_TEKST[o.status]}`} style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--danger)', background: 'rgba(192,57,43,0.10)', padding: '3px 8px', borderRadius: 'var(--r)', whiteSpace: 'nowrap' }}>
         {a.dagar} d · {ALDER_TEKST[o.status]}
       </span>
     );
@@ -120,7 +120,7 @@ export function Bestillinger() {
         <div className="sidetittel">Bestillingar</div>
         <button
           onClick={() => setOrderTarget('new')}
-          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           + Ny bestilling
         </button>
@@ -132,7 +132,7 @@ export function Bestillinger() {
         onChange={(e) => setSok(e.target.value)}
         placeholder="Søk på kunde, vare, varenr eller telefon …"
         aria-label="Søk i bestillingar"
-        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--text)', maxWidth: 460 }}
+        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--text)', maxWidth: 460 }}
       />
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -142,7 +142,7 @@ export function Bestillinger() {
             onClick={() => setFilter(f.key)}
             aria-pressed={filter === f.key}
             style={{
-              padding: '7px 14px', borderRadius: 9, border: f.key === 'gamle' && filter !== f.key ? '1px solid rgba(192,57,43,0.4)' : '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+              padding: '7px 14px', borderRadius: 'var(--r)', border: f.key === 'gamle' && filter !== f.key ? '1px solid rgba(192,57,43,0.4)' : '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
               background: filter === f.key ? 'var(--brand-strong)' : 'var(--surface)', color: filter === f.key ? 'var(--on-brand)' : f.key === 'gamle' ? 'var(--danger)' : 'var(--text-secondary)',
             }}
           >
@@ -159,10 +159,10 @@ export function Bestillinger() {
             const kanVarsle = o.status === 'komen';
             const nesteIdx = ORDER_FLOW.indexOf(o.status as typeof ORDER_FLOW[number]) + 1;
             return (
-              <div key={o.id} style={{ background: 'var(--surface)', border: alder(o).gammal ? '1px solid rgba(192,57,43,0.35)' : '1px solid var(--border)', borderRadius: 12, padding: '13px 14px', boxShadow: 'var(--shadow-card)' }}>
+              <div key={o.id} style={{ background: 'var(--surface)', border: alder(o).gammal ? '1px solid rgba(192,57,43,0.35)' : '1px solid var(--border)', borderRadius: 'var(--r)', padding: '13px 14px', boxShadow: 'var(--shadow-card)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button onClick={() => setOrderTarget(o)} style={{ fontSize: 14.5, fontWeight: 700, flex: 1, cursor: 'pointer', textAlign: 'left', background: 'none', border: 'none', padding: 0, color: 'var(--text)', fontFamily: 'inherit' }}>{o.kunde}</button>
-                  <span style={{ fontSize: 10.5, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 9, textTransform: 'uppercase' }}>{s.tekst}</span>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 'var(--r)', textTransform: 'uppercase' }}>{s.tekst}</span>
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 5 }}>{o.vare}{o.antal > 1 ? ` · ${o.antal} stk` : ''}</div>
                 {o.notat && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 3, fontStyle: 'italic' }}>{o.notat}</div>}
@@ -186,10 +186,10 @@ export function Bestillinger() {
                   <div style={{ display: 'flex', gap: 8, marginTop: 11 }}>
                     {oppgaveKnapp(o)}
                     {kanVarsle && (
-                      <button onClick={() => setNotifyTarget(o)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--border)', background: o.varsla ? 'var(--brand-soft)' : 'var(--accent-soft)', borderRadius: 10, fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>Varsle</button>
+                      <button onClick={() => setNotifyTarget(o)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--border)', background: o.varsla ? 'var(--brand-soft)' : 'var(--accent-soft)', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>Varsle</button>
                     )}
                     {kanFram && (
-                      <button onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])} style={{ marginLeft: 'auto', padding: '7px 14px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{s.neste} →</button>
+                      <button onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])} style={{ marginLeft: 'auto', padding: '7px 14px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{s.neste} →</button>
                     )}
                   </div>
                 )}
@@ -197,13 +197,13 @@ export function Bestillinger() {
             );
           })}
           {filtered.length === 0 && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>Ingen bestillingar.</div>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '16px 18px', fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>Ingen bestillingar.</div>
           )}
         </div>
       )}
 
       {filter !== 'henta' && !isMobile && (
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'auto', boxShadow: 'var(--shadow-card)' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'auto', boxShadow: 'var(--shadow-card)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: 'var(--surface-alt)' }}>
@@ -248,7 +248,7 @@ export function Bestillinger() {
                     ) : <span style={{ color: 'var(--text-faint)' }}>–</span>}
                   </td>
                   <td style={td}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 9, textTransform: 'uppercase' }}>{s.tekst}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 'var(--r)', textTransform: 'uppercase' }}>{s.tekst}</span>
                     {o.varsla && <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 3 }}>Varsla {datoKort(o.varsla)}</div>}
                     {alder(o).gammal && <div style={{ marginTop: 4 }}><AlderMerke o={o} /></div>}
                   </td>
@@ -259,7 +259,7 @@ export function Bestillinger() {
                         <button
                           onClick={() => setNotifyTarget(o)}
                           title="Varsle kunde"
-                          style={{ padding: '6px 11px', border: '1px solid var(--border)', background: o.varsla ? 'var(--brand-soft)' : 'var(--accent-soft)', borderRadius: 9, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          style={{ padding: '6px 11px', border: '1px solid var(--border)', background: o.varsla ? 'var(--brand-soft)' : 'var(--accent-soft)', borderRadius: 'var(--r)', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
                           Varsle
                         </button>
@@ -267,7 +267,7 @@ export function Bestillinger() {
                       {kanFram && (
                         <button
                           onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])}
-                          style={{ padding: '6px 12px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          style={{ padding: '6px 12px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 'var(--r)', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
                           {s.neste} →
                         </button>
@@ -288,21 +288,21 @@ export function Bestillinger() {
       {filter === 'henta' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {hentaGrupper.length === 0 && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', fontSize: 13, color: 'var(--text-muted)' }}>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '16px 18px', fontSize: 13, color: 'var(--text-muted)' }}>
               Ingen henta bestillingar enno.
             </div>
           )}
           {hentaGrupper.map((g) => {
             const arOpen = openYear === g.ar;
             return (
-              <div key={g.ar} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+              <div key={g.ar} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'hidden' }}>
                 <button
                   onClick={() => { setOpenYear(arOpen ? null : g.ar); setOpenMonth(null); }}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
                 >
                   <span style={{ fontSize: 12, color: 'var(--text-faint)', width: 14 }}>{arOpen ? '▾' : '▸'}</span>
                   <span style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-sans)' }}>{g.ar}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--surface-alt)', borderRadius: 10, padding: '2px 9px' }}>{g.tal} henta</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--surface-alt)', borderRadius: 'var(--r)', padding: '2px 9px' }}>{g.tal} henta</span>
                 </button>
 
                 {arOpen && (
@@ -325,7 +325,7 @@ export function Bestillinger() {
                                 <button
                                   key={o.id}
                                   onClick={() => setOrderTarget(o)}
-                                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', textAlign: 'left' }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', textAlign: 'left' }}
                                 >
                                   <span style={{ fontSize: 13, fontWeight: 600, flex: 'none', minWidth: 0 }}>{o.kunde}</span>
                                   <span style={{ fontSize: 12.5, color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.vare}</span>

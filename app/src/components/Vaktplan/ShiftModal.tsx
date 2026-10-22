@@ -77,7 +77,7 @@ export function ShiftModal({
         </Field>
       </div>
       {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Slutt må vere etter start.</div>}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 13px', borderRadius: 12, background: 'var(--surface-alt)', border: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 13px', borderRadius: 'var(--r)', background: 'var(--surface-alt)', border: '1px solid var(--border)' }}>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', color: 'var(--text-label)' }}>Skift</span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: skiftFarge }}>
           <span style={{ width: 9, height: 9, borderRadius: '50%', background: skiftFarge }} />

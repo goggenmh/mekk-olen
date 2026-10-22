@@ -129,7 +129,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
               key={m}
               onClick={() => setMode(m)}
               style={{
-                padding: '7px 14px', borderRadius: 9, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                padding: '7px 14px', borderRadius: 'var(--r)', border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
                 background: mode === m ? 'var(--brand-strong)' : 'var(--surface)', color: mode === m ? 'var(--on-brand)' : 'var(--text-secondary)',
               }}
             >
@@ -213,7 +213,7 @@ function WeekSummary({ dates, prevDates, entries }: { dates: string[]; prevDates
         const pct = Math.round((sum / NORMALTID) * 100);
         const diff = Math.round((sum - prev) * 4) / 4;
         return (
-          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '15px 17px', boxShadow: 'var(--shadow-card)' }}>
+          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '15px 17px', boxShadow: 'var(--shadow-card)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: a.farge, flex: 'none' }} />
               <span style={{ fontSize: 13.5, fontWeight: 700, flex: 1 }}>{a.navn}</span>
@@ -227,8 +227,8 @@ function WeekSummary({ dates, prevDates, entries }: { dates: string[]; prevDates
               <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Geist Mono Variable'", color: a.farge, letterSpacing: '-0.5px' }}>{fmt(sum)} t</div>
               <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)' }}>{lonTekst(a, sum)}</div>
             </div>
-            <div style={{ height: 9, borderRadius: 6, background: 'var(--surface-alt)', overflow: 'hidden', marginTop: 8 }}>
-              <div style={{ height: '100%', width: `${Math.min(100, pct)}%`, background: pct >= 100 ? '#2f9e6f' : a.farge, borderRadius: 6 }} />
+            <div style={{ height: 9, borderRadius: 'var(--r-sm)', background: 'var(--surface-alt)', overflow: 'hidden', marginTop: 8 }}>
+              <div style={{ height: '100%', width: `${Math.min(100, pct)}%`, background: pct >= 100 ? '#2f9e6f' : a.farge, borderRadius: 'var(--r-sm)' }} />
             </div>
             <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 6 }}>{pct}% av normaltid ({fmt(NORMALTID)} t) · {diff === 0 ? 'som førre veke' : `${diff > 0 ? '+' : '−'}${fmt(Math.abs(diff))} t frå førre veke`}</div>
           </div>
@@ -254,7 +254,7 @@ function WeekTable({
     .filter((s) => s.ansatt === ansatt && s.date === d)
     .reduce((sum, s) => { const [h1, m1] = s.start.split(':').map(Number); const [h2, m2] = s.slutt.split(':').map(Number); return sum + (h2 * 60 + m2 - h1 * 60 - m1) / 60; }, 0);
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'auto', boxShadow: 'var(--shadow-card)' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'auto', boxShadow: 'var(--shadow-card)' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ background: 'var(--surface-alt)' }}>
@@ -281,7 +281,7 @@ function WeekTable({
               <tr key={a.id} style={{ borderTop: '1px solid var(--divider)' }}>
                 <td style={{ ...td, paddingLeft: 18 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 26, height: 26, borderRadius: 8, background: a.farge, color: tekstPaFarge(a.farge), fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{a.init}</span>
+                    <span style={{ width: 26, height: 26, borderRadius: 'var(--r)', background: a.farge, color: tekstPaFarge(a.farge), fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{a.init}</span>
                     <span style={{ fontWeight: 700 }}>{a.navn}</span>
                   </div>
                 </td>
@@ -321,7 +321,7 @@ function WeekTable({
                     {ventarN > 0 && (
                       <button
                         onClick={() => onApprove(a.id)}
-                        style={{ padding: '6px 11px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        style={{ padding: '6px 11px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 'var(--r)', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                       >
                         Godkjenn ({ventarN})
                       </button>
@@ -357,7 +357,7 @@ function WeekCards({
         const harTimar = dagBolkar.some((es) => es.length > 0);
         const lonn = lonTekst(a, sum);
         return (
-          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 15px', boxShadow: 'var(--shadow-card)' }}>
+          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '14px 15px', boxShadow: 'var(--shadow-card)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: a.farge, flex: 'none' }} />
               <span style={{ fontSize: 14.5, fontWeight: 700, flex: 1 }}>{a.navn}</span>
@@ -378,7 +378,7 @@ function WeekCards({
                     onClick={() => onCellClick(a.id, d)}
                     style={{
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '7px 2px', cursor: 'pointer',
-                      border: '1px solid var(--border)', borderRadius: 10,
+                      border: '1px solid var(--border)', borderRadius: 'var(--r)',
                       background: es.length > 0 ? (dagVentar ? 'rgba(216,146,15,0.12)' : 'rgba(47,158,111,0.10)') : 'var(--surface-alt)',
                     }}
                   >
@@ -395,7 +395,7 @@ function WeekCards({
               {maaGodkjenne && ventarN > 0 && (
                 <button
                   onClick={() => onApprove(a.id)}
-                  style={{ marginLeft: 'auto', padding: '7px 13px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 9, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
+                  style={{ marginLeft: 'auto', padding: '7px 13px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
                 >
                   Godkjenn ({ventarN})
                 </button>
@@ -444,7 +444,7 @@ function MonthView({
 
   return (
     <>
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: 'var(--surface-alt)' }}>
           {UKE_KORT.map((d) => <div key={d} style={{ ...th, textAlign: 'center' }}>{d}</div>)}
         </div>
@@ -482,7 +482,7 @@ function MonthView({
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14 }}>
         {manadKort.map(({ a, tot, lonn, trekk, ferie }) => (
-          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
+          <div key={a.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '14px 16px' }}>
             <div style={{ fontSize: 13.5, fontWeight: 700 }}>{a.navn}</div>
             <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Geist Mono Variable'", color: a.farge, marginTop: 4 }}>{fmt(tot)} t</div>
             {trekk && trekk !== 'fast' ? (
@@ -510,8 +510,8 @@ function MonthView({
   );
 }
 
-const btnGhost: CSSProperties = { padding: '9px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' };
-const navBtn: CSSProperties = { width: 32, height: 32, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, cursor: 'pointer', fontSize: 15, color: 'var(--text-secondary)' };
+const btnGhost: CSSProperties = { padding: '9px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' };
+const navBtn: CSSProperties = { width: 32, height: 32, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', cursor: 'pointer', fontSize: 15, color: 'var(--text-secondary)' };
 const th: CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px' };
 const td: CSSProperties = { padding: '10px 12px' };
 const dot = (color: string): CSSProperties => ({ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: color });

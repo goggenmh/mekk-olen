@@ -102,7 +102,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           title="Meny" aria-label="Opne meny"
           style={{
             width: 36, height: 36, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 9, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none',
+            borderRadius: 'var(--r)', cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none',
           }}
         >
           <Icon name="menu" size={20} />
@@ -117,14 +117,14 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           aria-label="Søk"
           style={{
             width: '100%', padding: '8px 13px', border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 9, fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--topbar-ctl-fg)',
+            borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--topbar-ctl-fg)',
           }}
         />
         {hits.length > 0 && (
           <div
             style={{
               position: 'absolute', top: '110%', left: 0, right: 0, background: 'var(--surface)', border: '1px solid var(--border)',
-              borderRadius: 14, boxShadow: '0 12px 30px rgba(0,0,0,0.15)', overflow: 'hidden', zIndex: 50,
+              borderRadius: 'var(--r)', boxShadow: '0 12px 30px rgba(0,0,0,0.15)', overflow: 'hidden', zIndex: 50,
             }}
           >
             {hits.map((h) => (
@@ -159,7 +159,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
             title="Varsel" aria-label={`Varsel (${varsler.length})`} aria-expanded={notifOpen}
             style={{
               position: 'relative', width: 34, height: 34, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-              borderRadius: 9, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: 'var(--r)', cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
             <Icon name="bell" size={18} />
@@ -177,7 +177,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
                 ...(isMobile
                   ? { position: 'fixed', top: listeTopp, left: 12, right: 12, maxHeight: `calc(100dvh - ${listeTopp + 90}px)` }
                   : { position: 'absolute', top: '130%', right: 0, width: 320, maxHeight: '70vh' }),
-                overflowY: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
+                overflowY: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)',
                 boxShadow: '0 12px 30px rgba(0,0,0,0.18)', zIndex: 50,
               }}>
                 <div style={{ padding: '11px 14px', borderBottom: '1px solid var(--divider)', fontSize: 12, fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', color: 'var(--text-label)' }}>Varsel</div>
@@ -205,7 +205,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
             title="Administrasjon" aria-label="Administrasjon"
             style={{
               width: 34, height: 34, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-              borderRadius: 9, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: 'var(--r)', cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
             <Icon name="innstillinger" size={18} />
@@ -217,7 +217,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           aria-label={dark ? 'Bytt til lys modus' : 'Bytt til mørk modus'}
           style={{
             width: 34, height: 34, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 9, cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: 'var(--r)', cursor: 'pointer', color: 'var(--topbar-ctl-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
           <Icon name={dark ? 'sun' : 'moon'} size={18} />
@@ -234,7 +234,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           title="Logg ut" aria-label="Logg ut"
           style={{
             marginLeft: 6, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 9, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 700, color: 'var(--topbar-ctl-fg)',
+            borderRadius: 'var(--r)', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 700, color: 'var(--topbar-ctl-fg)',
             ...(isMobile
               ? { width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }
               : { padding: '8px 14px' }),

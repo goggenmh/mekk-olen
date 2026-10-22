@@ -9,7 +9,7 @@ import { feriepengar, tidlegareIAar, trekkForPeriode } from '../../lib/skatt';
 
 const nesteManad = (m: string) => { const [y, mm] = m.split('-').map(Number); return mm === 12 ? `${y + 1}-01-01` : `${y}-${String(mm + 1).padStart(2, '0')}-01`; };
 
-const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', boxShadow: 'var(--shadow-card)' } as const;
+const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '16px 18px', boxShadow: 'var(--shadow-card)' } as const;
 const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 12 } as const;
 
 export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
@@ -110,7 +110,7 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
               const farge = SKIFT_FARGE[s.skift] || ansatt.farge;
               return (
                 <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ flex: 'none', width: 46, textAlign: 'center', padding: '6px 0', borderRadius: 10, background: erIDag ? 'var(--brand-soft)' : 'var(--surface-alt)', border: '1px solid var(--border)' }}>
+                  <div style={{ flex: 'none', width: 46, textAlign: 'center', padding: '6px 0', borderRadius: 'var(--r)', background: erIDag ? 'var(--brand-soft)' : 'var(--surface-alt)', border: '1px solid var(--border)' }}>
                     <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)' }}>{UKE_KORT[weekdayIdx(s.date)]}</div>
                     <div style={{ fontSize: 17, fontWeight: 800, fontFamily: 'var(--font-sans)', color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(s.date).getDate()}</div>
                   </div>
@@ -140,7 +140,7 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
                 <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13 }}>
                   <span style={{ display: 'flex', color: forfalle ? 'var(--danger)' : 'var(--text-faint)', flex: 'none' }}><Icon name={forfalle ? 'alert' : 'oppgaver'} size={15} /></span>
                   <span style={{ flex: 1 }}>{o.tittel}</span>
-                  {o.frist && <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 9, color: forfalle ? '#fff' : 'var(--text-muted)', background: forfalle ? 'var(--danger)' : 'var(--surface-alt)' }}>{forfalle ? 'Forfalt' : datoKort(o.frist)}</span>}
+                  {o.frist && <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 'var(--r)', color: forfalle ? '#fff' : 'var(--text-muted)', background: forfalle ? 'var(--danger)' : 'var(--surface-alt)' }}>{forfalle ? 'Forfalt' : datoKort(o.frist)}</span>}
                 </div>
               );
             })}
@@ -157,7 +157,7 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
               return (
                 <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13 }}>
                   <span style={{ flex: 1 }}>{f.tekst}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: tc.fg, background: tc.bg, padding: '2px 8px', borderRadius: 9, textTransform: 'uppercase' }}>{f.type}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: tc.fg, background: tc.bg, padding: '2px 8px', borderRadius: 'var(--r)', textTransform: 'uppercase' }}>{f.type}</span>
                 </div>
               );
             })}
@@ -170,5 +170,5 @@ export function AnsattProfil({ ansatt, onBack, onEdit, onResetPin }: {
 
 const btn = {
   padding: '9px 14px', background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)',
-  borderRadius: 10, fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+  borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
 } as const;

@@ -21,7 +21,7 @@ const DUMMY_DATO: Record<string, string> = {
 
 interface Rad { ansatt: string; dag: string; start: string; slutt: string; }
 
-const sel: CSSProperties = { padding: '8px 9px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 9, fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text)' };
+const sel: CSSProperties = { padding: '8px 9px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text)' };
 
 export function StandardvekeModal({ onClose }: { onClose: () => void }) {
   const { standardveke, saveStandardveke } = useAppData();
@@ -66,12 +66,12 @@ export function StandardvekeModal({ onClose }: { onClose: () => void }) {
               <input type="time" value={r.start} onChange={(e) => oppdater(i, { start: e.target.value })} style={{ ...sel, fontFamily: "'Geist Mono Variable'", width: 92 }} />
               <input type="time" value={r.slutt} onChange={(e) => oppdater(i, { slutt: e.target.value })} style={{ ...sel, fontFamily: "'Geist Mono Variable'", width: 92 }} />
               <span style={{ fontSize: 11, fontWeight: 700, minWidth: 62, color: skift ? (SKIFT_FARGE[skift] || 'var(--text-muted)') : 'var(--danger)' }}>{skift || 'ugyldig'}</span>
-              <button onClick={() => fjern(i)} title="Fjern" style={{ width: 30, height: 30, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 9, cursor: 'pointer', color: 'var(--danger)', fontSize: 15, flex: 'none' }}>✕</button>
+              <button onClick={() => fjern(i)} title="Fjern" style={{ width: 30, height: 30, border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', cursor: 'pointer', color: 'var(--danger)', fontSize: 15, flex: 'none' }}>✕</button>
             </div>
           );
         })}
       </div>
-      <button onClick={leggTil} style={{ marginTop: 4, alignSelf: 'flex-start', border: '1px dashed var(--border)', background: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 600, color: 'var(--brand-strong)', cursor: 'pointer' }}>
+      <button onClick={leggTil} style={{ marginTop: 4, alignSelf: 'flex-start', border: '1px dashed var(--border)', background: 'none', borderRadius: 'var(--r)', padding: '8px 14px', fontSize: 13, fontWeight: 600, color: 'var(--brand-strong)', cursor: 'pointer' }}>
         + Legg til vakt
       </button>
       <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>Skifttypen blir sett automatisk ut frå tida. Du fyller ei veke ved å trykkje «Fyll frå standardveke» på vaktplanen.</div>

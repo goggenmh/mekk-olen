@@ -29,7 +29,7 @@ export function RutineModal({ onClose }: { onClose: () => void }) {
           <button
             key={r.id}
             onClick={() => setUtkast({ ...r })}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', opacity: r.aktiv ? 1 : 0.55, color: 'var(--text)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '10px 12px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', opacity: r.aktiv ? 1 : 0.55, color: 'var(--text)' }}
           >
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700 }}>{r.tittel}</span>
@@ -49,7 +49,7 @@ export function RutineModal({ onClose }: { onClose: () => void }) {
             <button
               key={m.tittel}
               onClick={() => setUtkast({ ...m, aktiv: true, sjekkliste: m.sjekkliste.map((p) => ({ ...p })) })}
-              style={{ textAlign: 'left', padding: '10px 12px', borderRadius: 12, border: '1px dashed var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', color: 'var(--text)' }}
+              style={{ textAlign: 'left', padding: '10px 12px', borderRadius: 'var(--r)', border: '1px dashed var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', color: 'var(--text)' }}
             >
               <span style={{ display: 'block', fontSize: 13, fontWeight: 700 }}>{m.tittel}{brukteMalar.has(m.tittel) ? ' ✓' : ''}</span>
               <span style={{ display: 'block', fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>{rutineTekst(m)} · {ansvarTekst(m.ansvar)}</span>
@@ -101,7 +101,7 @@ function RutineSkjema({ utkast, onTilbake, onLagre, onSlett }: { utkast: Utkast;
               const aktiv = (k === 'manad') === manadleg;
               return (
                 <button key={k} type="button" onClick={() => sett({ manadsdag: k === 'manad' ? (r.manadsdag ?? 1) : null })}
-                  style={{ padding: '6px 12px', borderRadius: 9, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', border: '1px solid var(--border)', background: aktiv ? 'var(--brand-strong)' : 'var(--surface)', color: aktiv ? 'var(--on-brand)' : 'var(--text-secondary)' }}>
+                  style={{ padding: '6px 12px', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', border: '1px solid var(--border)', background: aktiv ? 'var(--brand-strong)' : 'var(--surface)', color: aktiv ? 'var(--on-brand)' : 'var(--text-secondary)' }}>
                   {l}
                 </button>
               );
@@ -120,7 +120,7 @@ function RutineSkjema({ utkast, onTilbake, onLagre, onSlett }: { utkast: Utkast;
                 return (
                   <button key={dag} type="button" aria-pressed={valt}
                     onClick={() => sett({ dagar: valt ? r.dagar.filter((x) => x !== dag) : [...r.dagar, dag].sort((a, b) => a - b) })}
-                    style={{ width: 44, padding: '7px 0', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: '1px solid var(--border)', background: valt ? 'var(--brand-soft)' : 'var(--surface)', color: valt ? 'var(--brand-strong)' : 'var(--text-muted)' }}>
+                    style={{ width: 44, padding: '7px 0', borderRadius: 'var(--r)', fontSize: 12, fontWeight: 700, cursor: 'pointer', border: '1px solid var(--border)', background: valt ? 'var(--brand-soft)' : 'var(--surface)', color: valt ? 'var(--brand-strong)' : 'var(--text-muted)' }}>
                     {namn}
                   </button>
                 );

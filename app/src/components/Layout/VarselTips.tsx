@@ -53,7 +53,7 @@ export function VarselTips({ setView }: { setView: (v: View) => void }) {
         role="status"
         style={{
           display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: 'var(--brand-soft)',
-          border: '1px solid var(--border)', borderRadius: 14, padding: '12px 14px', maxWidth: 1384, margin: '0 auto',
+          border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '12px 14px', maxWidth: 1384, margin: '0 auto',
         }}
       >
         <span style={{ display: 'flex', color: 'var(--brand-strong)' }}><Icon name="bell" size={20} /></span>
@@ -63,12 +63,12 @@ export function VarselTips({ setView }: { setView: (v: View) => void }) {
           {feil && <div style={{ fontSize: 12.5, color: 'var(--danger)', marginTop: 4 }}>{feil}</div>}
         </div>
         {!heimeskjerm && !blokkert && (
-          <button onClick={skruPa} disabled={jobbar} style={{ padding: '8px 14px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={skruPa} disabled={jobbar} style={{ padding: '8px 14px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             {jobbar ? 'Slår på …' : 'Slå på'}
           </button>
         )}
         {blokkert && (
-          <button onClick={() => setView('innstillinger')} style={{ padding: '8px 14px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => setView('innstillinger')} style={{ padding: '8px 14px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             Innstillingar
           </button>
         )}

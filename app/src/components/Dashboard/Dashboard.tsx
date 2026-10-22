@@ -19,8 +19,8 @@ import { ventandeFerie } from '../../lib/ferie';
 import { erForseinka, fristTekst, ledigeOppgaver, mineIDag } from '../../lib/oppgave';
 import type { Task } from '../../types';
 
-const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', boxShadow: 'var(--shadow-card)' } as const;
-const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--kort-label)', marginBottom: 9 } as const;
+const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '14px 16px', boxShadow: 'var(--shadow-card)' } as const;
+const labelStyle = { fontSize: 11.5, fontWeight: 900, letterSpacing: '0.4px', textTransform: 'uppercase', color: 'var(--kort-label)', marginBottom: 9 } as const;
 const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 
 export function Dashboard({ setView }: { setView: (v: View) => void }) {
@@ -164,7 +164,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
     <div style={{ padding: isMobile ? '16px 16px 28px' : '24px 28px 34px', display: 'flex', flexDirection: 'column', gap: 15 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: isMobile ? 24 : 30, letterSpacing: '-0.6px' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 900, fontSize: isMobile ? 24 : 32, letterSpacing: '-0.01em', textTransform: 'uppercase' }}>
             {helsing}, <span style={{ background: 'linear-gradient(120deg, var(--brand), var(--brand-strong))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{fornamn}</span>
           </div>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4 }}>{fullDatoTekst(t)}</div>
@@ -186,10 +186,10 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             onClick={() => setQuickAction(h.key)}
             style={{
               display: 'flex', alignItems: 'center', gap: 11, textAlign: 'left', background: 'var(--surface)',
-              border: '1px solid var(--border)', borderRadius: 14, padding: '11px 14px', cursor: 'pointer', boxShadow: 'var(--shadow-card)',
+              border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '11px 14px', cursor: 'pointer', boxShadow: 'var(--shadow-card)',
             }}
           >
-            <span style={{ width: 34, height: 34, borderRadius: 11, background: h.primary ? 'var(--cta)' : 'var(--brand-soft)', color: h.primary ? 'var(--on-cta)' : 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={h.ikon} size={18} /></span>
+            <span style={{ width: 34, height: 34, borderRadius: 'var(--r)', background: h.primary ? 'var(--cta)' : 'var(--brand-soft)', color: h.primary ? 'var(--on-cta)' : 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={h.ikon} size={18} /></span>
             <span style={{ fontSize: 13.5, fontWeight: 700 }}>{h.tekst}</span>
           </button>
         ))}
@@ -203,7 +203,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
               <button
                 key={v.key}
                 onClick={() => setView(v.view)}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '10px 12px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}
               >
                 <span style={{ display: 'flex', color: 'var(--accent)', flex: 'none' }}><Icon name="bell" size={15} /></span>
                 <span style={{ flex: 1 }}>{v.tekst}</span>
@@ -218,7 +218,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
       <div style={cardStyle}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 9 }}>
           <div style={{ ...labelStyle, marginBottom: 0 }}>Dine oppgåver i dag</div>
-          <button onClick={() => setView('oppgaver')} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, color: 'var(--brand)' }}>Alle oppgåver ›</button>
+          <button onClick={() => setView('oppgaver')} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, color: 'var(--brand)' }}>Alle oppgåver ‹</button>
         </div>
         {dagensOppgaver.length === 0 && (
           <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen oppgåver med frist i dag. 👍</div>
@@ -227,7 +227,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
           {dagensOppgaver.slice(0, 6).map((o) => {
             const forfalle = erForseinka(o, t);
             return (
-              <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-alt)' }}>
+              <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface-alt)' }}>
                 <button onClick={() => setOpneTask(o)} style={{ flex: 1, minWidth: 0, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text)' }}>
                   <div style={{ fontSize: 13.5, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.tittel}</div>
                   <div style={{ fontSize: 11.5, fontWeight: 600, color: o.blokkert || forfalle ? 'var(--danger)' : 'var(--text-muted)', marginTop: 1 }}>
@@ -236,7 +236,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                   </div>
                 </button>
                 {!o.blokkert && (
-                  <button onClick={() => completeTask(o)} style={{ padding: '7px 12px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flex: 'none' }}>✓ Fullfør</button>
+                  <button onClick={() => completeTask(o)} style={{ padding: '7px 12px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flex: 'none' }}>✓ Fullfør</button>
                 )}
               </div>
             );
@@ -245,13 +245,13 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             <button onClick={() => setView('oppgaver')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', textAlign: 'left' }}>+ {dagensOppgaver.length - 6} til</button>
           )}
           {ledigeIDag.slice(0, 2).map((o) => (
-            <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 12, border: '1px dashed var(--border)' }}>
+            <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 'var(--r)', border: '1px dashed var(--border)' }}>
               <button onClick={() => setOpneTask(o)} style={{ flex: 1, minWidth: 0, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text)' }}>
                 <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.tittel}</div>
                 <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 1 }}>Ledig · {fristTekst(o.frist, t).toLowerCase()}</div>
               </button>
               {user && (
-                <button onClick={() => moveTask(o.id, user.id)} style={{ padding: '7px 12px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flex: 'none' }}>Ta ansvar</button>
+                <button onClick={() => moveTask(o.id, user.id)} style={{ padding: '7px 12px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flex: 'none' }}>Ta ansvar</button>
               )}
             </div>
           ))}
@@ -283,7 +283,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
 
       {/* Neste vakt + timar per dag */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: 15 }}>
-        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, padding: isMobile ? '15px 18px' : '17px 22px', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 12px 32px rgba(12, 90, 105, 0.28)' }}>
+        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--r)', padding: isMobile ? '15px 18px' : '17px 22px', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 12px 32px rgba(12, 90, 105, 0.28)' }}>
           <span style={{ position: 'absolute', right: -60, top: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 68%)', pointerEvents: 'none' }} />
           <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', background: 'var(--cta)', color: 'var(--on-cta)', padding: '5px 11px', borderRadius: 20 }}>
             Neste vakt {nesteVakt ? (nesteVakt.date === t ? '· I dag' : `· ${datoKort(nesteVakt.date)}`) : ''}
@@ -294,10 +294,10 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
               <div style={{ fontSize: 13.5, color: 'var(--hero-sub)', fontWeight: 500, textTransform: 'capitalize' }}>{nesteVakt.skift || 'Vakt'}</div>
               <div style={{ display: 'flex', gap: 10, marginTop: 13, flexWrap: 'wrap' }}>
                 {nesteKollegaer.length > 0 && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 11, fontSize: 13, fontWeight: 600 }}><Icon name="user" size={14} /> Saman med {nesteKollegaer.join(' & ')}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600 }}><Icon name="user" size={14} /> Saman med {nesteKollegaer.join(' & ')}</span>
                 )}
                 {startOm && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 11, fontSize: 13, fontWeight: 600 }}><Icon name="timeliste" size={14} /> {startOm}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600 }}><Icon name="timeliste" size={14} /> {startOm}</span>
                 )}
               </div>
             </>
@@ -313,7 +313,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
               const erIdag = d === t;
               return (
                 <div key={d} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: 7, height: '100%' }} title={`${fmt(tt)} t`}>
-                  <div style={{ width: '100%', height: `${Math.max(4, (tt / maxDag) * 100)}%`, borderRadius: '7px 7px 3px 3px', background: erIdag ? 'var(--cta)' : 'var(--brand-soft)', boxShadow: erIdag ? 'var(--glow-brand)' : 'none' }} />
+                  <div style={{ width: '100%', height: `${Math.max(4, (tt / maxDag) * 100)}%`, borderRadius: 'var(--r-sm)', background: erIdag ? 'var(--cta)' : 'var(--brand-soft)', boxShadow: erIdag ? 'var(--glow-brand)' : 'none' }} />
                   <span style={{ fontSize: 11, color: erIdag ? 'var(--brand-strong)' : 'var(--text-muted)', fontWeight: 700 }}>{UKE_KORT[weekdayIdx(d)]}</span>
                 </div>
               );
@@ -330,7 +330,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
               <div style={labelStyle}>Meldingar frå leiinga</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {mineMeldinger.map((m) => (
-                  <div key={m.id} style={{ border: '1px solid var(--border)', borderRadius: 13, padding: '10px 12px' }}>
+                  <div key={m.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '10px 12px' }}>
                     <div style={{ fontSize: 13 }}>{m.tekst}</div>
                   </div>
                 ))}
@@ -346,7 +346,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                   <button
                     key={v.key}
                     onClick={() => setView(v.view)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '9px 12px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', fontSize: 12.5, fontWeight: 600 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '9px 12px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', fontSize: 12.5, fontWeight: 600 }}
                   >
                     <span style={{ display: 'flex', color: 'var(--brand-strong)', flex: 'none' }}><Icon name="bell" size={15} /></span>
                     {v.tekst}
@@ -364,7 +364,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                 const erIDag = g.dato === t;
                 return (
                   <div key={g.dato} style={{ display: 'flex', gap: 11, alignItems: 'flex-start' }}>
-                    <div style={{ flex: 'none', width: 44, textAlign: 'center', padding: '5px 0', borderRadius: 10, background: erIDag ? 'var(--brand-soft)' : 'var(--surface-alt)', border: '1px solid var(--border)' }}>
+                    <div style={{ flex: 'none', width: 44, textAlign: 'center', padding: '5px 0', borderRadius: 'var(--r)', background: erIDag ? 'var(--brand-soft)' : 'var(--surface-alt)', border: '1px solid var(--border)' }}>
                       <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)' }}>{UKE_KORT[weekdayIdx(g.dato)]}</div>
                       <div style={{ fontSize: 16, fontWeight: 800, fontFamily: 'var(--font-sans)', color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(g.dato).getDate()}</div>
                     </div>
@@ -398,8 +398,8 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                     <span style={{ fontWeight: 600 }}>{a.navn}</span>
                     <span style={{ fontFamily: "'Geist Mono Variable'", color: 'var(--text-muted)' }}>{fmt(tt)} t</span>
                   </div>
-                  <div style={{ height: 7, borderRadius: 6, background: 'var(--surface-alt)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${(tt / maxTimar) * 100}%`, background: a.farge, borderRadius: 6 }} />
+                  <div style={{ height: 7, borderRadius: 'var(--r-sm)', background: 'var(--surface-alt)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${(tt / maxTimar) * 100}%`, background: a.farge, borderRadius: 'var(--r-sm)' }} />
                   </div>
                 </div>
               ))}
@@ -439,7 +439,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             </div>
           </div>
 
-          <div style={{ borderRadius: 16, padding: '14px 16px', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 10px 30px rgba(12,90,105,0.28)' }}>
+          <div style={{ borderRadius: 'var(--r)', padding: '14px 16px', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 10px 30px rgba(12,90,105,0.28)' }}>
             <div style={{ ...labelStyle, color: 'var(--hero-sub)' }}>Ferie &amp; fri på trappene</div>
             {dashFerie.length === 0 && <div style={{ fontSize: 13, color: 'var(--hero-sub)' }}>Ingen registrert.</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -452,7 +452,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{a.navn}</div>
                       <div style={{ fontSize: 11.5, color: 'var(--hero-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.fra ? datoIntervall(f.fra, f.til) : (f.tekst || '—')}</div>
                     </div>
-                    <span style={{ fontSize: 9.5, fontWeight: 700, color: '#0c5a69', background: '#d5eef2', padding: '3px 8px', borderRadius: 9, textTransform: 'uppercase' }}>{f.type}</span>
+                    <span style={{ fontSize: 9.5, fontWeight: 700, color: '#0c5a69', background: '#d5eef2', padding: '3px 8px', borderRadius: 'var(--r)', textTransform: 'uppercase' }}>{f.type}</span>
                   </div>
                 );
               })}

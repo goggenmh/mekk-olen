@@ -39,14 +39,14 @@ export function Dokument() {
         <div className="sidetittel">Dokument</div>
         <button
           onClick={() => setDocTarget('new')}
-          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           + Nytt dokument
         </button>
       </div>
 
       {manglarMine > 0 && (
-        <div role="status" style={{ background: 'var(--accent-soft)', border: '1px solid var(--border)', borderRadius: 12, padding: '11px 14px', fontSize: 13.5 }}>
+        <div role="status" style={{ background: 'var(--accent-soft)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '11px 14px', fontSize: 13.5 }}>
           <b>{manglarMine} HMS-dokument</b> ventar på at du stadfestar at du har lese {manglarMine === 1 ? 'det' : 'dei'}.
         </div>
       )}
@@ -57,7 +57,7 @@ export function Dokument() {
         onChange={(e) => setSok(e.target.value)}
         placeholder="Søk i dokument …"
         aria-label="Søk i dokument"
-        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--text)', maxWidth: 420 }}
+        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--text)', maxWidth: 420 }}
       />
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -66,7 +66,7 @@ export function Dokument() {
             key={f}
             onClick={() => setFilter(f)}
             style={{
-              padding: '7px 14px', borderRadius: 9, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+              padding: '7px 14px', borderRadius: 'var(--r)', border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600,
               background: filter === f ? 'var(--brand-strong)' : 'var(--surface)', color: filter === f ? 'var(--on-brand)' : 'var(--text-secondary)',
             }}
           >
@@ -83,11 +83,11 @@ export function Dokument() {
               key={d.id}
               className="hoverable"
               onClick={() => setDocTarget(d)}
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer', boxShadow: 'var(--shadow-card)' }}
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '14px 16px', cursor: 'pointer', boxShadow: 'var(--shadow-card)' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
                 <span style={{ display: 'flex', color: k.fg }}><Icon name={k.ikon} size={18} /></span>
-                <span style={{ fontSize: 10.5, fontWeight: 700, color: k.fg, background: k.bg, padding: '2px 8px', borderRadius: 9, textTransform: 'uppercase' }}>{d.kategori}</span>
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: k.fg, background: k.bg, padding: '2px 8px', borderRadius: 'var(--r)', textTransform: 'uppercase' }}>{d.kategori}</span>
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{d.tittel}</div>
               {d.notat && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6, lineHeight: 1.4 }}>{d.notat}</div>}
@@ -109,7 +109,7 @@ export function Dokument() {
                       <button
                         onClick={() => stadfest(d.id)}
                         disabled={jobbar === d.id}
-                        style={{ alignSelf: 'flex-start', padding: '7px 12px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 9, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
+                        style={{ alignSelf: 'flex-start', padding: '7px 12px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
                       >
                         {jobbar === d.id ? 'Lagrar …' : 'Eg har lese dette'}
                       </button>

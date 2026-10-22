@@ -52,7 +52,7 @@ export function LoginScreen() {
     >
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-        <img src="/assets/mekk-logo.png" alt="MEKK" style={{ width: 38, height: 38, borderRadius: 11 }} />
+        <img src="/assets/mekk-logo.png" alt="MEKK" style={{ width: 38, height: 38, borderRadius: 'var(--r)' }} />
         <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: '0.6px', color: 'var(--login-text)' }}>{merke}</span>
       </div>
 
@@ -66,7 +66,7 @@ export function LoginScreen() {
           <>
             <button onClick={back} style={backBtn}>‹ Byt brukar</button>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: 58, height: 58, borderRadius: 17, background: pick.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: tekstPaFarge(pick.farge), marginBottom: 12 }}>
+              <div style={{ width: 58, height: 58, borderRadius: 'var(--r)', background: pick.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: tekstPaFarge(pick.farge), marginBottom: 12 }}>
                 {pick.init}
               </div>
               <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--login-text)' }}>Hei, {pick.navn.split(' ')[0]}</div>
@@ -80,7 +80,7 @@ export function LoginScreen() {
                     <div
                       key={i}
                       style={{
-                        width: 48, height: 56, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 48, height: 56, borderRadius: 'var(--r)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontFamily: "'Geist Mono Variable'", fontSize: 24, fontWeight: 700, color: 'var(--login-text)',
                         border: `1.5px solid ${fylt || aktiv ? 'var(--login-accent)' : 'var(--login-surface-border)'}`,
                         background: 'var(--login-pin-bg)',
@@ -144,7 +144,7 @@ export function LoginScreen() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {synlege.map((u) => (
                 <button key={u.id} className="glassrow" onClick={() => pickUser(u.id)} style={rowBtn}>
-                  <div style={{ flex: 'none', width: 42, height: 42, borderRadius: 13, background: u.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: tekstPaFarge(u.farge) }}>
+                  <div style={{ flex: 'none', width: 42, height: 42, borderRadius: 'var(--r)', background: u.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: tekstPaFarge(u.farge) }}>
                     {u.init}
                   </div>
                   <div style={{ lineHeight: 1.25, textAlign: 'left' }}>
@@ -156,7 +156,7 @@ export function LoginScreen() {
               ))}
             </div>
             {synlege.length === 0 && (
-              <div style={{ marginTop: 16, padding: '10px 13px', background: 'var(--login-surface)', borderRadius: 12, fontSize: 11.5, color: 'var(--login-sub)', lineHeight: 1.4, textAlign: 'center' }}>
+              <div style={{ marginTop: 16, padding: '10px 13px', background: 'var(--login-surface)', borderRadius: 'var(--r)', fontSize: 11.5, color: 'var(--login-sub)', lineHeight: 1.4, textAlign: 'center' }}>
                 Ingen tilsette i denne butikken enno.
               </div>
             )}
@@ -173,6 +173,6 @@ const glass: CSSProperties = {
   boxShadow: 'var(--login-card-shadow)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
 };
 const backBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--login-sub)', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, marginBottom: 14 };
-const rowBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', transition: 'all 0.15s ease' };
-const tileBtn: CSSProperties = { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, padding: '14px 15px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', transition: 'all 0.15s ease', textAlign: 'left' };
-const padKey: CSSProperties = { height: 54, border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', fontFamily: "'Geist Mono Variable'", fontSize: 20, fontWeight: 600, color: 'var(--login-text)', transition: 'all 0.12s ease' };
+const rowBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 'var(--r)', cursor: 'pointer', transition: 'all 0.15s ease' };
+const tileBtn: CSSProperties = { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, padding: '14px 15px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 'var(--r)', cursor: 'pointer', transition: 'all 0.15s ease', textAlign: 'left' };
+const padKey: CSSProperties = { height: 54, border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 'var(--r)', cursor: 'pointer', fontFamily: "'Geist Mono Variable'", fontSize: 20, fontWeight: 600, color: 'var(--login-text)', transition: 'all 0.12s ease' };

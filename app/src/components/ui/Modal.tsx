@@ -28,20 +28,20 @@ export function Modal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: 'var(--surface)', borderRadius: 12, width: '100%', maxWidth, maxHeight: 'calc(100vh - 48px)', boxShadow: '0 24px 60px rgba(0,0,0,0.3)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        style={{ background: 'var(--surface)', borderRadius: 'var(--r)', width: '100%', maxWidth, maxHeight: 'calc(100vh - 48px)', boxShadow: '0 24px 60px rgba(0,0,0,0.3)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
       >
         <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--divider)' }}>
           {leftHeader ? (
             leftHeader
           ) : (
             <div style={{ lineHeight: 1.2 }}>
-              <h2 style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 18 }}>{title}</h2>
+              <h2 style={{ fontFamily: 'var(--font-sans)', fontWeight: 900, fontSize: 18, textTransform: 'uppercase', letterSpacing: '-0.01em' }}>{title}</h2>
               {subtitle && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{subtitle}</div>}
             </div>
           )}
           <button
             onClick={onClose}
-            style={{ marginLeft: 'auto', width: 30, height: 30, border: 'none', background: 'var(--bg)', borderRadius: 10, cursor: 'pointer', fontSize: 16, color: 'var(--text-secondary)' }}
+            style={{ marginLeft: 'auto', width: 30, height: 30, border: 'none', background: 'var(--bg)', borderRadius: 'var(--r)', cursor: 'pointer', fontSize: 16, color: 'var(--text-secondary)' }}
           >
             ✕
           </button>
@@ -65,7 +65,7 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 }
 
 export const inputStyle = {
-  padding: '9px 11px', border: '1px solid var(--border)', borderRadius: 11, background: 'var(--surface)',
+  padding: '9px 11px', border: '1px solid var(--border)', borderRadius: 'var(--r-input)', background: 'var(--surface)',
   fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--text)', width: '100%',
 } as const;
 
@@ -73,7 +73,7 @@ export const monoInputStyle = { ...inputStyle, fontFamily: "'Geist Mono Variable
 
 export function CancelButton({ onClick, children = 'Avbryt' }: { onClick: () => void; children?: ReactNode }) {
   return (
-    <button onClick={onClick} style={{ marginLeft: 'auto', padding: '10px 16px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 11, fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+    <button onClick={onClick} style={{ marginLeft: 'auto', padding: '10px 16px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
       {children}
     </button>
   );
@@ -81,7 +81,7 @@ export function CancelButton({ onClick, children = 'Avbryt' }: { onClick: () => 
 
 export function SaveButton({ onClick, children = 'Lagre' }: { onClick: () => void; children?: ReactNode }) {
   return (
-    <button onClick={onClick} style={{ padding: '10px 22px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 11, fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+    <button onClick={onClick} style={{ padding: '10px 22px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
       {children}
     </button>
   );
@@ -89,7 +89,7 @@ export function SaveButton({ onClick, children = 'Lagre' }: { onClick: () => voi
 
 export function DeleteButton({ onClick, children = 'Slett' }: { onClick: () => void; children?: ReactNode }) {
   return (
-    <button onClick={onClick} style={{ padding: '10px 14px', background: 'var(--surface)', color: 'var(--danger)', border: '1px solid var(--danger-border)', borderRadius: 11, fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+    <button onClick={onClick} style={{ padding: '10px 14px', background: 'var(--surface)', color: 'var(--danger)', border: '1px solid var(--danger-border)', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
       {children}
     </button>
   );

@@ -17,7 +17,7 @@ type Fane = 'mine' | 'ledige' | 'alle' | 'fullforte';
 type Fokus = 'forseinka' | 'blokkert' | null;
 
 const fane = (aktiv: boolean): CSSProperties => ({
-  padding: '8px 14px', borderRadius: 10, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 700,
+  padding: '8px 14px', borderRadius: 'var(--r)', border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 700,
   background: aktiv ? 'var(--brand-strong)' : 'var(--surface)', color: aktiv ? 'var(--on-brand)' : 'var(--text-secondary)', whiteSpace: 'nowrap',
 });
 
@@ -103,13 +103,13 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 3 }}>{undertittel}</div>
         </div>
         {erLeiar && (
-          <button onClick={() => setVisRutinar(true)} style={{ padding: '9px 14px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={() => setVisRutinar(true)} style={{ padding: '9px 14px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             ↻ Faste rutinar
           </button>
         )}
         <button
           onClick={() => setTaskTarget({ defaultAnsatt: valtFane === 'mine' ? user?.id : undefined })}
-          style={{ padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           + Ny oppgåve
         </button>
@@ -129,7 +129,7 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
               onClick={k.klikk}
               aria-pressed={k.aktiv}
               style={{
-                textAlign: 'left', padding: '11px 14px', borderRadius: 13, cursor: 'pointer', boxShadow: 'var(--shadow-card)',
+                textAlign: 'left', padding: '11px 14px', borderRadius: 'var(--r)', cursor: 'pointer', boxShadow: 'var(--shadow-card)',
                 background: k.aktiv ? 'var(--brand-soft)' : 'var(--surface)', border: k.aktiv ? '1px solid var(--brand)' : '1px solid var(--border)',
               }}
             >
@@ -141,7 +141,7 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
       )}
 
       {/* Hurtig-registrering */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 12, boxShadow: 'var(--shadow-card)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: 12, boxShadow: 'var(--shadow-card)', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', gap: 8 }}>
           <input
             value={nyTittel}
@@ -150,9 +150,9 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
             placeholder="Skriv ei oppgåve, t.d. «Ring kunde om dekk»"
             autoCapitalize="sentences"
             aria-label="Ny oppgåve"
-            style={{ flex: 1, minWidth: 0, padding: '11px 13px', borderRadius: 11, border: '1px solid var(--border)', background: 'var(--surface-alt)', color: 'var(--text)', fontSize: 14, fontFamily: 'inherit' }}
+            style={{ flex: 1, minWidth: 0, padding: '11px 13px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface-alt)', color: 'var(--text)', fontSize: 14, fontFamily: 'inherit' }}
           />
-          <button onClick={leggTil} disabled={!nyTittel.trim()} style={{ padding: '0 16px', background: nyTittel.trim() ? 'var(--cta)' : 'var(--surface-alt)', color: nyTittel.trim() ? 'var(--on-cta)' : 'var(--text-faint)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: nyTittel.trim() ? 'pointer' : 'default', flex: 'none' }}>Legg til</button>
+          <button onClick={leggTil} disabled={!nyTittel.trim()} style={{ padding: '0 16px', background: nyTittel.trim() ? 'var(--cta)' : 'var(--surface-alt)', color: nyTittel.trim() ? 'var(--on-cta)' : 'var(--text-faint)', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: nyTittel.trim() ? 'pointer' : 'default', flex: 'none' }}>Legg til</button>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
           <span>Til:</span>
@@ -184,7 +184,7 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
           </button>
         )}
         {erLeiar && !isMobile && valtFane === 'alle' && !fokus && (
-          <div style={{ marginLeft: 'auto', display: 'flex', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+          <div style={{ marginLeft: 'auto', display: 'flex', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'hidden' }}>
             {([[false, 'Liste'], [true, 'Per person']] as const).map(([v, l]) => (
               <button key={l} onClick={() => setTavle(v)} aria-pressed={tavle === v}
                 style={{ padding: '7px 12px', border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 600, background: tavle === v ? 'var(--surface-alt)' : 'var(--surface)', color: tavle === v ? 'var(--text)' : 'var(--text-muted)' }}>
@@ -207,7 +207,7 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
                 key={a.id}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => { if (dragTaskId.current) { moveTask(dragTaskId.current, a.id); dragTaskId.current = null; } }}
-                style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 14, padding: 10, minHeight: 300, display: 'flex', flexDirection: 'column', gap: 8 }}
+                style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: 10, minHeight: 300, display: 'flex', flexDirection: 'column', gap: 8 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 3px 6px' }}>
                   <span style={{ width: 9, height: 9, borderRadius: '50%', background: a.farge, flex: 'none' }} />
@@ -250,12 +250,12 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
 
 function TomListe({ fane: f, ledige, onLedige }: { fane: Fane; ledige: number; onLedige: () => void }) {
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '26px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '26px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
       <div style={{ fontSize: 14, fontWeight: 700 }}>
         {f === 'mine' ? 'Du har ingen oppgåver no' : f === 'ledige' ? 'Ingen ledige oppgåver' : 'Ingen oppgåver her'}
       </div>
       {f === 'mine' && ledige > 0 && (
-        <button onClick={onLedige} style={{ padding: '8px 14px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={onLedige} style={{ padding: '8px 14px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
           Sjå {tal(ledige, 'ledig oppgåve', 'ledige oppgåver')} du kan ta
         </button>
       )}

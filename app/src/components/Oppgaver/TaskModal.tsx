@@ -8,7 +8,7 @@ import { addDays, datoKort, today, ymd } from '../../lib/dates';
 import type { Task, SjekklistePunkt, TaskInput } from '../../types';
 
 const fristKnapp = (aktiv: boolean) => ({
-  padding: '5px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  padding: '5px 10px', borderRadius: 'var(--r)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
   border: '1px solid var(--border)', background: aktiv ? 'var(--brand-soft)' : 'var(--surface)', color: aktiv ? 'var(--brand-strong)' : 'var(--text-secondary)',
 }) as const;
 
@@ -92,7 +92,7 @@ export function TaskModal({ existing, defaultAnsatt, preset, onClose }: {
         <textarea autoCapitalize="sentences" value={detalj} onChange={(e) => setDetalj(e.target.value)} style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} />
       </Field>
       {bestilling && (
-        <div style={{ fontSize: 12.5, color: 'var(--brand-strong)', background: 'var(--brand-soft)', borderRadius: 10, padding: '8px 11px', fontWeight: 600 }}>
+        <div style={{ fontSize: 12.5, color: 'var(--brand-strong)', background: 'var(--brand-soft)', borderRadius: 'var(--r)', padding: '8px 11px', fontWeight: 600 }}>
           Kopla til bestillinga til {bestilling.kunde} ({bestilling.vare})
         </div>
       )}
@@ -161,7 +161,7 @@ export function TaskModal({ existing, defaultAnsatt, preset, onClose }: {
               placeholder="Legg til punkt…"
               style={{ ...inputStyle, flex: 1 }}
             />
-            <button onClick={leggTilPunkt} style={{ padding: '0 14px', background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 11, fontSize: 18, fontWeight: 600, cursor: 'pointer', flex: 'none' }}>+</button>
+            <button onClick={leggTilPunkt} style={{ padding: '0 14px', background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r)', fontSize: 18, fontWeight: 600, cursor: 'pointer', flex: 'none' }}>+</button>
           </div>
         </div>
       </Field>

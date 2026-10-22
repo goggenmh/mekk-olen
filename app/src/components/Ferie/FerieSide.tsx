@@ -13,9 +13,9 @@ import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import type { Ferie, Unavailable } from '../../types';
 
-const kort: CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', boxShadow: 'var(--shadow-card)' };
+const kort: CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '16px 18px', boxShadow: 'var(--shadow-card)' };
 const etikett: CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-label)', marginBottom: 10 };
-const knapp: CSSProperties = { padding: '7px 13px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)' };
+const knapp: CSSProperties = { padding: '7px 13px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)' };
 const stil = (type: string) => FERIE_STYL[type] || FERIE_STYL.Fri;
 // «Kan ikkje jobbe» (raude dagar frå vaktplanen) – eigen kategori, ikkje ein søknad.
 const KAN_IKKJE = 'Kan ikkje jobbe';
@@ -89,14 +89,14 @@ export function FerieSide() {
     return (
       <button
         onClick={() => setModal(f)}
-        style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', padding: '10px 12px', border: `1px solid ${st.kant}`, background: 'var(--surface-alt)', borderRadius: 12, cursor: 'pointer', color: 'var(--text)' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', padding: '10px 12px', border: `1px solid ${st.kant}`, background: 'var(--surface-alt)', borderRadius: 'var(--r)', cursor: 'pointer', color: 'var(--text)' }}
       >
-        <span style={{ width: 34, height: 34, borderRadius: 10, background: st.bg, color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={st.ikon} size={17} /></span>
+        <span style={{ width: 34, height: 34, borderRadius: 'var(--r)', background: st.bg, color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={st.ikon} size={17} /></span>
         <span style={{ flex: 1, minWidth: 0 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <b style={{ fontSize: 13.5 }}>{a.navn}</b>
-            <span style={{ fontSize: 10.5, fontWeight: 700, color: st.fg, background: st.bg, borderRadius: 8, padding: '1px 8px' }}>{f.type}</span>
-            {f.status !== 'godkjend' && <span style={{ fontSize: 10.5, fontWeight: 700, color: s.fg, background: s.bg, borderRadius: 8, padding: '1px 8px' }}>{s.tekst}</span>}
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: st.fg, background: st.bg, borderRadius: 'var(--r)', padding: '1px 8px' }}>{f.type}</span>
+            {f.status !== 'godkjend' && <span style={{ fontSize: 10.5, fontWeight: 700, color: s.fg, background: s.bg, borderRadius: 'var(--r)', padding: '1px 8px' }}>{s.tekst}</span>}
             {paagaar && <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--surface)', background: st.fg, borderRadius: 999, padding: '1px 8px' }}>Pågår</span>}
             {om > 0 && f.status === 'godkjend' && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>om {om} d</span>}
           </span>
@@ -117,13 +117,13 @@ export function FerieSide() {
     return (
       <button
         onClick={() => setRaudModal(p.dagar)}
-        style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', padding: '10px 12px', border: `1px solid ${RAUD.kant}`, background: 'var(--surface-alt)', borderRadius: 12, cursor: 'pointer', color: 'var(--text)' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', padding: '10px 12px', border: `1px solid ${RAUD.kant}`, background: 'var(--surface-alt)', borderRadius: 'var(--r)', cursor: 'pointer', color: 'var(--text)' }}
       >
-        <span style={{ width: 34, height: 34, borderRadius: 10, background: RAUD.bg, color: RAUD.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name="alert" size={17} /></span>
+        <span style={{ width: 34, height: 34, borderRadius: 'var(--r)', background: RAUD.bg, color: RAUD.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name="alert" size={17} /></span>
         <span style={{ flex: 1, minWidth: 0 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <b style={{ fontSize: 13.5 }}>{a.navn}</b>
-            <span style={{ fontSize: 10.5, fontWeight: 700, color: RAUD.fg, background: RAUD.bg, borderRadius: 8, padding: '1px 8px' }}>Kan ikkje jobbe</span>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: RAUD.fg, background: RAUD.bg, borderRadius: 'var(--r)', padding: '1px 8px' }}>Kan ikkje jobbe</span>
             {paagaar && <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--surface)', background: RAUD.fg, borderRadius: 999, padding: '1px 8px' }}>{p.fra === p.til ? 'I dag' : 'Pågår'}</span>}
             {om > 0 && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>om {om} d</span>}
           </span>
@@ -152,13 +152,13 @@ export function FerieSide() {
         </div>
         <button
           onClick={() => setModal('ny')}
-          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           {leiar ? '+ Registrer ferie/fri' : '+ Søk om ferie/fri'}
         </button>
         <button
           onClick={() => setRaudModal('ny')}
-          style={{ padding: '9px 16px', background: 'var(--surface)', color: RAUD.fg, border: `1px solid ${RAUD.kant}`, borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ padding: '9px 16px', background: 'var(--surface)', color: RAUD.fg, border: `1px solid ${RAUD.kant}`, borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           + Kan ikkje jobbe
         </button>

@@ -10,7 +10,7 @@ import type { Task } from '../../types';
 
 const labelStyle: CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 3 };
 const knapp = (primar: boolean): CSSProperties => ({
-  padding: '7px 13px', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+  padding: '7px 13px', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
   border: primar ? 'none' : '1px solid var(--border)',
   background: primar ? 'var(--brand-strong)' : 'var(--surface)',
   color: primar ? 'var(--on-brand)' : 'var(--text-secondary)',
@@ -77,7 +77,7 @@ export function OppgaveKort({
       draggable={draggable}
       onDragStart={onDragStart}
       style={{
-        background: 'var(--surface)', borderRadius: 13, boxShadow: 'var(--shadow-card)', opacity: task.ferdig ? 0.72 : 1,
+        background: 'var(--surface)', borderRadius: 'var(--r)', boxShadow: 'var(--shadow-card)', opacity: task.ferdig ? 0.72 : 1,
         border: task.blokkert ? '1px solid var(--danger-border)' : forseinka ? '1px solid rgba(192,57,43,0.35)' : '1px solid var(--border)',
         padding: kompakt ? '10px 11px' : '13px 14px', display: 'flex', flexDirection: 'column', gap: kompakt ? 7 : 10,
         cursor: draggable ? 'grab' : undefined,
@@ -87,7 +87,7 @@ export function OppgaveKort({
         <span style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <span style={{ flex: 1, fontSize: kompakt ? 13 : 14.5, fontWeight: 700, lineHeight: 1.3, textDecoration: task.ferdig ? 'line-through' : 'none', color: 'var(--text)' }}>{task.tittel}</span>
           {task.prioritet === 'høg' && !task.ferdig && (
-            <span style={{ fontSize: 10, fontWeight: 700, color: p.fg, background: p.bg, padding: '2px 7px', borderRadius: 8, textTransform: 'uppercase', flex: 'none' }}>{p.tekst}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: p.fg, background: p.bg, padding: '2px 7px', borderRadius: 'var(--r)', textTransform: 'uppercase', flex: 'none' }}>{p.tekst}</span>
           )}
         </span>
         {task.detalj && !kompakt && (
@@ -97,12 +97,12 @@ export function OppgaveKort({
 
       {kompakt ? (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: status.fg, background: status.bg, padding: '2px 8px', borderRadius: 9 }}>{status.tekst}</span>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: status.fg, background: status.bg, padding: '2px 8px', borderRadius: 'var(--r)' }}>{status.tekst}</span>
           {task.frist && <span style={{ fontSize: 10.5, fontWeight: 700, color: forseinka ? 'var(--danger)' : 'var(--text-muted)' }}>{fristTekst(task.frist, t)}</span>}
           {sjekkTotal > 0 && <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text-muted)' }}>☑ {sjekkFerdig}/{sjekkTotal}</span>}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr', gap: 10, padding: '9px 10px', background: 'var(--surface-alt)', borderRadius: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr', gap: 10, padding: '9px 10px', background: 'var(--surface-alt)', borderRadius: 'var(--r)' }}>
           <Felt label="Ansvarleg">
             {ansvarleg ? (
               <>
@@ -115,20 +115,20 @@ export function OppgaveKort({
             <span style={{ color: forseinka ? 'var(--danger)' : task.frist ? 'var(--text)' : 'var(--text-muted)' }}>{fristTekst(task.frist, t)}</span>
           </Felt>
           <Felt label="Status">
-            <span style={{ fontSize: 11, fontWeight: 700, color: status.fg, background: status.bg, padding: '2px 8px', borderRadius: 9, whiteSpace: 'nowrap' }}>{status.tekst}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: status.fg, background: status.bg, padding: '2px 8px', borderRadius: 'var(--r)', whiteSpace: 'nowrap' }}>{status.tekst}</span>
           </Felt>
         </div>
       )}
 
       {task.blokkert && !task.ferdig && (
-        <div style={{ fontSize: 12.5, color: 'var(--pill-raud-fg)', background: 'var(--pill-raud-bg)', borderRadius: 9, padding: '7px 10px', lineHeight: 1.4 }}>
+        <div style={{ fontSize: 12.5, color: 'var(--pill-raud-fg)', background: 'var(--pill-raud-bg)', borderRadius: 'var(--r)', padding: '7px 10px', lineHeight: 1.4 }}>
           <b>Står fast:</b> {task.blokkertGrunn || 'Ingen grunn oppgitt.'}
         </div>
       )}
 
       {!kompakt && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: kat.fg, background: kat.bg, padding: '2px 8px', borderRadius: 9 }}>{task.kategori}</span>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: kat.fg, background: kat.bg, padding: '2px 8px', borderRadius: 'var(--r)' }}>{task.kategori}</span>
           {sjekkTotal > 0 && (
             <span style={{ fontSize: 11, fontWeight: 600, color: sjekkFerdig === sjekkTotal ? 'var(--brand-strong)' : 'var(--text-muted)' }}>☑ {sjekkFerdig}/{sjekkTotal}</span>
           )}
@@ -138,7 +138,7 @@ export function OppgaveKort({
             <button
               onClick={onOpneBestilling}
               disabled={!onOpneBestilling}
-              style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)', background: 'var(--brand-soft)', border: 'none', borderRadius: 9, padding: '2px 8px', cursor: onOpneBestilling ? 'pointer' : 'default' }}
+              style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)', background: 'var(--brand-soft)', border: 'none', borderRadius: 'var(--r)', padding: '2px 8px', cursor: onOpneBestilling ? 'pointer' : 'default' }}
             >
               Bestilling: {bestilling.kunde}
             </button>
