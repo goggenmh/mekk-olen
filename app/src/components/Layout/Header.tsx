@@ -12,6 +12,7 @@ import { alder } from '../../lib/bestilling';
 import { ustadfesta } from '../../lib/dokument';
 import { ventandeFerie } from '../../lib/ferie';
 import { tal } from '../../lib/tekst';
+import { ledigeOppgaver, mineIDag } from '../../lib/oppgave';
 
 interface Varsel {
   key: string;
@@ -44,7 +45,9 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
     const weekDays = weekDates(mondayOf(t));
     const pendingSwaps = swaps.filter((s) => s.status === 'pending');
     const ventandeTimar = entries.filter((e) => weekDays.includes(e.date) && e.status === 'venter').length;
-    const ufordelte = tasks.filter((x) => x.ansatt === 'ufordelt').length;
+    const ufordelte = ledigeOppgaver(tasks).length;
+    const mineNo = mineIDag(tasks, user?.id, t).length;
+    const blokkerte = canApprove(user?.id) ? tasks.filter((x) => !x.ferdig && x.blokkert).length : 0;
     const ankomne = orders.filter((o) => o.status === 'komen' && !o.varsla);
     const gamle = orders.filter((o) => alder(o, t).gammal).length;
     const ulesne = ustadfesta(docs, stadfestingar, user?.id);
@@ -56,6 +59,8 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
       ...(gamle > 0 ? [{ key: 'gamle', tekst: `${tal(gamle, 'bestilling', 'bestillingar')} har stått lenge – sjekk ${gamle === 1 ? 'henne' : 'dei'}`, view: 'bestilling' as View }] : []),
       ...(ulesne > 0 ? [{ key: 'hms', tekst: `${ulesne} HMS-dokument ventar på at du stadfestar at du har lese ${ulesne === 1 ? 'det' : 'dei'}`, view: 'dokument' as View }] : []),
       ...(ferieSoknader > 0 ? [{ key: 'ferie', tekst: `${ferieSoknader} ${ferieSoknader === 1 ? 'søknad' : 'søknader'} om ferie/fri ventar på svar`, view: 'ferie' as View }] : []),
+      ...(mineNo > 0 ? [{ key: 'mine-oppgaver', tekst: `Du har ${tal(mineNo, 'oppgåve', 'oppgåver')} å gjere i dag`, view: 'oppgaver' as View }] : []),
+      ...(blokkerte > 0 ? [{ key: 'blokkert', tekst: `${tal(blokkerte, 'oppgåve', 'oppgåver')} står fast og treng hjelp`, view: 'oppgaver' as View }] : []),
       ...(ufordelte > 0 ? [{ key: 'oppgaver', tekst: tal(ufordelte, 'ufordelt oppgåve', 'ufordelte oppgåver'), view: 'oppgaver' as View }] : []),
     ].slice(0, 8);
   }, [swaps, entries, tasks, orders, docs, stadfestingar, ferie, canApprove, user?.id, findAnsatt]);

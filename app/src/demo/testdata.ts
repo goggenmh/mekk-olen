@@ -80,11 +80,12 @@ export function lagTestdata(): Record<string, Rad[]> {
   const utilgjengeleg: Rad[] = [{ id: id('util'), ansatt: 'ola', dato: dag(9), grunn: 'Tannlege' }];
 
   const tasks: Rad[] = [
-    { id: id('oppg'), tittel: 'Varetelling hageavdelinga', detalj: 'Tel opp gjødsel, jord og frø før sesongslutt.', prioritet: 'høg', ansatt: 'ola', ferdig: false, frist: addDays(t, -1), kategori: 'Lager', gjentak: 'ingen', sjekkliste: [{ tekst: 'Gjødsel', ferdig: true }, { tekst: 'Jord', ferdig: false }, { tekst: 'Frø', ferdig: false }] },
-    { id: id('oppg'), tittel: 'Prismerk nye skrutrekkjarar', detalj: 'Kom med siste leveranse.', prioritet: 'medium', ansatt: 'ingrid', ferdig: false, frist: addDays(t, 2), kategori: 'Butikk', gjentak: 'ingen', sjekkliste: [] },
-    { id: id('oppg'), tittel: 'Byt ut kampanjeskilt i vindauget', detalj: 'Vinterkampanje frå neste veke.', prioritet: 'låg', ansatt: 'ufordelt', ferdig: false, frist: addDays(t, 5), kategori: 'Kampanje', gjentak: 'ingen', sjekkliste: [] },
+    { id: id('oppg'), tittel: 'Varetelling hageavdelinga', detalj: 'Tel opp gjødsel, jord og frø før sesongslutt.', prioritet: 'høg', ansatt: 'ola', ferdig: false, frist: addDays(t, -1), kategori: 'Lager', gjentak: 'ingen', sjekkliste: [{ tekst: 'Gjødsel', ferdig: true }, { tekst: 'Jord', ferdig: false }, { tekst: 'Frø', ferdig: false }], oppretta_av: 'kari' },
+    { id: id('oppg'), tittel: 'Prismerk nye skrutrekkjarar', detalj: 'Kom med siste leveranse.', prioritet: 'medium', ansatt: 'ingrid', ferdig: false, frist: addDays(t, 2), kategori: 'Butikk', gjentak: 'ingen', sjekkliste: [], oppretta_av: 'kari', blokkert: true, blokkert_grunn: 'Prisane er ikkje lagde inn i kassasystemet enno.' },
+    { id: id('oppg'), tittel: 'Følg opp nytt sortiment', detalj: 'Betongskruar, gjengestang og syrefaste variantar.', prioritet: 'medium', ansatt: 'ufordelt', ferdig: false, frist: t, kategori: 'Butikk', gjentak: 'ingen', sjekkliste: [], oppretta_av: 'kari' },
+    { id: id('oppg'), tittel: 'Byt ut kampanjeskilt i vindauget', detalj: 'Vinterkampanje frå neste veke.', prioritet: 'låg', ansatt: 'ufordelt', ferdig: false, frist: addDays(t, 5), kategori: 'Kampanje', gjentak: 'ingen', sjekkliste: [], oppretta_av: 'kari' },
     { id: id('oppg'), tittel: 'Tøm pantemaskina', detalj: '', prioritet: 'medium', ansatt: 'jonas', ferdig: false, frist: t, kategori: 'Butikk', gjentak: 'vekevis', sjekkliste: [] },
-    { id: id('oppg'), tittel: 'Rydd lageret bak', detalj: '', prioritet: 'låg', ansatt: 'kari', ferdig: true, frist: addDays(t, -3), kategori: 'Lager', gjentak: 'ingen', sjekkliste: [], ferdig_av: 'kari', ferdig_at: `${addDays(t, -2)}T14:00:00Z` },
+    { id: id('oppg'), tittel: 'Rydd lageret bak', detalj: '', prioritet: 'låg', ansatt: 'kari', ferdig: true, frist: addDays(t, -3), kategori: 'Lager', gjentak: 'ingen', sjekkliste: [], oppretta_av: 'kari', ferdig_av: 'kari', ferdig_at: new Date(Date.now() - 864e5).toISOString() },
   ];
 
   const ordre = (kunde: string, telefon: string, vare: string, leverandor: string, dagarSidan: number, status: string, ekstra: Rad = {}): Rad => ({
@@ -118,6 +119,10 @@ export function lagTestdata(): Record<string, Rad[]> {
     ansatte,
     butikkar: [{ id: B, namn: 'MEKK Ølen', farge: '#11788a', aktiv: true, created_at: '2026-01-01' }],
     shifts, standardveke, time_entries, shift_swaps, ferie, utilgjengeleg, tasks, orders, docs, doc_stadfesting, meldinger,
+    oppgave_rutinar: [
+      { id: id('rutine'), tittel: 'Opning av butikken', detalj: 'Gjer butikken klar før dørene opnar.', kategori: 'Butikk', prioritet: 'høg', ansvar: 'opnar', dagar: [1, 2, 3, 4, 5, 6], manadsdag: null, aktiv: true, sjekkliste: [{ tekst: 'Slå av alarmen og lås opp', ferdig: false }, { tekst: 'Lys, kasse og kortterminal på', ferdig: false }, { tekst: 'Tel opp vekselkassa', ferdig: false }] },
+      { id: id('rutine'), tittel: 'Stenging og rydding', detalj: 'Rydd og lås forsvarleg etter stenging.', kategori: 'Butikk', prioritet: 'høg', ansvar: 'stengjer', dagar: [1, 2, 3, 4, 5, 6], manadsdag: null, aktiv: true, sjekkliste: [{ tekst: 'Rydd golv, disk og hyller', ferdig: false }, { tekst: 'Kasseoppgjer', ferdig: false }, { tekst: 'Lås og set på alarmen', ferdig: false }] },
+    ],
     permissions: [{ ansatt: 'ola', kan_godkjenne: false }],
   };
 }

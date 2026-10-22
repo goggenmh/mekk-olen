@@ -16,14 +16,16 @@ import { alder } from '../../lib/bestilling';
 import { tal } from '../../lib/tekst';
 import { ustadfesta } from '../../lib/dokument';
 import { ventandeFerie } from '../../lib/ferie';
+import { erForseinka, fristTekst, ledigeOppgaver, mineIDag } from '../../lib/oppgave';
+import type { Task } from '../../types';
 
 const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', boxShadow: 'var(--shadow-card)' } as const;
 const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 9 } as const;
 const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
-const PRI_RANG: Record<string, number> = { høg: 0, medium: 1, låg: 2 };
 
 export function Dashboard({ setView }: { setView: (v: View) => void }) {
-  const { entries, shifts, swaps, tasks, orders, ferie: alleFerie, meldinger, docs, stadfestingar, canApprove } = useAppData();
+  const { entries, shifts, swaps, tasks, orders, ferie: alleFerie, meldinger, docs, stadfestingar, canApprove, completeTask, moveTask } = useAppData();
+  const [opneTask, setOpneTask] = useState<Task | null>(null);
   const ferie = alleFerie.filter((f) => f.status === 'godkjend');
   const { user } = useAuth();
   const kanLageVakt = canApprove(user?.id);
@@ -56,7 +58,8 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   // ---- varslingssenter ----
   const pendingSwaps = swaps.filter((s) => s.status === 'pending');
   const ventandeTimar = entries.filter((e) => weekDays.includes(e.date) && e.status === 'venter').length;
-  const ufordelteOppgaver = tasks.filter((x) => x.ansatt === 'ufordelt').length;
+  const ufordelteOppgaver = ledigeOppgaver(tasks).length;
+  const blokkerteOppgaver = kanLageVakt ? tasks.filter((x) => !x.ferdig && x.blokkert).length : 0;
   const ankomneBestillingar = orders.filter((o) => o.status === 'komen' && !o.varsla);
   const gamleBestillingar = orders.filter((o) => alder(o, t).gammal).length;
   const forseinka = tasks.filter((x) => !x.ferdig && x.frist && x.frist < t && (kanLageVakt || x.ansatt === user?.id)).length;
@@ -68,6 +71,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
     ...ankomneBestillingar.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),
     ...(gamleBestillingar > 0 ? [{ key: 'gamle', tekst: `${tal(gamleBestillingar, 'bestilling', 'bestillingar')} har stått lenge`, view: 'bestilling' as View }] : []),
     ...(kanLageVakt && ventandeFerie(alleFerie) > 0 ? [{ key: 'ferie', tekst: `${ventandeFerie(alleFerie)} søknader om ferie/fri ventar på svar`, view: 'ferie' as View }] : []),
+    ...(blokkerteOppgaver > 0 ? [{ key: 'blokkert', tekst: `${tal(blokkerteOppgaver, 'oppgåve', 'oppgåver')} står fast og treng hjelp`, view: 'oppgaver' as View }] : []),
     ...(forseinka > 0 ? [{ key: 'forseinka', tekst: `${tal(forseinka, 'oppgåve', 'oppgåver')} har passert fristen`, view: 'oppgaver' as View }] : []),
     ...(ulesneHms > 0 ? [{ key: 'hms', tekst: `${ulesneHms} HMS-dokument ventar på stadfesting`, view: 'dokument' as View }] : []),
     ...(ufordelteOppgaver > 0 ? [{ key: 'oppgaver', tekst: tal(ufordelteOppgaver, 'ufordelt oppgåve', 'ufordelte oppgåver'), view: 'oppgaver' as View }] : []),
@@ -130,23 +134,9 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const timarPerDag = weekDays.map((d) => ({ d, t: entries.filter((e) => e.date === d).reduce((acc, e) => acc + timar(e), 0) }));
   const maxDag = Math.max(1, ...timarPerDag.map((x) => x.t));
 
-  // ---- opne oppgåver (liste) ----
-  const opneListe = tasks
-    .filter((x) => !x.ferdig)
-    .slice()
-    .sort((a, b) => {
-      const ao = a.frist && a.frist < t ? 0 : 1;
-      const bo = b.frist && b.frist < t ? 0 : 1;
-      if (ao !== bo) return ao - bo;
-      // Tilsette ser sine eigne oppgåver først.
-      const am = a.ansatt === user?.id ? 0 : 1;
-      const bm = b.ansatt === user?.id ? 0 : 1;
-      if (!kanLageVakt && am !== bm) return am - bm;
-      if (a.frist && b.frist && a.frist !== b.frist) return a.frist < b.frist ? -1 : 1;
-      if (!!a.frist !== !!b.frist) return a.frist ? -1 : 1;
-      return (PRI_RANG[a.prioritet] ?? 1) - (PRI_RANG[b.prioritet] ?? 1);
-    })
-    .slice(0, 5);
+  // ---- dagens oppgåver for den innlogga ----
+  const dagensOppgaver = mineIDag(tasks, user?.id, t);
+  const ledigeIDag = ledigeOppgaver(tasks).filter((x) => !x.frist || x.frist <= t);
 
   // ---- i dag: opne/steng ----
   const wi = weekdayIdx(t);
@@ -223,6 +213,50 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
           </div>
         </div>
       )}
+
+      {/* Dagens oppgåver: det den innlogga skal gjere i dag, utan å opne modulen. */}
+      <div style={cardStyle}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 9 }}>
+          <div style={{ ...labelStyle, marginBottom: 0 }}>Dine oppgåver i dag</div>
+          <button onClick={() => setView('oppgaver')} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, color: 'var(--brand)' }}>Alle oppgåver ›</button>
+        </div>
+        {dagensOppgaver.length === 0 && (
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen oppgåver med frist i dag. 👍</div>
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {dagensOppgaver.slice(0, 6).map((o) => {
+            const forfalle = erForseinka(o, t);
+            return (
+              <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-alt)' }}>
+                <button onClick={() => setOpneTask(o)} style={{ flex: 1, minWidth: 0, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text)' }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.tittel}</div>
+                  <div style={{ fontSize: 11.5, fontWeight: 600, color: o.blokkert || forfalle ? 'var(--danger)' : 'var(--text-muted)', marginTop: 1 }}>
+                    {o.blokkert ? 'Står fast – ventar på hjelp' : forfalle ? `Forseinka · frist ${fristTekst(o.frist, t).toLowerCase()}` : 'Frist i dag'}
+                    {o.sjekkliste.length > 0 && ` · ☑ ${o.sjekkliste.filter((s) => s.ferdig).length}/${o.sjekkliste.length}`}
+                  </div>
+                </button>
+                {!o.blokkert && (
+                  <button onClick={() => completeTask(o)} style={{ padding: '7px 12px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flex: 'none' }}>✓ Fullfør</button>
+                )}
+              </div>
+            );
+          })}
+          {dagensOppgaver.length > 6 && (
+            <button onClick={() => setView('oppgaver')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', textAlign: 'left' }}>+ {dagensOppgaver.length - 6} til</button>
+          )}
+          {ledigeIDag.slice(0, 2).map((o) => (
+            <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 12, border: '1px dashed var(--border)' }}>
+              <button onClick={() => setOpneTask(o)} style={{ flex: 1, minWidth: 0, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text)' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.tittel}</div>
+                <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 1 }}>Ledig · {fristTekst(o.frist, t).toLowerCase()}</div>
+              </button>
+              {user && (
+                <button onClick={() => moveTask(o.id, user.id)} style={{ padding: '7px 12px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flex: 'none' }}>Ta ansvar</button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* nøkkeltal – samla i eitt panel */}
       <div style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
@@ -378,32 +412,6 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             </div>
           </div>
 
-          <div style={cardStyle}>
-            <div style={labelStyle}>Oppgåver</div>
-            {opneListe.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen opne oppgåver.</div>}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-              {opneListe.map((o) => {
-                const forfalle = !!o.frist && o.frist < t;
-                return (
-                  <button
-                    key={o.id}
-                    onClick={() => setView('oppgaver')}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', padding: 0 }}
-                  >
-                    <span style={{ display: 'flex', color: forfalle ? 'var(--danger)' : 'var(--text-faint)', flex: 'none' }}>
-                      <Icon name={forfalle ? 'alert' : 'oppgaver'} size={16} />
-                    </span>
-                    <span style={{ flex: 1, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.tittel}</span>
-                    {o.frist && (
-                      <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 9, color: forfalle ? '#fff' : 'var(--text-muted)', background: forfalle ? 'var(--danger)' : 'var(--surface-alt)', flex: 'none' }}>
-                        {forfalle ? 'Forfalt' : datoKort(o.frist)}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
         {/* Kolonne 3: ansatte + ferie */}
@@ -458,6 +466,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
       )}
       {quickAction === 'vakt' && <ShiftModal target={{ date: t }} onClose={() => setQuickAction(null)} />}
       {quickAction === 'oppgave' && <TaskModal onClose={() => setQuickAction(null)} />}
+      {opneTask && <TaskModal existing={opneTask} onClose={() => setOpneTask(null)} />}
       {quickAction === 'bestilling' && <OrderModal onClose={() => setQuickAction(null)} />}
     </div>
   );

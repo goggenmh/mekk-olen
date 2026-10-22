@@ -11,7 +11,9 @@
 //   ferie_soknad    – ein tilsett har søkt om ferie/fri (til godkjennarane)
 //   ferie_svar      – søknaden er godkjend/avslått, eller leiar har
 //                     registrert ferie/fri for deg (til den tilsette)
-//   oppgave_tildelt – du har fått ei oppgåve (ny eller flytta til deg)
+//   oppgave_tildelt – du har fått ansvar for ei oppgåve
+//   oppgave_blokkert – ein tilsett står fast på ei oppgåve og treng hjelp
+//                     (til godkjennarane og den som oppretta henne)
 //
 // Tryggleik: klienten seier berre KVA som skjedde (id-ar). Mottakarar og
 // tekst blir henta frå databasen her, avgrensa til butikken til den som
@@ -81,6 +83,32 @@ async function godkjennarar(admin: SupabaseClient, butikkId: string): Promise<st
 const vaktplan = (dato?: string | null) => `/?vis=vaktplan${dato ? `&dato=${dato}` : ''}`;
 const timeliste = (dato?: string | null) => `/?vis=timeliste${dato ? `&dato=${dato}` : ''}`;
 const tidlegast = (datoar: string[]) => [...datoar].sort()[0];
+const oppgaver = '/?vis=oppgaver';
+
+/** Sender meldingane og ryddar bort abonnement som ikkje kan nåast lenger. */
+async function sendAlle(admin: SupabaseClient, noklar: { publicKey: string; privateKey: string }, meldingar: Melding[]) {
+  webpush.setVapidDetails('https://mekk-olen.vercel.app', noklar.publicKey, noklar.privateKey);
+  let sendt = 0;
+  for (const m of meldingar) {
+    if (m.til.length === 0) continue;
+    const { data: abonnement } = await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').in('ansatt', m.til);
+    const payload = JSON.stringify({ title: m.title, body: m.body, url: m.url, tag: m.tag });
+    await Promise.all((abonnement || []).map(async (a) => {
+      try {
+        await webpush.sendNotification({ endpoint: a.endpoint, keys: { p256dh: a.p256dh, auth: a.auth } }, payload);
+        sendt++;
+      } catch (e) {
+        // Eininga finst ikkje lenger, eller abonnementet høyrer til eit
+        // anna nøkkelpar – det kan aldri nåast, så rydd det bort.
+        const kode = (e as { statusCode?: number })?.statusCode;
+        if (kode === 403 || kode === 404 || kode === 410) {
+          await admin.from('push_subscriptions').delete().eq('id', a.id);
+        }
+      }
+    }));
+  }
+  return sendt;
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -190,39 +218,30 @@ Deno.serve(async (req) => {
     } else if (type === 'oppgave_tildelt') {
       const { data: o } = await admin.from('tasks').select('tittel, ansatt, frist, ferdig')
         .eq('id', String(body.task_id || '')).eq('butikk_id', meg.butikk_id).maybeSingle();
-      if (o && !o.ferdig && o.ansatt && o.ansatt !== 'ufordelt') {
+      if (o && !o.ferdig && o.ansatt !== 'ufordelt') {
         meldingar.push({
           til: ikkjeMeg([o.ansatt]),
           title: 'Ny oppgåve til deg',
-          body: `${meg.navn}: «${o.tittel}»${o.frist ? ` – frist ${datoTekst(o.frist)}` : ''}.`,
-          url: '/?vis=oppgaver',
+          body: `${meg.navn} har gitt deg «${o.tittel}»${o.frist ? ` – frist ${datoTekst(o.frist)}` : ''}.`,
+          url: oppgaver,
+        });
+      }
+    } else if (type === 'oppgave_blokkert') {
+      const { data: o } = await admin.from('tasks').select('tittel, blokkert, blokkert_grunn, oppretta_av')
+        .eq('id', String(body.task_id || '')).eq('butikk_id', meg.butikk_id).maybeSingle();
+      if (o?.blokkert) {
+        meldingar.push({
+          til: ikkjeMeg([...(await godkjennarar(admin, meg.butikk_id)), o.oppretta_av || '']),
+          title: 'Treng hjelp med oppgåve',
+          body: `${meg.navn} står fast på «${o.tittel}»${o.blokkert_grunn ? `: ${o.blokkert_grunn}` : '.'}`,
+          url: oppgaver,
         });
       }
     } else {
       return json({ error: 'Ukjend type.' }, 400);
     }
 
-    webpush.setVapidDetails('https://mekk-olen.vercel.app', noklar.publicKey, noklar.privateKey);
-    let sendt = 0;
-    for (const m of meldingar) {
-      if (m.til.length === 0) continue;
-      const { data: abonnement } = await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').in('ansatt', m.til);
-      const payload = JSON.stringify({ title: m.title, body: m.body, url: m.url, tag: m.tag });
-      await Promise.all((abonnement || []).map(async (a) => {
-        try {
-          await webpush.sendNotification({ endpoint: a.endpoint, keys: { p256dh: a.p256dh, auth: a.auth } }, payload);
-          sendt++;
-        } catch (e) {
-          // Eininga finst ikkje lenger, eller abonnementet høyrer til eit
-          // anna nøkkelpar – det kan aldri nåast, så rydd det bort.
-          const kode = (e as { statusCode?: number })?.statusCode;
-          if (kode === 403 || kode === 404 || kode === 410) {
-            await admin.from('push_subscriptions').delete().eq('id', a.id);
-          }
-        }
-      }));
-    }
-    return json({ ok: true, sendt });
+    return json({ ok: true, sendt: await sendAlle(admin, noklar, meldingar) });
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : 'Ukjend feil.' }, 500);
   }

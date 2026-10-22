@@ -144,7 +144,7 @@ function App() {
                 {synlegView === 'timeliste' && <Timeliste key={visDato ?? 'i-dag'} startDato={visDato} />}
                 {synlegView === 'vaktplan' && <Vaktplan key={visDato ?? 'i-dag'} startDato={visDato} />}
                 {synlegView === 'ferie' && <FerieSide />}
-                {synlegView === 'oppgaver' && <Oppgaver />}
+                {synlegView === 'oppgaver' && <Oppgaver setView={go} />}
                 {synlegView === 'bestilling' && <Bestillinger />}
                 {synlegView === 'dokument' && <Dokument />}
                 {synlegView === 'rapporter' && <Rapporter />}

@@ -24,7 +24,13 @@ function utfyll(t: string, r: Rad): Rad {
   const n: Rad = { id: nyId(), created_at: new Date().toISOString(), ...r };
   if (t === 'orders') { n.registrert_av = innlogga; n.notat ??= ''; n.varsla ??= null; }
   if (t === 'doc_stadfesting') { n.ansatt = innlogga; n.stadfesta_at = new Date().toISOString(); }
-  if (t === 'tasks') { n.sjekkliste ??= []; n.ferdig ??= false; n.oppretta_av = innlogga; if (n.ferdig) { n.ferdig_av = innlogga; n.ferdig_at = new Date().toISOString(); } }
+  if (t === 'tasks') {
+    n.sjekkliste ??= []; n.ferdig ??= false; n.blokkert ??= false; n.blokkert_grunn ??= '';
+    n.oppretta_av = n.rutine_id ? null : innlogga;
+    n.oppretta_at = new Date().toISOString();
+    if (n.ferdig) { n.ferdig_av = innlogga; n.ferdig_at = new Date().toISOString(); }
+  }
+  if (t === 'oppgave_rutinar') { n.aktiv ??= true; n.sjekkliste ??= []; }
   return n;
 }
 
@@ -78,13 +84,13 @@ class Sporjing implements PromiseLike<{ data: unknown; error: unknown }> {
     } else if (this.op === 'update') {
       ut = rader.filter(this.treff);
       ut.forEach((r) => {
-        // Som triggeren i databasen: hugs kven som fullførte oppgåva.
-        if (this.t === 'tasks' && 'ferdig' in (this.nytt as Rad)) {
-          const ferdig = (this.nytt as Rad).ferdig;
-          if (ferdig && !r.ferdig) Object.assign(r, { ferdig_av: innlogga, ferdig_at: new Date().toISOString() });
-          if (!ferdig) Object.assign(r, { ferdig_av: null, ferdig_at: null });
-        }
+        const varFerdig = r.ferdig;
         Object.assign(r, this.nytt);
+        // Som triggeren tasks_spor: kven fullførte, og når.
+        if (this.t === 'tasks') {
+          if (!r.ferdig) { r.ferdig_av = null; r.ferdig_at = null; } else if (!varFerdig) { r.ferdig_av = innlogga; r.ferdig_at = new Date().toISOString(); r.blokkert = false; }
+          if (!r.blokkert) r.blokkert_grunn = '';
+        }
       });
     } else {
       ut = rader.filter(this.treff);
@@ -110,6 +116,29 @@ class Sporjing implements PromiseLike<{ data: unknown; error: unknown }> {
 
 const meg = () => tabell('ansatte').find((a) => a.id === innlogga);
 
+// Same logikk som lag_rutineoppgaver() i oppgaver-v2.sql.
+function lagRutineoppgaver() {
+  const d = new Date();
+  const dag = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const iso = ((d.getDay() + 6) % 7) + 1;
+  const sisteIMnd = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  let n = 0;
+  for (const r of tabell('oppgave_rutinar')) {
+    const idag = r.manadsdag ? d.getDate() === Math.min(Number(r.manadsdag), sisteIMnd) : (r.dagar as number[]).includes(iso);
+    if (!r.aktiv || !idag || tabell('tasks').some((x) => x.rutine_id === r.id && x.frist === dag)) continue;
+    const vakter = tabell('shifts').filter((s) => s.date === dag).sort((x, y) => String(x.start).localeCompare(String(y.start)));
+    const ansatt = r.ansvar === 'opnar' ? vakter[0]?.ansatt
+      : r.ansvar === 'stengjer' ? [...vakter].sort((x, y) => String(y.slutt).localeCompare(String(x.slutt)))[0]?.ansatt
+      : r.ansvar;
+    tabell('tasks').push(utfyll('tasks', {
+      tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: ansatt ?? 'ufordelt', frist: dag, kategori: r.kategori, gjentak: 'ingen',
+      sjekkliste: (r.sjekkliste as { tekst: string }[]).map((p) => ({ tekst: p.tekst, ferdig: false })), rutine_id: r.id, ferdig: false,
+    }));
+    n++;
+  }
+  return n;
+}
+
 const rpc = async (namn: string): Promise<{ data: unknown; error: unknown }> => {
   const a = meg();
   switch (namn) {
@@ -119,6 +148,8 @@ const rpc = async (namn: string): Promise<{ data: unknown; error: unknown }> => 
       return ok(a && a.aktiv ? [JSON.parse(JSON.stringify(a))] : []);
     case 'min_butikk':
       return ok(a?.butikk_id ?? null);
+    case 'lag_rutineoppgaver':
+      return ok(lagRutineoppgaver());
     case 'lonssatsar':
     case 'lonsdata':
       return ok(a && (a.leder || a.konsern_admin) ? tabell('ansatte').map((x) => ({

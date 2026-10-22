@@ -4,10 +4,11 @@ import { ORDER_FLOW, ORDER_STATUS } from '../../constants';
 import { datoKort, MND } from '../../lib/dates';
 import { OrderModal } from './OrderModal';
 import { NotifyModal } from './NotifyModal';
+import { TaskModal } from '../Oppgaver/TaskModal';
 import { useIsMobile } from '../../lib/useIsMobile';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { Avatar } from '../ui/Avatar';
-import type { Order } from '../../types';
+import type { Order, Task } from '../../types';
 import { alder, ALDER_TEKST, reinTelefon } from '../../lib/bestilling';
 
 const FILTERS: { key: string; label: string }[] = [
@@ -19,7 +20,7 @@ const FILTERS: { key: string; label: string }[] = [
 ];
 
 export function Bestillinger() {
-  const { orders, advanceOrder } = useAppData();
+  const { orders, advanceOrder, tasks } = useAppData();
   const { findAnsatt } = useAnsatte();
   // Kven la inn bestillinga (eldre bestillingar har ingen registrert).
   const lagtInnAv = (o: Order) => {
@@ -31,6 +32,20 @@ export function Bestillinger() {
   const [sok, setSok] = useState('');
   const [orderTarget, setOrderTarget] = useState<Order | 'new' | null>(null);
   const [notifyTarget, setNotifyTarget] = useState<Order | null>(null);
+  // Oppgåve frå ei bestilling: opne den som finst, eller lag ei ny.
+  const [oppgaveTarget, setOppgaveTarget] = useState<{ order: Order; existing?: Task } | null>(null);
+  const oppgaveKnapp = (o: Order, liten = false) => {
+    const finst = tasks.find((x) => x.orderId === o.id && !x.ferdig);
+    return (
+      <button
+        onClick={() => setOppgaveTarget({ order: o, existing: finst })}
+        title={finst ? 'Opne oppgåva for denne bestillinga' : 'Lag ei oppgåve for å følgje opp bestillinga'}
+        style={{ padding: liten ? '6px 11px' : '7px 12px', border: '1px solid var(--border)', background: finst ? 'var(--brand-soft)' : 'var(--surface)', borderRadius: liten ? 9 : 10, fontSize: liten ? 12 : 12.5, fontWeight: 600, color: finst ? 'var(--brand-strong)' : 'var(--text-secondary)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+      >
+        {finst ? '✓ Oppgåve' : '+ Oppgåve'}
+      </button>
+    );
+  };
   const [openYear, setOpenYear] = useState<string | null>(null);
   const [openMonth, setOpenMonth] = useState<string | null>(null);
 
@@ -169,6 +184,7 @@ export function Bestillinger() {
                 )}
                 {(kanVarsle || kanFram) && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 11 }}>
+                    {oppgaveKnapp(o)}
                     {kanVarsle && (
                       <button onClick={() => setNotifyTarget(o)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--border)', background: o.varsla ? 'var(--brand-soft)' : 'var(--accent-soft)', borderRadius: 10, fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>Varsle</button>
                     )}
@@ -238,6 +254,7 @@ export function Bestillinger() {
                   </td>
                   <td style={td}>
                     <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                      {kanFram && oppgaveKnapp(o, true)}
                       {kanVarsle && (
                         <button
                           onClick={() => setNotifyTarget(o)}
@@ -344,6 +361,18 @@ export function Bestillinger() {
 
       {orderTarget && <OrderModal existing={orderTarget === 'new' ? undefined : orderTarget} onClose={() => setOrderTarget(null)} />}
       {notifyTarget && <NotifyModal order={notifyTarget} onClose={() => setNotifyTarget(null)} />}
+      {oppgaveTarget && (
+        <TaskModal
+          existing={oppgaveTarget.existing}
+          preset={{
+            tittel: `Følg opp bestilling: ${oppgaveTarget.order.vare}`,
+            detalj: [`Kunde: ${oppgaveTarget.order.kunde}${oppgaveTarget.order.telefon ? ` (${oppgaveTarget.order.telefon})` : ''}`, oppgaveTarget.order.leverandor && `Leverandør: ${oppgaveTarget.order.leverandor}`, oppgaveTarget.order.notat].filter(Boolean).join('\n'),
+            kategori: 'Butikk',
+            orderId: oppgaveTarget.order.id,
+          }}
+          onClose={() => setOppgaveTarget(null)}
+        />
+      )}
     </div>
   );
 }

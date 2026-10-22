@@ -6,7 +6,7 @@ import { parseDate, ymd, today, addDays, DAG_IDX, skiftFraTid } from '../lib/dat
 import { toast } from '../lib/toast';
 import { storeOrd, storFyrste } from '../lib/tekst';
 import { useAnsatte } from './AnsatteContext';
-import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Stadfesting, Task, TimeEntry, Unavailable, StandardvekeEntry } from '../types';
+import type { Doc, Ferie, Melding, Order, Permission, Rutine, Shift, ShiftSwap, Stadfesting, Task, TaskInput, TimeEntry, Unavailable, StandardvekeEntry } from '../types';
 
 // Neste forfallsdato for ei gjentakande oppgåve.
 const nesteFrist = (frist: string | null, gjentak: string): string | null => {
@@ -66,10 +66,16 @@ interface AppData {
   behandleFerie: (id: string, status: 'godkjend' | 'avslatt', svar: string) => Promise<void>;
   deleteFerie: (id: string) => Promise<void>;
 
-  saveTask: (t: Omit<Task, 'id'> & { id?: string }, val?: { varsle?: boolean }) => Promise<void>;
+  saveTask: (t: TaskInput) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   moveTask: (id: string, ansatt: EmployeeId | 'ufordelt') => Promise<void>;
   completeTask: (task: Task) => Promise<void>;
+  reopenTask: (task: Task) => Promise<void>;
+  blockTask: (task: Task, grunn: string) => Promise<void>;
+  unblockTask: (task: Task) => Promise<void>;
+  rutinar: Rutine[];
+  saveRutine: (r: Omit<Rutine, 'id'> & { id?: string }) => Promise<void>;
+  deleteRutine: (id: string) => Promise<void>;
 
   saveOrder: (o: Omit<Order, 'id'> & { id?: string }) => Promise<void>;
   deleteOrder: (id: string) => Promise<void>;
@@ -90,7 +96,14 @@ const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.
 const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst ?? '', fra: r.fra ?? null, til: r.til ?? null, status: r.status ?? 'godkjend', svar: r.svar ?? '', behandlaAv: r.behandla_av ?? null, createdAt: r.created_at ?? null });
 const mapUnavail = (r: any): Unavailable => ({ id: r.id, ansatt: r.ansatt, dato: r.dato, grunn: r.grunn ?? null });
 const mapStandard = (r: any): StandardvekeEntry => ({ id: r.id, ansatt: r.ansatt, dag: r.dag, start: r.start, slutt: r.slutt });
-const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [], opprettaAv: r.oppretta_av ?? null, ferdigAv: r.ferdig_av ?? null, ferdigAt: r.ferdig_at ?? null });
+const mapTask = (r: any): Task => ({
+  id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [],
+  blokkert: !!r.blokkert, blokkertGrunn: r.blokkert_grunn ?? '', opprettaAv: r.oppretta_av ?? null, opprettaAt: r.oppretta_at ?? null,
+  ferdigAv: r.ferdig_av ?? null, ferdigAt: r.ferdig_at ?? null, orderId: r.order_id ?? null, rutineId: r.rutine_id ?? null,
+});
+const mapRutine = (r: any): Rutine => ({ id: r.id, tittel: r.tittel, detalj: r.detalj ?? '', kategori: r.kategori ?? 'Butikk', prioritet: r.prioritet ?? 'medium', ansvar: r.ansvar ?? 'ufordelt', dagar: Array.isArray(r.dagar) ? r.dagar : [], manadsdag: r.manadsdag ?? null, sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [], aktiv: r.aktiv !== false });
+// Kolonnene frå oppgaver-v2.sql. Manglar dei, lagrar vi utan (sjå lagreTask).
+const NYE_TASK_FELT = /blokkert|order_id/;
 const mapOrder = (r: any): Order => ({ id: r.id, kunde: storeOrd(r.kunde || ''), telefon: r.telefon, vare: storFyrste(r.vare || ''), leverandor: storFyrste(r.leverandor || ''), varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla, notat: r.notat ?? '', registrertAv: r.registrert_av ?? null });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
 const mapStadfesting = (r: any): Stadfesting => ({ id: r.id, docId: r.doc_id, ansatt: r.ansatt, stadfestaAt: r.stadfesta_at });
@@ -108,6 +121,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [unavailable, setUnavailable] = useState<Unavailable[]>([]);
   const [standardveke, setStandardveke] = useState<StandardvekeEntry[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [rutinar, setRutinar] = useState<Rutine[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [stadfestingar, setStadfestingar] = useState<Stadfesting[]>([]);
@@ -122,8 +136,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     if (!stille) {
       setLoading(true);
       setError(null);
+      // Lag dagens rutineoppgåver før vi hentar oppgåvene. Databasen passar
+      // på at kvar rutine blir til berre éi oppgåve per dag.
+      await supabase.rpc('lag_rutineoppgaver');
     }
-    const [e, s, sw, f, t, o, d, p, m, u, sv, st] = await Promise.all([
+    const [e, s, sw, f, t, o, d, p, m, u, sv, st, ru] = await Promise.all([
       supabase.from('time_entries').select('*'),
       supabase.from('shifts').select('*'),
       supabase.from('shift_swaps').select('*'),
@@ -136,6 +153,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       supabase.from('utilgjengeleg').select('*'),
       supabase.from('standardveke').select('*'),
       supabase.from('doc_stadfesting').select('*'),
+      supabase.from('oppgave_rutinar').select('*').order('created_at'),
     ]);
     const firstError = [e, s, sw, f, t, o, d, p, m, u, sv].find((r) => r.error)?.error;
     if (firstError) {
@@ -155,6 +173,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setStandardveke((sv.data || []).map(mapStandard));
       // Tabellen kjem med dokument-stadfesting.sql; manglar han, blir lista tom.
       setStadfestingar(st.error ? [] : (st.data || []).map(mapStadfesting));
+      // Kjem med oppgaver-v2.sql.
+      setRutinar(ru.error ? [] : (ru.data || []).map(mapRutine));
     }
     if (!stille) setLoading(false);
   }, []);
@@ -172,7 +192,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       timer = setTimeout(() => hent(true), 400);
     };
     const kanal = supabase.channel('appdata-live');
-    for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting']) {
+    for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting', 'oppgave_rutinar']) {
       kanal.on('postgres_changes', { event: '*', schema: 'public', table }, planlegg);
     }
     // Mobilen set appen på pause i bakgrunnen, og då går endringar tapt.
@@ -433,51 +453,82 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   };
 
   // ---- tasks ----
-  const saveTask: AppData['saveTask'] = async (t, val) => {
-    const forre = t.id ? tasks.find((x) => x.id === t.id) : undefined;
-    const felt = {
+  // Varsle den som får oppgåva (servaren hoppar over den som gjorde det).
+  const varsleTildelt = (task: Task, forrige?: string) => {
+    if (!task.ferdig && task.ansatt !== 'ufordelt' && task.ansatt !== forrige) varsle({ type: 'oppgave_tildelt', task_id: task.id });
+  };
+  const lagreTask = async (t: TaskInput, melding: string | null) => {
+    const felt: Record<string, unknown> = {
       tittel: t.tittel, detalj: t.detalj, prioritet: t.prioritet, ansatt: t.ansatt,
       frist: t.frist ?? null, kategori: t.kategori ?? 'Anna', gjentak: t.gjentak ?? 'ingen',
-      sjekkliste: t.sjekkliste ?? [],
+      sjekkliste: t.sjekkliste ?? [], ferdig: t.ferdig ?? false,
     };
-    if (t.id) {
-      const { data, error: err } = await supabase.from('tasks').update({ ...felt, ferdig: t.ferdig }).eq('id', t.id).select().single();
-      if (err) throw err;
-      setTasks((prev) => prev.map((x) => (x.id === t.id ? mapTask(data) : x)));
-    } else {
-      const { data, error: err } = await supabase.from('tasks').insert({ ...felt, ferdig: t.ferdig ?? false }).select().single();
-      if (err) throw err;
-      setTasks((prev) => [...prev, mapTask(data)]);
-      t = { ...t, id: data.id };
-    }
-    // Den som får oppgåva (ny, eller flytta til seg) får push-varsel.
-    if (val?.varsle !== false && t.id && t.ansatt !== 'ufordelt' && !t.ferdig && forre?.ansatt !== t.ansatt) {
-      varsle({ type: 'oppgave_tildelt', task_id: t.id });
-    }
-    toast(t.ferdig && !forre?.ferdig ? 'Oppgåve fullført' : 'Oppgåve lagra');
+    const nye: Record<string, unknown> = {};
+    if (t.blokkert !== undefined) { nye.blokkert = t.blokkert && !t.ferdig; nye.blokkert_grunn = t.blokkert ? t.blokkertGrunn ?? '' : ''; }
+    if (!t.id && t.orderId) nye.order_id = t.orderId;
+    const lagre = (rad: Record<string, unknown>) => (t.id
+      ? supabase.from('tasks').update(rad).eq('id', t.id).select().single()
+      : supabase.from('tasks').insert(rad).select().single());
+    let { data, error: err } = await lagre({ ...felt, ...nye });
+    if (err && NYE_TASK_FELT.test(err.message)) ({ data, error: err } = await lagre(felt));
+    if (err) throw err;
+    const lagra = mapTask(data);
+    const forrige = t.id ? tasks.find((x) => x.id === t.id) : undefined;
+    if (t.id) setTasks((prev) => prev.map((x) => (x.id === t.id ? lagra : x)));
+    else setTasks((prev) => [...prev, lagra]);
+    varsleTildelt(lagra, forrige?.ansatt);
+    if (lagra.blokkert && !forrige?.blokkert) varsle({ type: 'oppgave_blokkert', task_id: lagra.id });
+    if (melding) toast(melding);
   };
+  const saveTask: AppData['saveTask'] = (t) => lagreTask(t, 'Oppgåve lagra');
   // Marker ferdig, og lag automatisk neste førekomst om oppgåva er gjentakande.
   const completeTask: AppData['completeTask'] = async (task) => {
-    await saveTask({ ...task, ferdig: true });
+    await lagreTask({ ...task, ferdig: true, blokkert: false }, 'Oppgåva er fullført');
     if (task.gjentak && task.gjentak !== 'ingen') {
-      await saveTask({
+      await lagreTask({
         tittel: task.tittel, detalj: task.detalj, prioritet: task.prioritet, ansatt: task.ansatt,
         ferdig: false, kategori: task.kategori, gjentak: task.gjentak,
         frist: nesteFrist(task.frist, task.gjentak),
         sjekkliste: (task.sjekkliste || []).map((s) => ({ tekst: s.tekst, ferdig: false })),
-      }, { varsle: false });
+      }, null);
     }
   };
+  const reopenTask: AppData['reopenTask'] = (task) => lagreTask({ ...task, ferdig: false }, 'Oppgåva er open igjen');
+  const blockTask: AppData['blockTask'] = (task, grunn) =>
+    lagreTask({ ...task, blokkert: true, blokkertGrunn: grunn.trim() }, 'Merkt som blokkert – leiar får beskjed');
+  const unblockTask: AppData['unblockTask'] = (task) => lagreTask({ ...task, blokkert: false }, 'Blokkeringa er oppheva');
   const deleteTask: AppData['deleteTask'] = async (id) => {
     const { error: err } = await supabase.from('tasks').delete().eq('id', id);
     if (err) throw err;
     setTasks((prev) => prev.filter((x) => x.id !== id));
   };
   const moveTask: AppData['moveTask'] = async (id, ansatt) => {
+    const forrige = tasks.find((x) => x.id === id)?.ansatt;
     const { data, error: err } = await supabase.from('tasks').update({ ansatt }).eq('id', id).select().single();
     if (err) throw err;
-    setTasks((prev) => prev.map((x) => (x.id === id ? mapTask(data) : x)));
-    if (ansatt !== 'ufordelt' && !data.ferdig) varsle({ type: 'oppgave_tildelt', task_id: id });
+    const flytta = mapTask(data);
+    setTasks((prev) => prev.map((x) => (x.id === id ? flytta : x)));
+    varsleTildelt(flytta, forrige);
+  };
+
+  // ---- rutinar ----
+  const saveRutine: AppData['saveRutine'] = async (r) => {
+    const rad = { tittel: r.tittel, detalj: r.detalj, kategori: r.kategori, prioritet: r.prioritet, ansvar: r.ansvar, dagar: r.dagar, manadsdag: r.manadsdag, sjekkliste: r.sjekkliste, aktiv: r.aktiv };
+    const { data, error: err } = r.id
+      ? await supabase.from('oppgave_rutinar').update(rad).eq('id', r.id).select().single()
+      : await supabase.from('oppgave_rutinar').insert(rad).select().single();
+    if (err) throw err;
+    const lagra = mapRutine(data);
+    setRutinar((prev) => (r.id ? prev.map((x) => (x.id === r.id ? lagra : x)) : [...prev, lagra]));
+    // Gjeld rutinen i dag, skal oppgåva dukke opp med ein gong.
+    const { data: nye } = await supabase.rpc('lag_rutineoppgaver');
+    if (nye) await hent(true);
+    toast('Rutine lagra');
+  };
+  const deleteRutine: AppData['deleteRutine'] = async (id) => {
+    const { error: err } = await supabase.from('oppgave_rutinar').delete().eq('id', id);
+    if (err) throw err;
+    setRutinar((prev) => prev.filter((x) => x.id !== id));
   };
 
   // ---- orders ----
@@ -599,12 +650,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveShift, deleteShift, moveShiftDate, saveStandardveke, applyStandardveke, kopierVeke,
       createSwap, approveSwap, declineSwap,
       saveFerie, deleteFerie, behandleFerie, saveUnavailable, removeUnavailable, saveUnavailablePeriode, removeUnavailableMange,
-      saveTask, deleteTask, moveTask, completeTask,
+      saveTask, deleteTask, moveTask, completeTask, reopenTask, blockTask, unblockTask,
+      rutinar, saveRutine, deleteRutine,
       saveOrder, deleteOrder, advanceOrder, markOrderVarsla,
       saveDoc, deleteDoc, uploadDocFile, docFileUrl,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, stadfestingar, permissions, meldinger, unavailable, standardveke, canApprove]
+    [loading, error, entries, shifts, swaps, ferie, tasks, rutinar, orders, docs, stadfestingar, permissions, meldinger, unavailable, standardveke, canApprove]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

@@ -3,6 +3,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { weekDates, mondayOf, today } from '../../lib/dates';
+import { mineIDag } from '../../lib/oppgave';
 import { VIEWS, NAV_GROUPS, harTilgang, type View } from '../../lib/view';
 import { Icon } from '../ui/Icon';
 
@@ -42,9 +43,8 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   const weekDays = weekDates(mondayOf(today()));
   const timelisteBadge = entries.filter((e) => weekDays.includes(e.date) && e.status === 'venter').length;
   const vaktplanBadge = swaps.filter((s) => s.status === 'pending').length;
-  // Opne oppgåver du kan ta: dine med frist i dag/forseinka, og alle ufordelte.
-  const iDag = today();
-  const oppgaverBadge = tasks.filter((t) => !t.ferdig && (t.ansatt === 'ufordelt' || (t.ansatt === user?.id && !!t.frist && t.frist <= iDag))).length;
+  // Oppgåvene du sjølv skal gjere i dag (inkludert forseinka).
+  const oppgaverBadge = mineIDag(tasks, user?.id, today()).length;
   const bestillingBadge = orders.filter((o) => o.status === 'komen' && !o.varsla).length;
 
   const ferieBadge = canApprove(user?.id) ? ferie.filter((f) => f.status === 'ventar').length : 0;

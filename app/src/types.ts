@@ -66,10 +66,40 @@ export interface Task {
   kategori: string;
   gjentak: string;
   sjekkliste: SjekklistePunkt[];
-  /** Sett av databasen: kven som oppretta og fullførte oppgåva. */
-  opprettaAv?: EmployeeId | null;
-  ferdigAv?: EmployeeId | null;
-  ferdigAt?: string | null;
+  /** Kan ikkje fullførast no; grunnen står i blokkertGrunn. */
+  blokkert: boolean;
+  blokkertGrunn: string;
+  /** Blir sett av databasen (oppgaver-v2.sql). null på eldre oppgåver og rutineoppgåver. */
+  opprettaAv: EmployeeId | null;
+  opprettaAt: string | null;
+  ferdigAv: EmployeeId | null;
+  ferdigAt: string | null;
+  /** Bestillinga oppgåva følgjer opp. */
+  orderId: string | null;
+  /** Rutinen som laga oppgåva automatisk. */
+  rutineId: string | null;
+}
+
+/** Felta appen sjølv skriv på ei oppgåve (resten set databasen). */
+export type TaskInput = Pick<Task, 'tittel' | 'detalj' | 'prioritet' | 'ansatt' | 'ferdig' | 'frist' | 'kategori' | 'gjentak' | 'sjekkliste'>
+  & Partial<Pick<Task, 'blokkert' | 'blokkertGrunn' | 'orderId'>>
+  & { id?: string };
+
+/** Fast rutine som blir til ei oppgåve automatisk på rett dag. */
+export interface Rutine {
+  id: string;
+  tittel: string;
+  detalj: string;
+  kategori: string;
+  prioritet: string;
+  /** Tilsett-id, 'ufordelt', 'opnar' (første vakt) eller 'stengjer' (siste vakt). */
+  ansvar: string;
+  /** ISO-vekedagar, 1 = måndag … 7 = søndag. */
+  dagar: number[];
+  /** Sett = kvar månad på denne dagen i staden for vekedagar. */
+  manadsdag: number | null;
+  sjekkliste: SjekklistePunkt[];
+  aktiv: boolean;
 }
 
 export interface Order {
