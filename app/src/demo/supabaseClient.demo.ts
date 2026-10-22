@@ -81,6 +81,7 @@ class Sporjing implements PromiseLike<{ data: unknown; error: unknown }> {
   private sortering: { kol: string; opp: boolean } | null = null;
   private returner = false;
   private berreEin = false;
+  private grense: number | null = null;
   private t: string;
   private op: 'select' | 'insert' | 'update' | 'delete' | 'upsert' = 'select';
   private nytt?: Rad | Rad[];
@@ -95,6 +96,7 @@ class Sporjing implements PromiseLike<{ data: unknown; error: unknown }> {
   neq(k: string, v: unknown) { this.filter.push((r) => r[k] !== v); return this; }
   in(k: string, v: unknown[]) { this.filter.push((r) => v.includes(r[k])); return this; }
   order(kol: string, o?: { ascending?: boolean }) { this.sortering = { kol, opp: o?.ascending !== false }; return this; }
+  limit(n: number) { this.grense = n; return this; }
   single() { this.berreEin = true; return this; }
   maybeSingle() { this.berreEin = true; return this; }
 
@@ -137,6 +139,7 @@ class Sporjing implements PromiseLike<{ data: unknown; error: unknown }> {
       const { kol, opp } = this.sortering;
       ut = [...ut].sort((a, b) => (String(a[kol]) < String(b[kol]) ? -1 : String(a[kol]) > String(b[kol]) ? 1 : 0) * (opp ? 1 : -1));
     }
+    if (this.grense != null) ut = ut.slice(0, this.grense);
     const kopi = ut.map(this.kopi);
     if (this.op !== 'select' && !this.returner) return ok(null);
     if (this.berreEin) return kopi[0] ? ok(kopi[0]) : feil('Fann ingen rad');
