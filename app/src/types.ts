@@ -66,6 +66,10 @@ export interface Task {
   kategori: string;
   gjentak: string;
   sjekkliste: SjekklistePunkt[];
+  /** Sett av databasen: kven som oppretta og fullførte oppgåva. */
+  opprettaAv?: EmployeeId | null;
+  ferdigAv?: EmployeeId | null;
+  ferdigAt?: string | null;
 }
 
 export interface Order {

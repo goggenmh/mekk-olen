@@ -191,7 +191,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
       <div style={{ display: 'flex', gap: 18, alignItems: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={dot('#2f9e6f')} /> Godkjent</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={dot('#d8920f')} /> Ventar</span>
-        <span><b style={{ color: 'var(--danger)' }}>manglar</b> = vakt utan registrerte timar</span>
+        <span><b style={{ color: 'var(--danger)' }}>Manglar</b> = vakt utan registrerte timar</span>
         <span>Normaltid 37,5 t/veke</span>
       </div>
 
@@ -300,7 +300,7 @@ function WeekTable({
                           {es.length > 1 && <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--brand)' }}>{es.length} bolkar</div>}
                         </div>
                       ) : manglar ? (
-                        <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--danger)' }}>manglar</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--danger)' }}>Manglar</span>
                       ) : (
                         <span style={{ color: 'var(--text-faint2)' }}>–</span>
                       )}

@@ -11,6 +11,7 @@
 //   ferie_soknad    – ein tilsett har søkt om ferie/fri (til godkjennarane)
 //   ferie_svar      – søknaden er godkjend/avslått, eller leiar har
 //                     registrert ferie/fri for deg (til den tilsette)
+//   oppgave_tildelt – du har fått ei oppgåve (ny eller flytta til deg)
 //
 // Tryggleik: klienten seier berre KVA som skjedde (id-ar). Mottakarar og
 // tekst blir henta frå databasen her, avgrensa til butikken til den som
@@ -184,6 +185,17 @@ Deno.serve(async (req) => {
           title: godkjend ? 'Ferie/fri godkjend' : 'Søknad avslått',
           body: `${godkjend ? `Du har fått ${kva}` : `Søknaden om ${kva}`} ${periode}${godkjend ? ' godkjend.' : ' vart avslått.'}${f.svar ? ` «${f.svar}»` : ''}`,
           url,
+        });
+      }
+    } else if (type === 'oppgave_tildelt') {
+      const { data: o } = await admin.from('tasks').select('tittel, ansatt, frist, ferdig')
+        .eq('id', String(body.task_id || '')).eq('butikk_id', meg.butikk_id).maybeSingle();
+      if (o && !o.ferdig && o.ansatt && o.ansatt !== 'ufordelt') {
+        meldingar.push({
+          til: ikkjeMeg([o.ansatt]),
+          title: 'Ny oppgåve til deg',
+          body: `${meg.navn}: «${o.tittel}»${o.frist ? ` – frist ${datoTekst(o.frist)}` : ''}.`,
+          url: '/?vis=oppgaver',
         });
       }
     } else {

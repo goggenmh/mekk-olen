@@ -74,7 +74,8 @@ export type Hending =
   | { type: 'timar_godkjent'; entry_ids: string[] }
   | { type: 'timar_venter'; entry_ids: string[] }
   | { type: 'ferie_soknad'; ferie_id: string }
-  | { type: 'ferie_svar'; ferie_id: string };
+  | { type: 'ferie_svar'; ferie_id: string }
+  | { type: 'oppgave_tildelt'; task_id: string };
 
 /**
  * Varsle om ei hending. Servaren finn sjølv ut kven som skal ha varsel og

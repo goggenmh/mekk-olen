@@ -24,7 +24,7 @@ function utfyll(t: string, r: Rad): Rad {
   const n: Rad = { id: nyId(), created_at: new Date().toISOString(), ...r };
   if (t === 'orders') { n.registrert_av = innlogga; n.notat ??= ''; n.varsla ??= null; }
   if (t === 'doc_stadfesting') { n.ansatt = innlogga; n.stadfesta_at = new Date().toISOString(); }
-  if (t === 'tasks') { n.sjekkliste ??= []; n.ferdig ??= false; }
+  if (t === 'tasks') { n.sjekkliste ??= []; n.ferdig ??= false; n.oppretta_av = innlogga; if (n.ferdig) { n.ferdig_av = innlogga; n.ferdig_at = new Date().toISOString(); } }
   return n;
 }
 
@@ -77,7 +77,15 @@ class Sporjing implements PromiseLike<{ data: unknown; error: unknown }> {
       ut = [fins ?? rader[rader.length - 1]];
     } else if (this.op === 'update') {
       ut = rader.filter(this.treff);
-      ut.forEach((r) => Object.assign(r, this.nytt));
+      ut.forEach((r) => {
+        // Som triggeren i databasen: hugs kven som fullførte oppgåva.
+        if (this.t === 'tasks' && 'ferdig' in (this.nytt as Rad)) {
+          const ferdig = (this.nytt as Rad).ferdig;
+          if (ferdig && !r.ferdig) Object.assign(r, { ferdig_av: innlogga, ferdig_at: new Date().toISOString() });
+          if (!ferdig) Object.assign(r, { ferdig_av: null, ferdig_at: null });
+        }
+        Object.assign(r, this.nytt);
+      });
     } else {
       ut = rader.filter(this.treff);
       data()[this.t] = rader.filter((r) => !ut.includes(r));

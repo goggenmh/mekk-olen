@@ -3,6 +3,7 @@
 // Påminningar om vakter, kalla av pg_cron kvart 5. minutt (sjå paaminning.sql):
 //   morgon – kl. 08–10: «Du er på jobb i dag kl. …» (éi melding per person,
 //            berre om vakta ikkje byrjar innan 30 min – då kjem «snart»)
+//            Har personen oppgåver med frist i dag (eller forfalne), står det òg.
 //   snart  – 30 min før vakta: «Vakta di byrjar kl. …»
 // Dagleg leiar (leder = true), inaktive og dei med godkjend ferie/fri får ikkje.
 //
@@ -77,10 +78,15 @@ Deno.serve(async () => {
       for (const v of aktuelle.filter((v) => tilMin(v.start) - no.min > 30)) {
         perAnsatt.set(v.ansatt, [...(perAnsatt.get(v.ansatt) || []), v]);
       }
+      const { data: oppgaver } = perAnsatt.size
+        ? await admin.from('tasks').select('ansatt').eq('ferdig', false).lte('frist', no.dato).in('ansatt', [...perAnsatt.keys()])
+        : { data: [] };
       for (const [ansatt, vs] of perAnsatt) {
+        const n = (oppgaver || []).filter((o) => o.ansatt === ansatt).length;
+        const oppg = n ? ` Du har ${n} ${n === 1 ? 'oppgåve' : 'oppgåver'} som skal gjerast i dag.` : '';
         meldingar.push({
           til: ansatt, type: 'morgon', vakter: vs.map((v) => v.id), url, tag: `morgon-${no.dato}`,
-          title: 'Du er på jobb i dag', body: `Vakt i dag kl. ${vs.map((v) => `${v.start}–${v.slutt}`).join(' og ')}.`,
+          title: 'Du er på jobb i dag', body: `Vakt i dag kl. ${vs.map((v) => `${v.start}–${v.slutt}`).join(' og ')}.${oppg}`,
         });
       }
     }

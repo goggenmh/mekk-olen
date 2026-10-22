@@ -4,6 +4,7 @@ import { varsle } from '../lib/push';
 import type { EmployeeId } from '../constants';
 import { parseDate, ymd, today, addDays, DAG_IDX, skiftFraTid } from '../lib/dates';
 import { toast } from '../lib/toast';
+import { storeOrd, storFyrste } from '../lib/tekst';
 import { useAnsatte } from './AnsatteContext';
 import type { Doc, Ferie, Melding, Order, Permission, Shift, ShiftSwap, Stadfesting, Task, TimeEntry, Unavailable, StandardvekeEntry } from '../types';
 
@@ -65,7 +66,7 @@ interface AppData {
   behandleFerie: (id: string, status: 'godkjend' | 'avslatt', svar: string) => Promise<void>;
   deleteFerie: (id: string) => Promise<void>;
 
-  saveTask: (t: Omit<Task, 'id'> & { id?: string }) => Promise<void>;
+  saveTask: (t: Omit<Task, 'id'> & { id?: string }, val?: { varsle?: boolean }) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   moveTask: (id: string, ansatt: EmployeeId | 'ufordelt') => Promise<void>;
   completeTask: (task: Task) => Promise<void>;
@@ -89,8 +90,8 @@ const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.
 const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst ?? '', fra: r.fra ?? null, til: r.til ?? null, status: r.status ?? 'godkjend', svar: r.svar ?? '', behandlaAv: r.behandla_av ?? null, createdAt: r.created_at ?? null });
 const mapUnavail = (r: any): Unavailable => ({ id: r.id, ansatt: r.ansatt, dato: r.dato, grunn: r.grunn ?? null });
 const mapStandard = (r: any): StandardvekeEntry => ({ id: r.id, ansatt: r.ansatt, dag: r.dag, start: r.start, slutt: r.slutt });
-const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [] });
-const mapOrder = (r: any): Order => ({ id: r.id, kunde: r.kunde, telefon: r.telefon, vare: r.vare, leverandor: r.leverandor, varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla, notat: r.notat ?? '', registrertAv: r.registrert_av ?? null });
+const mapTask = (r: any): Task => ({ id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [], opprettaAv: r.oppretta_av ?? null, ferdigAv: r.ferdig_av ?? null, ferdigAt: r.ferdig_at ?? null });
+const mapOrder = (r: any): Order => ({ id: r.id, kunde: storeOrd(r.kunde || ''), telefon: r.telefon, vare: storFyrste(r.vare || ''), leverandor: storFyrste(r.leverandor || ''), varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla, notat: r.notat ?? '', registrertAv: r.registrert_av ?? null });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
 const mapStadfesting = (r: any): Stadfesting => ({ id: r.id, docId: r.doc_id, ansatt: r.ansatt, stadfestaAt: r.stadfesta_at });
 const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne: r.kan_godkjenne });
@@ -432,7 +433,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   };
 
   // ---- tasks ----
-  const saveTask: AppData['saveTask'] = async (t) => {
+  const saveTask: AppData['saveTask'] = async (t, val) => {
+    const forre = t.id ? tasks.find((x) => x.id === t.id) : undefined;
     const felt = {
       tittel: t.tittel, detalj: t.detalj, prioritet: t.prioritet, ansatt: t.ansatt,
       frist: t.frist ?? null, kategori: t.kategori ?? 'Anna', gjentak: t.gjentak ?? 'ingen',
@@ -446,8 +448,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const { data, error: err } = await supabase.from('tasks').insert({ ...felt, ferdig: t.ferdig ?? false }).select().single();
       if (err) throw err;
       setTasks((prev) => [...prev, mapTask(data)]);
+      t = { ...t, id: data.id };
     }
-    toast('Oppgåve lagra');
+    // Den som får oppgåva (ny, eller flytta til seg) får push-varsel.
+    if (val?.varsle !== false && t.id && t.ansatt !== 'ufordelt' && !t.ferdig && forre?.ansatt !== t.ansatt) {
+      varsle({ type: 'oppgave_tildelt', task_id: t.id });
+    }
+    toast(t.ferdig && !forre?.ferdig ? 'Oppgåve fullført' : 'Oppgåve lagra');
   };
   // Marker ferdig, og lag automatisk neste førekomst om oppgåva er gjentakande.
   const completeTask: AppData['completeTask'] = async (task) => {
@@ -458,7 +465,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         ferdig: false, kategori: task.kategori, gjentak: task.gjentak,
         frist: nesteFrist(task.frist, task.gjentak),
         sjekkliste: (task.sjekkliste || []).map((s) => ({ tekst: s.tekst, ferdig: false })),
-      });
+      }, { varsle: false });
     }
   };
   const deleteTask: AppData['deleteTask'] = async (id) => {
@@ -470,6 +477,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { data, error: err } = await supabase.from('tasks').update({ ansatt }).eq('id', id).select().single();
     if (err) throw err;
     setTasks((prev) => prev.map((x) => (x.id === id ? mapTask(data) : x)));
+    if (ansatt !== 'ufordelt' && !data.ferdig) varsle({ type: 'oppgave_tildelt', task_id: id });
   };
 
   // ---- orders ----

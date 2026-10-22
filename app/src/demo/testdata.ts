@@ -84,7 +84,7 @@ export function lagTestdata(): Record<string, Rad[]> {
     { id: id('oppg'), tittel: 'Prismerk nye skrutrekkjarar', detalj: 'Kom med siste leveranse.', prioritet: 'medium', ansatt: 'ingrid', ferdig: false, frist: addDays(t, 2), kategori: 'Butikk', gjentak: 'ingen', sjekkliste: [] },
     { id: id('oppg'), tittel: 'Byt ut kampanjeskilt i vindauget', detalj: 'Vinterkampanje frå neste veke.', prioritet: 'låg', ansatt: 'ufordelt', ferdig: false, frist: addDays(t, 5), kategori: 'Kampanje', gjentak: 'ingen', sjekkliste: [] },
     { id: id('oppg'), tittel: 'Tøm pantemaskina', detalj: '', prioritet: 'medium', ansatt: 'jonas', ferdig: false, frist: t, kategori: 'Butikk', gjentak: 'vekevis', sjekkliste: [] },
-    { id: id('oppg'), tittel: 'Rydd lageret bak', detalj: '', prioritet: 'låg', ansatt: 'kari', ferdig: true, frist: addDays(t, -3), kategori: 'Lager', gjentak: 'ingen', sjekkliste: [] },
+    { id: id('oppg'), tittel: 'Rydd lageret bak', detalj: '', prioritet: 'låg', ansatt: 'kari', ferdig: true, frist: addDays(t, -3), kategori: 'Lager', gjentak: 'ingen', sjekkliste: [], ferdig_av: 'kari', ferdig_at: `${addDays(t, -2)}T14:00:00Z` },
   ];
 
   const ordre = (kunde: string, telefon: string, vare: string, leverandor: string, dagarSidan: number, status: string, ekstra: Rad = {}): Rad => ({

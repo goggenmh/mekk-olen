@@ -7,7 +7,8 @@ import type { Task, SjekklistePunkt } from '../../types';
 
 export function TaskModal({ existing, defaultAnsatt, onClose }: { existing?: Task; defaultAnsatt?: Task['ansatt']; onClose: () => void }) {
   const { saveTask, deleteTask, completeTask } = useAppData();
-  const { ansatte } = useAnsatte();
+  const { ansatte, findAnsatt } = useAnsatte();
+  const oppretta = existing?.opprettaAv ? findAnsatt(existing.opprettaAv) : null;
 
   const [tittel, setTittel] = useState(existing?.tittel || '');
   const [detalj, setDetalj] = useState(existing?.detalj || '');
@@ -57,12 +58,13 @@ export function TaskModal({ existing, defaultAnsatt, onClose }: { existing?: Tas
         </>
       }
     >
+      {oppretta?.navn && <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Lagt inn av <b style={{ color: 'var(--text-secondary)' }}>{oppretta.navn}</b></div>}
       <Field label="Tittel">
-        <input value={tittel} onChange={(e) => { setTittel(e.target.value); setFeil(false); }} style={inputStyle} />
+        <input value={tittel} onChange={(e) => { setTittel(e.target.value); setFeil(false); }} autoCapitalize="sentences" autoFocus={!existing} style={inputStyle} />
       </Field>
       {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Skriv inn ein tittel.</div>}
       <Field label="Detaljer">
-        <textarea value={detalj} onChange={(e) => setDetalj(e.target.value)} style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} />
+        <textarea autoCapitalize="sentences" value={detalj} onChange={(e) => setDetalj(e.target.value)} style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} />
       </Field>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Field label="Prioritet">
