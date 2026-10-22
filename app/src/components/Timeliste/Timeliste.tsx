@@ -16,7 +16,8 @@ import { toast } from '../../lib/toast';
 import type { TimeEntry } from '../../types';
 import { tekstPaFarge } from '../../lib/farge';
 import { PeriodeVeljar } from '../ui/PeriodeVeljar';
-import { avvikForGodkjenning, avvikTekst, erAvvik, planTimar } from '../../lib/avvik';
+import { avvikForGodkjenning, erAvvik, planTimar, type Avvik } from '../../lib/avvik';
+import { GodkjennModal } from './GodkjennModal';
 
 function downloadCsv(filename: string, rows: (string | number)[][]) {
   const csv = '﻿' + rows.map((r) => r.join(';')).join('\n');
@@ -32,7 +33,7 @@ function downloadCsv(filename: string, rows: (string | number)[][]) {
 /** startDato: opne på veka/månaden til denne datoen (t.d. frå eit push-varsel). */
 export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
   const { entries, shifts, approveEmployeeEntries, canApprove } = useAppData();
-  const { ansatte, finnButikk, findAnsatt } = useAnsatte();
+  const { ansatte, finnButikk } = useAnsatte();
   const { user } = useAuth();
   const [lagarLonsfil, setLagarLonsfil] = useState(false);
   const [lagarPdf, setLagarPdf] = useState(false);
@@ -102,15 +103,18 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
 
   const ventandeVeke = entries.filter((e) => dates.includes(e.date) && e.status === 'venter').length;
   // Før godkjenning: åtvar leiaren om førte timar som ikkje stemmer med vaktplanen.
-  const godkjenn = async (ids: string[], sporsmal: string | null) => {
-    const avvik = ids.flatMap((id) => avvikForGodkjenning(entries, shifts, id, dates));
-    if (avvik.length > 0) {
-      const linjer = avvik.map((a) => `• ${findAnsatt(a.ansatt).navn} – ${avvikTekst(a)}`).join('\n');
-      if (!window.confirm(`Timane stemmer ikkje med vaktplanen:\n\n${linjer}\n\nGodkjenne likevel?`)) return;
-    } else if (sporsmal && !window.confirm(sporsmal)) return;
+  // Avvik eller «Godkjenn alle» → stadfesting i eit eige vindauge; elles rett på.
+  const [stadfest, setStadfest] = useState<{ ids: string[]; avvik: Avvik[]; tal: number } | null>(null);
+  const godkjennNo = async (ids: string[]) => {
     for (const id of ids) await approveEmployeeEntries(id, dates);
   };
-  const godkjennAlle = () => godkjenn(ansatte.map((a) => a.id), `Godkjenne alle ${ventandeVeke} timeføringane i veke ${isoWeek(weekStart)}?`);
+  const godkjenn = (ids: string[], spor: boolean) => {
+    const avvik = ids.flatMap((id) => avvikForGodkjenning(entries, shifts, id, dates));
+    const tal = entries.filter((e) => ids.includes(e.ansatt) && dates.includes(e.date) && e.status === 'venter').length;
+    if (avvik.length > 0 || spor) setStadfest({ ids, avvik, tal });
+    else godkjennNo(ids);
+  };
+  const godkjennAlle = () => godkjenn(ansatte.map((a) => a.id), true);
 
   const exportLonn = async () => {
     setLagarLonsfil(true);
@@ -172,7 +176,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
               entries={entries}
               onCellClick={(ansatt, date) => setEditTarget({ ansatt, date })}
               maaGodkjenne={maaGodkjenne}
-              onApprove={(ansatt) => godkjenn([ansatt], null)}
+              onApprove={(ansatt) => godkjenn([ansatt], false)}
             />
           ) : (
             <>
@@ -181,7 +185,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
                 entries={entries}
                 onCellClick={(ansatt, date) => setEditTarget({ ansatt, date })}
                 maaGodkjenne={maaGodkjenne}
-                onApprove={(ansatt) => godkjenn([ansatt], null)}
+                onApprove={(ansatt) => godkjenn([ansatt], false)}
               />
               <WeekSummary dates={dates} prevDates={prevDates} entries={entries} />
             </>
@@ -203,6 +207,9 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
       </div>
 
       {editTarget && <TimeEntryModal target={editTarget} onClose={() => setEditTarget(null)} />}
+      {stadfest && (
+        <GodkjennModal avvik={stadfest.avvik} tal={stadfest.tal} onGodkjenn={() => godkjennNo(stadfest.ids)} onClose={() => setStadfest(null)} />
+      )}
     </div>
   );
 }

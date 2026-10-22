@@ -47,16 +47,16 @@ export function TimeEntryModal({
   const plan = planTimar(shifts, target.ansatt, target.date);
   const avvik = erAvvik(plan, totalTimar);
   const varGodkjent = eksisterande.length > 0 && eksisterande.every((e) => e.status === 'godkjent');
+  // Leiaren godkjenner timar som ikkje stemmer med vakta: første trykk ber om stadfesting.
+  const maaStadfeste = status === 'godkjent' && !varGodkjent && avvik;
+  const [stadfesta, setStadfesta] = useState(false);
 
   const [lagrar, setLagrar] = useState(false);
 
   const save = async () => {
     if (lagrar) return;
     if (bolkar.some((b) => mins(b.slutt) <= mins(b.start))) { setFeil('Slutt må vere etter start i alle bolkane.'); return; }
-    // Leiaren godkjenner timar som ikkje stemmer med vakta: spør først.
-    if (status === 'godkjent' && !varGodkjent && avvik && !window.confirm(
-      `${plan > 0 ? `Vakta er ${fmt(plan)} t` : 'Det er inga vakt denne dagen'}, men det er ført ${fmt(totalTimar)} t. Godkjenne likevel?`,
-    )) return;
+    if (maaStadfeste && !stadfesta) { setStadfesta(true); return; }
     setFeil(null);
     setLagrar(true);
     try {
@@ -107,7 +107,7 @@ export function TimeEntryModal({
         <>
           {eksisterande.length > 0 && kanSlette && <DeleteButton onClick={slettDag}>Slett dag</DeleteButton>}
           <CancelButton onClick={onClose} />
-          <SaveButton onClick={save}>{lagrar ? 'Lagrar…' : 'Lagre'}</SaveButton>
+          <SaveButton onClick={save}>{lagrar ? 'Lagrar…' : maaStadfeste && stadfesta ? 'Godkjenn likevel' : 'Lagre'}</SaveButton>
         </>
       }
     >
@@ -154,6 +154,9 @@ export function TimeEntryModal({
           {plan > 0
             ? `Stemmer ikkje med vaktplanen: ${fmt(totalTimar)} t ført, vakta er ${fmt(plan)} t (${totalTimar > plan ? '+' : '−'}${fmt(Math.abs(totalTimar - plan))} t).`
             : 'Det er inga vakt i vaktplanen denne dagen.'}
+          {maaStadfeste && stadfesta && (
+            <div style={{ fontWeight: 500, marginTop: 4 }}>Du godkjenner timar som ikkje stemmer med vakta. Trykk «Godkjenn likevel» for å lagre.</div>
+          )}
         </div>
       )}
 
