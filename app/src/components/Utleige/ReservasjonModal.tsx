@@ -2,15 +2,22 @@ import { useEffect, useMemo, useState } from 'react';
 import type { UtleigeKunde } from '../../lib/utleige';
 import { Modal, Field, inputStyle, CancelButton } from '../ui/Modal';
 import { useAnsatte } from '../../context/AnsatteContext';
+import { useAuth } from '../../context/AuthContext';
 import { addDays, today } from '../../lib/dates';
 import { reinTelefon } from '../../lib/bestilling';
 import { AKTIVE, RES_STATUS, kr, nr, tidKort, tilIso, fraIso, feilTekst, type PrisSvar, type UtleigeReservasjon, type ResStatus } from '../../lib/utleige';
+import { lastNedUtleigeKontraktPdf } from '../../lib/utleigeKontraktPdf';
+import { toast } from '../../lib/toast';
 import type { UtleigeData } from './useUtleige';
 import { knapp } from './stil';
 
+// Statusar der ein leigekontrakt gir meining (reservasjonen er reell).
+const KAN_KONTRAKT: ResStatus[] = ['stadfesta', 'klar', 'utleigd', 'forseinka', 'returnert', 'kontroll'];
+
 /** Ny reservasjon (res = null) eller detaljar, status, endring og retur for ein eksisterande. */
 export function ReservasjonModal({ data, res, onClose }: { data: UtleigeData; res: UtleigeReservasjon | null; onClose: () => void }) {
-  const { findAnsatt } = useAnsatte();
+  const { findAnsatt, finnButikk } = useAnsatte();
+  const { user } = useAuth();
   const { produkt, einingar, kundar, reservasjonar, innstillingar } = data;
   // Hald alltid den ferskaste utgåva (live-oppdatering).
   const r = res ? reservasjonar.find((x) => x.id === res.id) ?? res : null;
@@ -90,6 +97,20 @@ export function ReservasjonModal({ data, res, onClose }: { data: UtleigeData; re
   });
 
   const status = (s: ResStatus, melding: string) => r && utfor(() => data.settStatus(r, s, melding));
+
+  const skrivKontrakt = () => r && utfor(async () => {
+    try {
+      await lastNedUtleigeKontraktPdf({
+        reservasjon: r,
+        produkt: produkt.find((x) => x.id === r.produkt_id),
+        eining: einingar.find((e) => e.id === r.eining_id),
+        kunde: kundar.find((k) => k.id === r.kunde_id),
+        innstillingar,
+        butikk: finnButikk(user?.butikk_id)?.namn || 'MEKK Ølen',
+      });
+    } catch { toast('Kunne ikkje lage leigekontrakten', 'feil'); }
+  });
+
   const tlf = kunde ? reinTelefon(kunde.telefon) : '';
   const tilbehor = (r ? produkt.find((x) => x.id === r.produkt_id) : p)?.tilbehor ?? [];
 
@@ -134,6 +155,9 @@ export function ReservasjonModal({ data, res, onClose }: { data: UtleigeData; re
             )}
             {['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka'].includes(r.status) && !endrar && (
               <button onClick={() => setEndrar(true)} style={knapp()}>{['utleigd', 'forseinka'].includes(r.status) ? 'Forleng / endre' : 'Endre periode'}</button>
+            )}
+            {KAN_KONTRAKT.includes(r.status) && (
+              <button disabled={lagrar} onClick={skrivKontrakt} style={knapp()}>Leigekontrakt (PDF)</button>
             )}
           </div>
 
