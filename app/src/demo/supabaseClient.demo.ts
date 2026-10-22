@@ -148,6 +148,11 @@ const rpc = async (namn: string): Promise<{ data: unknown; error: unknown }> => 
       return ok(a && a.aktiv ? [JSON.parse(JSON.stringify(a))] : []);
     case 'min_butikk':
       return ok(a?.butikk_id ?? null);
+    case 'login_status': {
+      const d = new Date();
+      const dag = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return ok(tabell('shifts').filter((x) => x.date === dag).map((x) => ({ id: x.ansatt, start: x.start, slutt: x.slutt })));
+    }
     case 'lag_rutineoppgaver':
       return ok(lagRutineoppgaver());
     case 'lonssatsar':

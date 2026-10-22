@@ -38,10 +38,11 @@
   --divider: #eef2f0;
   --danger-border: #ecc9c2;
   --text: #14202a;
-  --text-secondary: #465561;
-  --text-muted: #7a8791;
-  --text-label: #6e7d88;
-  --text-faint: #93a1ab;
+  /* Litt mørkare gråtonar for betre lesbarheit (muted 5,6:1 mot kvitt) */
+  --text-secondary: #3d4a55;
+  --text-muted: #5d6a74;
+  --text-label: #56636d;
+  --text-faint: #7b8893;
   --text-faint2: #aab4bb;
   --danger: #c0392b;
   --accent: #c8811a;
@@ -255,8 +256,10 @@ button:active {
 
 /* Innlogging – glass-terminal (konsept D) */
 /* Innlogging i MEKK-stil */
-.mk-rad { transition: border-color 0.12s ease, box-shadow 0.12s ease; }
-.mk-rad:hover { border-color: var(--mekk-teal) !important; background: rgba(255, 255, 255, 0.12) !important; }
+/* Brukarkorta skal kjennast trykkbare: løft, skugge og turkis kant */
+.mk-rad { transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease, background 0.12s ease; }
+.mk-rad:hover { border-color: var(--mekk-teal) !important; background: rgba(255, 255, 255, 0.13) !important; transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.3); }
+.mk-rad:active { transform: translateY(0); }
 .mk-chev { color: var(--mekk-teal); font-size: 20px; font-weight: 900; transition: transform 0.12s ease; }
 .mk-rad:hover .mk-chev { transform: translateX(-3px); }
 .mk-tast:hover { background: rgba(255, 255, 255, 0.12) !important; border-color: var(--mekk-teal) !important; }

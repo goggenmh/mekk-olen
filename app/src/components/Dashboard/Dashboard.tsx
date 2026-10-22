@@ -18,6 +18,8 @@ import { ustadfesta } from '../../lib/dokument';
 import { ventandeFerie } from '../../lib/ferie';
 import { erForseinka, fristTekst, ledigeOppgaver, mineIDag } from '../../lib/oppgave';
 import type { Task } from '../../types';
+import { HurtigKnapp } from './HurtigKnapp';
+import { planTimar } from '../../lib/avvik';
 
 const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '14px 16px', boxShadow: 'var(--shadow-card)' } as const;
 const labelStyle = { fontSize: 11.5, fontWeight: 900, letterSpacing: '0.4px', textTransform: 'uppercase', color: 'var(--kort-label)', marginBottom: 9 } as const;
@@ -65,17 +67,21 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const forseinka = tasks.filter((x) => !x.ferdig && x.frist && x.frist < t && (kanLageVakt || x.ansatt === user?.id)).length;
   const ulesneHms = ustadfesta(docs, stadfestingar, user?.id);
 
-  const varsler: { key: string; tekst: string; view: View }[] = [
-    ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønskjer å bytte vakt ${s.dag}`, view: 'vaktplan' as View })),
-    ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${tal(ventandeTimar, 'timeføring', 'timeføringar')} ventar på godkjenning`, view: 'timeliste' as View }] : []),
-    ...ankomneBestillingar.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),
-    ...(gamleBestillingar > 0 ? [{ key: 'gamle', tekst: `${tal(gamleBestillingar, 'bestilling', 'bestillingar')} har stått lenge`, view: 'bestilling' as View }] : []),
-    ...(kanLageVakt && ventandeFerie(alleFerie) > 0 ? [{ key: 'ferie', tekst: `${ventandeFerie(alleFerie)} søknader om ferie/fri ventar på svar`, view: 'ferie' as View }] : []),
-    ...(blokkerteOppgaver > 0 ? [{ key: 'blokkert', tekst: `${tal(blokkerteOppgaver, 'oppgåve', 'oppgåver')} står fast og treng hjelp`, view: 'oppgaver' as View }] : []),
-    ...(forseinka > 0 ? [{ key: 'forseinka', tekst: `${tal(forseinka, 'oppgåve', 'oppgåver')} har passert fristen`, view: 'oppgaver' as View }] : []),
-    ...(ulesneHms > 0 ? [{ key: 'hms', tekst: `${ulesneHms} HMS-dokument ventar på stadfesting`, view: 'dokument' as View }] : []),
-    ...(ufordelteOppgaver > 0 ? [{ key: 'oppgaver', tekst: tal(ufordelteOppgaver, 'ufordelt oppgåve', 'ufordelte oppgåver'), view: 'oppgaver' as View }] : []),
-  ].slice(0, 8);
+  // Alvorsgrad: høg (raud) → middels (gul) → info. Alder der vi veit han.
+  const nyasteFerie = alleFerie.filter((f) => f.status === 'ventar' && f.createdAt).map((f) => f.createdAt!).sort().pop();
+  const eldsteForseinka = tasks.filter((x) => !x.ferdig && x.frist && x.frist < t && (kanLageVakt || x.ansatt === user?.id)).map((x) => x.frist!).sort()[0];
+  const varslerUsortert: Varsel[] = [
+    ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønskjer å bytte vakt ${s.dag}`, view: 'vaktplan' as View, niva: 'middels' as const })),
+    ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${tal(ventandeTimar, 'timeføring', 'timeføringar')} ventar på godkjenning`, view: 'timeliste' as View, niva: 'middels' as const }] : []),
+    ...ankomneBestillingar.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View, niva: 'middels' as const })),
+    ...(gamleBestillingar > 0 ? [{ key: 'gamle', tekst: `${tal(gamleBestillingar, 'bestilling', 'bestillingar')} har stått lenge`, view: 'bestilling' as View, niva: 'hog' as const }] : []),
+    ...(kanLageVakt && ventandeFerie(alleFerie) > 0 ? [{ key: 'ferie', tekst: `${ventandeFerie(alleFerie)} søknader om ferie/fri ventar på svar`, view: 'ferie' as View, niva: 'middels' as const, alder: nyasteFerie ? alderTekst(nyasteFerie, now) : undefined }] : []),
+    ...(blokkerteOppgaver > 0 ? [{ key: 'blokkert', tekst: `${tal(blokkerteOppgaver, 'oppgåve', 'oppgåver')} står fast og treng hjelp`, view: 'oppgaver' as View, niva: 'hog' as const }] : []),
+    ...(forseinka > 0 ? [{ key: 'forseinka', tekst: `${tal(forseinka, 'oppgåve', 'oppgåver')} har passert fristen`, view: 'oppgaver' as View, niva: 'hog' as const, alder: eldsteForseinka ? `Frist ${fristTekst(eldsteForseinka, t).toLowerCase()}` : undefined }] : []),
+    ...(ulesneHms > 0 ? [{ key: 'hms', tekst: `${ulesneHms} HMS-dokument ventar på stadfesting`, view: 'dokument' as View, niva: 'middels' as const }] : []),
+    ...(ufordelteOppgaver > 0 ? [{ key: 'oppgaver', tekst: tal(ufordelteOppgaver, 'ufordelt oppgåve', 'ufordelte oppgåver'), view: 'oppgaver' as View, niva: 'info' as const }] : []),
+  ];
+  const varsler = varslerUsortert.slice().sort((a, b) => NIVA_RANG[a.niva] - NIVA_RANG[b.niva]).slice(0, 8);
   // Leiarar får «Treng handling» øvst på sida; tilsette ser varsla lenger ned.
   const leiarVisning = kanLageVakt;
 
@@ -131,8 +137,15 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   }
 
   // ---- timar per dag (denne veka) ----
-  const timarPerDag = weekDays.map((d) => ({ d, t: entries.filter((e) => e.date === d).reduce((acc, e) => acc + timar(e), 0) }));
-  const maxDag = Math.max(1, ...timarPerDag.map((x) => x.t));
+  // Førte timar mot vaktplanen (alle tilsette), så avvik syner.
+  const timarPerDag = weekDays.map((d) => ({
+    d,
+    t: entries.filter((e) => e.date === d).reduce((acc, e) => acc + timar(e), 0),
+    plan: ansatte.reduce((acc, a) => acc + planTimar(shifts, a.id, d), 0),
+  }));
+  const maxDag = Math.max(1, ...timarPerDag.map((x) => Math.max(x.t, x.plan)));
+  const sumFort = timarPerDag.reduce((acc, x) => acc + x.t, 0);
+  const sumPlan = timarPerDag.reduce((acc, x) => acc + x.plan, 0);
 
   // ---- dagens oppgåver for den innlogga ----
   const dagensOppgaver = mineIDag(tasks, user?.id, t);
@@ -151,20 +164,20 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
     .sort((a, b) => (a.fra || '9999').localeCompare(b.fra || '9999'))
     .slice(0, 4);
 
-  type Hurtig = { key: 'timer' | 'vakt' | 'oppgave' | 'bestilling'; ikon: string; tekst: string; primary: boolean };
-  const hurtighandlinger: Hurtig[] = [
-    { key: 'timer', ikon: 'ny-timer', tekst: 'Registrer timar', primary: true },
+  type HurtigKey = 'timer' | 'vakt' | 'oppgave' | 'bestilling';
+  const hurtighandlinger: { key: HurtigKey; ikon: string; tekst: string }[] = [
+    { key: 'timer', ikon: 'ny-timer', tekst: 'Registrer timar' },
     // Berre leiar/delegert kan opprette vakter.
-    ...(kanLageVakt ? [{ key: 'vakt' as const, ikon: 'ny-vakt', tekst: 'Ny vakt', primary: false }] : []),
-    { key: 'oppgave', ikon: 'ny-oppgave', tekst: 'Ny oppgåve', primary: false },
-    { key: 'bestilling', ikon: 'ny-bestilling', tekst: 'Ny bestilling', primary: false },
+    ...(kanLageVakt ? [{ key: 'vakt' as const, ikon: 'ny-vakt', tekst: 'Ny vakt' }] : []),
+    { key: 'oppgave', ikon: 'ny-oppgave', tekst: 'Ny oppgåve' },
+    { key: 'bestilling', ikon: 'ny-bestilling', tekst: 'Ny bestilling' },
   ];
 
   return (
     <div style={{ padding: isMobile ? '16px 16px 28px' : '24px 28px 34px', display: 'flex', flexDirection: 'column', gap: 15 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 900, fontSize: isMobile ? 24 : 32, letterSpacing: '-0.01em', textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 900, fontSize: isMobile ? 22 : 26, letterSpacing: '-0.01em', textTransform: 'uppercase' }}>
             {helsing}, <span style={{ background: 'linear-gradient(120deg, var(--brand), var(--brand-strong))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{fornamn}</span>
           </div>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4 }}>{fullDatoTekst(t)}</div>
@@ -177,45 +190,33 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         )}
       </div>
 
-      {/* hurtighandlingar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12 }}>
-        {hurtighandlinger.map((h) => (
-          <button
-            key={h.key}
-            className="hoverable"
-            onClick={() => setQuickAction(h.key)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 11, textAlign: 'left', background: 'var(--surface)',
-              border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '11px 14px', cursor: 'pointer', boxShadow: 'var(--shadow-card)',
-            }}
-          >
-            <span style={{ width: 34, height: 34, borderRadius: 'var(--r)', background: h.primary ? 'var(--cta)' : 'var(--brand-soft)', color: h.primary ? 'var(--on-cta)' : 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={h.ikon} size={18} /></span>
-            <span style={{ fontSize: 13.5, fontWeight: 700 }}>{h.tekst}</span>
-          </button>
-        ))}
-      </div>
-
-      {leiarVisning && varsler.length > 0 && (
-        <div style={{ ...cardStyle, borderColor: 'var(--accent)' }}>
-          <div style={{ ...labelStyle, color: 'var(--accent)' }}>Treng handling</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(230px,1fr))', gap: 8 }}>
-            {varsler.map((v) => (
-              <button
-                key={v.key}
-                onClick={() => setView(v.view)}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '10px 12px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}
-              >
-                <span style={{ display: 'flex', color: 'var(--accent)', flex: 'none' }}><Icon name="bell" size={15} /></span>
-                <span style={{ flex: 1 }}>{v.tekst}</span>
-                <span style={{ color: 'var(--text-faint)' }}>›</span>
-              </button>
-            ))}
-          </div>
+      {/* Neste vakt er det viktigaste for dei fleste – størst, øvst. */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1fr', gap: 15, alignItems: 'stretch' }}>
+        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--r)', padding: isMobile ? '18px 20px' : '24px 28px', minHeight: isMobile ? 0 : 230, display: 'flex', flexDirection: 'column', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 12px 32px rgba(12, 90, 105, 0.28)' }}>
+          <span style={{ position: 'absolute', right: -60, top: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 68%)', pointerEvents: 'none' }} />
+          <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', background: 'var(--cta)', color: 'var(--on-cta)', padding: '5px 11px', borderRadius: 20 }}>
+            Neste vakt {nesteVakt ? (nesteVakt.date === t ? '· I dag' : `· ${datoKort(nesteVakt.date)}`) : ''}
+          </span>
+          {nesteVakt ? (
+            <>
+              <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: isMobile ? 40 : 56, fontWeight: 700, letterSpacing: '-2px', lineHeight: 1.05, margin: '14px 0 4px' }}>{nesteVakt.start} – {nesteVakt.slutt}</div>
+              <div style={{ fontSize: 15, color: 'var(--hero-sub)', fontWeight: 600, textTransform: 'capitalize' }}>{nesteVakt.skift || 'Vakt'}</div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 'auto', paddingTop: 16, flexWrap: 'wrap' }}>
+                {nesteKollegaer.length > 0 && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600 }}><Icon name="user" size={14} /> Saman med {nesteKollegaer.join(' & ')}</span>
+                )}
+                {startOm && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600 }}><Icon name="timeliste" size={14} /> {startOm}</span>
+                )}
+              </div>
+            </>
+          ) : (
+            <div style={{ fontSize: 15, color: 'var(--hero-sub)', marginTop: 16, fontWeight: 500 }}>Ingen komande vakt planlagt denne veka.</div>
+          )}
         </div>
-      )}
 
       {/* Dagens oppgåver: det den innlogga skal gjere i dag, utan å opne modulen. */}
-      <div style={cardStyle}>
+      <div style={{ ...cardStyle, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 9 }}>
           <div style={{ ...labelStyle, marginBottom: 0 }}>Dine oppgåver i dag</div>
           <button onClick={() => setView('oppgaver')} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, color: 'var(--brand)' }}>Alle oppgåver ‹</button>
@@ -258,6 +259,17 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
       </div>
 
+      </div>
+
+      {leiarVisning && varsler.length > 0 && (
+        <div style={cardStyle}>
+          <div style={labelStyle}>Treng handling</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 8 }}>
+            {varsler.map((v) => <VarselRad key={v.key} v={v} onClick={() => setView(v.view)} />)}
+          </div>
+        </div>
+      )}
+
       {/* nøkkeltal – samla i eitt panel */}
       <div style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)' }}>
@@ -281,47 +293,6 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
       </div>
 
-      {/* Neste vakt + timar per dag */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: 15 }}>
-        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--r)', padding: isMobile ? '15px 18px' : '17px 22px', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 12px 32px rgba(12, 90, 105, 0.28)' }}>
-          <span style={{ position: 'absolute', right: -60, top: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 68%)', pointerEvents: 'none' }} />
-          <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', background: 'var(--cta)', color: 'var(--on-cta)', padding: '5px 11px', borderRadius: 20 }}>
-            Neste vakt {nesteVakt ? (nesteVakt.date === t ? '· I dag' : `· ${datoKort(nesteVakt.date)}`) : ''}
-          </span>
-          {nesteVakt ? (
-            <>
-              <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: isMobile ? 30 : 34, fontWeight: 600, letterSpacing: '-1px', margin: '8px 0 1px' }}>{nesteVakt.start} – {nesteVakt.slutt}</div>
-              <div style={{ fontSize: 13.5, color: 'var(--hero-sub)', fontWeight: 500, textTransform: 'capitalize' }}>{nesteVakt.skift || 'Vakt'}</div>
-              <div style={{ display: 'flex', gap: 10, marginTop: 13, flexWrap: 'wrap' }}>
-                {nesteKollegaer.length > 0 && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600 }}><Icon name="user" size={14} /> Saman med {nesteKollegaer.join(' & ')}</span>
-                )}
-                {startOm && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.14)', padding: '8px 12px', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600 }}><Icon name="timeliste" size={14} /> {startOm}</span>
-                )}
-              </div>
-            </>
-          ) : (
-            <div style={{ fontSize: 15, color: 'var(--hero-sub)', marginTop: 16, fontWeight: 500 }}>Ingen komande vakt planlagt denne veka.</div>
-          )}
-        </div>
-
-        <div style={cardStyle}>
-          <div style={labelStyle}>Timar per dag</div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 78 }}>
-            {timarPerDag.map(({ d, t: tt }) => {
-              const erIdag = d === t;
-              return (
-                <div key={d} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: 7, height: '100%' }} title={`${fmt(tt)} t`}>
-                  <div style={{ width: '100%', height: `${Math.max(4, (tt / maxDag) * 100)}%`, borderRadius: 'var(--r-sm)', background: erIdag ? 'var(--cta)' : 'var(--brand-soft)', boxShadow: erIdag ? 'var(--glow-brand)' : 'none' }} />
-                  <span style={{ fontSize: 11, color: erIdag ? 'var(--brand-strong)' : 'var(--text-muted)', fontWeight: 700 }}>{UKE_KORT[weekdayIdx(d)]}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 14, alignItems: 'start' }}>
         {/* Kolonne 1: meldingar, varsel, kommande vakter */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
@@ -342,16 +313,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             <div style={cardStyle}>
               <div style={labelStyle}>Varslingssenter</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {varsler.map((v) => (
-                  <button
-                    key={v.key}
-                    onClick={() => setView(v.view)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '9px 12px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', fontSize: 12.5, fontWeight: 600 }}
-                  >
-                    <span style={{ display: 'flex', color: 'var(--brand-strong)', flex: 'none' }}><Icon name="bell" size={15} /></span>
-                    {v.tekst}
-                  </button>
-                ))}
+                {varsler.map((v) => <VarselRad key={v.key} v={v} onClick={() => setView(v.view)} />)}
               </div>
             </div>
           )}
@@ -387,8 +349,42 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
           </div>
         </div>
 
-        {/* Kolonne 2: denne uka + oppgåver */}
+        {/* Kolonne 2: timar per dag + denne veka */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+          <div style={cardStyle}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}>
+              <div style={{ ...labelStyle, marginBottom: 0 }}>Timar per dag</div>
+              <div style={{ marginLeft: 'auto', fontSize: 12.5, color: 'var(--text-muted)' }}>
+                <strong style={{ color: 'var(--text)', fontFamily: "'Geist Mono Variable'" }}>{fmt(sumFort)} t</strong>{sumPlan > 0 && <> av {fmt(sumPlan)} t planlagt</>}
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 120 }}>
+              {timarPerDag.map(({ d, t: tt, plan }) => {
+                const erIdag = d === t;
+                const ferdig = d <= t;
+                // Grøn = stemmer med vaktplanen, gul = færre, raud = fleire timar enn planlagt.
+                const farge = !ferdig || (tt === 0 && plan === 0) ? 'var(--brand-soft)'
+                  : Math.abs(tt - plan) < 0.25 ? 'var(--stock-green)'
+                  : tt < plan ? '#e0a526' : 'var(--danger)';
+                return (
+                  <div key={d} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: 5, height: '100%' }} title={`${fmt(tt)} t ført${plan > 0 ? `, ${fmt(plan)} t planlagt` : ''}`}>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, fontFamily: "'Geist Mono Variable'", color: tt > 0 ? 'var(--text)' : 'var(--text-faint)' }}>{tt > 0 ? `${fmt(tt)} t` : '–'}</span>
+                    <div style={{ position: 'relative', width: '100%', flex: 1, display: 'flex', alignItems: 'flex-end' }}>
+                      <div style={{ width: '100%', height: `${Math.max(3, (tt / maxDag) * 100)}%`, borderRadius: 'var(--r-sm)', background: farge }} />
+                      {plan > 0 && <div title={`${fmt(plan)} t planlagt`} style={{ position: 'absolute', left: -2, right: -2, bottom: `${(plan / maxDag) * 100}%`, borderTop: '2px dashed var(--text-muted)' }} />}
+                    </div>
+                    <span style={{ fontSize: 11, color: erIdag ? 'var(--brand-strong)' : 'var(--text-muted)', fontWeight: erIdag ? 900 : 700 }}>{UKE_KORT[weekdayIdx(d)]}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 10, fontSize: 11.5, color: 'var(--text-muted)' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 9, height: 9, borderRadius: 2, background: 'var(--stock-green)' }} /> Som planlagt</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 9, height: 9, borderRadius: 2, background: '#e0a526' }} /> Under</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 9, height: 9, borderRadius: 2, background: 'var(--danger)' }} /> Over</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 12, borderTop: '2px dashed var(--text-muted)' }} /> Plan</span>
+            </div>
+          </div>
           <div style={cardStyle}>
             <div style={labelStyle}>Denne veka</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -426,13 +422,20 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                 const dagensVakter = shifts.filter((s) => s.date === t && s.ansatt === a.id);
                 const paJobb = dagensVakter.some((s) => tilMin(s.start) <= minNo && minNo < tilMin(s.slutt));
                 const seinare = dagensVakter.filter((s) => tilMin(s.start) > minNo).sort((x, y) => (x.start < y.start ? -1 : 1))[0];
-                const statusTekst = paJobb ? 'På jobb no' : seinare ? `Kjem ${seinare.start}` : dagensVakter.length ? 'Ferdig for i dag' : 'Fri';
+                const harFerie = ferie.some((f) => f.ansatt === a.id && f.fra && f.fra <= t && (!f.til || f.til >= t));
+                const st = paJobb ? { tekst: 'På jobb no', farge: 'var(--stock-green)', fg: 'var(--pill-gronn-fg)', bg: 'var(--pill-gronn-bg)', fylt: true }
+                  : seinare ? { tekst: `Neste vakt ${seinare.start}`, farge: '#2f7fd8', fg: 'var(--pill-teal-fg)', bg: 'var(--pill-teal-bg)', fylt: true }
+                  : harFerie ? { tekst: 'Ferie / fri', farge: 'var(--accent)', fg: 'var(--pill-amber-fg)', bg: 'var(--pill-amber-bg)', fylt: true }
+                  : dagensVakter.length ? { tekst: 'Ferdig for i dag', farge: 'var(--text-faint)', fg: 'var(--text-secondary)', bg: 'var(--surface-alt)', fylt: false }
+                  : { tekst: 'Fri', farge: 'var(--text-faint)', fg: 'var(--text-secondary)', bg: 'var(--surface-alt)', fylt: false };
                 return (
                   <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', background: paJobb ? 'var(--stock-green)' : 'var(--border)' }} />
                     <Avatar init={a.init} farge={a.farge} size={26} fontSize={10} />
                     <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>{a.navn}</span>
-                    <span style={{ fontSize: 11.5, color: paJobb ? 'var(--brand-strong)' : 'var(--text-muted)', fontWeight: paJobb ? 700 : 400 }}>{statusTekst}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: '3px 10px 3px 8px', borderRadius: 999, color: st.fg, background: st.bg, whiteSpace: 'nowrap' }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', background: st.fylt ? st.farge : 'transparent', border: st.fylt ? 'none' : `1.5px solid ${st.farge}` }} />
+                      {st.tekst}
+                    </span>
                   </div>
                 );
               })}
@@ -461,6 +464,8 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
       </div>
 
+      <HurtigKnapp handlingar={hurtighandlinger} onVel={setQuickAction} isMobile={isMobile} />
+
       {quickAction === 'timer' && user && (
         <TimeEntryModal target={{ ansatt: user.id, date: t }} onClose={() => setQuickAction(null)} />
       )}
@@ -469,5 +474,42 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
       {opneTask && <TaskModal existing={opneTask} onClose={() => setOpneTask(null)} />}
       {quickAction === 'bestilling' && <OrderModal onClose={() => setQuickAction(null)} />}
     </div>
+  );
+}
+
+type Niva = 'hog' | 'middels' | 'info';
+interface Varsel { key: string; tekst: string; view: View; niva: Niva; alder?: string }
+const NIVA_RANG: Record<Niva, number> = { hog: 0, middels: 1, info: 2 };
+const NIVA_STIL: Record<Niva, { ikon: string; fg: string; bg: string }> = {
+  hog: { ikon: 'alert', fg: 'var(--pill-raud-fg)', bg: 'var(--pill-raud-bg)' },
+  middels: { ikon: 'bell', fg: 'var(--pill-amber-fg)', bg: 'var(--pill-amber-bg)' },
+  info: { ikon: 'bell', fg: 'var(--brand)', bg: 'var(--brand-soft)' },
+};
+
+/** «Akkurat no», «For 2 timar sidan», «I går», «For 3 dagar sidan». */
+function alderTekst(iso: string, no: Date) {
+  const min = Math.round((no.getTime() - new Date(iso).getTime()) / 60000);
+  if (min < 2) return 'Akkurat no';
+  if (min < 60) return `For ${min} min sidan`;
+  const timar = Math.round(min / 60);
+  if (timar < 24) return `For ${timar} ${timar === 1 ? 'time' : 'timar'} sidan`;
+  const dagar = Math.round(timar / 24);
+  return dagar === 1 ? 'I går' : `For ${dagar} dagar sidan`;
+}
+
+function VarselRad({ v, onClick }: { v: Varsel; onClick: () => void }) {
+  const st = NIVA_STIL[v.niva];
+  return (
+    <button
+      onClick={onClick}
+      style={{ display: 'flex', alignItems: 'center', gap: 11, textAlign: 'left', padding: '10px 12px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--text)', width: '100%' }}
+    >
+      <span style={{ width: 30, height: 30, borderRadius: 'var(--r)', background: st.bg, color: st.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={st.ikon} size={16} /></span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', fontSize: 13, fontWeight: 700 }}>{v.tekst}</span>
+        {v.alder && <span style={{ display: 'block', fontSize: 11.5, color: 'var(--text-muted)', marginTop: 1 }}>{v.alder}</span>}
+      </span>
+      <span style={{ color: 'var(--text-faint)', fontWeight: 900 }}>‹</span>
+    </button>
   );
 }

@@ -1,7 +1,9 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
-import { pad, fullDatoTekst, today } from '../../lib/dates';
+import { pad, fullDatoTekst, today, weekdayIdx, mins } from '../../lib/dates';
+import { supabase } from '../../supabaseClient';
+import { DAGER_VAKTPLAN, type Employee } from '../../constants';
 import { tekstPaFarge } from '../../lib/farge';
 
 const PAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -21,6 +23,31 @@ export function LoginScreen() {
   const maaVeljeButikk = butikkar.length > 1 && !valdButikk;
   const synlege = effektivButikk ? ansatte.filter((a) => a.butikk_id === effektivButikk) : ansatte;
   const merke = finnButikk(effektivButikk ?? undefined)?.namn?.toUpperCase() || 'MEKK';
+
+  // Dagens vakter (berre tider) for status ved kvar tilsett. Finst ikkje
+  // funksjonen (login-status.sql), blir statusen berre ikkje vist.
+  const [vakter, setVakter] = useState<{ id: string; start: string; slutt: string }[] | null>(null);
+  useEffect(() => {
+    const hent = () => supabase.rpc('login_status').then(({ data, error }) => setVakter(error || !Array.isArray(data) ? null : data));
+    hent();
+    const id = setInterval(hent, 5 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // «Sist brukt» på denne eininga – hjelper på ein delt terminal i butikken.
+  const [sist] = useState<{ id: string; at: string } | null>(() => {
+    try { return JSON.parse(localStorage.getItem(SIST_NOKKEL) || 'null'); } catch { return null; }
+  });
+
+  // Kort stadfesting («Velkomen, Georg») før PIN-tastaturet.
+  const [velkomen, setVelkomen] = useState<Employee | null>(null);
+  const vel = (u: Employee) => {
+    try { localStorage.setItem(SIST_NOKKEL, JSON.stringify({ id: u.id, at: new Date().toISOString() })); } catch { /* privat modus */ }
+    setVelkomen(u);
+    setTimeout(() => { setVelkomen(null); pickUser(u.id); }, 650);
+  };
+
+  const [sok, setSok] = useState('');
 
   // Levande klokke
   const [now, setNow] = useState(() => new Date());
@@ -43,6 +70,39 @@ export function LoginScreen() {
 
   const dateStr = `${fullDatoTekst(today())} ${new Date().getFullYear()}`;
 
+  // Status ut frå vaktplanen og klokka: på vakt no / vakt seinare / ferdig / fri.
+  const minNo = now.getHours() * 60 + now.getMinutes();
+  const statusFor = (id: string) => {
+    if (!vakter) return null;
+    const mine = vakter.filter((v) => v.id === id);
+    if (mine.some((v) => mins(v.start) <= minNo && minNo < mins(v.slutt))) return { tekst: 'På vakt no', farge: '#22c55e', fylt: true };
+    const neste = mine.find((v) => mins(v.start) > minNo);
+    if (neste) return { tekst: `Vakt ${neste.start}–${neste.slutt}`, farge: 'var(--mekk-teal)', fylt: true };
+    if (mine.length) return { tekst: 'Ferdig for i dag', farge: FAINT, fylt: false };
+    return { tekst: 'Fri i dag', farge: FAINT, fylt: false };
+  };
+
+  // Linja under klokka: opningstid før/etter, elles kven som er på vakt.
+  const dagDef = DAGER_VAKTPLAN[weekdayIdx(today())];
+  const [opnar, stengjer] = (dagDef?.open || '').split('–').map((x) => Number(x) * 60);
+  const paVakt = synlege.filter((u) => statusFor(u.id)?.tekst === 'På vakt no').length;
+  const kjemSeinare = synlege.filter((u) => statusFor(u.id)?.tekst.startsWith('Vakt')).length;
+  const omTid = (m: number) => (m >= 60 ? `${Math.floor(m / 60)} t ${pad(m % 60)} min` : `${m} min`);
+  const dagsLinje = !dagDef ? 'Butikken er stengd i dag'
+    : minNo < opnar ? `Butikken opnar om ${omTid(opnar - minNo)}`
+    : minNo >= stengjer ? 'Butikken er stengd for i dag'
+    : vakter ? [`${paVakt} på vakt no`, kjemSeinare ? `${kjemSeinare} kjem seinare` : ''].filter(Boolean).join(' · ')
+    : `Ope til ${pad(stengjer / 60)}:00`;
+
+  // Sist brukt øvst, og søk når lista blir lang.
+  const sortert = [...synlege].sort((a, b) => Number(b.id === sist?.id) - Number(a.id === sist?.id));
+  const filtrert = sok.trim() ? sortert.filter((u) => u.navn.toLowerCase().includes(sok.trim().toLowerCase())) : sortert;
+  const sistTekst = (iso: string) => {
+    const d = new Date(iso);
+    const dag = d.toDateString() === now.toDateString() ? 'i dag' : d.toDateString() === new Date(now.getTime() - 864e5).toDateString() ? 'i går' : `${d.getDate()}.${d.getMonth() + 1}.`;
+    return `Sist brukt her ${dag} kl. ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: BAKGRUNN, color: '#ffffff', fontFamily: 'var(--font-sans)' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'clamp(24px, 5vh, 52px) 20px 40px' }}>
@@ -60,9 +120,18 @@ export function LoginScreen() {
           {pad(now.getHours())}:{pad(now.getMinutes())}<span style={{ color: 'var(--mekk-teal)' }}>:{pad(now.getSeconds())}</span>
         </div>
         <div style={{ fontSize: 16, color: SUB, fontWeight: 500, marginTop: 12, letterSpacing: '0.3px' }}>{dateStr}</div>
+        <div style={{ marginTop: 14, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderRadius: 999, background: GLAS, border: '1px solid ' + GLAS_KANT, fontSize: 13.5, fontWeight: 700 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: dagDef && minNo >= opnar && minNo < stengjer ? '#22c55e' : FAINT }} />
+          {dagsLinje}
+        </div>
 
         <div style={{ ...kort, marginTop: 'clamp(26px, 5vh, 44px)' }}>
-          {pick ? (
+          {velkomen ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '26px 0 22px', gap: 14, animation: 'toastIn 0.18s ease' }}>
+              <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--mekk-lime)', color: 'var(--mekk-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 900 }}>✓</div>
+              <div style={{ ...tittel, textTransform: 'none' }}>Velkomen, {velkomen.navn.split(' ')[0]}</div>
+            </div>
+          ) : pick ? (
             <>
               <button onClick={back} style={backBtn}><span style={{ color: 'var(--mekk-teal)', fontWeight: 900 }}>‹</span> Byt brukar</button>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -139,20 +208,43 @@ export function LoginScreen() {
               {butikkar.length > 1 && (
                 <button onClick={() => setValdButikk(null)} style={backBtn}><span style={{ color: 'var(--mekk-teal)', fontWeight: 900 }}>‹</span> Byt butikk</button>
               )}
-              <div style={{ ...tittel, marginBottom: 16 }}>Vel kven du er</div>
+              <div style={{ ...tittel, textTransform: 'none', marginBottom: 16 }}>Kven er du?</div>
+              {synlege.length > 10 && (
+                <input
+                  value={sok}
+                  onChange={(e) => setSok(e.target.value)}
+                  placeholder="Søk etter brukar"
+                  aria-label="Søk etter brukar"
+                  style={{ width: '100%', marginBottom: 10, padding: '10px 13px', borderRadius: R, border: '1px solid ' + GLAS_KANT, background: GLAS, color: '#ffffff', fontFamily: 'var(--font-sans)', fontSize: 14 }}
+                />
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {synlege.map((u) => (
-                  <button key={u.id} className="mk-rad" onClick={() => pickUser(u.id)} style={radBtn}>
+                {filtrert.map((u) => {
+                  const st = statusFor(u.id);
+                  const erSist = u.id === sist?.id;
+                  return (
+                  <button key={u.id} className="mk-rad" onClick={() => vel(u)} style={radBtn}>
                     <div style={{ flex: 'none', width: 42, height: 42, borderRadius: R, background: u.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: tekstPaFarge(u.farge) }}>
                       {u.init}
                     </div>
                     <div style={{ lineHeight: 1.25, textAlign: 'left' }}>
                       <div style={{ fontSize: 15, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}>{u.navn}</div>
                       <div style={{ fontSize: 12.5, color: SUB }}>{u.rolle}</div>
+                      {st && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, fontSize: 12, fontWeight: 700, color: st.fylt ? '#ffffff' : SUB }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', background: st.fylt ? st.farge : 'transparent', border: st.fylt ? 'none' : `1.5px solid ${st.farge}` }} />
+                          {st.tekst}
+                        </div>
+                      )}
+                      {erSist && sist && <div style={{ fontSize: 11.5, color: FAINT, marginTop: 2 }}>{sistTekst(sist.at)}</div>}
                     </div>
-                    <span className="mk-chev" style={{ marginLeft: 'auto' }}>‹</span>
+                    {erSist && (
+                      <span style={{ marginLeft: 'auto', flex: 'none', fontSize: 10.5, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.03em', padding: '3px 8px', borderRadius: 999, background: 'var(--mekk-lime)', color: 'var(--mekk-ink)' }}>★ Sist brukt</span>
+                    )}
+                    <span className="mk-chev" style={{ marginLeft: erSist ? 4 : 'auto' }}>‹</span>
                   </button>
-                ))}
+                  );
+                })}
               </div>
               {synlege.length === 0 && (
                 <div style={{ marginTop: 16, padding: '10px 13px', background: GLAS, borderRadius: R, fontSize: 12, color: SUB, lineHeight: 1.4, textAlign: 'center' }}>
@@ -166,6 +258,8 @@ export function LoginScreen() {
     </div>
   );
 }
+
+const SIST_NOKKEL = 'mekk-sist-brukt';
 
 // Glas-flater frå den førre innlogginga, på MEKK-marine.
 const R = 8;
