@@ -4,6 +4,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { useAuth } from '../../context/AuthContext';
 import { dur, fmt, mins } from '../../lib/dates';
+import { erAvvik, planTimar } from '../../lib/avvik';
 import type { TimeEntry } from '../../types';
 
 interface Bolk { id?: string; start: string; slutt: string; pause: number; }
@@ -15,7 +16,7 @@ export function TimeEntryModal({
   target: { ansatt: TimeEntry['ansatt']; date: string };
   onClose: () => void;
 }) {
-  const { entries, saveEntry, deleteEntry, canApprove } = useAppData();
+  const { entries, shifts, saveEntry, deleteEntry, canApprove } = useAppData();
   const { findAnsatt } = useAnsatte();
   const { user } = useAuth();
   const a = findAnsatt(target.ansatt);
@@ -42,11 +43,20 @@ export function TimeEntryModal({
 
   const totalTimar = bolkar.reduce((acc, b) => acc + (mins(b.slutt) > mins(b.start) ? dur(b.start, b.slutt) - b.pause / 60 : 0), 0);
 
+  // Kontroll mot vaktplanen: same dag, same tilsett.
+  const plan = planTimar(shifts, target.ansatt, target.date);
+  const avvik = erAvvik(plan, totalTimar);
+  const varGodkjent = eksisterande.length > 0 && eksisterande.every((e) => e.status === 'godkjent');
+
   const [lagrar, setLagrar] = useState(false);
 
   const save = async () => {
     if (lagrar) return;
     if (bolkar.some((b) => mins(b.slutt) <= mins(b.start))) { setFeil('Slutt må vere etter start i alle bolkane.'); return; }
+    // Leiaren godkjenner timar som ikkje stemmer med vakta: spør først.
+    if (status === 'godkjent' && !varGodkjent && avvik && !window.confirm(
+      `${plan > 0 ? `Vakta er ${fmt(plan)} t` : 'Det er inga vakt denne dagen'}, men det er ført ${fmt(totalTimar)} t. Godkjenne likevel?`,
+    )) return;
     setFeil(null);
     setLagrar(true);
     try {
@@ -135,7 +145,17 @@ export function TimeEntryModal({
       </button>
 
       {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>{feil}</div>}
-      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Totalt denne dagen: <strong style={{ color: 'var(--text)' }}>{fmt(totalTimar)} t</strong></div>
+      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+        Totalt denne dagen: <strong style={{ color: 'var(--text)' }}>{fmt(totalTimar)} t</strong>
+        {plan > 0 && <> · Vakt i vaktplanen: <strong style={{ color: 'var(--text)' }}>{fmt(plan)} t</strong></>}
+      </div>
+      {avvik && (
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pill-raud-fg)', background: 'var(--pill-raud-bg)', borderRadius: 'var(--r)', padding: '9px 12px' }}>
+          {plan > 0
+            ? `Stemmer ikkje med vaktplanen: ${fmt(totalTimar)} t ført, vakta er ${fmt(plan)} t (${totalTimar > plan ? '+' : '−'}${fmt(Math.abs(totalTimar - plan))} t).`
+            : 'Det er inga vakt i vaktplanen denne dagen.'}
+        </div>
+      )}
 
       <button
         onClick={() => setStatus(godkjent ? 'venter' : 'godkjent')}
