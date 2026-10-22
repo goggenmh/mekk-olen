@@ -5,10 +5,8 @@ import { pad, fullDatoTekst, today } from '../../lib/dates';
 import { tekstPaFarge } from '../../lib/farge';
 
 const PAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
-// Kategoriane frå toppstripa på mekk.no, med chevronen frå logoen.
-const STRIPE = ['BIL', 'BÅT', 'HJEM', 'FRITID', 'VERKTØY'];
 
-// Innlogginga ser lik ut i lys og mørk modus: MEKK-marine med toppstripe,
+// Innlogginga ser lik ut i lys og mørk modus: MEKK-marine,
 // mjuk turkis/lime-glød og eit glaskort.
 export function LoginScreen() {
   const { pick, pin, feil, pickUser, back, pressDigit, backspace } = useAuth();
@@ -47,13 +45,6 @@ export function LoginScreen() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: BAKGRUNN, color: '#ffffff', fontFamily: 'var(--font-sans)' }}>
-      {/* Toppstripe som på mekk.no */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '0 24px', height: 40, borderBottom: '1px solid var(--mekk-navy-700)', fontSize: 13, fontWeight: 700, overflow: 'hidden', whiteSpace: 'nowrap' }}>
-        {STRIPE.map((s) => (
-          <span key={s}><span style={{ color: 'var(--mekk-teal)', fontWeight: 900 }}>‹</span> {s}</span>
-        ))}
-      </div>
-
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'clamp(24px, 5vh, 52px) 20px 40px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <img src="/assets/mekk-logo.png" alt="MEKK" style={{ width: 44, height: 44 }} />

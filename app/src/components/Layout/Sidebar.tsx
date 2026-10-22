@@ -61,12 +61,19 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
 
   const innhald = (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: smal ? '2px 0 14px' : '2px 8px 14px', justifyContent: smal ? 'center' : 'flex-start' }}>
+      {/* Logofeltet høyrer til toppstripa: same farge og høgd som ho, kant i kant. */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 9, flex: 'none', height: isMobile ? 'calc(56px + env(safe-area-inset-top))' : 62, boxSizing: 'border-box',
+        margin: smal ? '-16px -9px 12px' : '-16px -11px 12px', padding: smal ? 0 : '0 19px', justifyContent: smal ? 'center' : 'flex-start',
+        background: 'var(--topbar-bg)', borderBottom: '1px solid var(--rail-border)',
+        // Mobilmenyen har luft til hakket på iPhone; fargen skal gå heilt opp.
+        ...(isMobile ? { marginTop: 'calc(-16px - env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' } : {}),
+      }}>
         <img src="/assets/mekk-logo.png" alt="MEKK Ølen" style={{ width: 28, height: 28, borderRadius: 'var(--r)', flex: 'none' }} />
         {!smal && (
           <div style={{ lineHeight: 1.15 }} className="rail-label">
-            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: 14, letterSpacing: '0.3px', color: 'var(--rail-brand)' }}>{merke}</div>
-            <div style={{ fontSize: 9.5, color: 'var(--rail-brand-sub)', fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase' }}>Vakt &amp; timestyring</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: 14, letterSpacing: '0.3px', color: 'var(--topbar-name)' }}>{merke}</div>
+            <div style={{ fontSize: 9.5, color: 'var(--topbar-role)', fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase' }}>Vakt &amp; timestyring</div>
           </div>
         )}
       </div>
