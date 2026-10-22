@@ -125,6 +125,13 @@ export function fraIso(iso: string) {
 
 export const nr = (r: Pick<UtleigeReservasjon, 'nummer'>) => `U-${r.nummer}`;
 
+/** Sant når feilen kjem av ei utgått/manglande økt (kallet gjekk ut som «anon»). */
+export function erOktaFeil(e: unknown): boolean {
+  const m = (e as { message?: string })?.message || '';
+  const kode = (e as { code?: string })?.code;
+  return kode === '42501' || kode === 'PGRST301' || /permission denied|JWT|jwt expired/i.test(m);
+}
+
 /** Gjer databasefeil om til ei forståeleg melding. */
 export function feilTekst(e: unknown): string {
   const m = (e as { message?: string; code?: string })?.message || '';
@@ -133,5 +140,6 @@ export function feilTekst(e: unknown): string {
   if (kode === '23503') return 'Kan ikkje slettast fordi det finst reservasjonar. Skjul utstyret i staden.';
   if (kode === '23505') return 'Koden er alt i bruk. Vel ein annan.';
   if (/Failed to fetch|NetworkError|network/i.test(m)) return 'Fekk ikkje kontakt med serveren. Sjekk nettet og prøv igjen.';
+  if (erOktaFeil(e)) return 'Økta er utgått. Logg inn på nytt for å sjå utleige.';
   return m || 'Noko gjekk gale.';
 }
