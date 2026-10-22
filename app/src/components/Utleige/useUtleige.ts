@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
 import { toast } from '../../lib/toast';
-import { feilTekst, type UtleigeEining, type UtleigeInnstillingar, type UtleigeKunde, type UtleigeProdukt, type UtleigeReservasjon, type UtleigeSperre, type PrisSvar, type ReturSjekk } from '../../lib/utleige';
+import { erOktaFeil, feilTekst, type UtleigeEining, type UtleigeInnstillingar, type UtleigeKunde, type UtleigeProdukt, type UtleigeReservasjon, type UtleigeSperre, type PrisSvar, type ReturSjekk } from '../../lib/utleige';
 
 const tal = (v: unknown) => (v == null ? null : Number(v));
 const mapProdukt = (r: Record<string, unknown>): UtleigeProdukt => ({
@@ -30,7 +30,7 @@ export function useUtleige() {
   const [innstillingar, setInnstillingar] = useState<UtleigeInnstillingar | null>(null);
 
   const hent = useCallback(async () => {
-    const [p, e, k, r, s, i] = await Promise.all([
+    const kjor = () => Promise.all([
       supabase.from('utleige_produkt').select('*').order('sortering').order('namn'),
       supabase.from('utleige_eining').select('*').order('kode'),
       supabase.from('utleige_kunde').select('*').order('namn'),
@@ -38,7 +38,15 @@ export function useUtleige() {
       supabase.from('utleige_sperre').select('*'),
       supabase.from('utleige_innstillingar').select('*').limit(1).maybeSingle(),
     ]);
-    const forste = [p, e, k, r, s, i].find((x) => x.error)?.error;
+    let svar = await kjor();
+    let forste = svar.find((x) => x.error)?.error;
+    // Utgått økt (t.d. etter at mobilen har vore i bakgrunnen): då går kalla ut
+    // som «anon» og blir avviste. Forny tokenet og prøv éin gong til.
+    if (forste && erOktaFeil(forste)) {
+      const { data } = await supabase.auth.refreshSession();
+      if (data.session) { svar = await kjor(); forste = svar.find((x) => x.error)?.error; }
+    }
+    const [p, e, k, r, s, i] = svar;
     if (forste) { setFeil(feilTekst(forste)); setLastar(false); return; }
     setProdukt((p.data || []).map(mapProdukt));
     setEiningar((e.data || []) as UtleigeEining[]);

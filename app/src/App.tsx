@@ -14,7 +14,6 @@ const Vaktplan = lazy(() => import('./components/Vaktplan/Vaktplan').then((m) =>
 const Oppgaver = lazy(() => import('./components/Oppgaver/Oppgaver').then((m) => ({ default: m.Oppgaver })));
 const Bestillinger = lazy(() => import('./components/Bestillinger/Bestillinger').then((m) => ({ default: m.Bestillinger })));
 const Utleige = lazy(() => import('./components/Utleige/Utleige').then((m) => ({ default: m.Utleige })));
-const UtleigeSide = lazy(() => import('./components/Utleige/UtleigeSide').then((m) => ({ default: m.UtleigeSide })));
 const Dokument = lazy(() => import('./components/Dokument/Dokument').then((m) => ({ default: m.Dokument })));
 const Rapporter = lazy(() => import('./components/Rapporter/Rapporter').then((m) => ({ default: m.Rapporter })));
 const Innstillinger = lazy(() => import('./components/Innstillinger/Innstillinger').then((m) => ({ default: m.Innstillinger })));
@@ -143,8 +142,7 @@ function App() {
     return () => navigator.serviceWorker.removeEventListener('message', vedMelding);
   }, [user]);
 
-  // Offentleg kundeside for utleige: ingen innlogging.
-  if (lesSti().startsWith('/utleige')) return <Suspense fallback={null}><UtleigeSide /></Suspense>;
+  // Den offentlege utleige-sida blir rendra i main.tsx (utan tilsett-providerane).
   if (authLoading) return null;
   if (!user) return <LoginScreen />;
 
