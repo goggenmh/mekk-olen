@@ -25,11 +25,11 @@
   --kort-label: var(--mekk-navy);
   --rail-active-bar: var(--mekk-lime);
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  /* Kantete som MEKK: kort, knappar og felt har (nesten) skarpe hjørne.
+  /* Nesten kantete som MEKK: små rundingar på kort, knappar og felt.
      Piller og sirklar (999 / 50 %) er framleis runde. */
-  --r: 0px;
-  --r-sm: 0px;
-  --r-input: 2px;
+  --r: 6px;
+  --r-sm: 4px;
+  --r-input: 6px;
   --bg: #f8fafc;
   --surface: #ffffff;
   --surface-alt: #f6f8f7;
