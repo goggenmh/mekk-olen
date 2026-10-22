@@ -36,10 +36,10 @@ export function Dokument() {
   return (
     <div className="side" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Dokument</div>
+        <div className="sidetittel">Dokument</div>
         <button
           onClick={() => setDocTarget('new')}
-          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           + Nytt dokument
         </button>
@@ -57,7 +57,7 @@ export function Dokument() {
         onChange={(e) => setSok(e.target.value)}
         placeholder="Søk i dokument …"
         aria-label="Søk i dokument"
-        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontFamily: "'Geist Variable'", fontSize: 14, color: 'var(--text)', maxWidth: 420 }}
+        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontFamily: "'Inter Variable'", fontSize: 14, color: 'var(--text)', maxWidth: 420 }}
       />
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -109,7 +109,7 @@ export function Dokument() {
                       <button
                         onClick={() => stadfest(d.id)}
                         disabled={jobbar === d.id}
-                        style={{ alignSelf: 'flex-start', padding: '7px 12px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 9, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
+                        style={{ alignSelf: 'flex-start', padding: '7px 12px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 9, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
                       >
                         {jobbar === d.id ? 'Lagrar …' : 'Eg har lese dette'}
                       </button>

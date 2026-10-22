@@ -113,7 +113,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
   return (
     <div style={{ padding: isMobile ? 16 : 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-        <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Vaktplan</div>
+        <div className="sidetittel">Vaktplan</div>
         <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
           {(['uke', 'manad'] as const).map((m) => (
             <button
@@ -179,7 +179,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, paddingBottom: 7, borderBottom: '1px solid var(--divider)' }}>
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'Geist Variable'", color: erIDag ? 'var(--brand-strong)' : heilagdag ? 'var(--dag-raud-tekst)' : halvdag ? 'var(--dag-amber-tekst)' : 'var(--text)', lineHeight: 1, letterSpacing: '-0.7px' }}>{parseDate(d.date).getDate()}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'Inter Variable'", color: erIDag ? 'var(--brand-strong)' : heilagdag ? 'var(--dag-raud-tekst)' : halvdag ? 'var(--dag-amber-tekst)' : 'var(--text)', lineHeight: 1, letterSpacing: '-0.7px' }}>{parseDate(d.date).getDate()}</div>
                   <div style={{ fontSize: 10.5, fontWeight: 700, color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.6px', marginTop: 3 }}>{d.kort}</div>
                   {heilagdag ? (
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--dag-raud-tekst)', marginTop: 1 }}>{heilagdag}</div>

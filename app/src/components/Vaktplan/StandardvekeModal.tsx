@@ -21,7 +21,7 @@ const DUMMY_DATO: Record<string, string> = {
 
 interface Rad { ansatt: string; dag: string; start: string; slutt: string; }
 
-const sel: CSSProperties = { padding: '8px 9px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 9, fontFamily: "'Geist Variable'", fontSize: 13, color: 'var(--text)' };
+const sel: CSSProperties = { padding: '8px 9px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 9, fontFamily: "'Inter Variable'", fontSize: 13, color: 'var(--text)' };
 
 export function StandardvekeModal({ onClose }: { onClose: () => void }) {
   const { standardveke, saveStandardveke } = useAppData();

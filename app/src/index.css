@@ -1,9 +1,24 @@
 :root {
-  --bg: #f4f7f6;
+  /* MEKK-profilen (designsystemet frå mekk.no): marine, lime og turkis. */
+  --mekk-navy: #0a2335;
+  --mekk-navy-800: #163a56;
+  --mekk-navy-700: #1e4664;
+  --mekk-lime: #c4e212;
+  --mekk-teal: #5dcbcc;
+  --mekk-teal-700: #1a7275;
+  --mekk-ink: #1a1a1a;
+  /* Lime = handling: hovudknappen på ei flate, alltid med mørk tekst. */
+  --cta: var(--mekk-lime);
+  --cta-hover: #b3cf0f;
+  --on-cta: var(--mekk-ink);
+  /* Berre som prikk (t.d. «på jobb no»), aldri som tekst. */
+  --stock-green: #22c55e;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --bg: #f8fafc;
   --surface: #ffffff;
   --surface-alt: #f6f8f7;
   --surface-soft: #f1f4f3;
-  --border: #e8ecea;
+  --border: #e3e9ec;
   --divider: #eef2f0;
   --danger-border: #ecc9c2;
   --text: #14202a;
@@ -16,9 +31,9 @@
   --accent: #c8811a;
   --accent-soft: #fbf1de;
   --modal-overlay: rgba(12, 36, 54, 0.5);
-  --brand: #11788a;
-  --brand-strong: #0c5a69;
-  --brand-soft: #e7f3f4;
+  --brand: var(--mekk-teal-700);
+  --brand-strong: var(--mekk-navy);
+  --brand-soft: #e4f5f5;
   /* Tekst på brand-/accent-fargar (knappar, merke) */
   --on-brand: #ffffff;
   /* Statusmerke og kategoriar */
@@ -46,27 +61,28 @@
   --rail-bg-solid: #ffffff;
   --rail-fg: #465561;
   --rail-section: #aab4bb;
-  --rail-active-bg: #e7f3f4;
-  --rail-active-fg: #0c5a69;
+  --rail-active-bg: #e4f5f5;
+  --rail-active-fg: var(--mekk-navy);
   --rail-brand: #14202a;
   --rail-brand-sub: #7a8791;
   --rail-border: #e8ecea;
-  --topbar-bg: #ffffff;
-  --topbar-name: #14202a;
-  --topbar-role: #7a8791;
-  --topbar-ctl-bg: #f6f8f7;
-  --topbar-ctl-border: #e8ecea;
-  --topbar-ctl-fg: #56656f;
+  /* Marine toppstripe som på mekk.no */
+  --topbar-bg: var(--mekk-navy);
+  --topbar-name: #ffffff;
+  --topbar-role: #b9cbd8;
+  --topbar-ctl-bg: var(--mekk-navy-800);
+  --topbar-ctl-border: var(--mekk-navy-700);
+  --topbar-ctl-fg: #ffffff;
   --radius-sm: 10px;
   --radius-md: 13px;
   --radius-lg: 16px;
   /* Nye felles tokens */
-  --hero-grad: linear-gradient(140deg, #0f6f80, #0b525f 72%);
-  --hero-fg: #eafaff;
-  --hero-sub: #bfe3e9;
+  --hero-grad: linear-gradient(140deg, var(--mekk-navy), var(--mekk-navy-800) 72%);
+  --hero-fg: #ffffff;
+  --hero-sub: #b9cbd8;
   --glow-brand: none;
   --body-img: none;
-  --ring: rgba(17, 120, 138, 0.28);
+  --ring: rgba(10, 35, 53, 0.28);
   /* Innlogging (følgjer lys/mørk) – lys drakt */
   --login-bg:
     radial-gradient(900px 500px at 50% -8%, rgba(17,120,138,0.14), transparent 60%),
@@ -75,8 +91,8 @@
   --login-text: #14202a;
   --login-sub: #65727d;
   --login-faint: #65727d;
-  --login-accent: #11788a;
-  --login-accent-2: #11788a;
+  --login-accent: var(--mekk-teal-700);
+  --login-accent-2: var(--mekk-teal-700);
   --login-card-bg: #ffffff;
   --login-card-border: #e8ecea;
   --login-card-shadow: 0 24px 60px rgba(16,33,40,0.14);
@@ -147,9 +163,9 @@
   --topbar-ctl-bg: #151c20;
   --topbar-ctl-border: #33424a;
   --topbar-ctl-fg: #c6d2d5;
-  --hero-grad: linear-gradient(135deg, #0f7a70, #0a5750);
-  --hero-fg: #eafffb;
-  --hero-sub: #bfeee7;
+  --hero-grad: linear-gradient(135deg, var(--mekk-navy-800), var(--mekk-navy));
+  --hero-fg: #ffffff;
+  --hero-sub: #b9cbd8;
   --glow-brand: 0 0 22px rgba(32, 201, 184, 0.32);
   --body-img: radial-gradient(900px 520px at 82% -10%, rgba(32, 201, 184, 0.12), transparent 60%), radial-gradient(720px 520px at -8% 6%, rgba(43, 120, 255, 0.07), transparent 55%);
   --ring: rgba(32, 201, 184, 0.4);
@@ -185,7 +201,7 @@ html, body, #root {
 }
 
 body {
-  font-family: 'Geist Variable', system-ui, sans-serif;
+  font-family: var(--font-sans);
   background: var(--bg);
   background-image: var(--body-img);
   background-attachment: fixed;
@@ -275,8 +291,26 @@ input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-
   outline-offset: 1px;
 }
 
+/* Hovudknapp (lime) – litt mørkare ved hover */
+button[style*="var(--cta)"]:hover:not(:disabled) { filter: brightness(0.94); }
+
+/* Sidetitlar i MEKK-stil: versalar i Inter Black */
+.sidetittel {
+  font-family: var(--font-sans);
+  font-weight: 900;
+  font-size: 26px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
 @media print {
   .no-print {
     display: none !important;
   }
 }
+
+/* Søket i toppstripa: lys plasshaldar og turkis ramme ved fokus, som på mekk.no */
+.topbar-sok::placeholder { color: var(--topbar-role); }
+.topbar-sok:focus { border-color: var(--mekk-teal) !important; outline: none; }

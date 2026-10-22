@@ -164,7 +164,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
     <div style={{ padding: isMobile ? '16px 16px 28px' : '24px 28px 34px', display: 'flex', flexDirection: 'column', gap: 15 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: isMobile ? 24 : 30, letterSpacing: '-0.6px' }}>
+          <div style={{ fontFamily: "'Inter Variable'", fontWeight: 800, fontSize: isMobile ? 24 : 30, letterSpacing: '-0.6px' }}>
             {helsing}, <span style={{ background: 'linear-gradient(120deg, var(--brand), var(--brand-strong))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{fornamn}</span>
           </div>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4 }}>{fullDatoTekst(t)}</div>
@@ -366,7 +366,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                   <div key={g.dato} style={{ display: 'flex', gap: 11, alignItems: 'flex-start' }}>
                     <div style={{ flex: 'none', width: 44, textAlign: 'center', padding: '5px 0', borderRadius: 10, background: erIDag ? 'var(--brand-soft)' : 'var(--surface-alt)', border: '1px solid var(--border)' }}>
                       <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)' }}>{UKE_KORT[weekdayIdx(g.dato)]}</div>
-                      <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "'Geist Variable'", color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(g.dato).getDate()}</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "'Inter Variable'", color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(g.dato).getDate()}</div>
                     </div>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5, paddingTop: 1, minWidth: 0 }}>
                       {g.vakter.map((s) => {
@@ -429,7 +429,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                 const statusTekst = paJobb ? 'På jobb no' : seinare ? `Kjem ${seinare.start}` : dagensVakter.length ? 'Ferdig for i dag' : 'Fri';
                 return (
                   <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', background: paJobb ? 'var(--brand)' : 'var(--border)' }} />
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', background: paJobb ? 'var(--stock-green)' : 'var(--border)' }} />
                     <Avatar init={a.init} farge={a.farge} size={26} fontSize={10} />
                     <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>{a.navn}</span>
                     <span style={{ fontSize: 11.5, color: paJobb ? 'var(--brand-strong)' : 'var(--text-muted)', fontWeight: paJobb ? 700 : 400 }}>{statusTekst}</span>

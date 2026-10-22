@@ -144,7 +144,7 @@ export function FerieSide() {
   return (
     <div className="side" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <h1 style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Ferie &amp; fri</h1>
+        <h1 className="sidetittel">Ferie &amp; fri</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button onClick={() => setAar(aar - 1)} style={knapp} aria-label="Førre år">‹</button>
           <span style={{ fontWeight: 700, fontSize: 15, minWidth: 44, textAlign: 'center' }}>{aar}</span>
@@ -152,7 +152,7 @@ export function FerieSide() {
         </div>
         <button
           onClick={() => setModal('ny')}
-          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ marginLeft: 'auto', padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           {leiar ? '+ Registrer ferie/fri' : '+ Søk om ferie/fri'}
         </button>

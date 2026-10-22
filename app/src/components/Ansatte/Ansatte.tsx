@@ -76,7 +76,7 @@ function AnsattCard({ ansatt, stats, onProfil, onEdit, onResetPin, onToggleAktiv
 
 const btnStyle = {
   padding: '8px 12px', background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)',
-  borderRadius: 10, fontFamily: "'Geist Variable'", fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+  borderRadius: 10, fontFamily: "'Inter Variable'", fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
 } as const;
 
 export function Ansatte() {
@@ -126,14 +126,14 @@ export function Ansatte() {
     <div className="side" style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 880 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Tilsette</h1>
+          <h1 className="sidetittel">Tilsette</h1>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Administrer tilsette, roller og tilgangsnivå</div>
         </div>
         <button
           onClick={() => setModalAnsatt('new')}
           style={{
-            padding: '11px 18px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none',
-            borderRadius: 12, fontFamily: "'Geist Variable'", fontSize: 13.5, fontWeight: 700, cursor: 'pointer',
+            padding: '11px 18px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none',
+            borderRadius: 12, fontFamily: "'Inter Variable'", fontSize: 13.5, fontWeight: 700, cursor: 'pointer',
           }}
         >
           + Ny tilsett

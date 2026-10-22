@@ -84,7 +84,7 @@ export function Innstillinger({ setView }: { setView: (v: View) => void }) {
   return (
     <div className="side" style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 640 }}>
       <div>
-        <h1 style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Innstillingar</h1>
+        <h1 className="sidetittel">Innstillingar</h1>
         <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Profil og preferansar</div>
       </div>
 
@@ -123,7 +123,7 @@ export function Innstillinger({ setView }: { setView: (v: View) => void }) {
           </div>
           <button
             onClick={() => setView('ansatte')}
-            style={{ padding: '9px 14px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+            style={{ padding: '9px 14px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
           >
             Gå til Tilsette
           </button>

@@ -99,7 +99,7 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
     <div style={{ padding: isMobile ? 16 : 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Oppgåver</div>
+          <div className="sidetittel">Oppgåver</div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 3 }}>{undertittel}</div>
         </div>
         {erLeiar && (
@@ -109,7 +109,7 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
         )}
         <button
           onClick={() => setTaskTarget({ defaultAnsatt: valtFane === 'mine' ? user?.id : undefined })}
-          style={{ padding: '9px 16px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          style={{ padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
           + Ny oppgåve
         </button>
@@ -152,7 +152,7 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
             aria-label="Ny oppgåve"
             style={{ flex: 1, minWidth: 0, padding: '11px 13px', borderRadius: 11, border: '1px solid var(--border)', background: 'var(--surface-alt)', color: 'var(--text)', fontSize: 14, fontFamily: 'inherit' }}
           />
-          <button onClick={leggTil} disabled={!nyTittel.trim()} style={{ padding: '0 16px', background: nyTittel.trim() ? 'var(--brand)' : 'var(--surface-alt)', color: nyTittel.trim() ? 'var(--on-brand)' : 'var(--text-faint)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: nyTittel.trim() ? 'pointer' : 'default', flex: 'none' }}>Legg til</button>
+          <button onClick={leggTil} disabled={!nyTittel.trim()} style={{ padding: '0 16px', background: nyTittel.trim() ? 'var(--cta)' : 'var(--surface-alt)', color: nyTittel.trim() ? 'var(--on-cta)' : 'var(--text-faint)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: nyTittel.trim() ? 'pointer' : 'default', flex: 'none' }}>Legg til</button>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
           <span>Til:</span>

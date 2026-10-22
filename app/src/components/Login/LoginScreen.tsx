@@ -108,7 +108,7 @@ export function LoginScreen() {
                 ))}
                 <div />
                 <button className="glasskey" onClick={() => pressDigit('0')} style={padKey}>0</button>
-                <button className="glasskey" onClick={backspace} style={{ ...padKey, color: 'var(--login-sub)', fontSize: 17, fontFamily: "'Geist Variable'" }}>⌫</button>
+                <button className="glasskey" onClick={backspace} style={{ ...padKey, color: 'var(--login-sub)', fontSize: 17, fontFamily: "'Inter Variable'" }}>⌫</button>
               </div>
             </div>
           </>
@@ -172,7 +172,7 @@ const glass: CSSProperties = {
   background: 'var(--login-card-bg)', border: '1px solid var(--login-card-border)',
   boxShadow: 'var(--login-card-shadow)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
 };
-const backBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--login-sub)', fontFamily: "'Geist Variable'", fontSize: 13, fontWeight: 600, marginBottom: 14 };
+const backBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--login-sub)', fontFamily: "'Inter Variable'", fontSize: 13, fontWeight: 600, marginBottom: 14 };
 const rowBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', transition: 'all 0.15s ease' };
 const tileBtn: CSSProperties = { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, padding: '14px 15px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', transition: 'all 0.15s ease', textAlign: 'left' };
 const padKey: CSSProperties = { height: 54, border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 14, cursor: 'pointer', fontFamily: "'Geist Mono Variable'", fontSize: 20, fontWeight: 600, color: 'var(--login-text)', transition: 'all 0.12s ease' };

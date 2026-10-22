@@ -65,7 +65,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
         <img src="/assets/mekk-logo.png" alt="MEKK Ølen" style={{ width: 28, height: 28, borderRadius: 9, flex: 'none' }} />
         {!smal && (
           <div style={{ lineHeight: 1.15 }} className="rail-label">
-            <div style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 14, letterSpacing: '0.3px', color: 'var(--rail-brand)' }}>{merke}</div>
+            <div style={{ fontFamily: "'Inter Variable'", fontWeight: 800, fontSize: 14, letterSpacing: '0.3px', color: 'var(--rail-brand)' }}>{merke}</div>
             <div style={{ fontSize: 9.5, color: 'var(--rail-brand-sub)', fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase' }}>Vakt &amp; timestyring</div>
           </div>
         )}
@@ -95,7 +95,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
                 style={{
                   position: 'relative', display: 'flex', alignItems: 'center', gap: smal ? 0 : 11,
                   padding: smal ? '9px 0' : '7px 11px', border: 'none', cursor: 'pointer',
-                  fontFamily: "'Geist Variable'", fontSize: 13, fontWeight: 600, textAlign: 'left', borderRadius: 9,
+                  fontFamily: "'Inter Variable'", fontSize: 13, fontWeight: 600, textAlign: 'left', borderRadius: 9,
                   justifyContent: smal ? 'center' : 'flex-start',
                   background: active ? 'var(--rail-active-bg)' : 'transparent', color: active ? 'var(--rail-active-fg)' : 'var(--rail-fg)',
                 }}
@@ -131,7 +131,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               border: '1px solid var(--rail-border)', background: 'transparent', cursor: 'pointer',
               color: 'var(--rail-section)', borderRadius: 9, padding: smal ? '8px 0' : '8px 11px',
-              fontFamily: "'Geist Variable'", fontSize: 12, fontWeight: 600,
+              fontFamily: "'Inter Variable'", fontSize: 12, fontWeight: 600,
             }}
           >
             <span style={{ fontSize: 14, lineHeight: 1 }}>{smal ? '»' : '«'}</span>

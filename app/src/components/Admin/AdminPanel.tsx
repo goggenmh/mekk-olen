@@ -32,7 +32,7 @@ export function AdminPanel({ onClose }: { onClose: () => void }) {
         style={{ width: 380, maxWidth: '92vw', height: '100%', background: 'var(--surface)', boxShadow: '-12px 0 40px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid var(--divider)' }}>
-          <div style={{ fontFamily: "'Geist Variable'", fontWeight: 700, fontSize: 18 }}>Administrasjon</div>
+          <div style={{ fontFamily: "'Inter Variable'", fontWeight: 700, fontSize: 18 }}>Administrasjon</div>
           <button
             onClick={onClose}
             style={{ width: 30, height: 30, border: 'none', background: 'var(--bg)', borderRadius: 10, cursor: 'pointer', fontSize: 16, color: 'var(--text-secondary)' }}
@@ -82,7 +82,7 @@ export function AdminPanel({ onClose }: { onClose: () => void }) {
               <button
                 onClick={send}
                 disabled={!tekst.trim()}
-                style={{ padding: '9px 14px', background: 'var(--brand)', color: 'var(--on-brand)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: tekst.trim() ? 1 : 0.5 }}
+                style={{ padding: '9px 14px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: tekst.trim() ? 1 : 0.5 }}
               >
                 Send
               </button>

@@ -117,7 +117,7 @@ export function Rapporter() {
     <div className="side" style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1100 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontFamily: "'Geist Variable'", fontWeight: 800, fontSize: 25, letterSpacing: '-0.3px' }}>Rapportar</h1>
+          <h1 className="sidetittel">Rapportar</h1>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Nøkkeltal for {periodeTekst}</div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -165,7 +165,7 @@ export function Rapporter() {
             const avvik = r.avvik;
             return (
               <div key={r.a.id} style={{ display: 'grid', gridTemplateColumns: kol, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--divider)', fontFamily: "'Geist Mono Variable'", fontSize: 13 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Geist Variable'" }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Inter Variable'" }}>
                   <Avatar init={r.a.init} farge={r.a.farge} size={28} fontSize={10.5} />
                   <span style={{ fontSize: 13.5, fontWeight: 600 }}>{r.a.navn}</span>
                 </div>
@@ -177,7 +177,7 @@ export function Rapporter() {
                 <span>{r.kr !== null ? fmtKr(r.kr) : 'Fastløn'}</span>
                 <span title={r.skatt?.forklaring} style={{ color: r.skatt?.manglarKort ? 'var(--danger)' : undefined }}>
                   {r.skatt ? fmtKr(r.skatt.netto) : '–'}
-                  {r.skatt && <div style={{ fontFamily: "'Geist Variable'", fontSize: 10.5, color: r.skatt.manglarKort ? 'var(--danger)' : 'var(--text-muted)' }}>{r.skatt.forklaring}</div>}
+                  {r.skatt && <div style={{ fontFamily: "'Inter Variable'", fontSize: 10.5, color: r.skatt.manglarKort ? 'var(--danger)' : 'var(--text-muted)' }}>{r.skatt.forklaring}</div>}
                 </span>
               </div>
             );

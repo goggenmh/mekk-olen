@@ -35,7 +35,7 @@ export function NotifyModal({ order, onClose }: { order: Order; onClose: () => v
           // Opnar meldings-appen på telefonen med teksten ferdig utfylt.
           <a
             href={`sms:${tlf}?&body=${encodeURIComponent(tekst)}`}
-            style={{ padding: '8px 14px', background: 'var(--brand)', color: 'var(--on-brand)', borderRadius: 11, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+            style={{ padding: '8px 14px', background: 'var(--cta)', color: 'var(--on-cta)', borderRadius: 11, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
           >
             Send SMS
           </a>
