@@ -5,7 +5,11 @@ import { pad, fullDatoTekst, today } from '../../lib/dates';
 import { tekstPaFarge } from '../../lib/farge';
 
 const PAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+// Kategoriane frå toppstripa på mekk.no, med chevronen frå logoen.
+const STRIPE = ['BIL', 'BÅT', 'HJEM', 'FRITID', 'VERKTØY'];
 
+// Innlogginga ser lik ut i lys og mørk modus: marine flate og kvitt kort,
+// som toppstripa og produktkorta på mekk.no.
 export function LoginScreen() {
   const { pick, pin, feil, pickUser, back, pressDigit, backspace } = useAuth();
   const { loginAnsatte, butikkar, finnButikk, loading } = useAnsatte();
@@ -42,137 +46,139 @@ export function LoginScreen() {
   const dateStr = `${fullDatoTekst(today())} ${new Date().getFullYear()}`;
 
   return (
-    <div
-      style={{
-        position: 'relative',
-        minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
-        padding: 'clamp(28px, 6vh, 60px) 24px 48px', gap: 6,
-        background: 'var(--login-bg)', color: 'var(--login-text)',
-      }}
-    >
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-        <img src="/assets/mekk-logo.png" alt="MEKK" style={{ width: 38, height: 38, borderRadius: 'var(--r)' }} />
-        <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: '0.6px', color: 'var(--login-text)' }}>{merke}</span>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--mekk-navy)', color: '#ffffff', fontFamily: 'var(--font-sans)' }}>
+      {/* Toppstripe som på mekk.no */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '0 24px', height: 40, borderBottom: '1px solid var(--mekk-navy-700)', fontSize: 13, fontWeight: 700, overflow: 'hidden', whiteSpace: 'nowrap' }}>
+        {STRIPE.map((s) => (
+          <span key={s}><span style={{ color: 'var(--mekk-teal)', fontWeight: 900 }}>‹</span> {s}</span>
+        ))}
       </div>
 
-      <div style={{ fontFamily: "'Geist Mono Variable'", fontWeight: 700, fontSize: 'clamp(54px, 10vw, 78px)', color: 'var(--login-text)', letterSpacing: '-1px', lineHeight: 1 }}>
-        {pad(now.getHours())}:{pad(now.getMinutes())}<span style={{ color: 'var(--login-accent-2)' }}>:{pad(now.getSeconds())}</span>
-      </div>
-      <div style={{ fontSize: 16, color: 'var(--login-sub)', fontWeight: 500, marginTop: 12, letterSpacing: '0.3px' }}>{dateStr}</div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'clamp(24px, 5vh, 52px) 20px 40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <img src="/assets/mekk-logo.png" alt="MEKK" style={{ width: 44, height: 44 }} />
+          <div style={{ lineHeight: 1.05 }}>
+            <div style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-0.01em' }}>{merke}</div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#b9cbd8' }}>
+              Skikkelig bra jernvare <span style={{ color: 'var(--mekk-teal)', fontWeight: 900 }}>‹</span>
+            </div>
+          </div>
+        </div>
 
-      <div style={{ ...glass, marginTop: 'clamp(28px, 5vh, 48px)' }}>
-        {pick ? (
-          <>
-            <button onClick={back} style={backBtn}>‹ Byt brukar</button>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: 58, height: 58, borderRadius: 'var(--r)', background: pick.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: tekstPaFarge(pick.farge), marginBottom: 12 }}>
-                {pick.init}
+        <div style={{ marginTop: 'clamp(22px, 4vh, 36px)', fontWeight: 900, fontSize: 'clamp(56px, 11vw, 88px)', letterSpacing: '-0.02em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+          {pad(now.getHours())}:{pad(now.getMinutes())}
+        </div>
+        {/* Den skjeve lime-lappen frå prislappane på mekk.no */}
+        <div style={{ marginTop: 14, background: 'var(--mekk-lime)', color: 'var(--mekk-ink)', padding: '6px 12px', fontSize: 14, fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '0.01em', transform: 'rotate(-3deg)' }}>
+          {dateStr}
+        </div>
+
+        <div style={{ ...kort, marginTop: 'clamp(26px, 5vh, 44px)' }}>
+          {pick ? (
+            <>
+              <button onClick={back} style={backBtn}><span style={{ color: 'var(--mekk-teal-700)', fontWeight: 900 }}>‹</span> Byt brukar</button>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ width: 60, height: 60, background: pick.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: tekstPaFarge(pick.farge), marginBottom: 12 }}>
+                  {pick.init}
+                </div>
+                <div style={tittel}>Hei, {pick.navn.split(' ')[0]}</div>
+                <div style={{ fontSize: 13, color: 'var(--mekk-text-muted)', marginTop: 4, marginBottom: 20 }}>Tast PIN på tastaturet eller under</div>
+
+                <div className={feil ? 'login-shake' : undefined} style={{ display: 'flex', gap: 10, marginBottom: 8 }}>
+                  {[0, 1, 2, 3].map((i) => {
+                    const fylt = i < pin.length;
+                    const aktiv = i === pin.length;
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          width: 52, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 28, fontWeight: 900, color: 'var(--mekk-ink)',
+                          border: `2px solid ${aktiv ? 'var(--mekk-navy)' : fylt ? 'var(--mekk-lime)' : 'var(--mekk-line)'}`,
+                          background: fylt ? 'var(--mekk-lime)' : '#ffffff',
+                          transition: 'all 0.12s ease',
+                        }}
+                      >
+                        {fylt ? '•' : ''}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {feil ? (
+                  <div style={{ textAlign: 'center', maxWidth: 300, margin: '6px 0 14px', fontSize: 13, color: 'var(--mekk-danger)', fontWeight: 700 }}>{feil}</div>
+                ) : (
+                  <div style={{ fontSize: 12, color: 'var(--mekk-text-subtle)', margin: '8px 0 16px' }}>0–9 for å taste · ⌫ for å slette</div>
+                )}
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,76px)', gap: 8 }}>
+                  {PAD_KEYS.map((k) => (
+                    <button key={k} className="mk-tast" onClick={() => pressDigit(k)} style={padKey}>{k}</button>
+                  ))}
+                  <div />
+                  <button className="mk-tast" onClick={() => pressDigit('0')} style={padKey}>0</button>
+                  <button className="mk-tast" onClick={backspace} aria-label="Slett" style={{ ...padKey, fontSize: 18 }}>⌫</button>
+                </div>
               </div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--login-text)' }}>Hei, {pick.navn.split(' ')[0]}</div>
-              <div style={{ fontSize: 12.5, color: 'var(--login-sub)', marginTop: 3, marginBottom: 20 }}>Tast PIN på tastaturet eller under</div>
-
-              <div className={feil ? 'login-shake' : undefined} style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-                {[0, 1, 2, 3].map((i) => {
-                  const fylt = i < pin.length;
-                  const aktiv = i === pin.length;
+            </>
+          ) : loading ? (
+            <div style={{ padding: '30px 0 18px', textAlign: 'center' }}>
+              <div className="loginspinner" />
+              <div style={{ fontSize: 13, color: 'var(--mekk-text-muted)', marginTop: 14 }}>Lastar…</div>
+            </div>
+          ) : maaVeljeButikk ? (
+            <>
+              <div style={{ ...tittel, marginBottom: 16 }}>Vel butikk</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {butikkar.map((b) => {
+                  const antal = ansatte.filter((a) => a.butikk_id === b.id).length;
                   return (
-                    <div
-                      key={i}
-                      style={{
-                        width: 48, height: 56, borderRadius: 'var(--r)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontFamily: "'Geist Mono Variable'", fontSize: 24, fontWeight: 700, color: 'var(--login-text)',
-                        border: `1.5px solid ${fylt || aktiv ? 'var(--login-accent)' : 'var(--login-surface-border)'}`,
-                        background: 'var(--login-pin-bg)',
-                        boxShadow: aktiv ? '0 0 0 3px var(--ring)' : 'none',
-                        transition: 'all 0.12s ease',
-                      }}
-                    >
-                      {fylt ? '•' : ''}
-                    </div>
+                    <button key={b.id} className="mk-rad" onClick={() => setValdButikk(b.id)} style={{ ...radBtn, borderLeft: `4px solid ${b.farge}` }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--mekk-ink)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.namn}</div>
+                        <div style={{ fontSize: 12, color: 'var(--mekk-text-muted)', marginTop: 2 }}>{antal} {antal === 1 ? 'tilsett' : 'tilsette'}</div>
+                      </div>
+                      <span className="mk-chev">‹</span>
+                    </button>
                   );
                 })}
               </div>
-
-              {feil ? (
-                <div style={{ textAlign: 'center', maxWidth: 300, margin: '6px 0 14px' }}>
-                  <div style={{ fontSize: 13, color: 'var(--login-error)', fontWeight: 600 }}>{feil}</div>
-                </div>
-              ) : (
-                <div style={{ fontSize: 12, color: 'var(--login-faint)', margin: '8px 0 16px' }}>0–9 for å taste · ⌫ for å slette</div>
+            </>
+          ) : (
+            <>
+              {butikkar.length > 1 && (
+                <button onClick={() => setValdButikk(null)} style={backBtn}><span style={{ color: 'var(--mekk-teal-700)', fontWeight: 900 }}>‹</span> Byt butikk</button>
               )}
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,72px)', gap: 11 }}>
-                {PAD_KEYS.map((k) => (
-                  <button key={k} className="glasskey" onClick={() => pressDigit(k)} style={padKey}>{k}</button>
-                ))}
-                <div />
-                <button className="glasskey" onClick={() => pressDigit('0')} style={padKey}>0</button>
-                <button className="glasskey" onClick={backspace} style={{ ...padKey, color: 'var(--login-sub)', fontSize: 17, fontFamily: 'var(--font-sans)' }}>⌫</button>
-              </div>
-            </div>
-          </>
-        ) : loading ? (
-          <div style={{ padding: '30px 0 18px', textAlign: 'center' }}>
-            <div className="loginspinner" />
-            <div style={{ fontSize: 13, color: 'var(--login-sub)', marginTop: 14 }}>Lastar…</div>
-          </div>
-        ) : maaVeljeButikk ? (
-          <>
-            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'var(--login-faint)', marginBottom: 16, textAlign: 'center' }}>Vel butikk</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              {butikkar.map((b) => {
-                const antal = ansatte.filter((a) => a.butikk_id === b.id).length;
-                return (
-                  <button key={b.id} className="glassrow" onClick={() => setValdButikk(b.id)} style={{ ...tileBtn, borderLeft: `3px solid ${b.farge}` }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--login-text)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.namn}</div>
-                      <div style={{ fontSize: 11.5, color: 'var(--login-sub)', fontWeight: 500, marginTop: 2 }}>{antal} {antal === 1 ? 'tilsett' : 'tilsette'}</div>
+              <div style={{ ...tittel, marginBottom: 16 }}>Vel kven du er</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {synlege.map((u) => (
+                  <button key={u.id} className="mk-rad" onClick={() => pickUser(u.id)} style={radBtn}>
+                    <div style={{ flex: 'none', width: 42, height: 42, background: u.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900, color: tekstPaFarge(u.farge) }}>
+                      {u.init}
                     </div>
-                    <span style={{ color: 'var(--login-faint)', fontSize: 18, flex: 'none' }}>›</span>
+                    <div style={{ lineHeight: 1.25, textAlign: 'left' }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--mekk-ink)', letterSpacing: '-0.01em' }}>{u.navn}</div>
+                      <div style={{ fontSize: 12.5, color: 'var(--mekk-text-muted)' }}>{u.rolle}</div>
+                    </div>
+                    <span className="mk-chev" style={{ marginLeft: 'auto' }}>‹</span>
                   </button>
-                );
-              })}
-            </div>
-          </>
-        ) : (
-          <>
-            {butikkar.length > 1 && (
-              <button onClick={() => setValdButikk(null)} style={backBtn}>‹ Byt butikk</button>
-            )}
-            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'var(--login-faint)', marginBottom: 18, textAlign: 'center' }}>Vel kven du er</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {synlege.map((u) => (
-                <button key={u.id} className="glassrow" onClick={() => pickUser(u.id)} style={rowBtn}>
-                  <div style={{ flex: 'none', width: 42, height: 42, borderRadius: 'var(--r)', background: u.farge, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: tekstPaFarge(u.farge) }}>
-                    {u.init}
-                  </div>
-                  <div style={{ lineHeight: 1.25, textAlign: 'left' }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--login-text)' }}>{u.navn}</div>
-                    <div style={{ fontSize: 12, color: 'var(--login-sub)' }}>{u.rolle}</div>
-                  </div>
-                  <span style={{ marginLeft: 'auto', color: 'var(--login-faint)', fontSize: 18 }}>›</span>
-                </button>
-              ))}
-            </div>
-            {synlege.length === 0 && (
-              <div style={{ marginTop: 16, padding: '10px 13px', background: 'var(--login-surface)', borderRadius: 'var(--r)', fontSize: 11.5, color: 'var(--login-sub)', lineHeight: 1.4, textAlign: 'center' }}>
-                Ingen tilsette i denne butikken enno.
+                ))}
               </div>
-            )}
-          </>
-        )}
+              {synlege.length === 0 && (
+                <div style={{ marginTop: 16, padding: '10px 13px', background: 'var(--mekk-surface-alt)', fontSize: 12, color: 'var(--mekk-text-muted)', lineHeight: 1.4, textAlign: 'center' }}>
+                  Ingen tilsette i denne butikken enno.
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-const glass: CSSProperties = {
-  width: '100%', maxWidth: 440, borderRadius: 22, padding: '28px 28px 32px',
-  background: 'var(--login-card-bg)', border: '1px solid var(--login-card-border)',
-  boxShadow: 'var(--login-card-shadow)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-};
-const backBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--login-sub)', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, marginBottom: 14 };
-const rowBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 'var(--r)', cursor: 'pointer', transition: 'all 0.15s ease' };
-const tileBtn: CSSProperties = { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, padding: '14px 15px', border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 'var(--r)', cursor: 'pointer', transition: 'all 0.15s ease', textAlign: 'left' };
-const padKey: CSSProperties = { height: 54, border: '1px solid var(--login-surface-border)', background: 'var(--login-surface)', borderRadius: 'var(--r)', cursor: 'pointer', fontFamily: "'Geist Mono Variable'", fontSize: 20, fontWeight: 600, color: 'var(--login-text)', transition: 'all 0.12s ease' };
+const kort: CSSProperties = { width: '100%', maxWidth: 440, padding: '26px 26px 30px', background: '#ffffff', color: 'var(--mekk-ink)', borderTop: '4px solid var(--mekk-lime)' };
+const tittel: CSSProperties = { fontSize: 22, fontWeight: 900, letterSpacing: '-0.01em', textTransform: 'uppercase', color: 'var(--mekk-ink)', textAlign: 'center' };
+const backBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--mekk-ink)', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 700, marginBottom: 14, padding: 0 };
+const radBtn: CSSProperties = { display: 'flex', alignItems: 'center', gap: 13, padding: '11px 14px', border: '1px solid var(--mekk-line)', background: '#ffffff', cursor: 'pointer', textAlign: 'left', fontFamily: 'var(--font-sans)' };
+const padKey: CSSProperties = { height: 56, border: '1px solid var(--mekk-line)', background: 'var(--mekk-surface-alt)', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 900, color: 'var(--mekk-ink)' };
