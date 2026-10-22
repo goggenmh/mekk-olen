@@ -11,6 +11,8 @@ const data = (): Db => (db ??= lagTestdata());
 const tabell = (t: string) => (data()[t] ??= []);
 
 let innlogga: string | null = null;
+// Utleigekunde innlogga på «Mi side» (eigen frå tilsett-innlogginga).
+let kundeEpost: string | null = null;
 type Lyttar = (event: string, session: unknown) => void;
 const lyttarar = new Set<Lyttar>();
 const okt = () => (innlogga ? { access_token: 'demo', refresh_token: 'demo', user: { id: innlogga } } : null);
@@ -257,6 +259,26 @@ const rpc = async (namn: string, args: Rad = {}): Promise<{ data: unknown; error
       if (e) e.status = 'tilgjengeleg';
       return ok(null);
     }
+    case 'utleige_mine_leige': {
+      const epost = (kundeEpost || '').toLowerCase();
+      if (!epost) return ok([]);
+      const rows = tabell('utleige_reservasjon')
+        .filter((r) => tabell('utleige_kunde').some((k) => k.id === r.kunde_id && String(k.epost).toLowerCase() === epost))
+        .sort((x, y) => String(y.start).localeCompare(String(x.start)))
+        .map((r) => {
+          const k = tabell('utleige_kunde').find((x) => x.id === r.kunde_id);
+          const p = tabell('utleige_produkt').find((x) => x.id === r.produkt_id);
+          const e = tabell('utleige_eining').find((x) => x.id === r.eining_id);
+          const b = tabell('butikkar').find((x) => x.id === r.butikk_id);
+          const i = tabell('utleige_innstillingar').find((x) => x.butikk_id === r.butikk_id);
+          return { id: r.id, nummer: r.nummer, status: r.status, start: r.start, slutt: r.slutt,
+            pris_leige: r.pris_leige, gebyr: r.gebyr, depositum: r.depositum, pris_total: r.pris_total,
+            produkt_namn: p?.namn, produkt_tilbehor: p?.tilbehor || [], eining_kode: e?.kode || null,
+            butikk: b?.namn, vilkar: i?.vilkar, kontakt_telefon: i?.kontakt_telefon, kontakt_epost: i?.kontakt_epost,
+            kunde_namn: k?.namn, kunde_telefon: k?.telefon, kunde_epost: k?.epost };
+        });
+      return ok(rows);
+    }
     case 'login_liste':
       return ok(tabell('ansatte').filter((x) => x.aktiv).map((r) => utan(r, 'sats', 'email', 'skattetype', 'skatteprosent', 'frikortgrense', 'feriepengesats', 'tidlegare_ar', 'tidlegare_mekk', 'tidlegare_andre')));
     case 'min_profil':
@@ -311,14 +333,21 @@ export const supabase = {
   rpc: (namn: string, args?: Rad) => rpc(namn, args),
   functions: funksjonar,
   auth: {
-    async getSession() { return ok({ session: okt() }); },
+    async getSession() {
+      if (kundeEpost) return ok({ session: { access_token: 'demo', refresh_token: 'demo', user: { email: kundeEpost } } });
+      return ok({ session: okt() });
+    },
     async refreshSession() { return ok({ session: okt() }); },
     onAuthStateChange(cb: Lyttar) {
       lyttarar.add(cb);
       return { data: { subscription: { unsubscribe: () => lyttarar.delete(cb) } } };
     },
     async setSession() { varsleAuth('SIGNED_IN'); return ok({ session: okt() }); },
-    async signOut() { innlogga = null; varsleAuth('SIGNED_OUT'); return { error: null }; },
+    // Kundeinnlogging på «Mi side»: i demoen blir koden ikkje send, og kva som
+    // helst 6-sifra kode godkjenner e-posten.
+    async signInWithOtp() { return ok({}); },
+    async verifyOtp(opts?: { email?: string }) { kundeEpost = String(opts?.email || '').toLowerCase(); return ok({ session: { user: { email: kundeEpost } } }); },
+    async signOut() { innlogga = null; kundeEpost = null; varsleAuth('SIGNED_OUT'); return { error: null }; },
   },
   storage: {
     from: () => ({

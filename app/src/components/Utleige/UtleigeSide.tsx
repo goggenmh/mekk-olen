@@ -28,7 +28,7 @@ function Bilete({ url, namn, hogd }: { url: string | null; namn: string; hogd: n
   );
 }
 
-export function UtleigeSide() {
+export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {}) {
   const [produkt, setProdukt] = useState<KatalogProdukt[] | null>(null);
   const [feil, setFeil] = useState<string | null>(null);
   const [valt, setValt] = useState<KatalogProdukt | null>(null);
@@ -47,10 +47,11 @@ export function UtleigeSide() {
       <header style={{ background: 'var(--mekk-navy)', color: '#ffffff' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <img src="/assets/mekk-logo.png" alt="MEKK" style={{ width: 38, height: 38 }} />
-          <div style={{ lineHeight: 1.1 }}>
+          <div style={{ lineHeight: 1.1, flex: 1 }}>
             <div style={{ fontWeight: 900, fontSize: 18, textTransform: 'uppercase' }}>{butikk}</div>
             <div style={{ fontSize: 12.5, color: '#b9cbd8', fontWeight: 700 }}>Utleige av verktøy og maskiner <span style={{ color: 'var(--mekk-teal)' }}>‹</span></div>
           </div>
+          {naviger && <button onClick={() => naviger('/utleige/mi-side')} style={{ background: 'none', border: '1px solid #ffffff55', color: '#fff', borderRadius: 'var(--r)', padding: '7px 12px', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mi side ›</button>}
         </div>
       </header>
 
