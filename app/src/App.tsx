@@ -12,6 +12,7 @@ const FerieSide = lazy(() => import('./components/Ferie/FerieSide').then((m) => 
 const Vaktplan = lazy(() => import('./components/Vaktplan/Vaktplan').then((m) => ({ default: m.Vaktplan })));
 const Oppgaver = lazy(() => import('./components/Oppgaver/Oppgaver').then((m) => ({ default: m.Oppgaver })));
 const Bestillinger = lazy(() => import('./components/Bestillinger/Bestillinger').then((m) => ({ default: m.Bestillinger })));
+const Assistent = lazy(() => import('./components/Assistent/Assistent').then((m) => ({ default: m.Assistent })));
 const Dokument = lazy(() => import('./components/Dokument/Dokument').then((m) => ({ default: m.Dokument })));
 const Rapporter = lazy(() => import('./components/Rapporter/Rapporter').then((m) => ({ default: m.Rapporter })));
 const Innstillinger = lazy(() => import('./components/Innstillinger/Innstillinger').then((m) => ({ default: m.Innstillinger })));
@@ -147,6 +148,7 @@ function App() {
                 {synlegView === 'oppgaver' && <Oppgaver setView={go} />}
                 {synlegView === 'bestilling' && <Bestillinger />}
                 {synlegView === 'dokument' && <Dokument />}
+                {synlegView === 'assistent' && <Assistent />}
                 {synlegView === 'rapporter' && <Rapporter />}
                 {synlegView === 'innstillinger' && <Innstillinger setView={go} />}
               </Suspense>
