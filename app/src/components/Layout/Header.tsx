@@ -32,7 +32,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
   const { user, logout } = useAuth();
   const { dark, toggle } = useTheme();
   const { isLeder, ansatte, findAnsatt } = useAnsatte();
-  const { docs, tasks, swaps, entries, orders, stadfestingar, ferie, canApprove } = useAppData();
+  const { docs, tasks, swaps, entries, orders, stadfestingar, ferie, canApprove, utleige } = useAppData();
   const [adminOpen, setAdminOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [notifOpen, setNotifOpen] = useState(false);
@@ -46,6 +46,9 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
     const pendingSwaps = swaps.filter((s) => s.status === 'pending');
     const ventandeTimar = entries.filter((e) => weekDays.includes(e.date) && e.status === 'venter').length;
     const ufordelte = ledigeOppgaver(tasks).length;
+    // Utleige: nye førespurnader og forseinka returar.
+    const utleigeNye = utleige.filter((r) => r.status === 'ny').length;
+    const utleigeSeine = utleige.filter((r) => r.status === 'forseinka').length;
     const mineNo = mineIDag(tasks, user?.id, t).length;
     const blokkerte = canApprove(user?.id) ? tasks.filter((x) => !x.ferdig && x.blokkert).length : 0;
     const ankomne = orders.filter((o) => o.status === 'komen' && !o.varsla);
@@ -61,9 +64,11 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
       ...(ferieSoknader > 0 ? [{ key: 'ferie', tekst: `${ferieSoknader} ${ferieSoknader === 1 ? 'søknad' : 'søknader'} om ferie/fri ventar på svar`, view: 'ferie' as View }] : []),
       ...(mineNo > 0 ? [{ key: 'mine-oppgaver', tekst: `Du har ${tal(mineNo, 'oppgåve', 'oppgåver')} å gjere i dag`, view: 'oppgaver' as View }] : []),
       ...(blokkerte > 0 ? [{ key: 'blokkert', tekst: `${tal(blokkerte, 'oppgåve', 'oppgåver')} står fast og treng hjelp`, view: 'oppgaver' as View }] : []),
+      ...(utleigeSeine > 0 ? [{ key: 'utleige-seine', tekst: `${tal(utleigeSeine, 'utleigd maskin', 'utleigde maskiner')} skulle vore levert`, view: 'utleige' as View }] : []),
+      ...(utleigeNye > 0 ? [{ key: 'utleige-nye', tekst: tal(utleigeNye, 'ny utleigeførespurnad', 'nye utleigeførespurnader'), view: 'utleige' as View }] : []),
       ...(ufordelte > 0 ? [{ key: 'oppgaver', tekst: tal(ufordelte, 'ufordelt oppgåve', 'ufordelte oppgåver'), view: 'oppgaver' as View }] : []),
     ].slice(0, 8);
-  }, [swaps, entries, tasks, orders, docs, stadfestingar, ferie, canApprove, user?.id, findAnsatt]);
+  }, [swaps, entries, tasks, orders, docs, stadfestingar, ferie, canApprove, user?.id, findAnsatt, utleige]);
 
   const hits = useMemo<SearchHit[]>(() => {
     const q = query.trim().toLowerCase();

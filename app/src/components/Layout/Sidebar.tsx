@@ -20,7 +20,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   open?: boolean;
   onClose?: () => void;
 }) {
-  const { entries, swaps, tasks, orders, ferie, canApprove } = useAppData();
+  const { entries, swaps, tasks, orders, ferie, canApprove, utleige } = useAppData();
   const { user } = useAuth();
   const { finnButikk } = useAnsatte();
   const merke = finnButikk(user?.butikk_id)?.namn?.toUpperCase() || 'MEKK ØLEN';
@@ -53,6 +53,8 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
     timeliste: timelisteBadge > 0 ? { n: timelisteBadge } : undefined,
     vaktplan: vaktplanBadge > 0 ? { n: vaktplanBadge } : undefined,
     oppgaver: oppgaverBadge > 0 ? { n: oppgaverBadge } : undefined,
+    // Nye utleigeførespurnader som ventar på svar.
+    utleige: utleige.some((r) => r.status === 'ny') ? { n: utleige.filter((r) => r.status === 'ny').length } : undefined,
     bestilling: bestillingBadge > 0 ? { n: bestillingBadge } : undefined,
   };
 

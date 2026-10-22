@@ -74,6 +74,8 @@ interface AppData {
   blockTask: (task: Task, grunn: string) => Promise<void>;
   unblockTask: (task: Task) => Promise<void>;
   rutinar: Rutine[];
+  /** Aktive utleigereservasjonar (berre status og tider) for varsel og teljarar. */
+  utleige: { status: string; start: string; slutt: string }[];
   saveRutine: (r: Omit<Rutine, 'id'> & { id?: string }) => Promise<void>;
   deleteRutine: (id: string) => Promise<void>;
 
@@ -122,6 +124,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [standardveke, setStandardveke] = useState<StandardvekeEntry[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [rutinar, setRutinar] = useState<Rutine[]>([]);
+  const [utleige, setUtleige] = useState<AppData['utleige']>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [stadfestingar, setStadfestingar] = useState<Stadfesting[]>([]);
@@ -144,7 +147,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       // gjer det same, så timane kjem med sjølv om ingen leiar opnar appen.
       await supabase.rpc('for_leiartimar');
     }
-    const [e, s, sw, f, t, o, d, p, m, u, sv, st, ru] = await Promise.all([
+    const [e, s, sw, f, t, o, d, p, m, u, sv, st, ru, ul] = await Promise.all([
       supabase.from('time_entries').select('*'),
       supabase.from('shifts').select('*'),
       supabase.from('shift_swaps').select('*'),
@@ -158,6 +161,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       supabase.from('standardveke').select('*'),
       supabase.from('doc_stadfesting').select('*'),
       supabase.from('oppgave_rutinar').select('*').order('created_at'),
+      supabase.from('utleige_reservasjon').select('status, start, slutt').in('status', ['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka']),
     ]);
     const firstError = [e, s, sw, f, t, o, d, p, m, u, sv].find((r) => r.error)?.error;
     if (firstError) {
@@ -179,6 +183,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setStadfestingar(st.error ? [] : (st.data || []).map(mapStadfesting));
       // Kjem med oppgaver-v2.sql.
       setRutinar(ru.error ? [] : (ru.data || []).map(mapRutine));
+      // Kjem med utleige.sql.
+      setUtleige(ul.error ? [] : (ul.data || []));
     }
     if (!stille) setLoading(false);
   }, []);
@@ -196,7 +202,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       timer = setTimeout(() => hent(true), 400);
     };
     const kanal = supabase.channel('appdata-live');
-    for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting', 'oppgave_rutinar']) {
+    for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting', 'oppgave_rutinar', 'utleige_reservasjon']) {
       kanal.on('postgres_changes', { event: '*', schema: 'public', table }, planlegg);
     }
     // Mobilen set appen på pause i bakgrunnen, og då går endringar tapt.
@@ -656,12 +662,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       createSwap, approveSwap, declineSwap,
       saveFerie, deleteFerie, behandleFerie, saveUnavailable, removeUnavailable, saveUnavailablePeriode, removeUnavailableMange,
       saveTask, deleteTask, moveTask, completeTask, reopenTask, blockTask, unblockTask,
-      rutinar, saveRutine, deleteRutine,
+      rutinar, saveRutine, deleteRutine, utleige,
       saveOrder, deleteOrder, advanceOrder, markOrderVarsla,
       saveDoc, deleteDoc, uploadDocFile, docFileUrl,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, error, entries, shifts, swaps, ferie, tasks, rutinar, orders, docs, stadfestingar, permissions, meldinger, unavailable, standardveke, canApprove]
+    [loading, error, entries, shifts, swaps, ferie, tasks, rutinar, utleige, orders, docs, stadfestingar, permissions, meldinger, unavailable, standardveke, canApprove]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

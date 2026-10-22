@@ -26,7 +26,7 @@ const labelStyle = { fontSize: 11.5, fontWeight: 900, letterSpacing: '0.4px', te
 const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 
 export function Dashboard({ setView }: { setView: (v: View) => void }) {
-  const { entries, shifts, swaps, tasks, orders, ferie: alleFerie, meldinger, docs, stadfestingar, canApprove, completeTask, moveTask } = useAppData();
+  const { entries, shifts, swaps, tasks, orders, ferie: alleFerie, meldinger, docs, stadfestingar, canApprove, completeTask, moveTask, utleige } = useAppData();
   const [opneTask, setOpneTask] = useState<Task | null>(null);
   const ferie = alleFerie.filter((f) => f.status === 'godkjend');
   const { user } = useAuth();
@@ -61,6 +61,9 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const pendingSwaps = swaps.filter((s) => s.status === 'pending');
   const ventandeTimar = entries.filter((e) => weekDays.includes(e.date) && e.status === 'venter').length;
   const ufordelteOppgaver = ledigeOppgaver(tasks).length;
+  // Utleige: nye førespurnader og forseinka returar.
+  const utleigeNye = utleige.filter((r) => r.status === 'ny').length;
+  const utleigeSeine = utleige.filter((r) => r.status === 'forseinka' || (r.status === 'utleigd' && new Date(r.slutt).getTime() < now.getTime())).length;
   const blokkerteOppgaver = kanLageVakt ? tasks.filter((x) => !x.ferdig && x.blokkert).length : 0;
   const ankomneBestillingar = orders.filter((o) => o.status === 'komen' && !o.varsla);
   const gamleBestillingar = orders.filter((o) => alder(o, t).gammal).length;
@@ -79,6 +82,8 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
     ...(blokkerteOppgaver > 0 ? [{ key: 'blokkert', tekst: `${tal(blokkerteOppgaver, 'oppgåve', 'oppgåver')} står fast og treng hjelp`, view: 'oppgaver' as View, niva: 'hog' as const }] : []),
     ...(forseinka > 0 ? [{ key: 'forseinka', tekst: `${tal(forseinka, 'oppgåve', 'oppgåver')} har passert fristen`, view: 'oppgaver' as View, niva: 'hog' as const, alder: eldsteForseinka ? `Frist ${fristTekst(eldsteForseinka, t).toLowerCase()}` : undefined }] : []),
     ...(ulesneHms > 0 ? [{ key: 'hms', tekst: `${ulesneHms} HMS-dokument ventar på stadfesting`, view: 'dokument' as View, niva: 'middels' as const }] : []),
+    ...(utleigeSeine > 0 ? [{ key: 'utleige-seine', tekst: `${tal(utleigeSeine, 'utleigd maskin', 'utleigde maskiner')} skulle vore levert`, view: 'utleige' as View, niva: 'hog' as const }] : []),
+    ...(utleigeNye > 0 ? [{ key: 'utleige-nye', tekst: tal(utleigeNye, 'ny utleigeførespurnad', 'nye utleigeførespurnader'), view: 'utleige' as View, niva: 'middels' as const }] : []),
     ...(ufordelteOppgaver > 0 ? [{ key: 'oppgaver', tekst: tal(ufordelteOppgaver, 'ufordelt oppgåve', 'ufordelte oppgåver'), view: 'oppgaver' as View, niva: 'info' as const }] : []),
   ];
   const varsler = varslerUsortert.slice().sort((a, b) => NIVA_RANG[a.niva] - NIVA_RANG[b.niva]).slice(0, 8);

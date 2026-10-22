@@ -3,7 +3,7 @@ import {
   FileText, BarChart3, Settings, CalendarPlus, PackagePlus,
   DoorOpen, DoorClosed, Bell, Sun, Moon, User, Phone, Mail,
   Paperclip, LifeBuoy, ClipboardList, PenLine, FolderOpen, TimerReset,
-  Menu, LogOut, Search, AlertTriangle, ArrowLeftRight, Copy, Trash2, Pencil,
+  Menu, LogOut, Search, AlertTriangle, ArrowLeftRight, Copy, Trash2, Pencil, Hammer,
   type LucideProps,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
@@ -19,6 +19,7 @@ const MAP: Record<string, ComponentType<LucideProps>> = {
   dokument: FileText,
   rapporter: BarChart3,
   innstillinger: Settings,
+  utleige: Hammer,
   // hurtighandlingar
   'ny-timer': TimerReset,
   'ny-vakt': CalendarPlus,
