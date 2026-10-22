@@ -93,7 +93,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
         display: 'flex', alignItems: 'center', gap: 12, padding: isMobile ? '9px 14px' : '10px 20px',
         // Hald toppen unna statuslinja/hakket på iPhone (0 der det ikkje trengst).
         paddingTop: `calc(${isMobile ? 9 : 10}px + env(safe-area-inset-top))`,
-        background: 'var(--topbar-bg)', borderBottom: '1px solid var(--rail-border)', minHeight: isMobile ? 56 : 62,
+        background: 'var(--topbar-bg)', borderBottom: '1px solid var(--topbar-border)', minHeight: isMobile ? 56 : 62,
       }}
     >
       {isMobile && (

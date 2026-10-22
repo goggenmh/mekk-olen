@@ -86,6 +86,8 @@
   --rail-border: #e8ecea;
   /* Marine toppstripe som på mekk.no */
   --topbar-bg: var(--mekk-navy);
+  /* Linja under toppstripa: same tone, så det ikkje blir ein lys strek */
+  --topbar-border: var(--mekk-navy);
   --topbar-name: #ffffff;
   --topbar-role: #b9cbd8;
   --topbar-ctl-bg: var(--mekk-navy-800);
@@ -160,6 +162,7 @@
   --rail-brand-sub: #9aaab0;
   --rail-border: #2a363c;
   --topbar-bg: #0e1417;
+  --topbar-border: var(--rail-border);
   --topbar-name: #eef4f3;
   --topbar-role: #9aaab0;
   --topbar-ctl-bg: #151c20;

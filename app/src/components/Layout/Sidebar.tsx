@@ -65,7 +65,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
       <div style={{
         display: 'flex', alignItems: 'center', gap: 9, flex: 'none', height: isMobile ? 'calc(56px + env(safe-area-inset-top))' : 62, boxSizing: 'border-box',
         margin: smal ? '-16px -9px 12px' : '-16px -11px 12px', padding: smal ? 0 : '0 19px', justifyContent: smal ? 'center' : 'flex-start',
-        background: 'var(--topbar-bg)', borderBottom: '1px solid var(--rail-border)',
+        background: 'var(--topbar-bg)', borderBottom: '1px solid var(--topbar-border)',
         // Mobilmenyen har luft til hakket på iPhone; fargen skal gå heilt opp.
         ...(isMobile ? { marginTop: 'calc(-16px - env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' } : {}),
       }}>
@@ -178,7 +178,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
       style={{
         width: smal ? 66 : 236, flex: 'none', display: 'flex', flexDirection: 'column', gap: 1,
         padding: smal ? '16px 9px' : '16px 11px', transition: 'width 0.16s ease',
-        background: 'var(--rail-bg)', borderRight: '1px solid var(--rail-border)', height: '100vh', overflowY: 'auto',
+        background: 'var(--rail-bg)', boxShadow: 'inset -1px 0 0 var(--rail-border)', height: '100vh', overflowY: 'auto',
       }}
     >
       {innhald}
