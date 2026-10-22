@@ -13,6 +13,12 @@
   --on-cta: var(--mekk-ink);
   /* Berre som prikk (t.d. «på jobb no»), aldri som tekst. */
   --stock-green: #22c55e;
+  /* Teljarar (meny, bjølle): lime med mørk tekst */
+  --badge-bg: var(--mekk-lime);
+  --on-badge: var(--mekk-ink);
+  /* Små overskrifter i korta (DINE OPPGÅVER I DAG …) */
+  --kort-label: var(--mekk-navy);
+  --rail-active-bar: var(--mekk-lime);
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --bg: #f8fafc;
   --surface: #ffffff;
@@ -61,9 +67,10 @@
   --rail-bg-solid: #ffffff;
   --rail-fg: #465561;
   --rail-section: #aab4bb;
-  --rail-active-bg: #e4f5f5;
-  --rail-active-fg: var(--mekk-navy);
-  --rail-brand: #14202a;
+  /* Aktivt menypunkt: marine med lime strek */
+  --rail-active-bg: var(--mekk-navy);
+  --rail-active-fg: #ffffff;
+  --rail-brand: var(--mekk-navy);
   --rail-brand-sub: #7a8791;
   --rail-border: #e8ecea;
   /* Marine toppstripe som på mekk.no */
@@ -154,6 +161,8 @@
   --rail-section: #7f9097;
   --rail-active-bg: rgba(32, 201, 184, 0.16);
   --rail-active-fg: #7ff0e4;
+  --rail-active-bar: var(--mekk-lime);
+  --kort-label: var(--text-label);
   --rail-brand: #eafffb;
   --rail-brand-sub: #9aaab0;
   --rail-border: #2a363c;

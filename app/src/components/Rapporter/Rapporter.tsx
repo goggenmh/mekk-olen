@@ -165,7 +165,7 @@ export function Rapporter() {
             const avvik = r.avvik;
             return (
               <div key={r.a.id} style={{ display: 'grid', gridTemplateColumns: kol, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--divider)', fontFamily: "'Geist Mono Variable'", fontSize: 13 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Inter Variable'" }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-sans)' }}>
                   <Avatar init={r.a.init} farge={r.a.farge} size={28} fontSize={10.5} />
                   <span style={{ fontSize: 13.5, fontWeight: 600 }}>{r.a.navn}</span>
                 </div>
@@ -177,7 +177,7 @@ export function Rapporter() {
                 <span>{r.kr !== null ? fmtKr(r.kr) : 'Fastløn'}</span>
                 <span title={r.skatt?.forklaring} style={{ color: r.skatt?.manglarKort ? 'var(--danger)' : undefined }}>
                   {r.skatt ? fmtKr(r.skatt.netto) : '–'}
-                  {r.skatt && <div style={{ fontFamily: "'Inter Variable'", fontSize: 10.5, color: r.skatt.manglarKort ? 'var(--danger)' : 'var(--text-muted)' }}>{r.skatt.forklaring}</div>}
+                  {r.skatt && <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10.5, color: r.skatt.manglarKort ? 'var(--danger)' : 'var(--text-muted)' }}>{r.skatt.forklaring}</div>}
                 </span>
               </div>
             );

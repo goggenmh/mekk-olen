@@ -28,14 +28,14 @@ export function BottomNav({ view, setView, onMeir }: { view: View; setView: (v: 
       aria-current={aktiv ? 'page' : undefined}
       style={{
         flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '8px 0 6px',
-        border: 'none', background: 'none', cursor: 'pointer', fontFamily: "'Inter Variable'", fontSize: 10.5, fontWeight: 600,
+        border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 10.5, fontWeight: 600,
         color: aktiv ? 'var(--brand-strong)' : 'var(--text-muted)', position: 'relative',
       }}
     >
       <span style={{ position: 'relative', display: 'flex' }}>
         <Icon name={ikon} size={21} />
         {n > 0 && (
-          <span style={{ position: 'absolute', top: -5, right: -9, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999, background: 'var(--accent)', color: 'var(--on-brand)', fontSize: 9.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{n}</span>
+          <span style={{ position: 'absolute', top: -5, right: -9, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999, background: 'var(--badge-bg)', color: 'var(--on-badge)', fontSize: 9.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{n}</span>
         )}
       </span>
       {label}

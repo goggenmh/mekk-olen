@@ -117,7 +117,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           aria-label="Søk"
           style={{
             width: '100%', padding: '8px 13px', border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 9, fontFamily: "'Inter Variable'", fontSize: 13, color: 'var(--topbar-ctl-fg)',
+            borderRadius: 9, fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--topbar-ctl-fg)',
           }}
         />
         {hits.length > 0 && (
@@ -164,7 +164,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           >
             <Icon name="bell" size={18} />
             {varsler.length > 0 && (
-              <span style={{ position: 'absolute', top: -5, right: -5, minWidth: 17, height: 17, padding: '0 4px', borderRadius: 999, background: 'var(--accent)', color: 'var(--on-brand)', fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--topbar-bg)' }}>
+              <span style={{ position: 'absolute', top: -5, right: -5, minWidth: 17, height: 17, padding: '0 4px', borderRadius: 999, background: 'var(--badge-bg)', color: 'var(--on-badge)', fontSize: 11.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--topbar-bg)' }}>
                 {varsler.length}
               </span>
             )}
@@ -222,11 +222,11 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
         >
           <Icon name={dark ? 'sun' : 'moon'} size={18} />
         </button>
-        <Avatar init={user.init} farge={user.farge} size={32} fontSize={12} />
+        <Avatar init={user.init} farge={user.farge} size={36} fontSize={13} />
         {!isMobile && (
           <div style={{ lineHeight: 1.2 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--topbar-name)' }}>{user.navn}</div>
-            <div style={{ fontSize: 11.5, color: 'var(--topbar-role)' }}>{user.rolle}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--topbar-name)' }}>{user.navn}</div>
+            <div style={{ fontSize: 13.5, color: 'var(--topbar-role)' }}>{user.rolle}</div>
           </div>
         )}
         <button
@@ -234,7 +234,7 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
           title="Logg ut" aria-label="Logg ut"
           style={{
             marginLeft: 6, border: '1px solid var(--topbar-ctl-border)', background: 'var(--topbar-ctl-bg)',
-            borderRadius: 9, cursor: 'pointer', fontFamily: "'Inter Variable'", fontSize: 13, fontWeight: 600, color: 'var(--topbar-ctl-fg)',
+            borderRadius: 9, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 700, color: 'var(--topbar-ctl-fg)',
             ...(isMobile
               ? { width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }
               : { padding: '8px 14px' }),

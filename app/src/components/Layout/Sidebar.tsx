@@ -65,7 +65,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
         <img src="/assets/mekk-logo.png" alt="MEKK Ølen" style={{ width: 28, height: 28, borderRadius: 9, flex: 'none' }} />
         {!smal && (
           <div style={{ lineHeight: 1.15 }} className="rail-label">
-            <div style={{ fontFamily: "'Inter Variable'", fontWeight: 800, fontSize: 14, letterSpacing: '0.3px', color: 'var(--rail-brand)' }}>{merke}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: 14, letterSpacing: '0.3px', color: 'var(--rail-brand)' }}>{merke}</div>
             <div style={{ fontSize: 9.5, color: 'var(--rail-brand-sub)', fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase' }}>Vakt &amp; timestyring</div>
           </div>
         )}
@@ -95,23 +95,23 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
                 style={{
                   position: 'relative', display: 'flex', alignItems: 'center', gap: smal ? 0 : 11,
                   padding: smal ? '9px 0' : '7px 11px', border: 'none', cursor: 'pointer',
-                  fontFamily: "'Inter Variable'", fontSize: 13, fontWeight: 600, textAlign: 'left', borderRadius: 9,
+                  fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, textAlign: 'left', borderRadius: 9,
                   justifyContent: smal ? 'center' : 'flex-start',
                   background: active ? 'var(--rail-active-bg)' : 'transparent', color: active ? 'var(--rail-active-fg)' : 'var(--rail-fg)',
                 }}
               >
                 {active && (
-                  <span style={{ position: 'absolute', left: smal ? 4 : 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 18, borderRadius: 3, background: 'var(--rail-active-fg)' }} />
+                  <span style={{ position: 'absolute', left: smal ? 4 : 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 18, borderRadius: 3, background: 'var(--rail-active-bar)' }} />
                 )}
                 <span style={{ width: 20, display: 'flex', justifyContent: 'center', flex: 'none', position: 'relative' }}>
                   <Icon name={v.ikon} size={18} />
                   {smal && badge && (
-                    <span style={{ position: 'absolute', top: -4, right: -4, width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', border: '1.5px solid var(--rail-bg-solid)' }} />
+                    <span style={{ position: 'absolute', top: -4, right: -4, width: 8, height: 8, borderRadius: '50%', background: 'var(--badge-bg)', border: '1.5px solid var(--rail-bg-solid)' }} />
                   )}
                 </span>
                 {!smal && <span className="rail-label" style={{ flex: 1 }}>{v.label}</span>}
                 {!smal && badge && (
-                  <span className="rail-label" style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--on-brand)', background: 'var(--accent)', borderRadius: 999, padding: '1px 7px', minWidth: 16, textAlign: 'center' }}>
+                  <span className="rail-label" style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--on-badge)', background: 'var(--badge-bg)', borderRadius: 999, padding: '1px 7px', minWidth: 16, textAlign: 'center' }}>
                     {badge.n}
                   </span>
                 )}
@@ -131,7 +131,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               border: '1px solid var(--rail-border)', background: 'transparent', cursor: 'pointer',
               color: 'var(--rail-section)', borderRadius: 9, padding: smal ? '8px 0' : '8px 11px',
-              fontFamily: "'Inter Variable'", fontSize: 12, fontWeight: 600,
+              fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600,
             }}
           >
             <span style={{ fontSize: 14, lineHeight: 1 }}>{smal ? '»' : '«'}</span>

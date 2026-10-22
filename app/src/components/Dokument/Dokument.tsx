@@ -57,7 +57,7 @@ export function Dokument() {
         onChange={(e) => setSok(e.target.value)}
         placeholder="Søk i dokument …"
         aria-label="Søk i dokument"
-        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontFamily: "'Inter Variable'", fontSize: 14, color: 'var(--text)', maxWidth: 420 }}
+        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--text)', maxWidth: 420 }}
       />
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

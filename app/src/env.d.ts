@@ -9,3 +9,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+// Inter-pakken har ingen typefil; importen er berre CSS.
+declare module '@fontsource-variable/inter';

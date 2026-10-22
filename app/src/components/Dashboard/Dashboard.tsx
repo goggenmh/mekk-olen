@@ -20,7 +20,7 @@ import { erForseinka, fristTekst, ledigeOppgaver, mineIDag } from '../../lib/opp
 import type { Task } from '../../types';
 
 const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', boxShadow: 'var(--shadow-card)' } as const;
-const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 9 } as const;
+const labelStyle = { fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--kort-label)', marginBottom: 9 } as const;
 const DAG_KEYS = ['man', 'tir', 'ons', 'tor', 'fre', 'lau'];
 
 export function Dashboard({ setView }: { setView: (v: View) => void }) {
@@ -164,7 +164,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
     <div style={{ padding: isMobile ? '16px 16px 28px' : '24px 28px 34px', display: 'flex', flexDirection: 'column', gap: 15 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontFamily: "'Inter Variable'", fontWeight: 800, fontSize: isMobile ? 24 : 30, letterSpacing: '-0.6px' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: isMobile ? 24 : 30, letterSpacing: '-0.6px' }}>
             {helsing}, <span style={{ background: 'linear-gradient(120deg, var(--brand), var(--brand-strong))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{fornamn}</span>
           </div>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4 }}>{fullDatoTekst(t)}</div>
@@ -189,7 +189,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
               border: '1px solid var(--border)', borderRadius: 14, padding: '11px 14px', cursor: 'pointer', boxShadow: 'var(--shadow-card)',
             }}
           >
-            <span style={{ width: 34, height: 34, borderRadius: 11, background: h.primary ? 'var(--accent-soft)' : 'var(--brand-soft)', color: h.primary ? 'var(--accent)' : 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={h.ikon} size={18} /></span>
+            <span style={{ width: 34, height: 34, borderRadius: 11, background: h.primary ? 'var(--cta)' : 'var(--brand-soft)', color: h.primary ? 'var(--on-cta)' : 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><Icon name={h.ikon} size={18} /></span>
             <span style={{ fontSize: 13.5, fontWeight: 700 }}>{h.tekst}</span>
           </button>
         ))}
@@ -285,7 +285,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: 15 }}>
         <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, padding: isMobile ? '15px 18px' : '17px 22px', background: 'var(--hero-grad)', color: 'var(--hero-fg)', boxShadow: '0 12px 32px rgba(12, 90, 105, 0.28)' }}>
           <span style={{ position: 'absolute', right: -60, top: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 68%)', pointerEvents: 'none' }} />
-          <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', background: 'rgba(255,255,255,0.16)', padding: '5px 11px', borderRadius: 20 }}>
+          <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', background: 'var(--cta)', color: 'var(--on-cta)', padding: '5px 11px', borderRadius: 20 }}>
             Neste vakt {nesteVakt ? (nesteVakt.date === t ? '· I dag' : `· ${datoKort(nesteVakt.date)}`) : ''}
           </span>
           {nesteVakt ? (
@@ -313,7 +313,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
               const erIdag = d === t;
               return (
                 <div key={d} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: 7, height: '100%' }} title={`${fmt(tt)} t`}>
-                  <div style={{ width: '100%', height: `${Math.max(4, (tt / maxDag) * 100)}%`, borderRadius: '7px 7px 3px 3px', background: erIdag ? 'linear-gradient(var(--brand), var(--brand-strong))' : 'var(--brand-soft)', boxShadow: erIdag ? 'var(--glow-brand)' : 'none' }} />
+                  <div style={{ width: '100%', height: `${Math.max(4, (tt / maxDag) * 100)}%`, borderRadius: '7px 7px 3px 3px', background: erIdag ? 'var(--cta)' : 'var(--brand-soft)', boxShadow: erIdag ? 'var(--glow-brand)' : 'none' }} />
                   <span style={{ fontSize: 11, color: erIdag ? 'var(--brand-strong)' : 'var(--text-muted)', fontWeight: 700 }}>{UKE_KORT[weekdayIdx(d)]}</span>
                 </div>
               );
@@ -366,7 +366,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                   <div key={g.dato} style={{ display: 'flex', gap: 11, alignItems: 'flex-start' }}>
                     <div style={{ flex: 'none', width: 44, textAlign: 'center', padding: '5px 0', borderRadius: 10, background: erIDag ? 'var(--brand-soft)' : 'var(--surface-alt)', border: '1px solid var(--border)' }}>
                       <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.3px', textTransform: 'uppercase', color: erIDag ? 'var(--brand-strong)' : 'var(--text-label)' }}>{UKE_KORT[weekdayIdx(g.dato)]}</div>
-                      <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "'Inter Variable'", color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(g.dato).getDate()}</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, fontFamily: 'var(--font-sans)', color: erIDag ? 'var(--brand-strong)' : 'var(--text)', lineHeight: 1.1 }}>{parseDate(g.dato).getDate()}</div>
                     </div>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5, paddingTop: 1, minWidth: 0 }}>
                       {g.vakter.map((s) => {

@@ -132,7 +132,7 @@ export function Bestillinger() {
         onChange={(e) => setSok(e.target.value)}
         placeholder="Søk på kunde, vare, varenr eller telefon …"
         aria-label="Søk i bestillingar"
-        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontFamily: "'Inter Variable'", fontSize: 14, color: 'var(--text)', maxWidth: 460 }}
+        style={{ padding: '10px 13px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 11, fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--text)', maxWidth: 460 }}
       />
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -301,7 +301,7 @@ export function Bestillinger() {
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
                 >
                   <span style={{ fontSize: 12, color: 'var(--text-faint)', width: 14 }}>{arOpen ? '▾' : '▸'}</span>
-                  <span style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Inter Variable'" }}>{g.ar}</span>
+                  <span style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-sans)' }}>{g.ar}</span>
                   <span style={{ marginLeft: 'auto', fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--surface-alt)', borderRadius: 10, padding: '2px 9px' }}>{g.tal} henta</span>
                 </button>
 
