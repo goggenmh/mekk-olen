@@ -392,7 +392,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
             )}
             {konfliktar.length > 0 && (
               <ul style={{ paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6, marginBottom: 8 }}>
-                {konfliktar.map((k) => <li key={k}>⚠ {k}</li>)}
+                {konfliktar.map((k) => <li key={k}>{k}</li>)}
               </ul>
             )}
             {hol.length === 0 && konfliktar.length === 0 ? (

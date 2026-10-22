@@ -239,7 +239,7 @@ export function LoginScreen() {
                       {erSist && sist && <div style={{ fontSize: 11.5, color: FAINT, marginTop: 2 }}>{sistTekst(sist.at)}</div>}
                     </div>
                     {erSist && (
-                      <span style={{ marginLeft: 'auto', flex: 'none', fontSize: 10.5, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.03em', padding: '3px 8px', borderRadius: 999, background: 'var(--mekk-lime)', color: 'var(--mekk-ink)' }}>★ Sist brukt</span>
+                      <span style={{ marginLeft: 'auto', flex: 'none', fontSize: 10.5, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.03em', padding: '3px 8px', borderRadius: 999, background: 'var(--mekk-lime)', color: 'var(--mekk-ink)' }}>Sist brukt</span>
                     )}
                     <span className="mk-chev" style={{ marginLeft: erSist ? 4 : 'auto' }}>‹</span>
                   </button>

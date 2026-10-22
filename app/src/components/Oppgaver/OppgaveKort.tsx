@@ -99,7 +99,7 @@ export function OppgaveKort({
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
           <span style={{ fontSize: 10.5, fontWeight: 700, color: status.fg, background: status.bg, padding: '2px 8px', borderRadius: 'var(--r)' }}>{status.tekst}</span>
           {task.frist && <span style={{ fontSize: 10.5, fontWeight: 700, color: forseinka ? 'var(--danger)' : 'var(--text-muted)' }}>{fristTekst(task.frist, t)}</span>}
-          {sjekkTotal > 0 && <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text-muted)' }}>☑ {sjekkFerdig}/{sjekkTotal}</span>}
+          {sjekkTotal > 0 && <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text-muted)' }}>{sjekkFerdig}/{sjekkTotal} punkt</span>}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr', gap: 10, padding: '9px 10px', background: 'var(--surface-alt)', borderRadius: 'var(--r)' }}>
@@ -130,7 +130,7 @@ export function OppgaveKort({
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
           <span style={{ fontSize: 10.5, fontWeight: 700, color: kat.fg, background: kat.bg, padding: '2px 8px', borderRadius: 'var(--r)' }}>{task.kategori}</span>
           {sjekkTotal > 0 && (
-            <span style={{ fontSize: 11, fontWeight: 600, color: sjekkFerdig === sjekkTotal ? 'var(--brand-strong)' : 'var(--text-muted)' }}>☑ {sjekkFerdig}/{sjekkTotal}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: sjekkFerdig === sjekkTotal ? 'var(--brand-strong)' : 'var(--text-muted)' }}>{sjekkFerdig}/{sjekkTotal} punkt</span>
           )}
           {task.rutineId && <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>↻ Fast rutine</span>}
           {task.gjentak && task.gjentak !== 'ingen' && !task.rutineId && <span title="Gjentakande" style={{ fontSize: 11, color: 'var(--text-faint)' }}>↻</span>}

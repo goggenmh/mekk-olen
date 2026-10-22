@@ -145,6 +145,11 @@ export function TimeEntryModal({
       </button>
 
       {feil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>{feil}</div>}
+      {eksisterande.some((e) => e.auto) && (
+        <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '8px 11px' }}>
+          Ført automatisk frå vaktplanen. Rettar du og lagrar, blir føringa di eiga og blir ikkje endra med vaktplanen lenger.
+        </div>
+      )}
       <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
         Totalt denne dagen: <strong style={{ color: 'var(--text)' }}>{fmt(totalTimar)} t</strong>
         {plan > 0 && <> · Vakt i vaktplanen: <strong style={{ color: 'var(--text)' }}>{fmt(plan)} t</strong></>}

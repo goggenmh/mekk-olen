@@ -170,7 +170,7 @@ export function Rapporter() {
                   <span style={{ fontSize: 13.5, fontWeight: 600 }}>{r.a.navn}</span>
                 </div>
                 <span>{fmt(r.planlagt)} t</span>
-                <span style={{ color: avvik ? 'var(--pill-amber-fg)' : undefined }} title={avvik ? 'Avvik frå vaktplanen' : undefined}>{fmt(r.registrert)} t{avvik ? ' ⚠' : ''}</span>
+                <span style={{ color: avvik ? 'var(--pill-amber-fg)' : undefined }} title={avvik ? 'Avvik frå vaktplanen' : undefined}>{fmt(r.registrert)} t{avvik ? ' (avvik)' : ''}</span>
                 <span>{fmt(r.godkjent)} t{r.ventar > 0 && <span style={{ color: 'var(--danger)', fontSize: 11 }}> ({r.ventar} ventar)</span>}</span>
                 <span style={{ color: r.overtid > 0 ? 'var(--danger)' : 'var(--text-muted)' }}>{r.overtid > 0 ? `${fmt(r.overtid)} t` : '–'}</span>
                 <span style={{ color: r.fravaer > 0 ? 'var(--text)' : 'var(--text-muted)' }}>{r.fravaer > 0 ? `${r.fravaer} d` : '–'}</span>
@@ -185,8 +185,8 @@ export function Rapporter() {
         </div>
       </div>
       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-        {manglarKort.length > 0 && <div style={{ color: 'var(--danger)', fontWeight: 600, marginBottom: 6 }}>⚠ Manglar skattekort: {manglarKort.join(', ')}. Registrer det under Tilsette, elles skal det trekkjast 50 %.</div>}
-        Forskotstrekk er eit anslag ut frå skatteopplysningane under Tilsette – lønssystemet/a-meldinga er fasit. Løn er rekna av godkjende timar. Overtid er timar over 37,5 per veke. ⚠ = registrerte timar avvik minst éin time frå vaktplanen.
+        {manglarKort.length > 0 && <div style={{ color: 'var(--danger)', fontWeight: 600, marginBottom: 6 }}>Manglar skattekort: {manglarKort.join(', ')}. Registrer det under Tilsette, elles skal det trekkjast 50 %.</div>}
+        Forskotstrekk er eit anslag ut frå skatteopplysningane under Tilsette – lønssystemet/a-meldinga er fasit. Løn er rekna av godkjende timar. Overtid er timar over 37,5 per veke. = registrerte timar avvik minst éin time frå vaktplanen.
       </div>
     </div>
   );

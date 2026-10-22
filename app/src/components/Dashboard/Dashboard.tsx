@@ -222,7 +222,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
           <button onClick={() => setView('oppgaver')} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, color: 'var(--brand)' }}>Alle oppgåver ‹</button>
         </div>
         {dagensOppgaver.length === 0 && (
-          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen oppgåver med frist i dag. 👍</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen oppgåver med frist i dag.</div>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {dagensOppgaver.slice(0, 6).map((o) => {
@@ -233,7 +233,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                   <div style={{ fontSize: 13.5, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.tittel}</div>
                   <div style={{ fontSize: 11.5, fontWeight: 600, color: o.blokkert || forfalle ? 'var(--danger)' : 'var(--text-muted)', marginTop: 1 }}>
                     {o.blokkert ? 'Står fast – ventar på hjelp' : forfalle ? `Forseinka · frist ${fristTekst(o.frist, t).toLowerCase()}` : 'Frist i dag'}
-                    {o.sjekkliste.length > 0 && ` · ☑ ${o.sjekkliste.filter((s) => s.ferdig).length}/${o.sjekkliste.length}`}
+                    {o.sjekkliste.length > 0 && ` · sjekkliste ${o.sjekkliste.filter((s) => s.ferdig).length}/${o.sjekkliste.length}`}
                   </div>
                 </button>
                 {!o.blokkert && (

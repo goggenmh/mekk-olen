@@ -10,6 +10,8 @@ export interface TimeEntry {
   slutt: string;
   pause: number;
   status: EntryStatus;
+  /** Ført automatisk frå vaktplanen (dagleg leiar). Blir false når nokon rettar føringa. */
+  auto?: boolean;
 }
 
 export interface Shift {

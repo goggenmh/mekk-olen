@@ -90,7 +90,7 @@ interface AppData {
 
 const AppDataContext = createContext<AppData | null>(null);
 
-const mapEntry = (r: any): TimeEntry => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, pause: r.pause, status: r.status });
+const mapEntry = (r: any): TimeEntry => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, pause: r.pause, status: r.status, auto: !!r.auto });
 const mapShift = (r: any): Shift => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift });
 const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.fra, til: r.til, dag: r.dag, tid: r.tid, status: r.status });
 const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst ?? '', fra: r.fra ?? null, til: r.til ?? null, status: r.status ?? 'godkjend', svar: r.svar ?? '', behandlaAv: r.behandla_av ?? null, createdAt: r.created_at ?? null });
@@ -139,6 +139,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       // Lag dagens rutineoppgåver før vi hentar oppgåvene. Databasen passar
       // på at kvar rutine blir til berre éi oppgåve per dag.
       await supabase.rpc('lag_rutineoppgaver');
+      // Dagleg leiar sine timar frå vaktplanen (berre leiarar/godkjennarar har
+      // lov; for andre gir databasen ein feil som vi ser bort frå). Natt-jobben
+      // gjer det same, så timane kjem med sjølv om ingen leiar opnar appen.
+      await supabase.rpc('for_leiartimar');
     }
     const [e, s, sw, f, t, o, d, p, m, u, sv, st, ru] = await Promise.all([
       supabase.from('time_entries').select('*'),
@@ -218,8 +222,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // ---- time entries ----
   const saveEntry: AppData['saveEntry'] = async (entry) => {
     if (entry.id) {
+      // Retta for hand: ikkje lenger ei auto-føring frå vaktplanen.
       const { data, error: err } = await supabase.from('time_entries').update({
-        start: entry.start, slutt: entry.slutt, pause: entry.pause, status: entry.status,
+        start: entry.start, slutt: entry.slutt, pause: entry.pause, status: entry.status, auto: false,
       }).eq('id', entry.id).select().single();
       if (err) throw err;
       setEntries((prev) => prev.map((x) => (x.id === entry.id ? mapEntry(data) : x)));

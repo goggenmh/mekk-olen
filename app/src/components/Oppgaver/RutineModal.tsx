@@ -146,7 +146,7 @@ function RutineSkjema({ utkast, onTilbake, onLagre, onSlett }: { utkast: Utkast;
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {r.sjekkliste.map((p, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-              <span style={{ color: 'var(--text-faint)' }}>☐</span>
+              <span style={{ color: 'var(--text-faint)' }}>–</span>
               <span style={{ flex: 1 }}>{p.tekst}</span>
               <button type="button" onClick={() => sett({ sjekkliste: r.sjekkliste.filter((_, j) => j !== i) })} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-faint)', fontSize: 15 }}>✕</button>
             </div>

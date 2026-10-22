@@ -310,6 +310,7 @@ function WeekTable({
                           <span style={{ fontFamily: "'Geist Mono Variable'", fontWeight: avvik ? 800 : 600, color: avvik ? 'var(--danger)' : dagVentar ? '#b7830b' : 'var(--text)' }}>{fmt(dagSum)}</span>
                           {avvik && <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--danger)' }}>{p > 0 ? `vakt ${fmt(p)}` : 'ingen vakt'}</div>}
                           {es.length > 1 && <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--brand)' }}>{es.length} bolkar</div>}
+                          {es.every((e) => e.auto) && <div title="Ført automatisk frå vaktplanen" style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Auto</div>}
                         </div>
                       ) : (
                         <span style={{ color: 'var(--text-faint2)' }}>–</span>

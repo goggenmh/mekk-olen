@@ -194,8 +194,8 @@ export function FerieSide() {
                   <Rad f={f} />
                   {leiar && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', paddingLeft: 4 }}>
-                      {vakter > 0 && <span style={{ fontSize: 11.5, color: 'var(--pill-amber-fg)' }}>⚠ {vakter} {vakter === 1 ? 'vakt' : 'vakter'} i perioden</span>}
-                      {andre.length > 0 && <span style={{ fontSize: 11.5, color: 'var(--pill-amber-fg)' }}>⚠ {andre.map((x) => findAnsatt(x.ansatt).navn.split(' ')[0]).join(', ')} òg borte</span>}
+                      {vakter > 0 && <span style={{ fontSize: 11.5, color: 'var(--pill-amber-fg)' }}>{vakter} {vakter === 1 ? 'vakt' : 'vakter'} i perioden</span>}
+                      {andre.length > 0 && <span style={{ fontSize: 11.5, color: 'var(--pill-amber-fg)' }}>{andre.map((x) => findAnsatt(x.ansatt).navn.split(' ')[0]).join(', ')} òg borte</span>}
                       <span style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
                         <button onClick={() => svar(f, 'avslatt')} style={{ ...knapp, color: 'var(--danger)' }}>Avslå</button>
                         <button onClick={() => svar(f, 'godkjend')} style={{ ...knapp, background: '#2f9e6f', color: '#fff', borderColor: '#2f9e6f' }}>Godkjenn</button>

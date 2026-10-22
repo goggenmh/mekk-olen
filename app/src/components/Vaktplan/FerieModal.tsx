@@ -92,9 +92,9 @@ export function FerieModal({ existing, onClose }: { existing?: Ferie; onClose: (
       )}
       {(andre.length > 0 || vakter > 0) && (
         <div style={{ fontSize: 12.5, background: 'var(--accent-soft)', borderRadius: 'var(--r)', padding: '9px 11px', display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {vakter > 0 && <span>⚠ {tilsett.navn.split(' ')[0]} har {vakter} {vakter === 1 ? 'vakt' : 'vakter'} i perioden som må dekkjast.</span>}
+          {vakter > 0 && <span>{tilsett.navn.split(' ')[0]} har {vakter} {vakter === 1 ? 'vakt' : 'vakter'} i perioden som må dekkjast.</span>}
           {andre.map((x) => (
-            <span key={x.id}>⚠ {findAnsatt(x.ansatt).navn} er òg borte {datoIntervall(x.fra!, x.til)} ({x.type.toLowerCase()}{x.status === 'ventar' ? ', søkt' : ''}).</span>
+            <span key={x.id}>{findAnsatt(x.ansatt).navn} er òg borte {datoIntervall(x.fra!, x.til)} ({x.type.toLowerCase()}{x.status === 'ventar' ? ', søkt' : ''}).</span>
           ))}
         </div>
       )}
