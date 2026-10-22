@@ -118,6 +118,8 @@ export interface Order {
   varsla: string | null;
   /** Fritt notat (kjenneteikn, ønske o.l.). Tomt før bestilling-notat.sql er køyrd. */
   notat: string;
+  /** Pris per stk i kroner (null = ikkje sett). */
+  pris: number | null;
   /** Tilsett som la inn bestillinga (blir sett av databasen; null på eldre). */
   registrertAv?: string | null;
 }

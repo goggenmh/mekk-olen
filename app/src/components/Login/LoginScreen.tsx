@@ -39,12 +39,10 @@ export function LoginScreen() {
     try { return JSON.parse(localStorage.getItem(SIST_NOKKEL) || 'null'); } catch { return null; }
   });
 
-  // Kort stadfesting («Velkomen, Georg») før PIN-tastaturet.
-  const [velkomen, setVelkomen] = useState<Employee | null>(null);
+  // «Velkomen, Georg» kjem etter rett PIN (sjå Velkomst i App).
   const vel = (u: Employee) => {
     try { localStorage.setItem(SIST_NOKKEL, JSON.stringify({ id: u.id, at: new Date().toISOString() })); } catch { /* privat modus */ }
-    setVelkomen(u);
-    setTimeout(() => { setVelkomen(null); pickUser(u.id); }, 650);
+    pickUser(u.id);
   };
 
   const [sok, setSok] = useState('');
@@ -126,12 +124,7 @@ export function LoginScreen() {
         </div>
 
         <div style={{ ...kort, marginTop: 'clamp(26px, 5vh, 44px)' }}>
-          {velkomen ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '26px 0 22px', gap: 14, animation: 'toastIn 0.18s ease' }}>
-              <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--mekk-lime)', color: 'var(--mekk-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 900 }}>✓</div>
-              <div style={{ ...tittel, textTransform: 'none' }}>Velkomen, {velkomen.navn.split(' ')[0]}</div>
-            </div>
-          ) : pick ? (
+          {pick ? (
             <>
               <button onClick={back} style={backBtn}><span style={{ color: 'var(--mekk-teal)', fontWeight: 900 }}>‹</span> Byt brukar</button>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

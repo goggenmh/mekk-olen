@@ -3,7 +3,7 @@ import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from
 import { useAppData } from '../../context/AppDataContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { ORDER_FLOW, ORDER_STATUS } from '../../constants';
-import { today } from '../../lib/dates';
+import { today, fmtPris } from '../../lib/dates';
 import type { Order } from '../../types';
 import { storeOrd, storFyrste } from '../../lib/tekst';
 
@@ -23,11 +23,16 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
   const [antal, setAntal] = useState(existing?.antal ?? 1);
   const [status, setStatus] = useState(existing?.status || ORDER_FLOW[0]);
   const [notat, setNotat] = useState(existing?.notat || '');
+  // Pris per stk som tekst, så komma og mellomrom kan skrivast («1 199,50»).
+  const [pris, setPris] = useState(existing?.pris != null ? String(existing.pris).replace('.', ',') : '');
+  const prisTal = pris.trim() ? Number(pris.replace(/\s/g, '').replace(',', '.')) : null;
+  const prisFeil = prisTal !== null && (!Number.isFinite(prisTal) || prisTal < 0);
   const [feil, setFeil] = useState(false);
 
   const save = async () => {
     if (!kunde.trim()) { setFeil(true); return; }
-    await saveOrder({ id: existing?.id, kunde: storeOrd(kunde.trim()), telefon, vare: storFyrste(vare.trim()), leverandor: storFyrste(leverandor.trim()), varenr, lenke: lenke.trim() || null, dato, antal, status, notat: storFyrste(notat.trim()), varsla: existing?.varsla ?? null });
+    if (prisFeil) return;
+    await saveOrder({ id: existing?.id, kunde: storeOrd(kunde.trim()), telefon, vare: storFyrste(vare.trim()), leverandor: storFyrste(leverandor.trim()), varenr, lenke: lenke.trim() || null, dato, antal, status, notat: storFyrste(notat.trim()), pris: prisTal === null ? null : Math.round(prisTal * 100) / 100, varsla: existing?.varsla ?? null });
     onClose();
   };
 
@@ -86,6 +91,13 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
           <input type="number" min={1} value={antal} onChange={(e) => setAntal(Number(e.target.value))} style={inputStyle} />
         </Field>
       </div>
+      <Field label="Pris per stk (kr)">
+        <input inputMode="decimal" value={pris} onChange={(e) => setPris(e.target.value)} placeholder="T.d. 1199,00" autoComplete="off" style={inputStyle} />
+      </Field>
+      {prisFeil && <div style={{ fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}>Skriv prisen som eit tal, t.d. 1199,00.</div>}
+      {prisTal !== null && !prisFeil && antal > 1 && (
+        <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: -6 }}>Totalt {fmtPris(prisTal * antal)} for {antal} stk</div>
+      )}
       <Field label="Status">
         <select value={status} onChange={(e) => setStatus(e.target.value)} style={inputStyle}>
           {ORDER_FLOW.map((s) => <option key={s} value={s}>{ORDER_STATUS[s].tekst}</option>)}

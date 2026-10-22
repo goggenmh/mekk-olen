@@ -61,6 +61,9 @@ export const fmt = (n: number) => (Math.round(n * 4) / 4).toString().replace('.'
 
 export const fmtKr = (n: number) => `${Math.round(n).toLocaleString('nb-NO')} kr`;
 
+/** «kr 1 199,00» – pris med øre, som på mekk.no. */
+export const fmtPris = (n: number) => `kr ${n.toLocaleString('nb-NO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 export const datoKort = (s: string | null | undefined) => {
   if (!s) return '';
   const d = parseDate(s);

@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { ORDER_FLOW, ORDER_STATUS } from '../../constants';
-import { datoKort, MND } from '../../lib/dates';
+import { datoKort, MND, fmtPris } from '../../lib/dates';
 import { OrderModal } from './OrderModal';
 import { NotifyModal } from './NotifyModal';
 import { TaskModal } from '../Oppgaver/TaskModal';
@@ -164,7 +164,7 @@ export function Bestillinger() {
                   <button onClick={() => setOrderTarget(o)} style={{ fontSize: 14.5, fontWeight: 700, flex: 1, cursor: 'pointer', textAlign: 'left', background: 'none', border: 'none', padding: 0, color: 'var(--text)', fontFamily: 'inherit' }}>{o.kunde}</button>
                   <span style={{ fontSize: 10.5, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 'var(--r)', textTransform: 'uppercase' }}>{s.tekst}</span>
                 </div>
-                <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 5 }}>{o.vare}{o.antal > 1 ? ` · ${o.antal} stk` : ''}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 5 }}>{o.vare}{o.antal > 1 ? ` · ${o.antal} stk` : ''}{o.pris != null ? ` · ${fmtPris(o.pris * o.antal)}` : ''}</div>
                 {o.notat && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 3, fontStyle: 'italic' }}>{o.notat}</div>}
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{o.leverandor} · {datoKort(o.dato)}{o.varsla ? ` · varsla ${datoKort(o.varsla)}` : ''}</div>
                 {(alder(o).gammal || o.telefon) && (
@@ -212,6 +212,7 @@ export function Bestillinger() {
               <th style={th}>Leverandør</th>
               <th style={th}>Dato</th>
               <th style={th}>Antal</th>
+              <th style={{ ...th, textAlign: 'right' }}>Pris</th>
               <th style={th}>Lagt inn av</th>
               <th style={th}>Status</th>
               <th style={th}></th>
@@ -239,6 +240,10 @@ export function Bestillinger() {
                   <td style={td}>{o.leverandor}</td>
                   <td style={td}>{datoKort(o.dato)}</td>
                   <td style={td}>{o.antal}</td>
+                  <td style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700 }}>
+                    {o.pris != null ? fmtPris(o.pris * o.antal) : <span style={{ color: 'var(--text-faint)', fontWeight: 400 }}>–</span>}
+                    {o.pris != null && o.antal > 1 && <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{fmtPris(o.pris)} / stk</div>}
+                  </td>
                   <td style={td}>
                     {lagtInnAv(o) ? (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap' }}>
@@ -278,7 +283,7 @@ export function Bestillinger() {
               );
             })}
             {filtered.length === 0 && (
-              <tr><td colSpan={8}style={{ ...td, textAlign: 'center', color: 'var(--text-muted)' }}>Ingen bestillingar.</td></tr>
+              <tr><td colSpan={9} style={{ ...td, textAlign: 'center', color: 'var(--text-muted)' }}>Ingen bestillingar.</td></tr>
             )}
           </tbody>
         </table>

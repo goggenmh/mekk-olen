@@ -30,7 +30,7 @@ export const VIEWS: { key: View; label: string; ikon: string; sti: string; berre
 // Gruppering av menyen i sidemenyen. `seksjon: null` = ingen overskrift.
 export const NAV_GROUPS: { seksjon: string | null; punkt: View[] }[] = [
   { seksjon: null, punkt: ['dashbord'] },
-  { seksjon: 'Drift', punkt: ['vaktplan', 'ferie', 'timeliste', 'oppgaver'] },
+  { seksjon: 'Drift', punkt: ['vaktplan', 'timeliste', 'oppgaver', 'ferie'] },
   { seksjon: 'Butikk', punkt: ['bestilling', 'dokument'] },
   { seksjon: 'Analyse', punkt: ['rapporter', 'ansatte'] },
   { seksjon: null, punkt: ['innstillinger'] },

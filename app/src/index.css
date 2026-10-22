@@ -270,6 +270,8 @@ button:active {
   40%,80% { transform: translateX(6px); }
 }
 .login-shake { animation: loginShake 0.35s ease; }
+/* Velkomst etter innlogging: står litt, så glir han bort */
+@keyframes velkomstUt { 0%, 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
 @keyframes loginspin { to { transform: rotate(360deg); } }
 .loginspinner {
   width: 30px; height: 30px; margin: 0 auto; border-radius: 50%;

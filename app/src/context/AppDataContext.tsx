@@ -104,7 +104,7 @@ const mapTask = (r: any): Task => ({
 const mapRutine = (r: any): Rutine => ({ id: r.id, tittel: r.tittel, detalj: r.detalj ?? '', kategori: r.kategori ?? 'Butikk', prioritet: r.prioritet ?? 'medium', ansvar: r.ansvar ?? 'ufordelt', dagar: Array.isArray(r.dagar) ? r.dagar : [], manadsdag: r.manadsdag ?? null, sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [], aktiv: r.aktiv !== false });
 // Kolonnene frå oppgaver-v2.sql. Manglar dei, lagrar vi utan (sjå lagreTask).
 const NYE_TASK_FELT = /blokkert|order_id/;
-const mapOrder = (r: any): Order => ({ id: r.id, kunde: storeOrd(r.kunde || ''), telefon: r.telefon, vare: storFyrste(r.vare || ''), leverandor: storFyrste(r.leverandor || ''), varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla, notat: r.notat ?? '', registrertAv: r.registrert_av ?? null });
+const mapOrder = (r: any): Order => ({ id: r.id, kunde: storeOrd(r.kunde || ''), telefon: r.telefon, vare: storFyrste(r.vare || ''), leverandor: storFyrste(r.leverandor || ''), varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla, notat: r.notat ?? '', pris: r.pris != null ? Number(r.pris) : null, registrertAv: r.registrert_av ?? null });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
 const mapStadfesting = (r: any): Stadfesting => ({ id: r.id, docId: r.doc_id, ansatt: r.ansatt, stadfestaAt: r.stadfesta_at });
 const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne: r.kan_godkjenne });
@@ -539,7 +539,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // ---- orders ----
   const saveOrder: AppData['saveOrder'] = async (o) => {
     const felt = {
-      kunde: o.kunde, telefon: o.telefon, vare: o.vare, leverandor: o.leverandor, varenr: o.varenr, lenke: o.lenke || null, dato: o.dato, antal: o.antal, status: o.status,
+      kunde: o.kunde, telefon: o.telefon, vare: o.vare, leverandor: o.leverandor, varenr: o.varenr, lenke: o.lenke || null, dato: o.dato, antal: o.antal, status: o.status, pris: o.pris ?? null,
     };
     // notat-kolonna kjem med bestilling-notat.sql. Finst ho ikkje enno, lagrar
     // vi resten så bestillinga ikkje går tapt.

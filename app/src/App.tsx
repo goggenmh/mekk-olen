@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useAppData } from './context/AppDataContext';
 import { LoginScreen } from './components/Login/LoginScreen';
+import { Velkomst } from './components/Login/Velkomst';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import { Dashboard } from './components/Dashboard/Dashboard';
@@ -103,10 +104,27 @@ function App() {
     if (ventandeVis.current) window.history.replaceState(null, '', window.location.pathname);
   }, []);
 
-  // Ved innlogging: gå til sida frå varselet, elles bli på sida i adressa.
+  // Vart innloggingsskjermen vist? Då er dette ei ny innlogging (ikkje berre
+  // ei oppdatering av sida med ei gyldig økt).
+  const fraInnlogging = useRef(false);
+  useEffect(() => {
+    if (!authLoading && !user) fraInnlogging.current = true;
+  }, [authLoading, user]);
+  const [velkomen, setVelkomen] = useState<string | null>(null);
+
+  // Ved innlogging: gå til sida frå varselet, elles alltid til oversikta.
+  // Etter rett PIN: «Velkomen, Georg» i eitt sekund.
   useEffect(() => {
     if (ventandeVis.current) gaaTil(ventandeVis.current);
-    if (user?.id) ventandeVis.current = null;
+    else if (user?.id && fraInnlogging.current) go('dashbord');
+    if (user?.id) {
+      if (fraInnlogging.current) {
+        setVelkomen(user.navn.split(' ')[0]);
+        setTimeout(() => setVelkomen(null), 1250);
+      }
+      fraInnlogging.current = false;
+      ventandeVis.current = null;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
@@ -156,6 +174,7 @@ function App() {
       </div>
       {isMobile && <BottomNav view={synlegView} setView={go} onMeir={() => setMenuOpen(true)} />}
       <Toaster />
+      {velkomen && <Velkomst namn={velkomen} />}
     </div>
   );
 }
