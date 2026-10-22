@@ -253,10 +253,10 @@ button:active {
 /* Innlogging – glass-terminal (konsept D) */
 /* Innlogging i MEKK-stil */
 .mk-rad { transition: border-color 0.12s ease, box-shadow 0.12s ease; }
-.mk-rad:hover { border-color: var(--mekk-navy) !important; box-shadow: 0 4px 16px rgba(10, 35, 53, 0.08); }
-.mk-chev { color: var(--mekk-teal-700); font-size: 20px; font-weight: 900; transition: transform 0.12s ease; }
+.mk-rad:hover { border-color: var(--mekk-teal) !important; background: rgba(255, 255, 255, 0.12) !important; }
+.mk-chev { color: var(--mekk-teal); font-size: 20px; font-weight: 900; transition: transform 0.12s ease; }
 .mk-rad:hover .mk-chev { transform: translateX(-3px); }
-.mk-tast:hover { background: var(--mekk-navy) !important; color: #ffffff !important; border-color: var(--mekk-navy) !important; }
+.mk-tast:hover { background: rgba(255, 255, 255, 0.12) !important; border-color: var(--mekk-teal) !important; }
 .mk-tast:active { background: var(--mekk-lime) !important; color: var(--mekk-ink) !important; }
 @keyframes loginShake {
   0%,100% { transform: translateX(0); }
@@ -267,7 +267,7 @@ button:active {
 @keyframes loginspin { to { transform: rotate(360deg); } }
 .loginspinner {
   width: 30px; height: 30px; margin: 0 auto; border-radius: 50%;
-  border: 3px solid var(--mekk-line); border-top-color: var(--mekk-navy);
+  border: 3px solid rgba(255, 255, 255, 0.16); border-top-color: var(--mekk-teal);
   animation: loginspin 0.7s linear infinite;
 }
 
