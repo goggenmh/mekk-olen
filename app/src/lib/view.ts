@@ -9,7 +9,6 @@ export type View =
   | 'oppgaver'
   | 'bestilling'
   | 'dokument'
-  | 'assistent'
   | 'rapporter'
   | 'innstillinger';
 
@@ -24,7 +23,6 @@ export const VIEWS: { key: View; label: string; ikon: string; sti: string; berre
   { key: 'oppgaver', label: 'Oppgåver', ikon: 'oppgaver', sti: '/oppgaver' },
   { key: 'bestilling', label: 'Bestillingar', ikon: 'bestilling', sti: '/bestillingar' },
   { key: 'dokument', label: 'Dokument', ikon: 'dokument', sti: '/dokument' },
-  { key: 'assistent', label: 'Assistent', ikon: 'assistent', sti: '/assistent' },
   { key: 'rapporter', label: 'Rapportar', ikon: 'rapporter', sti: '/rapportar', berreLeiar: true },
   { key: 'innstillinger', label: 'Innstillingar', ikon: 'innstillinger', sti: '/innstillingar' },
 ];
@@ -33,7 +31,7 @@ export const VIEWS: { key: View; label: string; ikon: string; sti: string; berre
 export const NAV_GROUPS: { seksjon: string | null; punkt: View[] }[] = [
   { seksjon: null, punkt: ['dashbord'] },
   { seksjon: 'Drift', punkt: ['vaktplan', 'ferie', 'timeliste', 'oppgaver'] },
-  { seksjon: 'Butikk', punkt: ['bestilling', 'dokument', 'assistent'] },
+  { seksjon: 'Butikk', punkt: ['bestilling', 'dokument'] },
   { seksjon: 'Analyse', punkt: ['rapporter', 'ansatte'] },
   { seksjon: null, punkt: ['innstillinger'] },
 ];

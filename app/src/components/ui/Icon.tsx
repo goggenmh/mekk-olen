@@ -4,7 +4,6 @@ import {
   DoorOpen, DoorClosed, Bell, Sun, Moon, User, Phone, Mail,
   Paperclip, LifeBuoy, ClipboardList, PenLine, FolderOpen, TimerReset,
   Menu, LogOut, Search, AlertTriangle, ArrowLeftRight, Copy, Trash2, Pencil,
-  MessageCircleQuestion, Camera,
   type LucideProps,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
@@ -20,7 +19,6 @@ const MAP: Record<string, ComponentType<LucideProps>> = {
   dokument: FileText,
   rapporter: BarChart3,
   innstillinger: Settings,
-  assistent: MessageCircleQuestion,
   // hurtighandlingar
   'ny-timer': TimerReset,
   'ny-vakt': CalendarPlus,
@@ -45,7 +43,6 @@ const MAP: Record<string, ComponentType<LucideProps>> = {
   kopi: Copy,
   soppel: Trash2,
   blyant: Pencil,
-  kamera: Camera,
   // dokumentkategoriar
   HMS: LifeBuoy,
   Rutine: ClipboardList,
