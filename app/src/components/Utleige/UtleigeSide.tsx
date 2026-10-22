@@ -210,29 +210,35 @@ function Produktside({ p, onTilbake }: { p: KatalogProdukt; onTilbake: () => voi
           <div style={{ ...kort, padding: 18 }}>
             <span style={label}>Ledige dagar (neste 6 veker)</span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+              {UKE_KORT.map((u) => (
+                <div key={u} style={{ textAlign: 'center', fontSize: 10, fontWeight: 800, letterSpacing: '0.02em', color: 'var(--text-muted)', paddingBottom: 2 }}>{u}</div>
+              ))}
+              {/* Tomme celler så første dag hamnar under rett vekedag. */}
+              {dagar.length > 0 && Array.from({ length: weekdayIdx(dagar[0].dato) }).map((_, i) => <div key={`pad-${i}`} aria-hidden />)}
               {dagar.map((d) => {
                 const fritt = d.totalt > 0 && d.ledige > 0;
+                const delvis = fritt && d.ledige < d.totalt;
                 const valtDag = d.dato >= fraDato && d.dato <= tilDato;
                 return (
                   <button
                     key={d.dato}
                     onClick={() => { setFraDato(d.dato); if (tilDato <= d.dato) setTilDato(addDays(d.dato, 1)); }}
                     disabled={!fritt}
-                    title={fritt ? `${d.ledige} av ${d.totalt} ledig` : 'Ikkje ledig'}
+                    title={fritt ? `${d.ledige} av ${d.totalt} ledig` : d.totalt === 0 ? 'Ikkje ledig' : 'Fullbooka'}
                     style={{
-                      padding: '6px 0', borderRadius: 'var(--r-sm)', cursor: fritt ? 'pointer' : 'not-allowed', fontFamily: 'var(--font-sans)',
+                      position: 'relative', padding: '8px 0', borderRadius: 'var(--r-sm)', cursor: fritt ? 'pointer' : 'not-allowed', fontFamily: 'var(--font-sans)',
                       border: valtDag ? '2px solid var(--mekk-navy)' : '1px solid var(--border)',
                       background: fritt ? 'var(--pill-gronn-bg)' : 'var(--surface-alt)', color: fritt ? 'var(--pill-gronn-fg)' : 'var(--text-faint)',
                       textDecoration: fritt ? 'none' : 'line-through',
                     }}
                   >
-                    <div style={{ fontSize: 9.5, fontWeight: 700 }}>{UKE_KORT[weekdayIdx(d.dato)]}</div>
                     <div style={{ fontSize: 14, fontWeight: 800 }}>{parseDate(d.dato).getDate()}</div>
+                    {delvis && <span style={{ position: 'absolute', top: 2, right: 4, fontSize: 9, fontWeight: 900, color: 'var(--pill-amber-fg)' }}>{d.ledige}</span>}
                   </button>
                 );
               })}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Grøn = ledig. Trykk på ein dag for å velje henting.</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Grøn = ledig. Talet oppe til høgre viser kor mange som er att når utstyret er delvis utleigd. Trykk på ein dag for å velje henting.</div>
           </div>
 
           <div style={{ ...kort, padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>

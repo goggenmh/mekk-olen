@@ -115,10 +115,63 @@ export function lagTestdata(): Record<string, Rad[]> {
     { id: id('meld'), fra: 'kari', til: null, tekst: 'Hugs varetelling laurdag etter stenging. Pizza på huset!', created_at: new Date().toISOString() },
   ];
 
+  // --- Utleige: oppdikta utstyr med enkle teikna bilete (SVG), så kundesida,
+  // kalenderen og prisane har noko å vise i demoen. ---
+  const svg = (inner: string) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 150"><rect width="220" height="150" fill="#eef2f4"/>${inner}</svg>`)}`;
+  const bileteTilhengar = svg('<rect x="38" y="68" width="124" height="28" rx="4" fill="#0a2335"/><line x1="162" y1="82" x2="196" y2="82" stroke="#0a2335" stroke-width="6" stroke-linecap="round"/><circle cx="70" cy="106" r="15" fill="#11788a"/><circle cx="130" cy="106" r="15" fill="#11788a"/><circle cx="70" cy="106" r="5" fill="#eef2f4"/><circle cx="130" cy="106" r="5" fill="#eef2f4"/>');
+  const bileteHogtrykk = svg('<rect x="52" y="62" width="66" height="54" rx="7" fill="#11788a"/><rect x="66" y="48" width="26" height="16" rx="3" fill="#0a2335"/><path d="M118 78 h44 l-8 -9 M162 78 v-14" stroke="#0a2335" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="60" cy="118" r="8" fill="#0a2335"/><circle cx="110" cy="118" r="8" fill="#0a2335"/>');
+  const bileteJordfres = svg('<rect x="78" y="52" width="56" height="40" rx="5" fill="#0a2335"/><line x1="132" y1="58" x2="178" y2="42" stroke="#0a2335" stroke-width="6" stroke-linecap="round"/><g fill="#11788a"><circle cx="72" cy="104" r="6"/><circle cx="88" cy="112" r="6"/><circle cx="104" cy="104" r="6"/><circle cx="88" cy="94" r="6"/><circle cx="120" cy="112" r="6"/></g>');
+  const bileteStillas = svg('<g stroke="#0a2335" stroke-width="5" fill="none"><rect x="58" y="36" width="104" height="84"/><line x1="58" y1="80" x2="162" y2="80"/><line x1="110" y1="36" x2="110" y2="120"/></g><rect x="58" y="74" width="104" height="9" fill="#c8e66b"/>');
+  const bileteFliskuttar = svg('<rect x="44" y="92" width="132" height="12" rx="3" fill="#0a2335"/><line x1="60" y1="92" x2="60" y2="112" stroke="#0a2335" stroke-width="5"/><line x1="160" y1="92" x2="160" y2="112" stroke="#0a2335" stroke-width="5"/><circle cx="110" cy="68" r="26" fill="none" stroke="#11788a" stroke-width="6"/><circle cx="110" cy="68" r="4" fill="#0a2335"/><line x1="110" y1="68" x2="150" y2="92" stroke="#0a2335" stroke-width="4"/>');
+
+  const utleige_produkt: Rad[] = [
+    { id: 'u-tilhengar', butikk_id: B, namn: 'Tilhengar 750 kg', beskriving: 'Lett og praktisk tilhengar til hageavfall, flyttelass og materialar. Kjørekort klasse B.', kategori: 'Transport', bilete_url: bileteTilhengar, dogn_pris: 350, halvdag_pris: null, helg_pris: 900, gebyr: 0, depositum: 2000, tilbehor: ['Lastenett', 'Stroppar (4 stk)'], aktiv: true, sortering: 1 },
+    { id: 'u-hogtrykk', butikk_id: B, namn: 'Høgtrykksvaskar', beskriving: 'Kraftig vaskar til fasade, terrasse, bil og utemøblar. Inkluderer skumlanse.', kategori: 'Reingjering', bilete_url: bileteHogtrykk, dogn_pris: 300, halvdag_pris: 180, helg_pris: null, gebyr: 50, depositum: 500, tilbehor: ['Slange 8 m', 'Vifteduse', 'Skumlanse'], aktiv: true, sortering: 2 },
+    { id: 'u-jordfres', butikk_id: B, namn: 'Jordfres', beskriving: 'Gjer klar bed og plen om våren. Enkel å styre, 50 cm arbeidsbreidde.', kategori: 'Hage', bilete_url: bileteJordfres, dogn_pris: 450, halvdag_pris: null, helg_pris: 1100, gebyr: 0, depositum: 1500, tilbehor: ['Ekstra knivsett'], aktiv: true, sortering: 3 },
+    { id: 'u-stillas', butikk_id: B, namn: 'Rullestillas 4 m', beskriving: 'Trygt arbeid i høgda ved måling og montering. Hjul med brems og rekkverk.', kategori: 'Bygg', bilete_url: bileteStillas, dogn_pris: 250, halvdag_pris: null, helg_pris: 650, gebyr: 0, depositum: 1000, tilbehor: ['Rekkverk', 'Hjul med brems'], aktiv: true, sortering: 4 },
+    { id: 'u-fliskuttar', butikk_id: B, namn: 'Fliskuttar 90 cm', beskriving: 'Vassavkjølt kuttar for fliser og klinkar opp til 90 cm. Rein og presis kutt.', kategori: 'Bygg', bilete_url: bileteFliskuttar, dogn_pris: 220, halvdag_pris: 140, helg_pris: null, gebyr: 40, depositum: 400, tilbehor: ['Diamantblad', 'Vasskar'], aktiv: true, sortering: 5 },
+  ];
+
+  const utleige_eining: Rad[] = [
+    { id: 'e-tilh-1', produkt_id: 'u-tilhengar', kode: 'TILH-01', status: 'tilgjengeleg', notat: '' },
+    { id: 'e-tilh-2', produkt_id: 'u-tilhengar', kode: 'TILH-02', status: 'tilgjengeleg', notat: '' },
+    { id: 'e-hogt-1', produkt_id: 'u-hogtrykk', kode: 'HØGT-01', status: 'tilgjengeleg', notat: '' },
+    { id: 'e-hogt-2', produkt_id: 'u-hogtrykk', kode: 'HØGT-02', status: 'tilgjengeleg', notat: '' },
+    { id: 'e-jord-1', produkt_id: 'u-jordfres', kode: 'JORD-01', status: 'tilgjengeleg', notat: '' },
+    { id: 'e-stil-1', produkt_id: 'u-stillas', kode: 'STIL-01', status: 'tilgjengeleg', notat: '' },
+    { id: 'e-stil-2', produkt_id: 'u-stillas', kode: 'STIL-02', status: 'tilgjengeleg', notat: '' },
+    { id: 'e-flis-1', produkt_id: 'u-fliskuttar', kode: 'FLIS-01', status: 'tilgjengeleg', notat: '' },
+  ];
+
+  const utleige_kunde: Rad[] = [
+    { id: 'uk-per', butikk_id: B, namn: 'Per Hansen', telefon: '91122333', epost: 'per@demo.local', notat: '', created_at: addDays(t, -20) },
+    { id: 'uk-liv', butikk_id: B, namn: 'Liv Solberg', telefon: '92233444', epost: 'liv@demo.local', notat: 'Fast kunde', created_at: addDays(t, -6) },
+  ];
+
+  // Nokre reservasjonar så kalenderen viser delvis/fullt utleigd, og admin-sida
+  // har ein ny førespurnad og eit utleigd utstyr å jobbe med.
+  const ures = (over: Rad): Rad => ({ butikk_id: B, kunde_melding: '', internt_notat: '', retur_sjekk: null, oppgave_id: null, utlevert_at: null, utlevert_av: null, returnert_at: null, returnert_av: null, created_at: new Date().toISOString(), ...over });
+  const utleige_reservasjon: Rad[] = [
+    ures({ id: 'ur-1', nummer: 1001, produkt_id: 'u-tilhengar', eining_id: 'e-tilh-1', kunde_id: 'uk-per', start: `${addDays(t, 2)}T08:00:00`, slutt: `${addDays(t, 4)}T16:00:00`, status: 'stadfesta', pris_leige: 700, gebyr: 0, depositum: 2000, pris_total: 700 }),
+    ures({ id: 'ur-2', nummer: 1002, produkt_id: 'u-jordfres', eining_id: 'e-jord-1', kunde_id: 'uk-liv', start: `${addDays(t, 1)}T08:00:00`, slutt: `${addDays(t, 3)}T16:00:00`, status: 'ny', pris_leige: 900, gebyr: 0, depositum: 1500, pris_total: 900, kunde_melding: 'Treng han til helga om mogleg.' }),
+    ures({ id: 'ur-3', nummer: 1003, produkt_id: 'u-hogtrykk', eining_id: 'e-hogt-1', kunde_id: 'uk-per', start: `${addDays(t, -1)}T08:00:00`, slutt: `${addDays(t, 1)}T16:00:00`, status: 'utleigd', pris_leige: 600, gebyr: 50, depositum: 500, pris_total: 650, utlevert_at: `${addDays(t, -1)}T08:05:00`, utlevert_av: 'kari' }),
+  ];
+
+  // Ei eining sperra for reparasjon (viser i kalenderen og under «sperra utstyr»).
+  const utleige_sperre: Rad[] = [
+    { id: 'us-1', eining_id: 'e-stil-2', start: `${addDays(t, 0)}T00:00:00`, slutt: `${addDays(t, 3)}T00:00:00`, grunn: 'reparasjon', notat: 'Byte av hjul', oppgave_id: null },
+  ];
+
+  const utleige_innstillingar: Rad[] = [
+    { butikk_id: B, offentleg: true, hente_tid: '08:00', retur_tid: '16:00', maks_dagar: 14, kontakt_telefon: '53 76 00 00', kontakt_epost: 'utleige@demo.local', updated_at: addDays(t, -30),
+      vilkar: 'Utstyret skal leverast tilbake reint og i same stand, med alt tilbehøyr. Leigetakar er ansvarleg for skade og tap i leigeperioden. Depositum blir betalt tilbake når utstyret er kontrollert. Forseinka retur blir fakturert per påbyrja døgn.' },
+  ];
+
   return {
     ansatte,
     butikkar: [{ id: B, namn: 'MEKK Ølen', farge: '#11788a', aktiv: true, created_at: '2026-01-01' }],
     shifts, standardveke, time_entries, shift_swaps, ferie, utilgjengeleg, tasks, orders, docs, doc_stadfesting, meldinger,
+    utleige_produkt, utleige_eining, utleige_kunde, utleige_reservasjon, utleige_sperre, utleige_innstillingar,
     oppgave_rutinar: [
       { id: id('rutine'), tittel: 'Opning av butikken', detalj: 'Gjer butikken klar før dørene opnar.', kategori: 'Butikk', prioritet: 'høg', ansvar: 'opnar', dagar: [1, 2, 3, 4, 5, 6], manadsdag: null, aktiv: true, sjekkliste: [{ tekst: 'Slå av alarmen og lås opp', ferdig: false }, { tekst: 'Lys, kasse og kortterminal på', ferdig: false }, { tekst: 'Tel opp vekselkassa', ferdig: false }] },
       { id: id('rutine'), tittel: 'Stenging og rydding', detalj: 'Rydd og lås forsvarleg etter stenging.', kategori: 'Butikk', prioritet: 'høg', ansvar: 'stengjer', dagar: [1, 2, 3, 4, 5, 6], manadsdag: null, aktiv: true, sjekkliste: [{ tekst: 'Rydd golv, disk og hyller', ferdig: false }, { tekst: 'Kasseoppgjer', ferdig: false }, { tekst: 'Lås og set på alarmen', ferdig: false }] },
