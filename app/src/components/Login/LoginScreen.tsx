@@ -2,7 +2,6 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { pad, fullDatoTekst, today, weekdayIdx, mins } from '../../lib/dates';
-import { supabase } from '../../supabaseClient';
 import { DAGER_VAKTPLAN, type Employee } from '../../constants';
 import { tekstPaFarge } from '../../lib/farge';
 
@@ -24,15 +23,10 @@ export function LoginScreen() {
   const synlege = effektivButikk ? ansatte.filter((a) => a.butikk_id === effektivButikk) : ansatte;
   const merke = finnButikk(effektivButikk ?? undefined)?.namn?.toUpperCase() || 'MEKK';
 
-  // Dagens vakter (berre tider) for status ved kvar tilsett. Finst ikkje
-  // funksjonen (login-status.sql), blir statusen berre ikkje vist.
-  const [vakter, setVakter] = useState<{ id: string; start: string; slutt: string }[] | null>(null);
-  useEffect(() => {
-    const hent = () => supabase.rpc('login_status').then(({ data, error }) => setVakter(error || !Array.isArray(data) ? null : data));
-    hent();
-    const id = setInterval(hent, 5 * 60 * 1000);
-    return () => clearInterval(id);
-  }, []);
+  // Dagens vaktstatus blir med vilje IKKJE henta her. Innloggings-skjermen er
+  // open (før pålogging), så vaktlista ville då vore offentleg på internett.
+  // Den står difor berre inne i appen; her degraderer visninga til opningstid.
+  const [vakter] = useState<{ id: string; start: string; slutt: string }[] | null>(null);
 
   // «Sist brukt» på denne eininga – hjelper på ein delt terminal i butikken.
   const [sist] = useState<{ id: string; at: string } | null>(() => {
