@@ -12,14 +12,16 @@ import { UtleigeKalender } from './UtleigeKalender';
 import { UtleigeUtstyr } from './UtleigeUtstyr';
 import { UtleigeKundar } from './UtleigeKundar';
 import { UtleigeInnstillingarSide } from './UtleigeInnstillingar';
+import { UtleigeRapport } from './UtleigeRapport';
 
-type Fane = 'oversikt' | 'kalender' | 'utstyr' | 'reservasjonar' | 'kundar' | 'innstillingar';
+type Fane = 'oversikt' | 'kalender' | 'utstyr' | 'reservasjonar' | 'kundar' | 'rapport' | 'innstillingar';
 const FANER: { key: Fane; tekst: string; berreLeiar?: boolean }[] = [
   { key: 'oversikt', tekst: 'Oversikt' },
   { key: 'kalender', tekst: 'Kalender' },
   { key: 'reservasjonar', tekst: 'Reservasjonar' },
   { key: 'utstyr', tekst: 'Utstyr' },
   { key: 'kundar', tekst: 'Kundar' },
+  { key: 'rapport', tekst: 'Rapport', berreLeiar: true },
   { key: 'innstillingar', tekst: 'Innstillingar', berreLeiar: true },
 ];
 
@@ -160,6 +162,7 @@ export function Utleige() {
 
       {fane === 'utstyr' && <UtleigeUtstyr data={data} erLeiar={erLeiar} />}
       {fane === 'kundar' && <UtleigeKundar data={data} onOpne={(r) => setOpne(r)} />}
+      {fane === 'rapport' && erLeiar && <UtleigeRapport data={data} />}
       {fane === 'innstillingar' && erLeiar && <UtleigeInnstillingarSide data={data} />}
 
       {opne && <ReservasjonModal data={data} res={opne === 'ny' ? null : opne} onClose={() => setOpne(null)} />}
