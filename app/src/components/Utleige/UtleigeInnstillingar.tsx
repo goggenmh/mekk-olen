@@ -29,6 +29,10 @@ export function UtleigeInnstillingarSide({ data }: { data: UtleigeData }) {
         <Field label="Vanleg hentetid"><input type="time" value={skjema.hente_tid} onChange={(e) => sett({ hente_tid: e.target.value })} style={inputStyle} /></Field>
         <Field label="Vanleg returtid"><input type="time" value={skjema.retur_tid} onChange={(e) => sett({ retur_tid: e.target.value })} style={inputStyle} /></Field>
         <Field label="Lengste leige (dagar)"><input type="number" min={1} max={90} value={skjema.maks_dagar} onChange={(e) => sett({ maks_dagar: Math.max(1, Math.min(90, Number(e.target.value) || 1)) })} style={inputStyle} /></Field>
+        <Field label="Svarfrist på førespurnader (timar)"><input type="number" min={1} max={336} value={skjema.svarfrist_timar} onChange={(e) => sett({ svarfrist_timar: Math.max(1, Math.min(336, Number(e.target.value) || 1)) })} style={inputStyle} /></Field>
+      </div>
+      <div style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5, marginTop: -4 }}>
+        Ein ubehandla «ny»-førespurnad held av maskina i {skjema.svarfrist_timar} timar. Blir han korkje stadfesta eller avslått innan då, går han ut automatisk og maskina blir ledig igjen (kunden får e-post).
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
         <Field label="Telefon i e-postane"><input value={skjema.kontakt_telefon} onChange={(e) => sett({ kontakt_telefon: e.target.value })} style={inputStyle} /></Field>

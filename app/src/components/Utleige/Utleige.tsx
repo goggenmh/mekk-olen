@@ -103,7 +103,20 @@ export function Utleige() {
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 14, alignItems: 'start' }}>
-            <Seksjon tittel="Nye førespurnader" tal={nye.length} tom="Ingen nye førespurnader.">{nye.map((r) => rad(r))}</Seksjon>
+            <Seksjon tittel="Nye førespurnader" tal={nye.length} tom="Ingen nye førespurnader.">
+              {nye.map((r) => {
+                const frist = new Date(r.created_at).getTime() + (data.innstillingar?.svarfrist_timar ?? 48) * 3600e3;
+                const over = frist < no;
+                return (
+                  <div key={r.id} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {rad(r)}
+                    <span style={{ fontSize: 11.5, fontWeight: 800, paddingLeft: 2, color: over ? 'var(--danger)' : 'var(--text-muted)' }}>
+                      {over ? 'Over svarfristen – maskina blir frigjeven automatisk' : `Svar innan ${tidKort(new Date(frist).toISOString())}`}
+                    </span>
+                  </div>
+                );
+              })}
+            </Seksjon>
             <Seksjon tittel="Forseinka returar" tal={forseinka.length} tom="Ingen forseinka returar.">{forseinka.map((r) => rad(r, `skulle vore levert ${tidKort(r.slutt)}`))}</Seksjon>
             <Seksjon tittel="Utleveringar i dag" tal={utleveringar.length} tom="Ingen utleveringar i dag.">{utleveringar.map((r) => rad(r, `hentar ${tidKort(r.start)}`))}</Seksjon>
             <Seksjon tittel="Forventa returar i dag" tal={returar.length} tom="Ingen returar i dag.">{returar.map((r) => rad(r, `kjem ${tidKort(r.slutt)}`))}</Seksjon>

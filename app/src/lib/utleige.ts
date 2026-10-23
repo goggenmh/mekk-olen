@@ -59,6 +59,8 @@ export interface UtleigeInnstillingar {
   hente_tid: string;
   retur_tid: string;
   maks_dagar: number;
+  /** Timar ei ubehandla «ny»-førespurnad held av eininga før ho går ut automatisk. */
+  svarfrist_timar: number;
   kontakt_telefon: string;
   kontakt_epost: string;
 }
