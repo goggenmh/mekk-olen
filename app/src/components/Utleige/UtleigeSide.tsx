@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { supabase } from '../../supabaseClient';
 import { kr, tilIso, feilTekst, type PrisSvar } from '../../lib/utleige';
-import { addDays, today, UKE_KORT, weekdayIdx, parseDate } from '../../lib/dates';
+import { addDays, today, UKE_KORT, weekdayIdx, parseDate, MND } from '../../lib/dates';
 
 // Offentleg kundeside (/utleige): ingen innlogging. Snakkar berre med dei
 // offentlege funksjonane i databasen (utleige_katalog, utleige_ledigheit,
@@ -108,6 +108,8 @@ function Produktside({ p, onTilbake }: { p: KatalogProdukt; onTilbake: () => voi
   const [fraTid, setFraTid] = useState(p.hente_tid);
   const [tilDato, setTilDato] = useState(addDays(t, 2));
   const [tilTid, setTilTid] = useState(p.retur_tid);
+  // true = neste trykk i kalenderen set returdato (elles hentedato/ny periode).
+  const [veljarSlutt, setVeljarSlutt] = useState(false);
   const [svar, setSvar] = useState<{ nokkel: string; pris?: PrisSvar; feil?: string } | null>(null);
   const [feil, setFeil] = useState<string | null>(null);
   const [namn, setNamn] = useState('');
@@ -160,6 +162,19 @@ function Produktside({ p, onTilbake }: { p: KatalogProdukt; onTilbake: () => voi
     window.scrollTo(0, 0);
   };
 
+  // Periodeveljar: første trykk vel henting (og nullstiller retur), andre vel
+  // retur. Trykkjer du før hentedagen, startar du på nytt frå den dagen.
+  const velgDag = (dato: string) => {
+    if (!veljarSlutt) { setFraDato(dato); setTilDato(''); setVeljarSlutt(true); }
+    else if (dato > fraDato) { setTilDato(dato); setVeljarSlutt(false); }
+    else { setFraDato(dato); setTilDato(''); }
+  };
+  const datoTekst = (dato: string) => {
+    if (!dato) return '';
+    const d = parseDate(dato);
+    return `${['søn', 'mån', 'tys', 'ons', 'tor', 'fre', 'lau'][d.getDay()]} ${d.getDate()}. ${MND[d.getMonth()]}`;
+  };
+
   if (kvittering) {
     return (
       <div style={{ ...kort, maxWidth: 560, margin: '0 auto', padding: '28px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
@@ -209,7 +224,10 @@ function Produktside({ p, onTilbake }: { p: KatalogProdukt; onTilbake: () => voi
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ ...kort, padding: 18 }}>
-            <span style={label}>Ledige dagar (neste 6 veker)</span>
+            <span style={label}>Vel leigeperiode</span>
+            <div style={{ fontSize: 13, fontWeight: 800, color: veljarSlutt ? 'var(--brand-strong)' : 'var(--text-secondary)', margin: '2px 0 10px' }}>
+              {veljarSlutt ? 'Trykk på returdagen' : fraDato && tilDato ? `Valt: ${datoTekst(fraDato)} – ${datoTekst(tilDato)}` : 'Trykk på hentedagen'}
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
               {UKE_KORT.map((u) => (
                 <div key={u} style={{ textAlign: 'center', fontSize: 10, fontWeight: 800, letterSpacing: '0.02em', color: 'var(--text-muted)', paddingBottom: 2 }}>{u}</div>
@@ -219,35 +237,47 @@ function Produktside({ p, onTilbake }: { p: KatalogProdukt; onTilbake: () => voi
               {dagar.map((d) => {
                 const fritt = d.totalt > 0 && d.ledige > 0;
                 const delvis = fritt && d.ledige < d.totalt;
-                const valtDag = d.dato >= fraDato && d.dato <= tilDato;
+                const erStart = d.dato === fraDato;
+                const erSlutt = d.dato === tilDato;
+                const iMellom = !!tilDato && d.dato > fraDato && d.dato < tilDato;
+                const endepunkt = erStart || erSlutt;
                 return (
                   <button
                     key={d.dato}
-                    onClick={() => { setFraDato(d.dato); if (tilDato <= d.dato) setTilDato(addDays(d.dato, 1)); }}
+                    onClick={() => velgDag(d.dato)}
                     disabled={!fritt}
+                    aria-pressed={endepunkt}
                     title={fritt ? `${d.ledige} av ${d.totalt} ledig` : d.totalt === 0 ? 'Ikkje ledig' : 'Fullbooka'}
                     style={{
-                      position: 'relative', padding: '8px 0', borderRadius: 'var(--r-sm)', cursor: fritt ? 'pointer' : 'not-allowed', fontFamily: 'var(--font-sans)',
-                      border: valtDag ? '2px solid var(--mekk-navy)' : '1px solid var(--border)',
-                      background: fritt ? 'var(--pill-gronn-bg)' : 'var(--surface-alt)', color: fritt ? 'var(--pill-gronn-fg)' : 'var(--text-faint)',
+                      position: 'relative', padding: '9px 0', borderRadius: 'var(--r-sm)', cursor: fritt ? 'pointer' : 'not-allowed', fontFamily: 'var(--font-sans)',
+                      border: endepunkt ? '2px solid var(--mekk-navy)' : iMellom ? '1px solid var(--mekk-navy)' : '1px solid var(--border)',
+                      background: endepunkt ? 'var(--mekk-navy)' : iMellom ? 'var(--brand-soft)' : fritt ? 'var(--pill-gronn-bg)' : 'var(--surface-alt)',
+                      color: endepunkt ? '#ffffff' : iMellom ? 'var(--brand-strong)' : fritt ? 'var(--pill-gronn-fg)' : 'var(--text-faint)',
+                      fontWeight: endepunkt ? 900 : 800,
                       textDecoration: fritt ? 'none' : 'line-through',
                     }}
                   >
-                    <div style={{ fontSize: 14, fontWeight: 800 }}>{parseDate(d.dato).getDate()}</div>
-                    {delvis && <span style={{ position: 'absolute', top: 2, right: 4, fontSize: 9, fontWeight: 900, color: 'var(--pill-amber-fg)' }}>{d.ledige}</span>}
+                    <div style={{ fontSize: 14 }}>{parseDate(d.dato).getDate()}</div>
+                    {delvis && !endepunkt && <span style={{ position: 'absolute', top: 2, right: 4, fontSize: 9, fontWeight: 900, color: 'var(--pill-amber-fg)' }}>{d.ledige}</span>}
                   </button>
                 );
               })}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Grøn = ledig. Talet oppe til høgre viser kor mange som er att når utstyret er delvis utleigd. Trykk på ein dag for å velje henting.</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Grøn = ledig · talet = kor mange att når delvis utleigd.</div>
           </div>
 
           <div style={{ ...kort, padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 10 }}>
-              <label><span style={label}>Henting</span><input type="date" min={t} value={fraDato} onChange={(e) => setFraDato(e.target.value)} style={felt} /></label>
-              <label><span style={label}>Kl.</span><input type="time" value={fraTid} onChange={(e) => setFraTid(e.target.value)} style={felt} /></label>
-              <label><span style={label}>Retur</span><input type="date" min={fraDato || t} value={tilDato} onChange={(e) => setTilDato(e.target.value)} style={felt} /></label>
-              <label><span style={label}>Kl.</span><input type="time" value={tilTid} onChange={(e) => setTilTid(e.target.value)} style={felt} /></label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px 12px', alignItems: 'end' }}>
+              <div>
+                <span style={label}>Henting</span>
+                <div style={{ fontSize: 15, fontWeight: 800, textTransform: 'capitalize' }}>{fraDato ? datoTekst(fraDato) : '–'}</div>
+              </div>
+              <label style={{ width: 108 }}><span style={label}>Kl.</span><input type="time" value={fraTid} onChange={(e) => setFraTid(e.target.value)} style={felt} /></label>
+              <div>
+                <span style={label}>Retur</span>
+                <div style={{ fontSize: 15, fontWeight: 800, textTransform: 'capitalize', color: tilDato ? 'var(--text)' : 'var(--text-muted)' }}>{tilDato ? datoTekst(tilDato) : 'Vel i kalenderen'}</div>
+              </div>
+              <label style={{ width: 108 }}><span style={label}>Kl.</span><input type="time" value={tilTid} onChange={(e) => setTilTid(e.target.value)} style={felt} /></label>
             </div>
 
             {sjekkar && <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Sjekkar ledigheit …</div>}
