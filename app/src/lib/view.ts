@@ -16,7 +16,7 @@ export type View =
 /** `sti` = adressa i nettlesaren, så tilbake-knappen og oppdatering verkar.
  *  `berreLeiar` = sida viser løn/tilgangsstyring og er berre for leiarar. */
 export const VIEWS: { key: View; label: string; ikon: string; sti: string; berreLeiar?: boolean }[] = [
-  { key: 'dashbord', label: 'Oversikt', ikon: 'dashbord', sti: '/' },
+  { key: 'dashbord', label: 'Oversikt', ikon: 'dashbord', sti: '/intern' },
   { key: 'ansatte', label: 'Tilsette', ikon: 'ansatte', sti: '/tilsette', berreLeiar: true },
   { key: 'vaktplan', label: 'Vaktplan', ikon: 'vaktplan', sti: '/vaktplan' },
   { key: 'ferie', label: 'Ferie & fri', ikon: 'sun', sti: '/ferie' },
@@ -46,7 +46,7 @@ export const erLeiar = (u: Pick<Employee, 'leder' | 'konsern_admin'> | null | un
 export const harTilgang = (v: View, u: Pick<Employee, 'leder' | 'konsern_admin'> | null | undefined) =>
   !VIEWS.find((x) => x.key === v)?.berreLeiar || erLeiar(u);
 
-export const stiFor = (v: View) => VIEWS.find((x) => x.key === v)?.sti ?? '/';
+export const stiFor = (v: View) => VIEWS.find((x) => x.key === v)?.sti ?? '/intern';
 
 /** Demo-fila (npm run build:demo) blir opna som ei lokal fil, der adressa ikkje
  *  kan endrast. Der ligg sida i #-delen i staden: mekk-olen-demo.html#/vaktplan. */
