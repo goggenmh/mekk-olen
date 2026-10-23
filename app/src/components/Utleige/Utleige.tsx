@@ -32,6 +32,7 @@ export function Utleige() {
   const [fane, setFane] = useState<Fane>('oversikt');
   const [opne, setOpne] = useState<UtleigeReservasjon | 'ny' | null>(null);
   const [filter, setFilter] = useState<'aktive' | 'ny' | 'alle'>('aktive');
+  const [sok, setSok] = useState('');
   // Tidspunktet sida vart opna (forseinka = utleigd med returtid før dette).
   const [no] = useState(() => Date.now());
 
@@ -65,7 +66,9 @@ export function Utleige() {
   const forseinka = reservasjonar.filter((r) => r.status === 'forseinka' || (r.status === 'utleigd' && new Date(r.slutt).getTime() < no));
   const sperra = einingar.filter((e) => e.status !== 'tilgjengeleg');
 
+  const sokLc = sok.trim().toLowerCase();
   const liste = reservasjonar.filter((r) => filter === 'alle' || (filter === 'ny' ? r.status === 'ny' : ['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka', 'kontroll'].includes(r.status)))
+    .filter((r) => !sokLc || `${nr(r)} ${finnProdukt(r.produkt_id)?.namn ?? ''} ${finnEining(r.eining_id)?.kode ?? ''} ${finnKunde(r.kunde_id)?.namn ?? ''}`.toLowerCase().includes(sokLc))
     .sort((a, b) => (filter === 'alle' ? b.start.localeCompare(a.start) : a.start.localeCompare(b.start)));
 
   return (
@@ -140,13 +143,15 @@ export function Utleige() {
 
       {fane === 'reservasjonar' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
             {([['aktive', 'Aktive'], ['ny', `Nye (${nye.length})`], ['alle', 'Alle']] as const).map(([k, l]) => (
               <button key={k} onClick={() => setFilter(k)} aria-pressed={filter === k}
                 style={{ padding: '7px 12px', borderRadius: 999, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, background: filter === k ? 'var(--brand-soft)' : 'var(--surface)', color: filter === k ? 'var(--brand-strong)' : 'var(--text-secondary)' }}>
                 {l}
               </button>
             ))}
+            <input value={sok} onChange={(e) => setSok(e.target.value)} placeholder="Søk kunde, utstyr, kode eller U-nr"
+              style={{ marginLeft: 'auto', minWidth: 200, padding: '7px 11px', border: '1px solid var(--border)', borderRadius: 'var(--r-input)', background: 'var(--surface)', color: 'var(--text)', fontSize: 13 }} />
           </div>
           {liste.length === 0 && <div style={{ ...kortStil, color: 'var(--text-muted)', fontSize: 13.5 }}>Ingen reservasjonar her.</div>}
           {liste.map((r) => (
