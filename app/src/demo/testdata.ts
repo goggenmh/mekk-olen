@@ -163,7 +163,7 @@ export function lagTestdata(): Record<string, Rad[]> {
   ];
 
   const utleige_innstillingar: Rad[] = [
-    { butikk_id: B, offentleg: true, hente_tid: '08:00', retur_tid: '16:00', maks_dagar: 14, kontakt_telefon: '53 76 00 00', kontakt_epost: 'utleige@demo.local', updated_at: addDays(t, -30),
+    { butikk_id: B, offentleg: true, hente_tid: '08:00', retur_tid: '16:00', maks_dagar: 14, svarfrist_timar: 48, kontakt_telefon: '53 76 00 00', kontakt_epost: 'utleige@demo.local', updated_at: addDays(t, -30),
       vilkar: 'Utstyret skal leverast tilbake reint og i same stand, med alt tilbehøyr. Leigetakar er ansvarleg for skade og tap i leigeperioden. Depositum blir betalt tilbake når utstyret er kontrollert. Forseinka retur blir fakturert per påbyrja døgn.' },
   ];
 
