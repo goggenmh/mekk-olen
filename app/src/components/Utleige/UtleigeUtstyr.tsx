@@ -12,13 +12,23 @@ export function UtleigeUtstyr({ data, erLeiar }: { data: UtleigeData; erLeiar: b
   const { produkt, einingar, reservasjonar, sperrer } = data;
   const [redigerer, setRedigerer] = useState<UtleigeProdukt | 'ny' | null>(null);
   const [sperreFor, setSperreFor] = useState<UtleigeEining | null>(null);
+  const [sok, setSok] = useState('');
+
+  const sokLc = sok.trim().toLowerCase();
+  const vist = produkt.filter((p) => !sokLc || p.namn.toLowerCase().includes(sokLc)
+    || einingar.some((e) => e.produkt_id === p.id && e.kode.toLowerCase().includes(sokLc)));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {erLeiar && <button onClick={() => setRedigerer('ny')} style={{ ...knapp(true), alignSelf: 'flex-start' }}>+ Nytt utstyr</button>}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        {erLeiar && <button onClick={() => setRedigerer('ny')} style={knapp(true)}>+ Nytt utstyr</button>}
+        <input value={sok} onChange={(e) => setSok(e.target.value)} placeholder="Søk utstyr eller einingskode"
+          style={{ marginLeft: erLeiar ? 'auto' : 0, minWidth: 220, padding: '8px 11px', border: '1px solid var(--border)', borderRadius: 'var(--r-input)', background: 'var(--surface)', color: 'var(--text)', fontSize: 13 }} />
+      </div>
       {produkt.length === 0 && <div style={{ ...kortStil, fontSize: 13.5, color: 'var(--text-muted)' }}>Ikkje noko utleigeutstyr enno.</div>}
+      {produkt.length > 0 && vist.length === 0 && <div style={{ ...kortStil, fontSize: 13.5, color: 'var(--text-muted)' }}>Ingen treff på «{sok}».</div>}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12, alignItems: 'start' }}>
-        {produkt.map((p) => {
+        {vist.map((p) => {
           const mine = einingar.filter((e) => e.produkt_id === p.id);
           return (
             <div key={p.id} style={{ ...kortStil, display: 'flex', flexDirection: 'column', gap: 10, opacity: p.aktiv ? 1 : 0.6 }}>

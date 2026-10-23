@@ -61,6 +61,8 @@ export interface UtleigeInnstillingar {
   maks_dagar: number;
   /** Timar ei ubehandla «ny»-førespurnad held av eininga før ho går ut automatisk. */
   svarfrist_timar: number;
+  /** Timar før hentetid kunden sjølv kan avbestille på Mi side. */
+  avbestillingsfrist_timar: number;
   kontakt_telefon: string;
   kontakt_epost: string;
 }

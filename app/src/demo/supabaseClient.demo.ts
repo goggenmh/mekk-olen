@@ -278,9 +278,22 @@ const rpc = async (namn: string, args: Rad = {}): Promise<{ data: unknown; error
             pris_leige: r.pris_leige, gebyr: r.gebyr, depositum: r.depositum, pris_total: r.pris_total,
             produkt_namn: p?.namn, produkt_tilbehor: p?.tilbehor || [], eining_kode: e?.kode || null,
             butikk: b?.namn, vilkar: i?.vilkar, kontakt_telefon: i?.kontakt_telefon, kontakt_epost: i?.kontakt_epost,
+            avbestillingsfrist_timar: i?.avbestillingsfrist_timar ?? 24,
             kunde_namn: k?.namn, kunde_telefon: k?.telefon, kunde_epost: k?.epost };
         });
       return ok(rows);
+    }
+    case 'utleige_kunde_avbestill': {
+      const epost = (kundeEpost || '').toLowerCase();
+      const res = tabell('utleige_reservasjon').find((x) => x.id === args.p_res);
+      const k = res && tabell('utleige_kunde').find((x) => x.id === res.kunde_id);
+      if (!res || !k || String(k.epost).toLowerCase() !== epost) return feil('Fann ikkje reservasjonen.');
+      if (!['ny', 'stadfesta', 'klar'].includes(res.status)) return feil('Denne reservasjonen kan ikkje avbestillast her. Ta kontakt med butikken.');
+      const i = tabell('utleige_innstillingar').find((x) => x.butikk_id === res.butikk_id);
+      const frist = (i?.avbestillingsfrist_timar ?? 24) as number;
+      if (Date.now() > new Date(res.start).getTime() - frist * 3600e3) return feil(`Fristen for å avbestille sjølv har gått ut (${frist} timar før henting). Ta kontakt med butikken.`);
+      res.status = 'avbestilt';
+      return ok({ ok: true });
     }
     case 'login_liste':
       return ok(tabell('ansatte').filter((x) => x.aktiv).map((r) => utan(r, 'sats', 'email', 'skattetype', 'skatteprosent', 'frikortgrense', 'feriepengesats', 'tidlegare_ar', 'tidlegare_mekk', 'tidlegare_andre')));

@@ -14,19 +14,27 @@ interface MineLeige {
   pris_leige: number; gebyr: number; depositum: number; pris_total: number;
   produkt_namn: string; produkt_tilbehor: string[]; eining_kode: string | null;
   butikk: string; vilkar: string; kontakt_telefon: string; kontakt_epost: string;
+  avbestillingsfrist_timar: number;
   kunde_namn: string; kunde_telefon: string; kunde_epost: string;
 }
+
+const KAN_AVBESTILLE: ResStatus[] = ['ny', 'stadfesta', 'klar'];
 
 const kort: CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', boxShadow: 'var(--shadow-card)' };
 const label: CSSProperties = { fontSize: 11.5, fontWeight: 900, letterSpacing: '0.4px', textTransform: 'uppercase', color: 'var(--kort-label)', marginBottom: 6, display: 'block' };
 const felt: CSSProperties = { width: '100%', padding: '11px 12px', border: '1px solid var(--border)', borderRadius: 'var(--r-input)', background: 'var(--surface)', color: 'var(--text)', fontFamily: 'var(--font-sans)', fontSize: 15 };
 const cta: CSSProperties = { padding: '12px 18px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 900, cursor: 'pointer' };
+const sekundaer: CSSProperties = { padding: '8px 14px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface-alt)', color: 'var(--text)', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' };
 
 export function MiSide({ naviger }: { naviger: (sti: string) => void }) {
   const [klar, setKlar] = useState(false);
   const [innlogga, setInnlogga] = useState(false);
   const [leige, setLeige] = useState<MineLeige[] | null>(null);
   const [feil, setFeil] = useState<string | null>(null);
+  const [bekreft, setBekreft] = useState<string | null>(null);
+  const [jobbar, setJobbar] = useState<string | null>(null);
+  const [kortFeil, setKortFeil] = useState<{ id: string; tekst: string } | null>(null);
+  const [no] = useState(() => Date.now());
 
   const hentLeige = useCallback(async () => {
     const { data, error } = await supabase.rpc('utleige_mine_leige');
@@ -54,6 +62,19 @@ export function MiSide({ naviger }: { naviger: (sti: string) => void }) {
     innstillingar: { vilkar: r.vilkar, kontakt_telefon: r.kontakt_telefon, kontakt_epost: r.kontakt_epost } as UtleigeInnstillingar,
     butikk: r.butikk,
   });
+
+  // Kunden kan avbestille sjølv fram til avbestillingsfristen før henting.
+  // Serveren handhevar regelen uansett; dette styrer berre kva knappen viser.
+  const kanAvbestille = (r: MineLeige) =>
+    KAN_AVBESTILLE.includes(r.status) && no < new Date(r.start).getTime() - r.avbestillingsfrist_timar * 3600e3;
+
+  const avbestill = async (r: MineLeige) => {
+    setJobbar(r.id); setKortFeil(null);
+    const { error } = await supabase.rpc('utleige_kunde_avbestill', { p_res: r.id });
+    setJobbar(null); setBekreft(null);
+    if (error) { setKortFeil({ id: r.id, tekst: feilTekst(error) }); return; }
+    await hentLeige();
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-sans)' }}>
@@ -96,9 +117,23 @@ export function MiSide({ naviger }: { naviger: (sti: string) => void }) {
                     <span style={{ color: 'var(--text-muted)' }}>Retur</span><span>{tidKort(r.slutt)}</span>
                     <span style={{ color: 'var(--text-muted)' }}>Å betale</span><span><strong>{kr(r.pris_total)}</strong>{r.depositum > 0 && <span style={{ color: 'var(--text-muted)' }}> · depositum {kr(r.depositum)}</span>}</span>
                   </div>
-                  <button onClick={() => lastNedKontrakt(r)} style={{ alignSelf: 'flex-start', padding: '8px 14px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface-alt)', color: 'var(--text)', fontWeight: 800, fontSize: 13.5, cursor: 'pointer' }}>
-                    Last ned leigekontrakt (PDF)
-                  </button>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button onClick={() => lastNedKontrakt(r)} style={sekundaer}>Last ned leigekontrakt (PDF)</button>
+                    {kanAvbestille(r) && bekreft !== r.id && (
+                      <button onClick={() => { setBekreft(r.id); setKortFeil(null); }} style={{ ...sekundaer, color: 'var(--danger)', borderColor: 'var(--danger-border)' }}>Avbestill</button>
+                    )}
+                  </div>
+                  {bekreft === r.id && (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 13.5 }}>
+                      <span>Avbestille {nr(r)}?</span>
+                      <button disabled={jobbar === r.id} onClick={() => avbestill(r)} style={{ padding: '7px 12px', borderRadius: 'var(--r)', border: 'none', background: 'var(--danger)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>{jobbar === r.id ? 'Avbestiller …' : 'Ja, avbestill'}</button>
+                      <button onClick={() => setBekreft(null)} style={{ padding: '7px 12px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Avbryt</button>
+                    </div>
+                  )}
+                  {KAN_AVBESTILLE.includes(r.status) && !kanAvbestille(r) && (
+                    <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>For nær hentetida til å avbestille sjølv – ta kontakt med butikken{r.kontakt_telefon ? ` (tlf. ${r.kontakt_telefon})` : ''}.</div>
+                  )}
+                  {kortFeil?.id === r.id && <Boks tone="feil">{kortFeil.tekst}</Boks>}
                 </div>
               );
             })}
