@@ -119,7 +119,7 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <button type="button" onClick={finnProdukt} disabled={sokar}
             style={{ alignSelf: 'flex-start', padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface-alt)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: sokar ? 'default' : 'pointer', fontFamily: 'inherit', opacity: sokar ? 0.6 : 1 }}>
-            {sokar ? 'Søkjer …' : '🔎 Finn produktet (prøv)'}
+            {sokar ? 'Søkjer …' : 'Finn produktet (prøv)'}
           </button>
           {sokMelding && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.45 }}>{sokMelding}</div>}
           <div style={{ fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.4 }}>Eksperimentelt: søkjer opp produktet på mekk.no ut frå varenr, elles på nettet ut frå vare + leverandør. Kontroller alltid at lenka er rett før du lagrar.</div>
