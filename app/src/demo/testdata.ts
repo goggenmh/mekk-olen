@@ -92,7 +92,7 @@ export function lagTestdata(): Record<string, Rad[]> {
     id: id('ordre'), kunde, telefon, vare, leverandor, varenr: '', lenke: null, dato: addDays(t, -dagarSidan), antal: 1, status, varsla: null, notat: '', registrert_av: 'kari', created_at: addDays(t, -dagarSidan), ...ekstra,
   });
   const orders: Rad[] = [
-    ordre('Per Hansen', '911 22 333', 'Kjedesag 40 cm sverd', 'Stihl', 12, 'ny', { notat: 'Vil ha beskjed før me bestiller' }),
+    ordre('Per Hansen', '911 22 333', 'Kjedesag 40 cm sverd', 'Stihl', 12, 'ny', { notat: 'Vil ha beskjed før me bestiller', lenke: 'https://www.stihl.no', varenr: 'MS 261 C-M' }),
     ordre('Liv Solberg', '922 33 444', 'Varmepumpefilter', 'Mitsubishi', 2, 'ny'),
     ordre('Arne Moe', '933 44 555', 'Batteri 18V 5Ah', 'Ryobi', 5, 'tinga', { registrert_av: 'ola', antal: 2 }),
     ordre('Bygg & Bad AS', '944 55 666', 'Pipeinnfesting 110 mm', 'Biltema', 20, 'tinga'),
