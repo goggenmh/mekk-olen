@@ -185,6 +185,9 @@ export function ReservasjonModal({ data, res, onClose }: { data: UtleigeData; re
             <span style={{ color: 'var(--text-muted)' }}>Pris</span><span>{kr(r.pris_leige)}{r.gebyr > 0 && ` + gebyr ${kr(r.gebyr)}`} = <strong>{kr(r.pris_total)}</strong></span>
             {r.depositum > 0 && <><span style={{ color: 'var(--text-muted)' }}>Depositum</span><span>{kr(r.depositum)}</span></>}
             {r.kunde_melding && <><span style={{ color: 'var(--text-muted)' }}>Melding</span><span style={{ whiteSpace: 'pre-wrap' }}>{r.kunde_melding}</span></>}
+            {r.gruppe_id && reservasjonar.some((x) => x.gruppe_id === r.gruppe_id && x.id !== r.id) && (
+              <><span style={{ color: 'var(--text-muted)' }}>Samlebestilling</span><span>saman med {reservasjonar.filter((x) => x.gruppe_id === r.gruppe_id && x.id !== r.id).map((x) => nr(x)).join(', ')}</span></>
+            )}
           </div>
 
           {r.retur_sjekk && (
