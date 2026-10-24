@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { ORDER_FLOW, ORDER_STATUS } from '../../constants';
 import { datoKort, MND, fmtPris } from '../../lib/dates';
@@ -20,8 +20,11 @@ const FILTERS: { key: string; label: string }[] = [
 ];
 
 export function Bestillinger() {
-  const { orders, advanceOrder, tasks } = useAppData();
+  const { orders, advanceOrder, tasks, resolveOrderBilete } = useAppData();
   const { findAnsatt } = useAnsatte();
+  // Kva bestilling som er open med detalj-menyen under seg.
+  const [openId, setOpenId] = useState<string | null>(null);
+  const toggle = (id: string) => setOpenId((cur) => (cur === id ? null : id));
   // Kven la inn bestillinga (eldre bestillingar har ingen registrert).
   const lagtInnAv = (o: Order) => {
     const a = o.registrertAv ? findAnsatt(o.registrertAv) : null;
@@ -161,7 +164,7 @@ export function Bestillinger() {
             return (
               <div key={o.id} style={{ background: 'var(--surface)', border: alder(o).gammal ? '1px solid rgba(192,57,43,0.35)' : '1px solid var(--border)', borderRadius: 'var(--r)', padding: '13px 14px', boxShadow: 'var(--shadow-card)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <button onClick={() => setOrderTarget(o)} style={{ fontSize: 14.5, fontWeight: 700, flex: 1, cursor: 'pointer', textAlign: 'left', background: 'none', border: 'none', padding: 0, color: 'var(--text)', fontFamily: 'inherit' }}>{o.kunde}</button>
+                  <button onClick={() => toggle(o.id)} aria-expanded={openId === o.id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14.5, fontWeight: 700, flex: 1, cursor: 'pointer', textAlign: 'left', background: 'none', border: 'none', padding: 0, color: 'var(--text)', fontFamily: 'inherit' }}><span style={chev}>{openId === o.id ? '▾' : '▸'}</span>{o.kunde}</button>
                   <span style={{ fontSize: 10.5, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 'var(--r)', textTransform: 'uppercase' }}>{s.tekst}</span>
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 5 }}>{o.vare}{o.antal > 1 ? ` · ${o.antal} stk` : ''}{o.pris != null ? ` · ${fmtPris(o.pris * o.antal)}` : ''}</div>
@@ -191,6 +194,11 @@ export function Bestillinger() {
                     {kanFram && (
                       <button onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])} style={{ marginLeft: 'auto', padding: '7px 14px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{s.neste} →</button>
                     )}
+                  </div>
+                )}
+                {openId === o.id && (
+                  <div style={dpWrap}>
+                    <DetaljPanel o={o} lagtInn={lagtInnAv(o)} onEdit={() => setOrderTarget(o)} resolveBilete={resolveOrderBilete} />
                   </div>
                 )}
               </div>
@@ -225,9 +233,10 @@ export function Bestillinger() {
               const kanVarsle = o.status === 'komen';
               const nesteIdx = ORDER_FLOW.indexOf(o.status as typeof ORDER_FLOW[number]) + 1;
               return (
-                <tr key={o.id} style={{ borderTop: '1px solid var(--divider)', background: alder(o).gammal ? 'rgba(192,57,43,0.04)' : undefined }}>
+                <Fragment key={o.id}>
+                <tr style={{ borderTop: '1px solid var(--divider)', background: alder(o).gammal ? 'rgba(192,57,43,0.04)' : undefined }}>
                   <td style={td}>
-                    <button onClick={() => setOrderTarget(o)} style={{ fontWeight: 600, cursor: 'pointer', textAlign: 'left', background: 'none', border: 'none', padding: 0, color: 'var(--text)', fontFamily: 'inherit', fontSize: 13 }}>{o.kunde}</button>
+                    <button onClick={() => toggle(o.id)} aria-expanded={openId === o.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600, cursor: 'pointer', textAlign: 'left', background: 'none', border: 'none', padding: 0, color: 'var(--text)', fontFamily: 'inherit', fontSize: 13 }}><span style={chev}>{openId === o.id ? '▾' : '▸'}</span>{o.kunde}</button>
                     {o.telefon && <div style={{ fontSize: 11.5, marginTop: 2 }}><Kontakt o={o} /></div>}
                   </td>
                   <td style={td}>
@@ -280,6 +289,10 @@ export function Bestillinger() {
                     </div>
                   </td>
                 </tr>
+                {openId === o.id && (
+                  <tr><td colSpan={9} style={dpCell}><DetaljPanel o={o} lagtInn={lagtInnAv(o)} onEdit={() => setOrderTarget(o)} resolveBilete={resolveOrderBilete} /></td></tr>
+                )}
+                </Fragment>
               );
             })}
             {filtered.length === 0 && (
@@ -327,9 +340,10 @@ export function Bestillinger() {
                           {mdOpen && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '2px 6px 10px' }}>
                               {m.ordrar.map((o) => (
+                                <Fragment key={o.id}>
                                 <button
-                                  key={o.id}
-                                  onClick={() => setOrderTarget(o)}
+                                  onClick={() => toggle(o.id)}
+                                  aria-expanded={openId === o.id}
                                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer', textAlign: 'left' }}
                                 >
                                   <span style={{ fontSize: 13, fontWeight: 600, flex: 'none', minWidth: 0 }}>{o.kunde}</span>
@@ -350,6 +364,12 @@ export function Bestillinger() {
                                   )}
                                   <span style={{ fontSize: 11.5, color: 'var(--text-faint)', flex: 'none' }}>{datoKort(o.dato)}</span>
                                 </button>
+                                {openId === o.id && (
+                                  <div style={dpWrap}>
+                                    <DetaljPanel o={o} lagtInn={lagtInnAv(o)} onEdit={() => setOrderTarget(o)} resolveBilete={resolveOrderBilete} />
+                                  </div>
+                                )}
+                                </Fragment>
                               ))}
                             </div>
                           )}
@@ -386,3 +406,58 @@ const lenkeHref = (l: string) => (/^https?:\/\//i.test(l) ? l : `https://${l}`);
 
 const th: CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px' };
 const td: CSSProperties = { padding: '10px 12px' };
+
+const chev: CSSProperties = { fontSize: 10, color: 'var(--text-faint)', flex: 'none', width: 10 };
+const dpWrap: CSSProperties = { marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--divider)' };
+const dpCell: CSSProperties = { padding: '4px 16px 16px', background: 'var(--surface-alt)' };
+const dpLabel: CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.3px', margin: 0, whiteSpace: 'nowrap' };
+const dpVerdi: CSSProperties = { margin: 0, color: 'var(--text-secondary)' };
+const dpKnapp: CSSProperties = { padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit' };
+
+// Detalj-menyen som kjem under ei bestilling: alt om kunde/vare/leverandør,
+// eit produktbilete (henta frå lenka) og ein snarveg til å endre.
+function DetaljPanel({ o, lagtInn, onEdit, resolveBilete }: {
+  o: Order;
+  lagtInn: { navn: string; init: string; farge: string } | null;
+  onEdit: () => void;
+  resolveBilete: (id: string, lenke: string | null, overskriv?: boolean) => Promise<void>;
+}) {
+  // Etterfyll produktbiletet for eldre bestillingar som har lenke, men ikkje bilete.
+  useEffect(() => {
+    if (o.lenke && !o.bilde) void resolveBilete(o.id, o.lenke, false);
+  }, [o.id, o.lenke, o.bilde, resolveBilete]);
+
+  const s = ORDER_STATUS[o.status as keyof typeof ORDER_STATUS];
+  const tlf = reinTelefon(o.telefon || '');
+  const rad = (label: string, verdi: ReactNode) =>
+    verdi ? <><dt style={dpLabel}>{label}</dt><dd style={dpVerdi}>{verdi}</dd></> : null;
+
+  return (
+    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+      {o.bilde && (
+        <a href={lenkeHref(o.lenke || o.bilde)} target="_blank" rel="noopener noreferrer" style={{ flex: 'none' }} title="Opne produkt">
+          <img src={o.bilde} alt={o.vare} loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            style={{ width: 150, height: 150, objectFit: 'contain', background: '#fff', border: '1px solid var(--border)', borderRadius: 'var(--r)' }} />
+        </a>
+      )}
+      <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 16px', margin: 0, flex: 1, minWidth: 220, fontSize: 13, color: 'var(--text)', alignItems: 'baseline' }}>
+        {rad('Kunde', o.kunde)}
+        {rad('Telefon', tlf ? <a href={`tel:${tlf}`} style={{ color: 'var(--brand)', fontWeight: 600, textDecoration: 'none' }}>{o.telefon}</a> : null)}
+        {rad('Vare', o.vare)}
+        {rad('Varenr', o.varenr)}
+        {rad('Leverandør', o.leverandor)}
+        {rad('Antal', String(o.antal))}
+        {rad('Pris', o.pris != null ? (o.antal > 1 ? `${fmtPris(o.pris)} / stk · totalt ${fmtPris(o.pris * o.antal)}` : fmtPris(o.pris)) : null)}
+        {rad('Dato', datoKort(o.dato))}
+        {rad('Status', <span style={{ fontWeight: 700, color: s.fg, background: s.bg, padding: '2px 8px', borderRadius: 'var(--r)', fontSize: 11, textTransform: 'uppercase' }}>{s.tekst}</span>)}
+        {rad('Varsla', o.varsla ? datoKort(o.varsla) : null)}
+        {rad('Notat', o.notat || null)}
+        {rad('Lagt inn av', lagtInn ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Avatar init={lagtInn.init} farge={lagtInn.farge} size={20} fontSize={9} />{lagtInn.navn}</span> : null)}
+      </dl>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 'none' }}>
+        <button onClick={onEdit} style={dpKnapp}>Endre</button>
+        {o.lenke && <a href={lenkeHref(o.lenke)} target="_blank" rel="noopener noreferrer" style={{ ...dpKnapp, textAlign: 'center', textDecoration: 'none', color: 'var(--brand)' }}>Opne produkt ↗</a>}
+      </div>
+    </div>
+  );
+}

@@ -81,6 +81,8 @@ interface AppData {
 
   saveOrder: (o: Omit<Order, 'id'> & { id?: string }) => Promise<void>;
   deleteOrder: (id: string) => Promise<void>;
+  /** Hentar produktbilete frå lenka (edge function) og lagrar det på bestillinga. */
+  resolveOrderBilete: (id: string, lenke: string | null, overskriv?: boolean) => Promise<void>;
   advanceOrder: (id: string, nextStatus: string) => Promise<void>;
   markOrderVarsla: (id: string, date: string) => Promise<void>;
 
@@ -106,7 +108,7 @@ const mapTask = (r: any): Task => ({
 const mapRutine = (r: any): Rutine => ({ id: r.id, tittel: r.tittel, detalj: r.detalj ?? '', kategori: r.kategori ?? 'Butikk', prioritet: r.prioritet ?? 'medium', ansvar: r.ansvar ?? 'ufordelt', dagar: Array.isArray(r.dagar) ? r.dagar : [], manadsdag: r.manadsdag ?? null, sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [], aktiv: r.aktiv !== false });
 // Kolonnene frå oppgaver-v2.sql. Manglar dei, lagrar vi utan (sjå lagreTask).
 const NYE_TASK_FELT = /blokkert|order_id/;
-const mapOrder = (r: any): Order => ({ id: r.id, kunde: storeOrd(r.kunde || ''), telefon: r.telefon, vare: storFyrste(r.vare || ''), leverandor: storFyrste(r.leverandor || ''), varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla, notat: r.notat ?? '', pris: r.pris != null ? Number(r.pris) : null, registrertAv: r.registrert_av ?? null });
+const mapOrder = (r: any): Order => ({ id: r.id, kunde: storeOrd(r.kunde || ''), telefon: r.telefon, vare: storFyrste(r.vare || ''), leverandor: storFyrste(r.leverandor || ''), varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla, notat: r.notat ?? '', pris: r.pris != null ? Number(r.pris) : null, registrertAv: r.registrert_av ?? null, bilde: r.bilde ?? null });
 const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
 const mapStadfesting = (r: any): Stadfesting => ({ id: r.id, docId: r.doc_id, ansatt: r.ansatt, stadfestaAt: r.stadfesta_at });
 const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne: r.kan_godkjenne });
@@ -543,9 +545,30 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   };
 
   // ---- orders ----
+  // Hentar produktbiletet (og:image) frå lenka via edge-funksjonen og lagrar
+  // det på bestillinga. `overskriv`=false fyller berre inn når det finst eit
+  // bilete (brukt ved etterfylling); true reflekterer lenka slik ho er no.
+  const resolveOrderBilete = useCallback<AppData['resolveOrderBilete']>(async (id, lenke, overskriv = false) => {
+    if (!lenke) return;
+    try {
+      const { data, error: err } = await supabase.functions.invoke('lenke-bilete', { body: { url: lenke } });
+      if (err) return;
+      const bilde = ((data as { bilde?: string | null } | null)?.bilde) ?? null;
+      if (!bilde && !overskriv) return;
+      const { error: uerr } = await supabase.from('orders').update({ bilde }).eq('id', id);
+      if (uerr) return;
+      setOrders((prev) => prev.map((x) => (x.id === id ? { ...x, bilde } : x)));
+    } catch { /* best effort – bilete er valfritt */ }
+  }, []);
+
   const saveOrder: AppData['saveOrder'] = async (o) => {
+    const forrigeLenke = o.id ? (orders.find((x) => x.id === o.id)?.lenke ?? null) : null;
+    const nyLenke = o.lenke || null;
+    const lenkeEndra = nyLenke !== forrigeLenke;
     const felt = {
-      kunde: o.kunde, telefon: o.telefon, vare: o.vare, leverandor: o.leverandor, varenr: o.varenr, lenke: o.lenke || null, dato: o.dato, antal: o.antal, status: o.status, pris: o.pris ?? null,
+      kunde: o.kunde, telefon: o.telefon, vare: o.vare, leverandor: o.leverandor, varenr: o.varenr, lenke: nyLenke, dato: o.dato, antal: o.antal, status: o.status, pris: o.pris ?? null,
+      // Byter ein lenka, nullstill det gamle biletet – nytt blir henta under.
+      ...(lenkeEndra ? { bilde: null } : {}),
     };
     // notat-kolonna kjem med bestilling-notat.sql. Finst ho ikkje enno, lagrar
     // vi resten så bestillinga ikkje går tapt.
@@ -561,6 +584,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     if (o.id) setOrders((prev) => prev.map((x) => (x.id === o.id ? mapOrder(data) : x)));
     else setOrders((prev) => [mapOrder(data), ...prev]);
     toast('Bestilling lagra');
+    // Hent produktbilete i bakgrunnen når lenka er ny eller endra.
+    if (nyLenke && (lenkeEndra || !data.bilde)) void resolveOrderBilete(data.id, nyLenke, true);
   };
   const deleteOrder: AppData['deleteOrder'] = async (id) => {
     const { error: err } = await supabase.from('orders').delete().eq('id', id);
@@ -663,7 +688,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveFerie, deleteFerie, behandleFerie, saveUnavailable, removeUnavailable, saveUnavailablePeriode, removeUnavailableMange,
       saveTask, deleteTask, moveTask, completeTask, reopenTask, blockTask, unblockTask,
       rutinar, saveRutine, deleteRutine, utleige,
-      saveOrder, deleteOrder, advanceOrder, markOrderVarsla,
+      saveOrder, deleteOrder, advanceOrder, markOrderVarsla, resolveOrderBilete,
       saveDoc, deleteDoc, uploadDocFile, docFileUrl,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps

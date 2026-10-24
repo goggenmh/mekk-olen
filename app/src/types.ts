@@ -122,6 +122,8 @@ export interface Order {
   pris: number | null;
   /** Tilsett som la inn bestillinga (blir sett av databasen; null på eldre). */
   registrertAv?: string | null;
+  /** Produktbilete henta frå lenka (og:image). Null = ikkje henta/funne. */
+  bilde?: string | null;
 }
 
 export interface Doc {
