@@ -162,7 +162,7 @@ export function Bestillinger() {
             const kanVarsle = o.status === 'komen';
             const nesteIdx = ORDER_FLOW.indexOf(o.status as typeof ORDER_FLOW[number]) + 1;
             return (
-              <div key={o.id} style={{ background: 'var(--surface)', border: alder(o).gammal ? '1px solid rgba(192,57,43,0.35)' : '1px solid var(--border)', borderRadius: 'var(--r)', padding: '13px 14px', boxShadow: 'var(--shadow-card)' }}>
+              <div key={o.id} onClick={(e) => { if (!(e.target as HTMLElement).closest('a,button')) toggle(o.id); }} style={{ background: 'var(--surface)', border: alder(o).gammal ? '1px solid rgba(192,57,43,0.35)' : '1px solid var(--border)', borderRadius: 'var(--r)', padding: '13px 14px', boxShadow: 'var(--shadow-card)', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button onClick={() => toggle(o.id)} aria-expanded={openId === o.id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14.5, fontWeight: 700, flex: 1, cursor: 'pointer', textAlign: 'left', background: 'none', border: 'none', padding: 0, color: 'var(--text)', fontFamily: 'inherit' }}><span style={chev}>{openId === o.id ? '▾' : '▸'}</span>{o.kunde}</button>
                   <span style={{ fontSize: 10.5, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 9px', borderRadius: 'var(--r)', textTransform: 'uppercase' }}>{s.tekst}</span>
@@ -197,7 +197,7 @@ export function Bestillinger() {
                   </div>
                 )}
                 {openId === o.id && (
-                  <div style={dpWrap}>
+                  <div style={dpWrap} onClick={(e) => e.stopPropagation()}>
                     <DetaljPanel o={o} lagtInn={lagtInnAv(o)} onEdit={() => setOrderTarget(o)} resolveBilete={resolveOrderBilete} />
                   </div>
                 )}
@@ -234,7 +234,7 @@ export function Bestillinger() {
               const nesteIdx = ORDER_FLOW.indexOf(o.status as typeof ORDER_FLOW[number]) + 1;
               return (
                 <Fragment key={o.id}>
-                <tr style={{ borderTop: '1px solid var(--divider)', background: alder(o).gammal ? 'rgba(192,57,43,0.04)' : undefined }}>
+                <tr onClick={(e) => { if (!(e.target as HTMLElement).closest('a,button')) toggle(o.id); }} style={{ borderTop: '1px solid var(--divider)', cursor: 'pointer', background: openId === o.id ? 'var(--surface-alt)' : alder(o).gammal ? 'rgba(192,57,43,0.04)' : undefined }}>
                   <td style={td}>
                     <button onClick={() => toggle(o.id)} aria-expanded={openId === o.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600, cursor: 'pointer', textAlign: 'left', background: 'none', border: 'none', padding: 0, color: 'var(--text)', fontFamily: 'inherit', fontSize: 13 }}><span style={chev}>{openId === o.id ? '▾' : '▸'}</span>{o.kunde}</button>
                     {o.telefon && <div style={{ fontSize: 11.5, marginTop: 2 }}><Kontakt o={o} /></div>}
