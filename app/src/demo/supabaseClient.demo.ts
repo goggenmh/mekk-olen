@@ -350,10 +350,12 @@ const funksjonar = {
     }
     if (namn === 'finn-produkt') {
       // Demo: lat som søket fann eit produkt, så heile flyten kan visast fram.
+      const vn = String(b.varenr ?? '').trim();
+      if (vn) return ok({ lenke: `https://mekk.no/produkt-${encodeURIComponent(vn.toLowerCase())}`, bilde: plassbilete(), tittel: String(b.vare ?? ''), kjelde: 'mekk.no' });
       const sok = `${b.leverandor ?? ''} ${b.vare ?? ''}`.trim();
       if (!sok) return ok({ lenke: null, bilde: null });
       const slug = String(b.leverandor ?? 'leverandor').toLowerCase().replace(/[^a-z0-9]+/g, '');
-      return ok({ lenke: `https://www.${slug}.no/produkt`, bilde: plassbilete(), tittel: sok });
+      return ok({ lenke: `https://www.${slug}.no/produkt`, bilde: plassbilete(), tittel: sok, kjelde: 'nettet' });
     }
     return ok({}); // send-push o.l.: ingenting å gjere i demoen
   },
