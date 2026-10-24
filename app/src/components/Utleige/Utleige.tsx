@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { kortStil, kortLabel } from './stil';
 import { StatusMerke } from './StatusMerke';
 import { useAuth } from '../../context/AuthContext';
@@ -37,6 +37,8 @@ export function Utleige() {
   const [sok, setSok] = useState('');
   // Tidspunktet sida vart opna (forseinka = utleigd med returtid før dette).
   const [no] = useState(() => Date.now());
+  // Fane i ordrelista på driftstavla (Quipli-stil: Alle / Skal ut / Skal inn / …).
+  const [oversiktFane, setOversiktFane] = useState<'alle' | 'ut' | 'inn' | 'forseinka' | 'nye'>('alle');
 
   const { produkt, einingar, kundar, reservasjonar, lastar, feil } = data;
   const finnProdukt = (id: string) => produkt.find((p) => p.id === id);
@@ -71,6 +73,23 @@ export function Utleige() {
   const utleigdNo = reservasjonar.filter((r) => r.status === 'utleigd' || r.status === 'forseinka').length;
   const einingarUt = new Set(reservasjonar.filter((r) => r.status === 'utleigd' || r.status === 'forseinka').map((r) => r.eining_id)).size;
   const belegg = einingar.length ? Math.round((einingarUt / einingar.length) * 100) : 0;
+  // Driftstavla si ordreliste: fanene og tala, og hurtighandling per rad.
+  const forseinkaIds = new Set(forseinka.map((r) => r.id));
+  const utTal = reservasjonar.filter((r) => r.status === 'stadfesta' || r.status === 'klar').length;
+  const innTal = reservasjonar.filter((r) => r.status === 'utleigd' || r.status === 'forseinka').length;
+  const aktiveTal = reservasjonar.filter((r) => ['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka', 'kontroll'].includes(r.status)).length;
+  const oversiktListe = oversiktFane === 'ut' ? reservasjonar.filter((r) => r.status === 'stadfesta' || r.status === 'klar').sort((a, b) => a.start.localeCompare(b.start))
+    : oversiktFane === 'inn' ? reservasjonar.filter((r) => r.status === 'utleigd' || r.status === 'forseinka').sort((a, b) => a.slutt.localeCompare(b.slutt))
+    : oversiktFane === 'forseinka' ? forseinka.slice().sort((a, b) => a.slutt.localeCompare(b.slutt))
+    : oversiktFane === 'nye' ? nye
+    : reservasjonar.filter((r) => ['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka', 'kontroll'].includes(r.status)).sort((a, b) => a.start.localeCompare(b.start));
+  const hurtig = (r: UtleigeReservasjon) => {
+    const stil = (primar: boolean) => ({ padding: '7px 12px', borderRadius: 'var(--r)', border: primar ? 'none' : '1px solid var(--border)', background: primar ? 'var(--brand-strong)' : 'var(--surface)', color: primar ? 'var(--on-brand)' : 'var(--text-secondary)', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' as const });
+    if (r.status === 'ny') return <button onClick={() => data.settStatus(r, 'stadfesta', 'Stadfesta – kunden får e-post')} style={stil(true)}>Godkjenn</button>;
+    if (r.status === 'stadfesta' || r.status === 'klar') return <button onClick={() => data.settStatus(r, 'utleigd', 'Utlevert')} style={stil(true)}>Utlevering</button>;
+    if (r.status === 'utleigd' || r.status === 'forseinka') return <button onClick={() => setOpne(r)} style={stil(false)}>Retur</button>;
+    return null;
+  };
 
   const sokLc = sok.trim().toLowerCase();
   const liste = reservasjonar.filter((r) => filter === 'alle' || (filter === 'ny' ? r.status === 'ny' : ['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka', 'kontroll'].includes(r.status)))
@@ -113,44 +132,68 @@ export function Utleige() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(128px, 1fr))', gap: 10 }}>
-              <Kpi tal={utleigdNo} label="Utleigd no" />
-              <Kpi tal={nye.length} label="Opne førespurnader" tone={nye.length ? 'amber' : undefined} onClick={() => { setFilter('ny'); setFane('reservasjonar'); }} />
-              <Kpi tal={utleveringar.length} label="Skal hentast i dag" />
-              <Kpi tal={returar.length} label="Skal leverast i dag" />
-              <Kpi tal={forseinka.length} label="Forseinka" tone={forseinka.length ? 'raud' : undefined} />
               <Kpi tal={`${belegg}%`} label="Belegg no" />
+              <Kpi tal={utleigdNo} label="Utleigd no" onClick={() => setOversiktFane('inn')} />
+              <Kpi tal={nye.length} label="Opne førespurnader" tone={nye.length ? 'amber' : undefined} onClick={() => setOversiktFane('nye')} />
+              <Kpi tal={utleveringar.length} label="Skal ut i dag" onClick={() => setOversiktFane('ut')} />
+              <Kpi tal={returar.length} label="Skal inn i dag" onClick={() => setOversiktFane('inn')} />
+              <Kpi tal={forseinka.length} label="Forseinka" tone={forseinka.length ? 'raud' : undefined} onClick={() => setOversiktFane('forseinka')} />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 14, alignItems: 'start' }}>
-            <Seksjon tittel="Nye førespurnader" tal={nye.length} tom="Ingen nye førespurnader.">
-              {nye.map((r) => {
+
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {([['alle', `Alle (${aktiveTal})`], ['ut', `Skal ut (${utTal})`], ['inn', `Skal inn (${innTal})`], ['forseinka', `Forseinka (${forseinka.length})`], ['nye', `Nye (${nye.length})`]] as const).map(([k, l]) => (
+                <button key={k} onClick={() => setOversiktFane(k)} aria-pressed={oversiktFane === k}
+                  style={{ padding: '7px 13px', borderRadius: 999, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 12.5, fontWeight: 800, whiteSpace: 'nowrap',
+                    background: oversiktFane === k ? 'var(--brand-strong)' : 'var(--surface)', color: oversiktFane === k ? 'var(--on-brand)' : 'var(--text-secondary)' }}>
+                  {l}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {oversiktListe.length === 0 && <div style={{ ...kortStil, color: 'var(--text-muted)', fontSize: 13.5 }}>Ingen reservasjonar i denne lista.</div>}
+              {oversiktListe.map((r) => {
                 const frist = new Date(r.created_at).getTime() + (data.innstillingar?.svarfrist_timar ?? 48) * 3600e3;
                 const over = frist < no;
+                const seinka = forseinkaIds.has(r.id);
                 return (
                   <div key={r.id} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    {rad(r)}
-                    <span style={{ fontSize: 11.5, fontWeight: 800, paddingLeft: 2, color: over ? 'var(--danger)' : 'var(--text-muted)' }}>
-                      {over ? 'Over svarfristen – maskina blir frigjeven automatisk' : `Svar innan ${tidKort(new Date(frist).toISOString())}`}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'stretch', gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>{rad(r)}</div>
+                      {hurtig(r)}
+                    </div>
+                    {r.status === 'ny' && (
+                      <span style={{ fontSize: 11.5, fontWeight: 800, paddingLeft: 2, color: over ? 'var(--danger)' : 'var(--text-muted)' }}>
+                        {over ? 'Over svarfristen – maskina blir frigjeven automatisk' : `Svar innan ${tidKort(new Date(frist).toISOString())}`}
+                      </span>
+                    )}
+                    {(r.status === 'utleigd' || r.status === 'forseinka') && (
+                      <span style={{ fontSize: 11.5, fontWeight: 700, paddingLeft: 2, color: seinka ? 'var(--danger)' : 'var(--text-muted)' }}>
+                        {seinka ? `Forseinka – skulle vore levert ${tidKort(r.slutt)}` : `Retur ${tidKort(r.slutt)}`}
+                      </span>
+                    )}
                   </div>
                 );
               })}
-            </Seksjon>
-            <Seksjon tittel="Forseinka returar" tal={forseinka.length} tom="Ingen forseinka returar.">{forseinka.map((r) => rad(r, `skulle vore levert ${tidKort(r.slutt)}`))}</Seksjon>
-            <Seksjon tittel="Utleveringar i dag" tal={utleveringar.length} tom="Ingen utleveringar i dag.">{utleveringar.map((r) => rad(r, `hentar ${tidKort(r.start)}`))}</Seksjon>
-            <Seksjon tittel="Forventa returar i dag" tal={returar.length} tom="Ingen returar i dag.">{returar.map((r) => rad(r, `kjem ${tidKort(r.slutt)}`))}</Seksjon>
-            <Seksjon tittel="Sperra utstyr" tal={sperra.length} tom="Alt utstyr er tilgjengeleg.">
-              {sperra.map((e) => {
-                const s = EINING_STATUS[einingStatusNo(e, reservasjonar)];
-                return (
-                  <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 11px', borderRadius: 'var(--r)', border: '1px solid var(--border)' }}>
-                    <span style={{ flex: 1, fontSize: 13.5, fontWeight: 800 }}>{finnProdukt(e.produkt_id)?.namn} <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>· {e.kode}</span></span>
-                    <span style={{ fontSize: 11, fontWeight: 800, padding: '3px 9px', borderRadius: 999, color: s.fg, background: s.bg }}>{s.tekst}</span>
-                    <button onClick={() => data.frigjer(e.id)} style={{ padding: '5px 10px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: 'var(--text)' }}>Klar</button>
-                  </div>
-                );
-              })}
-            </Seksjon>
             </div>
+
+            {sperra.length > 0 && (
+              <div style={kortStil}>
+                <div style={{ ...kortLabel, display: 'flex', gap: 8 }}>Sperra utstyr<span style={{ color: 'var(--text-muted)' }}>{sperra.length}</span></div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {sperra.map((e) => {
+                    const s = EINING_STATUS[einingStatusNo(e, reservasjonar)];
+                    return (
+                      <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 11px', borderRadius: 'var(--r)', border: '1px solid var(--border)' }}>
+                        <span style={{ flex: 1, fontSize: 13.5, fontWeight: 800 }}>{finnProdukt(e.produkt_id)?.namn} <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>· {e.kode}</span></span>
+                        <span style={{ fontSize: 11, fontWeight: 800, padding: '3px 9px', borderRadius: 999, color: s.fg, background: s.bg }}>{s.tekst}</span>
+                        <button onClick={() => data.frigjer(e.id)} style={{ padding: '5px 10px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: 'var(--text)' }}>Klar</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )
       )}
@@ -197,14 +240,5 @@ function Kpi({ tal, label, tone, onClick }: { tal: number | string; label: strin
       <span style={{ fontSize: 26, fontWeight: 900, lineHeight: 1, color: farge }}>{tal}</span>
       <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)' }}>{label}</span>
     </button>
-  );
-}
-
-function Seksjon({ tittel, tal, children, tom }: { tittel: string; tal: number; children: ReactNode; tom: string }) {
-  return (
-    <div style={kortStil}>
-      <div style={{ ...kortLabel, display: 'flex', gap: 8 }}>{tittel}<span style={{ color: 'var(--text-muted)' }}>{tal}</span></div>
-      {tal === 0 ? <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{tom}</div> : <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{children}</div>}
-    </div>
   );
 }
