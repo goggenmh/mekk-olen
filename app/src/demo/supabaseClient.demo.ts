@@ -340,10 +340,20 @@ const funksjonar = {
       }
       return ok({ ok: true });
     }
+    const plassbilete = () => {
+      const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150'><rect width='150' height='150' fill='#eef2f5'/><path d='M40 55 L75 38 L110 55 L110 95 L75 112 L40 95 Z' fill='none' stroke='#0a2335' stroke-width='4' stroke-linejoin='round'/><path d='M40 55 L75 72 L110 55 M75 72 L75 112' stroke='#0a2335' stroke-width='4' fill='none' stroke-linejoin='round'/></svg>";
+      return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+    };
     if (namn === 'lenke-bilete') {
       // Demo: vis eit enkelt plassbilete når bestillinga har ei lenke.
-      const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150'><rect width='150' height='150' fill='#eef2f5'/><path d='M40 55 L75 38 L110 55 L110 95 L75 112 L40 95 Z' fill='none' stroke='#0a2335' stroke-width='4' stroke-linejoin='round'/><path d='M40 55 L75 72 L110 55 M75 72 L75 112' stroke='#0a2335' stroke-width='4' fill='none' stroke-linejoin='round'/></svg>";
-      return ok({ bilde: b.url ? `data:image/svg+xml,${encodeURIComponent(svg)}` : null });
+      return ok({ bilde: b.url ? plassbilete() : null });
+    }
+    if (namn === 'finn-produkt') {
+      // Demo: lat som søket fann eit produkt, så heile flyten kan visast fram.
+      const sok = `${b.leverandor ?? ''} ${b.vare ?? ''}`.trim();
+      if (!sok) return ok({ lenke: null, bilde: null });
+      const slug = String(b.leverandor ?? 'leverandor').toLowerCase().replace(/[^a-z0-9]+/g, '');
+      return ok({ lenke: `https://www.${slug}.no/produkt`, bilde: plassbilete(), tittel: sok });
     }
     return ok({}); // send-push o.l.: ingenting å gjere i demoen
   },

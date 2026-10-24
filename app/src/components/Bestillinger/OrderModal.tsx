@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
+import { supabase } from '../../supabaseClient';
 import { useAppData } from '../../context/AppDataContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { ORDER_FLOW, ORDER_STATUS } from '../../constants';
@@ -29,10 +30,35 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
   const prisFeil = prisTal !== null && (!Number.isFinite(prisTal) || prisTal < 0);
   const [feil, setFeil] = useState(false);
 
+  // Produktbilete: frå før, frå søk, eller (ved lagring) henta frå lenka.
+  const [bilde, setBilde] = useState<string | null>(existing?.bilde ?? null);
+  const [sokar, setSokar] = useState(false);
+  const [sokMelding, setSokMelding] = useState<string | null>(null);
+
+  // Når lenka blir endra manuelt, nullstill biletet (eller hent att det gamle).
+  const endreLenke = (v: string) => {
+    setLenke(v);
+    setBilde(v.trim() === (existing?.lenke || '') ? (existing?.bilde ?? null) : null);
+  };
+
+  // EKSPERIMENTELT: prøv å finne produkt ut frå vare + leverandør.
+  const finnProdukt = async () => {
+    if (!vare.trim() || !leverandor.trim() || sokar) return;
+    setSokar(true); setSokMelding(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('finn-produkt', { body: { vare: vare.trim(), leverandor: leverandor.trim() } });
+      const r = data as { lenke?: string | null; bilde?: string | null; merknad?: string } | null;
+      if (error || !r) setSokMelding('Søket feila. Prøv igjen, eller lim inn lenka sjølv.');
+      else if (r.lenke) { setLenke(r.lenke); setBilde(r.bilde ?? null); setSokMelding('Forslag henta – sjekk at det er rett produkt før du lagrar.'); }
+      else setSokMelding(r.merknad || 'Fann ingen treff.');
+    } catch { setSokMelding('Søket feila. Prøv igjen, eller lim inn lenka sjølv.'); }
+    setSokar(false);
+  };
+
   const save = async () => {
     if (!kunde.trim()) { setFeil(true); return; }
     if (prisFeil) return;
-    await saveOrder({ id: existing?.id, kunde: storeOrd(kunde.trim()), telefon, vare: storFyrste(vare.trim()), leverandor: storFyrste(leverandor.trim()), varenr, lenke: lenke.trim() || null, dato, antal, status, notat: storFyrste(notat.trim()), pris: prisTal === null ? null : Math.round(prisTal * 100) / 100, varsla: existing?.varsla ?? null });
+    await saveOrder({ id: existing?.id, kunde: storeOrd(kunde.trim()), telefon, vare: storFyrste(vare.trim()), leverandor: storFyrste(leverandor.trim()), varenr, lenke: lenke.trim() || null, dato, antal, status, notat: storFyrste(notat.trim()), pris: prisTal === null ? null : Math.round(prisTal * 100) / 100, varsla: existing?.varsla ?? null, bilde });
     onClose();
   };
 
@@ -73,8 +99,12 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
         <input value={vare} onChange={(e) => setVare(e.target.value)} onBlur={() => setVare(storFyrste)} autoCapitalize="sentences" style={inputStyle} />
       </Field>
       <Field label="Lenke til produkt">
-        <input value={lenke} autoCapitalize="off" onChange={(e) => setLenke(e.target.value)} placeholder="https://…" style={inputStyle} />
+        <input value={lenke} autoCapitalize="off" onChange={(e) => endreLenke(e.target.value)} placeholder="https://…" style={inputStyle} />
       </Field>
+      {bilde && (
+        <img src={bilde} alt="Produktbilete" onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          style={{ width: 96, height: 96, objectFit: 'contain', background: '#fff', border: '1px solid var(--border)', borderRadius: 'var(--r)', marginTop: -4 }} />
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Field label="Leverandør">
           <input value={leverandor} onChange={(e) => setLeverandor(e.target.value)} onBlur={() => setLeverandor(storFyrste)} autoCapitalize="sentences" style={inputStyle} />
@@ -83,6 +113,16 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
           <input value={varenr} onChange={(e) => setVarenr(e.target.value)} style={inputStyle} />
         </Field>
       </div>
+      {vare.trim() && leverandor.trim() && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <button type="button" onClick={finnProdukt} disabled={sokar}
+            style={{ alignSelf: 'flex-start', padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface-alt)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: sokar ? 'default' : 'pointer', fontFamily: 'inherit', opacity: sokar ? 0.6 : 1 }}>
+            {sokar ? 'Søkjer …' : '🔎 Finn produkt automatisk (prøv)'}
+          </button>
+          {sokMelding && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.45 }}>{sokMelding}</div>}
+          <div style={{ fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.4 }}>Eksperimentelt: søkjer opp produktet ut frå vare + leverandør. Kontroller alltid at lenka er rett før du lagrar.</div>
+        </div>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Field label="Dato">
           <input type="date" value={dato} onChange={(e) => setDato(e.target.value)} style={inputStyle} />

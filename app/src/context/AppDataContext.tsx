@@ -562,13 +562,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const saveOrder: AppData['saveOrder'] = async (o) => {
-    const forrigeLenke = o.id ? (orders.find((x) => x.id === o.id)?.lenke ?? null) : null;
     const nyLenke = o.lenke || null;
-    const lenkeEndra = nyLenke !== forrigeLenke;
     const felt = {
       kunde: o.kunde, telefon: o.telefon, vare: o.vare, leverandor: o.leverandor, varenr: o.varenr, lenke: nyLenke, dato: o.dato, antal: o.antal, status: o.status, pris: o.pris ?? null,
-      // Byter ein lenka, nullstill det gamle biletet – nytt blir henta under.
-      ...(lenkeEndra ? { bilde: null } : {}),
+      // Biletet kjem frå skjemaet (manuelt/søk); er det tomt, hentar vi under.
+      bilde: o.bilde ?? null,
     };
     // notat-kolonna kjem med bestilling-notat.sql. Finst ho ikkje enno, lagrar
     // vi resten så bestillinga ikkje går tapt.
@@ -584,8 +582,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     if (o.id) setOrders((prev) => prev.map((x) => (x.id === o.id ? mapOrder(data) : x)));
     else setOrders((prev) => [mapOrder(data), ...prev]);
     toast('Bestilling lagra');
-    // Hent produktbilete i bakgrunnen når lenka er ny eller endra.
-    if (nyLenke && (lenkeEndra || !data.bilde)) void resolveOrderBilete(data.id, nyLenke, true);
+    // Manglar bilete, men har lenke? Prøv å hente og:image i bakgrunnen.
+    if (nyLenke && !data.bilde) void resolveOrderBilete(data.id, nyLenke, true);
   };
   const deleteOrder: AppData['deleteOrder'] = async (id) => {
     const { error: err } = await supabase.from('orders').delete().eq('id', id);
