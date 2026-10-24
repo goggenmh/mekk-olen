@@ -101,12 +101,12 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
                 title={smal ? v.label : undefined}
                 aria-label={badge ? `${v.label} (${badge.n})` : v.label}
                 aria-current={active ? 'page' : undefined}
+                className={`rail-item${active ? ' is-active' : ''}`}
                 style={{
                   position: 'relative', display: 'flex', alignItems: 'center', gap: smal ? 0 : 11,
                   padding: smal ? '9px 0' : '7px 11px', border: 'none', cursor: 'pointer',
                   fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, textAlign: 'left', borderRadius: 'var(--r)',
                   justifyContent: smal ? 'center' : 'flex-start',
-                  background: active ? 'var(--rail-active-bg)' : 'transparent', color: active ? 'var(--rail-active-fg)' : 'var(--rail-fg)',
                 }}
               >
                 {active && (

@@ -85,6 +85,9 @@
   --rail-brand: var(--mekk-navy);
   --rail-brand-sub: #7a8791;
   --rail-border: #e8ecea;
+  /* Hover på menypunkt som ikkje er valt */
+  --rail-hover: #f2f5f4;
+  --rail-fg-strong: var(--mekk-navy);
   /* Marine toppstripe som på mekk.no */
   --topbar-bg: var(--mekk-navy);
   /* Linja under toppstripa: same tone, så det ikkje blir ein lys strek */
@@ -162,6 +165,8 @@
   --rail-brand: #eafffb;
   --rail-brand-sub: #9aaab0;
   --rail-border: #2a363c;
+  --rail-hover: rgba(255, 255, 255, 0.055);
+  --rail-fg-strong: #eef4f3;
   --topbar-bg: #0e1417;
   --topbar-border: var(--rail-border);
   --topbar-name: #eef4f3;
@@ -250,6 +255,13 @@ button:active {
 
 /* Kollapsbar sidemeny: skjul tekst når smal */
 .rail-collapsed .rail-label { display: none; }
+
+/* Menypunkt: roleg hover og tydeleg vald-tilstand */
+.rail-item { background: transparent; color: var(--rail-fg); transition: background 0.14s ease, color 0.14s ease; }
+.rail-item:hover:not(.is-active) { background: var(--rail-hover); color: var(--rail-fg-strong); }
+.rail-item:active:not(.is-active) { background: var(--rail-hover); }
+.rail-item.is-active { background: var(--rail-active-bg); color: var(--rail-active-fg); box-shadow: 0 2px 8px rgba(10, 35, 53, 0.16); }
+[data-theme='dark'] .rail-item.is-active { box-shadow: none; }
 
 /* PIN-tastar på innlogging */
 .pinkey:hover { background: var(--brand) !important; color: var(--on-brand) !important; border-color: var(--brand) !important; }
