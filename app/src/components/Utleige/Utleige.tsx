@@ -88,7 +88,7 @@ export function Utleige() {
   const oversiktFaner: [typeof oversiktFane, string][] = [['alle', `Alle (${aktiveTal})`], ['ut', `Skal ut (${utTal})`], ['inn', `Skal inn (${innTal})`], ['forseinka', `Forseinka (${forseinka.length})`], ['nye', `Nye (${nye.length})`]];
   if (forlengTal > 0) oversiktFaner.push(['forleng', `Forlenging (${forlengTal})`]);
   const hurtig = (r: UtleigeReservasjon) => {
-    if (r.status === 'ny') return <button onClick={() => data.settStatus(r, 'stadfesta', 'Stadfesta – kunden får e-post')} className="knapp-teal">Godkjenn</button>;
+    if (r.status === 'ny') return <button onClick={() => data.settStatus(r, 'stadfesta', 'Stadfesta – kunden får e-post')} className="knapp-gronn">Godkjenn</button>;
     if (r.status === 'stadfesta' || r.status === 'klar') return <button onClick={() => data.settStatus(r, 'utleigd', 'Utlevert')} className="knapp-teal">Utlevering</button>;
     if (r.status === 'utleigd' || r.status === 'forseinka') return <button onClick={() => setOpne(r)} className="knapp-teal">Retur</button>;
     return null;

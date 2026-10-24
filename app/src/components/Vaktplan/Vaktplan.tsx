@@ -299,7 +299,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                   {maaGodkjenne ? (
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
                       <button onClick={() => declineSwap(s.id)} style={{ ...btnGhost, color: 'var(--danger)' }}>Avslå</button>
-                      <button onClick={() => approveSwap(s.id)} style={{ padding: '7px 14px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Godkjenn</button>
+                      <button onClick={() => approveSwap(s.id)} className="knapp-gronn">Godkjenn</button>
                     </div>
                   ) : (
                     <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>Ventar på godkjenning</span>

@@ -151,7 +151,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
         <div className="no-print" style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           {erLeiar(user) && <button onClick={exportLonn} disabled={lagarLonsfil} title={`Lønsgrunnlag for ${MND[Number(monthAnchor.split('-')[1]) - 1]} som Excel-fil`} style={btnGhost}>{lagarLonsfil ? 'Lagar…' : 'Lønsfil (Excel)'}</button>}
           {maaGodkjenne && ventandeVeke > 0 && mode === 'uke' && (
-            <button onClick={godkjennAlle} style={{ ...btnGhost, background: '#2f9e6f', color: '#fff', borderColor: '#2f9e6f' }}>Godkjenn alle ({ventandeVeke})</button>
+            <button onClick={godkjennAlle} className="knapp-gronn">Godkjenn alle ({ventandeVeke})</button>
           )}
           <button onClick={exportCsv} style={btnGhost}>CSV</button>
           <button onClick={exportPdf} disabled={lagarPdf} title="Timeliste som PDF" style={btnGhost}>{lagarPdf ? 'Lagar…' : 'PDF'}</button>
@@ -330,10 +330,7 @@ function WeekTable({
                 {maaGodkjenne && (
                   <td style={{ ...td, textAlign: 'right' }}>
                     {ventarN > 0 && (
-                      <button
-                        onClick={() => onApprove(a.id)}
-                        style={{ padding: '6px 11px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 'var(--r)', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
-                      >
+                      <button onClick={() => onApprove(a.id)} className="knapp-gronn">
                         Godkjenn ({ventarN})
                       </button>
                     )}
@@ -408,10 +405,7 @@ function WeekCards({
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
               <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{[lonn, sum > 37.5 ? `+${fmt(sum - 37.5)} t overtid` : ''].filter(Boolean).join(' · ')}</span>
               {maaGodkjenne && ventarN > 0 && (
-                <button
-                  onClick={() => onApprove(a.id)}
-                  style={{ marginLeft: 'auto', padding: '7px 13px', background: '#2f9e6f', color: '#fff', border: 'none', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
-                >
+                <button onClick={() => onApprove(a.id)} className="knapp-gronn" style={{ marginLeft: 'auto' }}>
                   Godkjenn ({ventarN})
                 </button>
               )}
