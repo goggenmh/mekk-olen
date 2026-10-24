@@ -2,13 +2,12 @@
 //
 // Finn produktlenke + bilete ut frå ei bestilling, via Brave Search.
 // Prioriterer mekk.no + varenr (mest presist); fell så tilbake til eit
-// generelt nettsøk på leverandør + vare. Resultatet er eit FORSLAG som den
-// tilsette må stadfeste.
+// generelt nettsøk på leverandør + vare. Hentar produktbiletet frå sjølve
+// produktsida (og:image) når søket ikkje gir eit bilete. Resultatet er eit
+// FORSLAG som den tilsette må stadfeste.
 //
 // Krev løyndomen BRAVE_SEARCH_KEY. Utan han seier funksjonen tydeleg kva som
-// manglar – han later ikkje som om søket verkar.
-//
-// verify_jwt = true: berre innlogga tilsette kan kalle han.
+// manglar. verify_jwt = true.
 
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 
@@ -19,6 +18,45 @@ const CORS = {
 };
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
+
+function tryggVert(u: URL): boolean {
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+  const h = u.hostname.toLowerCase();
+  if (h === 'localhost' || h.endsWith('.local') || h.endsWith('.internal')) return false;
+  if (/^(127\.|10\.|192\.168\.|169\.254\.|0\.)/.test(h)) return false;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return false;
+  if (h === '::1' || h.startsWith('fe80') || h.startsWith('fc') || h.startsWith('fd')) return false;
+  return true;
+}
+
+function finnBilete(html: string, base: string): string | null {
+  const m = (re: RegExp) => { const x = html.match(re); return x ? x[1] : null; };
+  const kandidat =
+    m(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i) ||
+    m(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i) ||
+    m(/<meta[^>]+name=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["']/i) ||
+    m(/<link[^>]+rel=["']image_src["'][^>]+href=["']([^"']+)["']/i);
+  if (!kandidat) return null;
+  try { return new URL(kandidat, base).href; } catch { return null; }
+}
+
+// Hentar og:image frå ei produktside (best effort).
+async function sidebilete(href: string): Promise<string | null> {
+  try {
+    const u = new URL(href);
+    if (!tryggVert(u)) return null;
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+    const res = await fetch(u.href, {
+      signal: ctrl.signal, redirect: 'follow',
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; MEKK-bestilling/1.0)', Accept: 'text/html' },
+    });
+    clearTimeout(t);
+    if (!res.ok || !/text\/html/i.test(res.headers.get('content-type') || '')) return null;
+    const html = new TextDecoder('utf-8').decode(new Uint8Array(await res.arrayBuffer()).slice(0, 512 * 1024));
+    return finnBilete(html, u.href);
+  } catch { return null; }
+}
 
 interface Treff { url: string; bilde: string | null; tittel: string | null }
 
@@ -63,19 +101,19 @@ Deno.serve(async (req) => {
     return json({ lenke: null, bilde: null, merknad: 'Automatisk søk er ikkje sett opp: det krev ein søke-API-nøkkel (BRAVE_SEARCH_KEY).' });
   }
 
-  // 1) Prøv mekk.no med varenr (+ vare) – mest presist.
   let treff: Treff | null = null;
   let kjelde: string | null = null;
   if (mekkTerm.length >= 2) {
     treff = await brave(key, 'site:mekk.no ' + mekkTerm);
     if (treff) kjelde = 'mekk.no';
   }
-  // 2) Fall tilbake til generelt nettsøk på leverandør + vare.
   if (!treff && webTerm.length >= 3) {
     treff = await brave(key, webTerm);
     if (treff) kjelde = 'nettet';
   }
   if (!treff) return json({ lenke: null, bilde: null, merknad: 'Fann ingen treff.' });
 
-  return json({ lenke: treff.url, bilde: treff.bilde, tittel: treff.tittel, kjelde });
+  // Prøv å hente det ekte produktbiletet frå sida; fall tilbake til søke-miniatyren.
+  const ogBilete = await sidebilete(treff.url);
+  return json({ lenke: treff.url, bilde: ogBilete ?? treff.bilde, tittel: treff.tittel, kjelde });
 });
