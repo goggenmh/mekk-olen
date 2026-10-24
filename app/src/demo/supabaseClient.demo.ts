@@ -279,6 +279,7 @@ const rpc = async (namn: string, args: Rad = {}): Promise<{ data: unknown; error
             produkt_namn: p?.namn, produkt_tilbehor: p?.tilbehor || [], eining_kode: e?.kode || null,
             butikk: b?.namn, vilkar: i?.vilkar, kontakt_telefon: i?.kontakt_telefon, kontakt_epost: i?.kontakt_epost,
             avbestillingsfrist_timar: i?.avbestillingsfrist_timar ?? 24,
+            maks_dagar: i?.maks_dagar ?? 14, forleng_til: r.forleng_til ?? null,
             kunde_namn: k?.namn, kunde_telefon: k?.telefon, kunde_epost: k?.epost };
         });
       return ok(rows);
@@ -293,6 +294,16 @@ const rpc = async (namn: string, args: Rad = {}): Promise<{ data: unknown; error
       const frist = (i?.avbestillingsfrist_timar ?? 24) as number;
       if (Date.now() > new Date(res.start).getTime() - frist * 3600e3) return feil(`Fristen for å avbestille sjølv har gått ut (${frist} timar før henting). Ta kontakt med butikken.`);
       res.status = 'avbestilt';
+      return ok({ ok: true });
+    }
+    case 'utleige_kunde_forleng': {
+      const epost = (kundeEpost || '').toLowerCase();
+      const res = tabell('utleige_reservasjon').find((x) => x.id === args.p_res);
+      const k = res && tabell('utleige_kunde').find((x) => x.id === res.kunde_id);
+      if (!res || !k || String(k.epost).toLowerCase() !== epost) return feil('Fann ikkje reservasjonen.');
+      if (!['stadfesta', 'klar', 'utleigd', 'forseinka'].includes(res.status)) return feil('Denne reservasjonen kan ikkje forlengast her. Ta kontakt med butikken.');
+      if (new Date(String(args.p_til)) <= new Date(String(res.slutt))) return feil('Ny returtid må vere etter den noverande.');
+      res.forleng_til = args.p_til;
       return ok({ ok: true });
     }
     case 'login_liste':

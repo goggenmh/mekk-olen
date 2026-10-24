@@ -149,6 +149,18 @@ export function useUtleige() {
     return gjer(() => supabase.from('utleige_reservasjon').update({ bilete: ny }).eq('id', r.id), 'Bilete lagra');
   };
 
+  // Butikken godkjenner ei forlengings-førespurnad: ny slutt + ny pris, og
+  // nullstill førespurnaden. Sperra mot overlapp i databasen gjeld framleis.
+  const godkjennForleng = async (r: UtleigeReservasjon) => {
+    if (!r.forleng_til) return;
+    const p = await pris(r.produkt_id, r.start, r.forleng_til);
+    return gjer(() => supabase.from('utleige_reservasjon').update({
+      slutt: r.forleng_til, forleng_til: null, pris_leige: p.leige, gebyr: p.gebyr, depositum: p.depositum, pris_total: p.total,
+    }).eq('id', r.id), 'Forlenging godkjend');
+  };
+  const avslaForleng = (r: UtleigeReservasjon) =>
+    gjer(() => supabase.from('utleige_reservasjon').update({ forleng_til: null }).eq('id', r.id), 'Forlenging avslått');
+
   const lagreKunde = (k: UtleigeKunde) =>
     gjer(() => supabase.from('utleige_kunde').update({ namn: k.namn, telefon: k.telefon, epost: k.epost, notat: k.notat }).eq('id', k.id), 'Kunde lagra');
 
@@ -160,7 +172,7 @@ export function useUtleige() {
   return {
     lastar, feil, produkt, einingar, kundar, reservasjonar, sperrer, innstillingar, hent,
     lagreProdukt, slettProdukt, lagreEining, slettEining, lastOppBilete, pris,
-    nyReservasjon, endreReservasjon, settStatus, lagreNotat, retur, lagreBilete, nySperre, slettSperre, frigjer, lagreKunde, lagreInnstillingar,
+    nyReservasjon, endreReservasjon, settStatus, lagreNotat, retur, lagreBilete, godkjennForleng, avslaForleng, nySperre, slettSperre, frigjer, lagreKunde, lagreInnstillingar,
   };
 }
 
