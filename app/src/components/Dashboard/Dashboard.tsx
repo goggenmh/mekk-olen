@@ -168,7 +168,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
                     </div>
                   </button>
                   {!o.blokkert && (
-                    <button onClick={() => completeTask(o)} style={{ padding: '6px 11px', background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flex: 'none' }}>Fullfør</button>
+                    <button onClick={() => completeTask(o)} className="knapp-teal" style={{ flex: 'none' }}>Fullfør</button>
                   )}
                 </div>
               );
