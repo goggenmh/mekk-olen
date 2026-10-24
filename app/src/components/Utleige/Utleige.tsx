@@ -88,10 +88,9 @@ export function Utleige() {
   const oversiktFaner: [typeof oversiktFane, string][] = [['alle', `Alle (${aktiveTal})`], ['ut', `Skal ut (${utTal})`], ['inn', `Skal inn (${innTal})`], ['forseinka', `Forseinka (${forseinka.length})`], ['nye', `Nye (${nye.length})`]];
   if (forlengTal > 0) oversiktFaner.push(['forleng', `Forlenging (${forlengTal})`]);
   const hurtig = (r: UtleigeReservasjon) => {
-    const stil = (primar: boolean) => ({ padding: '7px 12px', borderRadius: 'var(--r)', border: primar ? 'none' : '1px solid var(--border)', background: primar ? 'var(--brand-strong)' : 'var(--surface)', color: primar ? 'var(--on-brand)' : 'var(--text-secondary)', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' as const });
-    if (r.status === 'ny') return <button onClick={() => data.settStatus(r, 'stadfesta', 'Stadfesta – kunden får e-post')} style={stil(true)}>Godkjenn</button>;
-    if (r.status === 'stadfesta' || r.status === 'klar') return <button onClick={() => data.settStatus(r, 'utleigd', 'Utlevert')} style={stil(true)}>Utlevering</button>;
-    if (r.status === 'utleigd' || r.status === 'forseinka') return <button onClick={() => setOpne(r)} style={stil(false)}>Retur</button>;
+    if (r.status === 'ny') return <button onClick={() => data.settStatus(r, 'stadfesta', 'Stadfesta – kunden får e-post')} className="knapp-teal">Godkjenn</button>;
+    if (r.status === 'stadfesta' || r.status === 'klar') return <button onClick={() => data.settStatus(r, 'utleigd', 'Utlevert')} className="knapp-teal">Utlevering</button>;
+    if (r.status === 'utleigd' || r.status === 'forseinka') return <button onClick={() => setOpne(r)} className="knapp-teal">Retur</button>;
     return null;
   };
 

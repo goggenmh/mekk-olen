@@ -51,6 +51,12 @@
   --brand: var(--mekk-teal-700);
   --brand-strong: var(--mekk-navy);
   --brand-soft: #e4f5f5;
+  /* Handlingsknapp i mekk.no-stil: kvit botn, turkis kant */
+  --knapp-teal-bg: #ffffff;
+  --knapp-teal-fg: var(--mekk-teal-700);
+  --knapp-teal-kant: var(--mekk-teal);
+  --knapp-teal-bg-hover: var(--brand-soft);
+  --knapp-teal-kant-hover: var(--mekk-teal-700);
   /* Tekst på brand-/accent-fargar (knappar, merke) */
   --on-brand: #ffffff;
   /* Statusmerke og kategoriar */
@@ -131,6 +137,11 @@
   --brand: #20c9b8;
   --brand-strong: #5ee0d2;
   --brand-soft: rgba(32, 201, 184, 0.13);
+  --knapp-teal-bg: var(--surface);
+  --knapp-teal-fg: #6fe3d6;
+  --knapp-teal-kant: rgba(93, 203, 204, 0.5);
+  --knapp-teal-bg-hover: rgba(32, 201, 184, 0.14);
+  --knapp-teal-kant-hover: #5dcbcc;
   /* Mørk tekst på den lyse turkise/gule fargen – kvit gav berre 2:1 */
   --on-brand: #04211e;
   /* Statusmerke: dempa bakgrunn, lys tekst */
@@ -262,6 +273,19 @@ button:active {
 .rail-item:active:not(.is-active) { background: var(--rail-hover); }
 .rail-item.is-active { background: var(--rail-active-bg); color: var(--rail-active-fg); box-shadow: 0 2px 8px rgba(10, 35, 53, 0.16); }
 [data-theme='dark'] .rail-item.is-active { box-shadow: none; }
+
+/* Handlingsknapp i mekk.no-stil: kvit/grå botn med turkis kant */
+.knapp-teal {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--r);
+  font-family: var(--font-sans); font-size: 12.5px; font-weight: 700; line-height: 1.2;
+  white-space: nowrap; cursor: pointer;
+  background: var(--knapp-teal-bg); color: var(--knapp-teal-fg);
+  border: 1.5px solid var(--knapp-teal-kant);
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+.knapp-teal:hover:not(:disabled) { background: var(--knapp-teal-bg-hover); border-color: var(--knapp-teal-kant-hover); color: var(--knapp-teal-kant-hover); }
+.knapp-teal:disabled { opacity: 0.45; cursor: default; }
 
 /* PIN-tastar på innlogging */
 .pinkey:hover { background: var(--brand) !important; color: var(--on-brand) !important; border-color: var(--brand) !important; }

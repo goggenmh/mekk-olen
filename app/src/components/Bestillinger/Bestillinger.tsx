@@ -192,7 +192,7 @@ export function Bestillinger() {
                       <button onClick={() => setNotifyTarget(o)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--border)', background: o.varsla ? 'var(--brand-soft)' : 'var(--accent-soft)', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>Varsle</button>
                     )}
                     {kanFram && (
-                      <button onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])} style={{ marginLeft: 'auto', padding: '7px 14px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{s.neste} →</button>
+                      <button onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])} className="knapp-teal" style={{ marginLeft: 'auto' }}>{s.neste} →</button>
                     )}
                   </div>
                 )}
@@ -281,7 +281,7 @@ export function Bestillinger() {
                       {kanFram && (
                         <button
                           onClick={() => advanceOrder(o.id, ORDER_FLOW[nesteIdx])}
-                          style={{ padding: '6px 12px', background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none', borderRadius: 'var(--r)', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          className="knapp-teal"
                         >
                           {s.neste} →
                         </button>
