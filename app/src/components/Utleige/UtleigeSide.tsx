@@ -19,6 +19,9 @@ const kort: CSSProperties = { background: 'var(--surface)', border: '1px solid v
 const label: CSSProperties = { fontSize: 11.5, fontWeight: 900, letterSpacing: '0.4px', textTransform: 'uppercase', color: 'var(--kort-label)', marginBottom: 6, display: 'block' };
 const felt: CSSProperties = { width: '100%', padding: '11px 12px', border: '1px solid var(--border)', borderRadius: 'var(--r-input)', background: 'var(--surface)', color: 'var(--text)', fontFamily: 'var(--font-sans)', fontSize: 15 };
 const cta: CSSProperties = { padding: '12px 18px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 900, cursor: 'pointer' };
+const knappAlt: CSSProperties = { padding: '12px 14px', background: 'var(--surface-alt)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' };
+
+interface KorgKvittering { gruppe: string; varer: { nummer: number; produkt: string; total: number; depositum: number }[]; sum: number }
 
 function Bilete({ url, namn, hogd }: { url: string | null; namn: string; hogd: number }) {
   return url ? (
@@ -34,6 +37,12 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
   const [valt, setValt] = useState<KatalogProdukt | null>(null);
   // Ledige einingar i dag per produkt, til «X ledige»-merket på korta.
   const [ledig, setLedig] = useState<Record<string, { ledige: number; totalt: number }>>({});
+  // Handlekorg: fleire varer i éi bestilling.
+  const [korg, setKorg] = useState<KatalogProdukt[]>([]);
+  const [visKorg, setVisKorg] = useState(false);
+  const iKorg = (id: string) => korg.some((x) => x.id === id);
+  const leggIKorg = (p: KatalogProdukt) => setKorg((k) => (k.some((x) => x.id === p.id) ? k : [...k, p]));
+  const fjernFraKorg = (id: string) => setKorg((k) => k.filter((x) => x.id !== id));
 
   useEffect(() => {
     supabase.rpc('utleige_katalog').then(({ data, error }) => {
@@ -84,6 +93,8 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
 
         {valt ? (
           <Produktside p={valt} onTilbake={() => setValt(null)} />
+        ) : visKorg ? (
+          <Handlekorg korg={korg} onFjern={fjernFraKorg} onTilbake={() => setVisKorg(false)} onFerdig={() => { setKorg([]); setVisKorg(false); }} />
         ) : produkt && produkt.length > 0 && (
           <>
             <h1 style={{ fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.01em', margin: '0 0 6px' }}>Lei utstyret du treng</h1>
@@ -113,11 +124,19 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
                         {p.tilbehor.slice(0, 4).map((t) => <span key={t} style={{ fontSize: 11.5, fontWeight: 600, padding: '3px 8px', background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 999 }}>{t}</span>)}
                       </div>
                     )}
-                    <button onClick={() => { setValt(p); window.scrollTo(0, 0); }} style={{ ...cta, marginTop: 'auto' }}>Sjå ledigheit ‹</button>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                      <button onClick={() => { setValt(p); window.scrollTo(0, 0); }} style={{ ...cta, flex: 1 }}>Sjå ledigheit ‹</button>
+                      <button onClick={() => leggIKorg(p)} disabled={iKorg(p.id)} style={{ ...knappAlt, flex: 'none', opacity: iKorg(p.id) ? 0.6 : 1 }}>{iKorg(p.id) ? 'I korg ✓' : '+ Korg'}</button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
+            {korg.length > 0 && (
+              <div style={{ position: 'sticky', bottom: 16, display: 'flex', justifyContent: 'center', marginTop: 18, zIndex: 5 }}>
+                <button onClick={() => { setVisKorg(true); window.scrollTo(0, 0); }} style={{ ...cta, boxShadow: '0 6px 20px rgba(10,35,53,0.25)' }}>Sjå handlekorg ({korg.length}) ›</button>
+              </div>
+            )}
           </>
         )}
       </main>
@@ -353,6 +372,150 @@ function Produktside({ p, onTilbake }: { p: KatalogProdukt; onTilbake: () => voi
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Handlekorg: fleire varer i éi bestilling, same leigeperiode for alle.
+function Handlekorg({ korg, onFjern, onTilbake, onFerdig }: {
+  korg: KatalogProdukt[]; onFjern: (id: string) => void; onTilbake: () => void; onFerdig: () => void;
+}) {
+  const i0 = korg[0];
+  const [fraDato, setFraDato] = useState(addDays(today(), 1));
+  const [fraTid, setFraTid] = useState(i0?.hente_tid || '09:00');
+  const [tilDato, setTilDato] = useState(addDays(today(), 2));
+  const [tilTid, setTilTid] = useState(i0?.retur_tid || '12:00');
+  const [namn, setNamn] = useState('');
+  const [telefon, setTelefon] = useState('');
+  const [epost, setEpost] = useState('');
+  const [melding, setMelding] = useState('');
+  const [vilkar, setVilkar] = useState(false);
+  const [visVilkar, setVisVilkar] = useState(false);
+  const [sender, setSender] = useState(false);
+  const [feil, setFeil] = useState<string | null>(null);
+  const [kvittering, setKvittering] = useState<KorgKvittering | null>(null);
+  const [sjekk, setSjekk] = useState<{ nokkel: string; map: Record<string, PrisSvar | null> } | null>(null);
+
+  const start = fraDato ? tilIso(fraDato, fraTid) : '';
+  const slutt = tilDato ? tilIso(tilDato, tilTid) : '';
+  const gyldig = !!start && !!slutt && new Date(slutt) > new Date(start);
+  const nokkel = `${start}|${slutt}|${korg.map((x) => x.id).join(',')}`;
+
+  useEffect(() => {
+    if (!gyldig || korg.length === 0) return;
+    let avbroten = false;
+    Promise.all(korg.map(async (p) => {
+      try { const { data } = await supabase.rpc('utleige_sjekk', { p_produkt: p.id, p_start: start, p_slutt: slutt }); return { id: p.id, pris: data as PrisSvar | null }; }
+      catch { return { id: p.id, pris: null as PrisSvar | null }; }
+    })).then((res) => {
+      if (avbroten) return;
+      const m: Record<string, PrisSvar | null> = {};
+      for (const r of res) m[r.id] = r.pris;
+      setSjekk({ nokkel, map: m });
+    });
+    return () => { avbroten = true; };
+  }, [nokkel, gyldig, korg, start, slutt]);
+
+  const gjeldande = sjekk?.nokkel === nokkel ? sjekk.map : null;
+  const erLedig = (id: string) => (gjeldande?.[id]?.ledige ?? 0) > 0;
+  const alleLedige = !!gjeldande && korg.length > 0 && korg.every((p) => erLedig(p.id));
+  const sum = gjeldande ? korg.reduce((n, p) => n + (erLedig(p.id) ? (gjeldande[p.id]?.total ?? 0) : 0), 0) : 0;
+  const depositum = gjeldande ? korg.reduce((n, p) => n + (erLedig(p.id) ? (gjeldande[p.id]?.depositum ?? 0) : 0), 0) : 0;
+  const kanSende = gyldig && alleLedige && namn.trim().length >= 2 && telefon.replace(/\D/g, '').length >= 8 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(epost.trim()) && vilkar && !sender;
+
+  const send = async () => {
+    if (!kanSende) return;
+    setSender(true); setFeil(null);
+    const { data, error } = await supabase.rpc('utleige_send_korg', {
+      p_produkt: korg.map((x) => x.id), p_start: start, p_slutt: slutt, p_namn: namn, p_telefon: telefon, p_epost: epost, p_melding: melding, p_vilkar: vilkar,
+    });
+    setSender(false);
+    if (error) { setFeil(feilTekst(error)); return; }
+    setKvittering(data as KorgKvittering);
+    window.scrollTo(0, 0);
+  };
+
+  if (kvittering) {
+    return (
+      <div style={{ ...kort, maxWidth: 560, margin: '0 auto', padding: '28px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--mekk-lime)', color: 'var(--mekk-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 900 }}>✓</div>
+        <h1 style={{ fontSize: 24, fontWeight: 900, textTransform: 'uppercase', margin: 0 }}>Førespurnaden er motteken</h1>
+        <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>Vi stadfestar så snart vi har sett på han. Du betaler når du hentar.</p>
+        <div style={{ width: '100%', textAlign: 'left', background: 'var(--surface-alt)', borderRadius: 'var(--r)', padding: '12px 14px', fontSize: 14, lineHeight: 1.8 }}>
+          {kvittering.varer.map((v) => <div key={v.nummer}><strong>U-{v.nummer}</strong> · {v.produkt} · {kr(v.total)}</div>)}
+          <div style={{ borderTop: '1px solid var(--border)', marginTop: 6, paddingTop: 6 }}>Sum: <strong>{kr(kvittering.sum)}</strong></div>
+        </div>
+        <button onClick={onFerdig} style={{ ...cta, background: 'var(--mekk-navy)', color: '#ffffff' }}>Til utstyret</button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 680, margin: '0 auto', width: '100%' }}>
+      <button onClick={onTilbake} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 14, color: 'var(--text)', padding: 0 }}>
+        <span style={{ color: 'var(--mekk-teal-700)', fontWeight: 900 }}>‹</span> Tilbake til utstyret
+      </button>
+      <h1 style={{ fontSize: 'clamp(22px, 4vw, 30px)', fontWeight: 900, textTransform: 'uppercase', margin: 0 }}>Handlekorg</h1>
+
+      {korg.length === 0 ? (
+        <Melding>Korga er tom. Legg til utstyr frå lista.</Melding>
+      ) : (
+        <>
+          <div style={{ ...kort, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={label}>Leigeperiode (gjeld alle varene)</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px 12px', alignItems: 'end' }}>
+              <label><span style={label}>Henting</span><input type="date" value={fraDato} min={today()} onChange={(e) => setFraDato(e.target.value)} style={felt} /></label>
+              <label style={{ width: 108 }}><span style={label}>Kl.</span><input type="time" value={fraTid} onChange={(e) => setFraTid(e.target.value)} style={felt} /></label>
+              <label><span style={label}>Retur</span><input type="date" value={tilDato} min={fraDato || today()} onChange={(e) => setTilDato(e.target.value)} style={felt} /></label>
+              <label style={{ width: 108 }}><span style={label}>Kl.</span><input type="time" value={tilTid} onChange={(e) => setTilTid(e.target.value)} style={felt} /></label>
+            </div>
+            {start && slutt && !gyldig && <Melding tone="feil">Retur må vere etter henting.</Melding>}
+          </div>
+
+          <div style={{ ...kort, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {korg.map((p) => {
+              const s = gjeldande?.[p.id] ?? null;
+              return (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 54, height: 54, flex: 'none', borderRadius: 'var(--r)', overflow: 'hidden', border: '1px solid var(--border)' }}><Bilete url={p.bilete_url} namn={p.namn} hogd={54} /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 800 }}>{p.namn}</div>
+                    {!gyldig ? <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Vel periode for å sjå pris</div>
+                      : !s ? <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Sjekkar …</div>
+                      : erLedig(p.id) ? <div style={{ fontSize: 13, fontWeight: 700 }}>{kr(s.total)}{s.depositum > 0 && <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}> · depositum {kr(s.depositum)}</span>}</div>
+                      : <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--danger)' }}>Ikkje ledig i perioden</div>}
+                  </div>
+                  <button onClick={() => onFjern(p.id)} title="Fjern" style={{ flex: 'none', background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--r)', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px 10px', fontSize: 13, fontWeight: 800 }}>Fjern</button>
+                </div>
+              );
+            })}
+            {gyldig && alleLedige && (
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 10, display: 'grid', gridTemplateColumns: '1fr auto', gap: 4, fontSize: 14 }}>
+                <strong>Sum å betale ved henting</strong><strong>{kr(sum)}</strong>
+                {depositum > 0 && <><span style={{ color: 'var(--text-muted)' }}>Depositum (får du att)</span><span style={{ color: 'var(--text-muted)' }}>{kr(depositum)}</span></>}
+              </div>
+            )}
+            {gyldig && gjeldande && !alleLedige && <Melding tone="feil">Éi eller fleire varer er ikkje ledige i perioden. Fjern dei eller vel andre datoar.</Melding>}
+          </div>
+
+          <div style={{ ...kort, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <label><span style={label}>Namn</span><input value={namn} onChange={(e) => setNamn(e.target.value)} autoComplete="name" style={felt} /></label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
+              <label><span style={label}>Telefon</span><input type="tel" inputMode="tel" value={telefon} onChange={(e) => setTelefon(e.target.value)} autoComplete="tel" style={felt} /></label>
+              <label><span style={label}>E-post</span><input type="email" value={epost} onChange={(e) => setEpost(e.target.value)} autoComplete="email" style={felt} /></label>
+            </div>
+            <label><span style={label}>Melding (valfritt)</span><textarea value={melding} onChange={(e) => setMelding(e.target.value)} rows={2} style={{ ...felt, resize: 'vertical' }} /></label>
+            <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', fontSize: 14 }}>
+              <input type="checkbox" checked={vilkar} onChange={(e) => setVilkar(e.target.checked)} style={{ width: 20, height: 20, marginTop: 1, flex: 'none' }} />
+              <span>Eg har lese og godtek <button type="button" onClick={() => setVisVilkar((v) => !v)} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--brand)', fontWeight: 800, cursor: 'pointer', textDecoration: 'underline', fontSize: 14 }}>leigevilkåra</button>.</span>
+            </label>
+            {visVilkar && <div style={{ maxHeight: 200, overflowY: 'auto', background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '10px 12px', fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{i0?.vilkar || 'Utstyret skal leverast tilbake reint og i same stand, med alt tilbehøyr. Leigetakar er ansvarleg for skade og tap i leigeperioden.'}</div>}
+            {feil && <Melding tone="feil">{feil}</Melding>}
+            <button onClick={send} disabled={!kanSende} style={{ ...cta, opacity: kanSende ? 1 : 0.5, cursor: kanSende ? 'pointer' : 'not-allowed' }}>{sender ? 'Sender …' : `Send førespurnad (${korg.length} varer) ‹`}</button>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Ingen betaling no. Vi stadfestar førespurnaden, og du betaler ved henting.</div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

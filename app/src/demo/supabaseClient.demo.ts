@@ -247,6 +247,39 @@ const rpc = async (namn: string, args: Rad = {}): Promise<{ data: unknown; error
         utlevert_at: null, utlevert_av: null, returnert_at: null, returnert_av: null, created_at: new Date().toISOString() });
       return ok({ nummer, start: args.p_start, slutt: args.p_slutt, total: pris.total, depositum: pris.depositum });
     }
+    case 'utleige_send_korg': {
+      const ids: string[] = Array.from(new Set((args.p_produkt as string[]) || []));
+      if (ids.length === 0) return feil('Handlekorga er tom.');
+      if (!args.p_vilkar) return feil('Du må godta leigevilkåra.');
+      const start = new Date(args.p_start).getTime(), slutt = new Date(args.p_slutt).getTime();
+      if (slutt <= start) return feil('Sluttid må vere etter starttid.');
+      const forste = tabell('utleige_produkt').find((x) => x.id === ids[0] && x.aktiv);
+      if (!forste) return feil('Produktet finst ikkje.');
+      const butikk = forste.butikk_id;
+      const tlf = String(args.p_telefon || '').replace(/[^0-9+]/g, '');
+      let kunde = tabell('utleige_kunde').find((k) => k.butikk_id === butikk && k.telefon === tlf);
+      if (kunde) { kunde.namn = String(args.p_namn).trim(); kunde.epost = String(args.p_epost).trim().toLowerCase(); }
+      else { kunde = { id: nyId(), butikk_id: butikk, namn: String(args.p_namn).trim(), telefon: tlf, epost: String(args.p_epost).trim().toLowerCase(), notat: '', created_at: new Date().toISOString() }; tabell('utleige_kunde').push(kunde); }
+      const gruppe = nyId();
+      const varer: Rad[] = [];
+      let sum = 0;
+      let nummer = tabell('utleige_reservasjon').reduce((m, r) => Math.max(m, Number(r.nummer) || 0), 1000);
+      for (const pid of ids) {
+        const p = tabell('utleige_produkt').find((x) => x.id === pid && x.aktiv);
+        if (!p) return feil('Eitt av produkta finst ikkje.');
+        const eining = tabell('utleige_eining').filter((e) => e.produkt_id === pid).sort((x, y) => String(x.kode).localeCompare(String(y.kode))).find((e) => einingLedig(e.id, start, slutt));
+        if (!eining) return feil(`${p.namn} er ikkje ledig i perioden. Fjern varen eller vel andre datoar.`);
+        const pris = utleigePris(pid, args.p_start, args.p_slutt);
+        nummer += 1;
+        tabell('utleige_reservasjon').push({ id: nyId(), nummer, butikk_id: butikk, produkt_id: pid, eining_id: eining.id, kunde_id: kunde.id,
+          start: args.p_start, slutt: args.p_slutt, status: 'ny', pris_leige: pris.leige, gebyr: pris.gebyr, depositum: pris.depositum, pris_total: pris.total,
+          kunde_melding: String(args.p_melding || '').slice(0, 1000), internt_notat: '', retur_sjekk: null, oppgave_id: null, gruppe_id: gruppe,
+          utlevert_at: null, utlevert_av: null, returnert_at: null, returnert_av: null, created_at: new Date().toISOString() });
+        varer.push({ nummer, produkt: p.namn, total: pris.total, depositum: pris.depositum });
+        sum += pris.total;
+      }
+      return ok({ gruppe, varer, sum });
+    }
     case 'utleige_retur': {
       const r = tabell('utleige_reservasjon').find((x) => x.id === args.p_res);
       if (!r) return feil('Fann ikkje reservasjonen.');

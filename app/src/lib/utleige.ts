@@ -51,6 +51,8 @@ export interface UtleigeReservasjon {
   bilete?: { utlevert?: string[]; retur?: string[] } | null;
   /** Ønskt ny returtid kunden har bedt om på Mi side (null = ingen førespurnad). */
   forleng_til?: string | null;
+  /** Samlebestilling: reservasjonar med same gruppe_id vart bestilte i lag. */
+  gruppe_id?: string | null;
 }
 
 export type SperreGrunn = 'vedlikehald' | 'reparasjon' | 'klargjering';
