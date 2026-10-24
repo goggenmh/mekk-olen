@@ -41,15 +41,17 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
     setBilde(v.trim() === (existing?.lenke || '') ? (existing?.bilde ?? null) : null);
   };
 
-  // EKSPERIMENTELT: prøv å finne produkt ut frå vare + leverandør.
+  // EKSPERIMENTELT: søk opp produktet – helst på mekk.no ut frå varenr,
+  // elles på nettet ut frå vare + leverandør.
+  const kanSoke = varenr.trim().length >= 2 || (vare.trim() !== '' && leverandor.trim() !== '');
   const finnProdukt = async () => {
-    if (!vare.trim() || !leverandor.trim() || sokar) return;
+    if (sokar || !kanSoke) return;
     setSokar(true); setSokMelding(null);
     try {
-      const { data, error } = await supabase.functions.invoke('finn-produkt', { body: { vare: vare.trim(), leverandor: leverandor.trim() } });
-      const r = data as { lenke?: string | null; bilde?: string | null; merknad?: string } | null;
+      const { data, error } = await supabase.functions.invoke('finn-produkt', { body: { vare: vare.trim(), leverandor: leverandor.trim(), varenr: varenr.trim() } });
+      const r = data as { lenke?: string | null; bilde?: string | null; merknad?: string; kjelde?: string } | null;
       if (error || !r) setSokMelding('Søket feila. Prøv igjen, eller lim inn lenka sjølv.');
-      else if (r.lenke) { setLenke(r.lenke); setBilde(r.bilde ?? null); setSokMelding('Forslag henta – sjekk at det er rett produkt før du lagrar.'); }
+      else if (r.lenke) { setLenke(r.lenke); setBilde(r.bilde ?? null); setSokMelding(`Forslag henta${r.kjelde ? ' frå ' + r.kjelde : ''} – sjekk at det er rett produkt før du lagrar.`); }
       else setSokMelding(r.merknad || 'Fann ingen treff.');
     } catch { setSokMelding('Søket feila. Prøv igjen, eller lim inn lenka sjølv.'); }
     setSokar(false);
@@ -113,14 +115,14 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
           <input value={varenr} onChange={(e) => setVarenr(e.target.value)} style={inputStyle} />
         </Field>
       </div>
-      {vare.trim() && leverandor.trim() && (
+      {kanSoke && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <button type="button" onClick={finnProdukt} disabled={sokar}
             style={{ alignSelf: 'flex-start', padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface-alt)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: sokar ? 'default' : 'pointer', fontFamily: 'inherit', opacity: sokar ? 0.6 : 1 }}>
-            {sokar ? 'Søkjer …' : '🔎 Finn produkt automatisk (prøv)'}
+            {sokar ? 'Søkjer …' : '🔎 Finn produktet (prøv)'}
           </button>
           {sokMelding && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.45 }}>{sokMelding}</div>}
-          <div style={{ fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.4 }}>Eksperimentelt: søkjer opp produktet ut frå vare + leverandør. Kontroller alltid at lenka er rett før du lagrar.</div>
+          <div style={{ fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.4 }}>Eksperimentelt: søkjer opp produktet på mekk.no ut frå varenr, elles på nettet ut frå vare + leverandør. Kontroller alltid at lenka er rett før du lagrar.</div>
         </div>
       )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
