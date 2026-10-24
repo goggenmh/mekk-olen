@@ -12,6 +12,7 @@ const mapProdukt = (r: Record<string, unknown>): UtleigeProdukt => ({
 const mapRes = (r: Record<string, unknown>): UtleigeReservasjon => ({
   ...(r as unknown as UtleigeReservasjon),
   pris_leige: Number(r.pris_leige), gebyr: Number(r.gebyr), depositum: Number(r.depositum), pris_total: Number(r.pris_total),
+  bilete: (r.bilete as { utlevert?: string[]; retur?: string[] }) ?? {},
 });
 
 /**
@@ -141,6 +142,13 @@ export function useUtleige() {
   const slettSperre = (id: string) => gjer(() => supabase.from('utleige_sperre').delete().eq('id', id), 'Sperre fjerna');
   const frigjer = (einingId: string) => gjer(() => supabase.rpc('utleige_frigjer', { p_eining: einingId }), 'Eininga er tilgjengeleg igjen');
 
+  // Legg bilete til på ein reservasjon (ved utlevering eller retur).
+  const lagreBilete = (r: UtleigeReservasjon, type: 'utlevert' | 'retur', urls: string[]) => {
+    const no = r.bilete ?? {};
+    const ny = { ...no, [type]: [...(no[type] ?? []), ...urls] };
+    return gjer(() => supabase.from('utleige_reservasjon').update({ bilete: ny }).eq('id', r.id), 'Bilete lagra');
+  };
+
   const lagreKunde = (k: UtleigeKunde) =>
     gjer(() => supabase.from('utleige_kunde').update({ namn: k.namn, telefon: k.telefon, epost: k.epost, notat: k.notat }).eq('id', k.id), 'Kunde lagra');
 
@@ -152,7 +160,7 @@ export function useUtleige() {
   return {
     lastar, feil, produkt, einingar, kundar, reservasjonar, sperrer, innstillingar, hent,
     lagreProdukt, slettProdukt, lagreEining, slettEining, lastOppBilete, pris,
-    nyReservasjon, endreReservasjon, settStatus, lagreNotat, retur, nySperre, slettSperre, frigjer, lagreKunde, lagreInnstillingar,
+    nyReservasjon, endreReservasjon, settStatus, lagreNotat, retur, lagreBilete, nySperre, slettSperre, frigjer, lagreKunde, lagreInnstillingar,
   };
 }
 

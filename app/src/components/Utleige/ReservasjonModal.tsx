@@ -98,6 +98,12 @@ export function ReservasjonModal({ data, res, onClose }: { data: UtleigeData; re
 
   const status = (s: ResStatus, melding: string) => r && utfor(() => data.settStatus(r, s, melding));
 
+  const leggTilBilete = (type: 'utlevert' | 'retur', filer: File[]) => r && filer.length > 0 && utfor(async () => {
+    const urls: string[] = [];
+    for (const f of filer) urls.push(await data.lastOppBilete(f));
+    await data.lagreBilete(r, type, urls);
+  });
+
   const skrivKontrakt = () => r && utfor(async () => {
     try {
       await lastNedUtleigeKontraktPdf({
@@ -177,11 +183,25 @@ export function ReservasjonModal({ data, res, onClose }: { data: UtleigeData; re
               {r.oppgave_id && <div style={{ color: 'var(--text-muted)' }}>Vedlikehaldsoppgåve er laga i Oppgåver.</div>}
             </div>
           )}
+
+          <BileteSeksjon
+            utlevert={r.bilete?.utlevert ?? []}
+            retur={r.bilete?.retur ?? []}
+            kanUtlevert={['stadfesta', 'klar', 'utleigd', 'forseinka'].includes(r.status)}
+            lagrar={lagrar}
+            onLeggTil={(filer) => leggTilBilete('utlevert', filer)}
+          />
         </>
       )}
 
       {visRetur && r && <Retur tilbehor={tilbehor} lagrar={lagrar} onAvbryt={() => setVisRetur(false)}
-        onLagre={(sjekk, vedlikehald, n) => utfor(async () => { await data.retur(r, sjekk, vedlikehald, n); setVisRetur(false); })} />}
+        onLagre={(sjekk, vedlikehald, n, filer) => utfor(async () => {
+          const urls: string[] = [];
+          for (const f of filer) urls.push(await data.lastOppBilete(f));
+          await data.retur(r, sjekk, vedlikehald, n);
+          if (urls.length) await data.lagreBilete(r, 'retur', urls);
+          setVisRetur(false);
+        })} />}
 
       {endrar && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, borderTop: r ? '1px solid var(--divider)' : 'none', paddingTop: r ? 12 : 0 }}>
@@ -238,13 +258,16 @@ function Retur({ tilbehor, lagrar, onAvbryt, onLagre }: {
   tilbehor: string[];
   lagrar: boolean;
   onAvbryt: () => void;
-  onLagre: (sjekk: { tilbehor: boolean; manglar: string[]; rein: boolean; skade: boolean; skildring: string }, vedlikehald: boolean, notat: string) => void;
+  onLagre: (sjekk: { tilbehor: boolean; manglar: string[]; rein: boolean; skade: boolean; skildring: string }, vedlikehald: boolean, notat: string, filer: File[]) => void;
 }) {
   const [med, setMed] = useState<Record<string, boolean>>(() => Object.fromEntries(tilbehor.map((t) => [t, true])));
   const [rein, setRein] = useState(true);
   const [skade, setSkade] = useState(false);
   const [skildring, setSkildring] = useState('');
   const [vedlikehald, setVedlikehald] = useState(false);
+  const [filer, setFiler] = useState<File[]>([]);
+  const previews = useMemo(() => filer.map((f) => URL.createObjectURL(f)), [filer]);
+  useEffect(() => () => previews.forEach(URL.revokeObjectURL), [previews]);
   const manglar = tilbehor.filter((t) => !med[t]);
   const sjekk = (label: string, verdi: boolean, sett: (v: boolean) => void) => (
     <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 14, cursor: 'pointer' }}>
@@ -264,12 +287,63 @@ function Retur({ tilbehor, lagrar, onAvbryt, onLagre }: {
       {sjekk('Skade eller feil', skade, setSkade)}
       {skade && <textarea value={skildring} onChange={(e) => setSkildring(e.target.value)} rows={2} placeholder="Kva er skadd?" style={{ ...inputStyle, resize: 'vertical' }} />}
       {sjekk('Treng vedlikehald – sperr eininga og lag oppgåve', vedlikehald, setVedlikehald)}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Bilete av utstyret (valfritt – dokumenterer tilstanden):</span>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {previews.map((url, i) => (
+            <span key={url} style={{ position: 'relative', display: 'inline-flex' }}>
+              <img src={url} alt="" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--r)', border: '1px solid var(--border)' }} />
+              <button type="button" onClick={() => setFiler((p) => p.filter((_, j) => j !== i))} title="Fjern" style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', border: 'none', background: 'var(--danger)', color: '#fff', fontSize: 12, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+            </span>
+          ))}
+          <BileteKnapp onVel={(fs) => setFiler((p) => [...p, ...fs])} disabled={lagrar} />
+        </div>
+      </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <button disabled={lagrar || (skade && !skildring.trim())} onClick={() => onLagre({ tilbehor: manglar.length === 0, manglar, rein, skade, skildring: skildring.trim() },
-          vedlikehald, [manglar.length ? `Manglar: ${manglar.join(', ')}` : '', skade ? `Skade: ${skildring.trim()}` : '', !rein ? 'Ikkje rein' : ''].filter(Boolean).join('. '))}
+          vedlikehald, [manglar.length ? `Manglar: ${manglar.join(', ')}` : '', skade ? `Skade: ${skildring.trim()}` : '', !rein ? 'Ikkje rein' : ''].filter(Boolean).join('. '), filer)}
           style={knapp(true)}>{lagrar ? 'Lagrar …' : 'Registrer retur'}</button>
         <button onClick={onAvbryt} style={knapp()}>Avbryt</button>
       </div>
+    </div>
+  );
+}
+
+// «+ Bilete»-rute som opnar kamera/filveljar og gir attende dei valde filene.
+function BileteKnapp({ onVel, disabled }: { onVel: (filer: File[]) => void; disabled?: boolean }) {
+  return (
+    <label style={{ width: 64, height: 64, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 'var(--r)', border: '1px dashed var(--border)', cursor: disabled ? 'default' : 'pointer', fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', textAlign: 'center', opacity: disabled ? 0.5 : 1 }}>
+      + Bilete
+      <input type="file" accept="image/*" capture="environment" multiple disabled={disabled} style={{ display: 'none' }}
+        onChange={(e) => { const fs = Array.from(e.target.files ?? []); e.currentTarget.value = ''; if (fs.length) onVel(fs); }} />
+    </label>
+  );
+}
+
+// Viser bilete ved utlevering (med opplasting når det er lov) og ved retur.
+function BileteSeksjon({ utlevert, retur, kanUtlevert, lagrar, onLeggTil }: {
+  utlevert: string[]; retur: string[]; kanUtlevert: boolean; lagrar: boolean; onLeggTil: (filer: File[]) => void;
+}) {
+  if (!kanUtlevert && utlevert.length === 0 && retur.length === 0) return null;
+  const miniatyr = (url: string) => (
+    <a key={url} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex' }}>
+      <img src={url} alt="" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--r)', border: '1px solid var(--border)' }} />
+    </a>
+  );
+  const rad = (tittel: string, bilete: string[], add: boolean) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--kort-label)' }}>{tittel}</span>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        {bilete.map(miniatyr)}
+        {add && <BileteKnapp onVel={onLeggTil} disabled={lagrar} />}
+        {bilete.length === 0 && !add && <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Ingen bilete.</span>}
+      </div>
+    </div>
+  );
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'var(--surface-alt)', borderRadius: 'var(--r)', padding: '11px 13px' }}>
+      {rad('Bilete ved utlevering', utlevert, kanUtlevert)}
+      {retur.length > 0 && rad('Bilete ved retur', retur, false)}
     </div>
   );
 }

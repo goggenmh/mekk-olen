@@ -388,6 +388,9 @@ export const supabase = {
         filer.set(path, URL.createObjectURL(fil));
         return ok({ path });
       },
+      getPublicUrl(path: string) {
+        return { data: { publicUrl: filer.get(path) ?? '' } };
+      },
       async createSignedUrl(path: string) {
         const u = filer.get(path);
         return u ? ok({ signedUrl: u }) : feil('Fila finst ikkje i demoen');

@@ -47,6 +47,8 @@ export interface UtleigeReservasjon {
   returnert_at: string | null;
   returnert_av: string | null;
   created_at: string;
+  /** Bilete tekne ved utlevering og retur (URL-ar i storage-bøtta `utleige`). */
+  bilete?: { utlevert?: string[]; retur?: string[] } | null;
 }
 
 export type SperreGrunn = 'vedlikehald' | 'reparasjon' | 'klargjering';
