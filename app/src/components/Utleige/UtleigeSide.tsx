@@ -32,6 +32,8 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
   const [produkt, setProdukt] = useState<KatalogProdukt[] | null>(null);
   const [feil, setFeil] = useState<string | null>(null);
   const [valt, setValt] = useState<KatalogProdukt | null>(null);
+  // Ledige einingar i dag per produkt, til «X ledige»-merket på korta.
+  const [ledig, setLedig] = useState<Record<string, { ledige: number; totalt: number }>>({});
 
   useEffect(() => {
     supabase.rpc('utleige_katalog').then(({ data, error }) => {
@@ -39,6 +41,26 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
       else setProdukt((data || []) as KatalogProdukt[]);
     });
   }, []);
+
+  useEffect(() => {
+    if (!produkt || produkt.length === 0) return;
+    const t = today();
+    let avbroten = false;
+    Promise.all(produkt.map(async (p) => {
+      try {
+        const { data } = await supabase.rpc('utleige_ledigheit', { p_produkt: p.id, p_fra: t, p_dagar: 1 });
+        return { id: p.id, rad: (data as { ledige: number; totalt: number }[] | null)?.[0] };
+      } catch {
+        return { id: p.id, rad: undefined as { ledige: number; totalt: number } | undefined };
+      }
+    })).then((res) => {
+      if (avbroten) return;
+      const m: Record<string, { ledige: number; totalt: number }> = {};
+      for (const r of res) if (r.rad) m[r.id] = { ledige: r.rad.ledige, totalt: r.rad.totalt };
+      setLedig(m);
+    });
+    return () => { avbroten = true; };
+  }, [produkt]);
 
   const butikk = produkt?.[0]?.butikk ?? 'MEKK';
 
@@ -77,6 +99,13 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
                   </div>
                   <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
                     <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.01em' }}>{p.namn}</div>
+                    {ledig[p.id] && ledig[p.id].totalt > 0 && (
+                      <span style={{ alignSelf: 'flex-start', fontSize: 11.5, fontWeight: 800, padding: '3px 9px', borderRadius: 999,
+                        color: ledig[p.id].ledige > 0 ? 'var(--pill-gronn-fg)' : 'var(--pill-gra-fg)',
+                        background: ledig[p.id].ledige > 0 ? 'var(--pill-gronn-bg)' : 'var(--pill-gra-bg)' }}>
+                        {ledig[p.id].ledige > 0 ? `${ledig[p.id].ledige} ledige no` : 'Fullt utleigd no'}
+                      </span>
+                    )}
                     {p.beskriving && <div style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.beskriving}</div>}
                     {p.helg_pris != null && <div style={{ fontSize: 13, fontWeight: 700 }}>Helg (fre–mån): {kr(p.helg_pris)}</div>}
                     {p.tilbehor.length > 0 && (
