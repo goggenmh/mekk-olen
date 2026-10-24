@@ -38,7 +38,7 @@ export function Utleige() {
   // Tidspunktet sida vart opna (forseinka = utleigd med returtid før dette).
   const [no] = useState(() => Date.now());
   // Fane i ordrelista på driftstavla (Quipli-stil: Alle / Skal ut / Skal inn / …).
-  const [oversiktFane, setOversiktFane] = useState<'alle' | 'ut' | 'inn' | 'forseinka' | 'nye'>('alle');
+  const [oversiktFane, setOversiktFane] = useState<'alle' | 'ut' | 'inn' | 'forseinka' | 'nye' | 'forleng'>('alle');
 
   const { produkt, einingar, kundar, reservasjonar, lastar, feil } = data;
   const finnProdukt = (id: string) => produkt.find((p) => p.id === id);
@@ -78,11 +78,15 @@ export function Utleige() {
   const utTal = reservasjonar.filter((r) => r.status === 'stadfesta' || r.status === 'klar').length;
   const innTal = reservasjonar.filter((r) => r.status === 'utleigd' || r.status === 'forseinka').length;
   const aktiveTal = reservasjonar.filter((r) => ['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka', 'kontroll'].includes(r.status)).length;
+  const forlengTal = reservasjonar.filter((r) => !!r.forleng_til).length;
   const oversiktListe = oversiktFane === 'ut' ? reservasjonar.filter((r) => r.status === 'stadfesta' || r.status === 'klar').sort((a, b) => a.start.localeCompare(b.start))
     : oversiktFane === 'inn' ? reservasjonar.filter((r) => r.status === 'utleigd' || r.status === 'forseinka').sort((a, b) => a.slutt.localeCompare(b.slutt))
     : oversiktFane === 'forseinka' ? forseinka.slice().sort((a, b) => a.slutt.localeCompare(b.slutt))
+    : oversiktFane === 'forleng' ? reservasjonar.filter((r) => !!r.forleng_til).sort((a, b) => a.start.localeCompare(b.start))
     : oversiktFane === 'nye' ? nye
     : reservasjonar.filter((r) => ['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka', 'kontroll'].includes(r.status)).sort((a, b) => a.start.localeCompare(b.start));
+  const oversiktFaner: [typeof oversiktFane, string][] = [['alle', `Alle (${aktiveTal})`], ['ut', `Skal ut (${utTal})`], ['inn', `Skal inn (${innTal})`], ['forseinka', `Forseinka (${forseinka.length})`], ['nye', `Nye (${nye.length})`]];
+  if (forlengTal > 0) oversiktFaner.push(['forleng', `Forlenging (${forlengTal})`]);
   const hurtig = (r: UtleigeReservasjon) => {
     const stil = (primar: boolean) => ({ padding: '7px 12px', borderRadius: 'var(--r)', border: primar ? 'none' : '1px solid var(--border)', background: primar ? 'var(--brand-strong)' : 'var(--surface)', color: primar ? 'var(--on-brand)' : 'var(--text-secondary)', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' as const });
     if (r.status === 'ny') return <button onClick={() => data.settStatus(r, 'stadfesta', 'Stadfesta – kunden får e-post')} style={stil(true)}>Godkjenn</button>;
@@ -141,7 +145,7 @@ export function Utleige() {
             </div>
 
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {([['alle', `Alle (${aktiveTal})`], ['ut', `Skal ut (${utTal})`], ['inn', `Skal inn (${innTal})`], ['forseinka', `Forseinka (${forseinka.length})`], ['nye', `Nye (${nye.length})`]] as const).map(([k, l]) => (
+              {oversiktFaner.map(([k, l]) => (
                 <button key={k} onClick={() => setOversiktFane(k)} aria-pressed={oversiktFane === k}
                   style={{ padding: '7px 13px', borderRadius: 999, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 12.5, fontWeight: 800, whiteSpace: 'nowrap',
                     background: oversiktFane === k ? 'var(--brand-strong)' : 'var(--surface)', color: oversiktFane === k ? 'var(--on-brand)' : 'var(--text-secondary)' }}>
@@ -170,6 +174,11 @@ export function Utleige() {
                     {(r.status === 'utleigd' || r.status === 'forseinka') && (
                       <span style={{ fontSize: 11.5, fontWeight: 700, paddingLeft: 2, color: seinka ? 'var(--danger)' : 'var(--text-muted)' }}>
                         {seinka ? `Forseinka – skulle vore levert ${tidKort(r.slutt)}` : `Retur ${tidKort(r.slutt)}`}
+                      </span>
+                    )}
+                    {r.forleng_til && (
+                      <span style={{ fontSize: 11.5, fontWeight: 800, paddingLeft: 2, color: 'var(--pill-amber-fg)' }}>
+                        Ber om forlenging til {tidKort(r.forleng_til)}
                       </span>
                     )}
                   </div>

@@ -144,6 +144,16 @@ export function ReservasjonModal({ data, res, onClose }: { data: UtleigeData; re
             <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Motteken {tidKort(r.created_at)}</span>
           </div>
 
+          {r.forleng_til && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--pill-amber-bg)', border: '1px solid var(--pill-amber-fg)', borderRadius: 'var(--r)', padding: '11px 13px' }}>
+              <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--pill-amber-fg)' }}>Kunden ber om forlenging til {tidKort(r.forleng_til)}</span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button disabled={lagrar} onClick={() => utfor(() => data.godkjennForleng(r))} style={knapp(true)}>Godkjenn forlenging</button>
+                <button disabled={lagrar} onClick={() => utfor(() => data.avslaForleng(r))} style={knapp()}>Avslå</button>
+              </div>
+            </div>
+          )}
+
           {/* Handlingar etter status */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {r.status === 'ny' && <>

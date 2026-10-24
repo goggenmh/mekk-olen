@@ -15,10 +15,12 @@ interface MineLeige {
   produkt_namn: string; produkt_tilbehor: string[]; eining_kode: string | null;
   butikk: string; vilkar: string; kontakt_telefon: string; kontakt_epost: string;
   avbestillingsfrist_timar: number;
+  maks_dagar: number; forleng_til: string | null;
   kunde_namn: string; kunde_telefon: string; kunde_epost: string;
 }
 
 const KAN_AVBESTILLE: ResStatus[] = ['ny', 'stadfesta', 'klar'];
+const KAN_FORLENGE: ResStatus[] = ['stadfesta', 'klar', 'utleigd', 'forseinka'];
 
 const kort: CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', boxShadow: 'var(--shadow-card)' };
 const label: CSSProperties = { fontSize: 11.5, fontWeight: 900, letterSpacing: '0.4px', textTransform: 'uppercase', color: 'var(--kort-label)', marginBottom: 6, display: 'block' };
@@ -35,6 +37,8 @@ export function MiSide({ naviger }: { naviger: (sti: string) => void }) {
   const [jobbar, setJobbar] = useState<string | null>(null);
   const [kortFeil, setKortFeil] = useState<{ id: string; tekst: string } | null>(null);
   const [no] = useState(() => Date.now());
+  const [forlengFor, setForlengFor] = useState<string | null>(null);
+  const [forlengDato, setForlengDato] = useState('');
 
   const hentLeige = useCallback(async () => {
     const { data, error } = await supabase.rpc('utleige_mine_leige');
@@ -73,6 +77,23 @@ export function MiSide({ naviger }: { naviger: (sti: string) => void }) {
     const { error } = await supabase.rpc('utleige_kunde_avbestill', { p_res: r.id });
     setJobbar(null); setBekreft(null);
     if (error) { setKortFeil({ id: r.id, tekst: feilTekst(error) }); return; }
+    await hentLeige();
+  };
+
+  // «ÅÅÅÅ-MM-DD» i lokal tid, og tidlegaste nye returdato (dagen etter noverande).
+  const datoDel = (iso: string) => { const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const minForleng = (r: MineLeige) => datoDel(new Date(new Date(r.slutt).getTime() + 864e5).toISOString());
+
+  const sendForleng = async (r: MineLeige) => {
+    if (!forlengDato) return;
+    setJobbar(r.id); setKortFeil(null);
+    const slutt = new Date(r.slutt);
+    const [y, m, d] = forlengDato.split('-').map(Number);
+    slutt.setFullYear(y, m - 1, d);
+    const { error } = await supabase.rpc('utleige_kunde_forleng', { p_res: r.id, p_til: slutt.toISOString() });
+    setJobbar(null);
+    if (error) { setKortFeil({ id: r.id, tekst: feilTekst(error) }); return; }
+    setForlengFor(null); setForlengDato('');
     await hentLeige();
   };
 
@@ -122,6 +143,9 @@ export function MiSide({ naviger }: { naviger: (sti: string) => void }) {
                     {kanAvbestille(r) && bekreft !== r.id && (
                       <button onClick={() => { setBekreft(r.id); setKortFeil(null); }} style={{ ...sekundaer, color: 'var(--danger)', borderColor: 'var(--danger-border)' }}>Avbestill</button>
                     )}
+                    {KAN_FORLENGE.includes(r.status) && !r.forleng_til && forlengFor !== r.id && (
+                      <button onClick={() => { setForlengFor(r.id); setForlengDato(minForleng(r)); setKortFeil(null); }} style={sekundaer}>Be om forlenging</button>
+                    )}
                   </div>
                   {bekreft === r.id && (
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 13.5 }}>
@@ -129,6 +153,17 @@ export function MiSide({ naviger }: { naviger: (sti: string) => void }) {
                       <button disabled={jobbar === r.id} onClick={() => avbestill(r)} style={{ padding: '7px 12px', borderRadius: 'var(--r)', border: 'none', background: 'var(--danger)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>{jobbar === r.id ? 'Avbestiller …' : 'Ja, avbestill'}</button>
                       <button onClick={() => setBekreft(null)} style={{ padding: '7px 12px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Avbryt</button>
                     </div>
+                  )}
+                  {forlengFor === r.id && (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 13.5 }}>
+                      <span>Ny returdato:</span>
+                      <input type="date" value={forlengDato} min={minForleng(r)} onChange={(e) => setForlengDato(e.target.value)} style={{ ...felt, width: 'auto', padding: '8px 10px', fontSize: 14 }} />
+                      <button disabled={jobbar === r.id || !forlengDato} onClick={() => sendForleng(r)} style={{ ...cta, padding: '8px 14px', fontSize: 14 }}>{jobbar === r.id ? 'Sender …' : 'Send førespurnad'}</button>
+                      <button onClick={() => { setForlengFor(null); setForlengDato(''); }} style={sekundaer}>Avbryt</button>
+                    </div>
+                  )}
+                  {r.forleng_til && (
+                    <Boks>Du har bedt om forlenging til {tidKort(r.forleng_til)}. Butikken må godkjenne før det gjeld.</Boks>
                   )}
                   {KAN_AVBESTILLE.includes(r.status) && !kanAvbestille(r) && (
                     <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>For nær hentetida til å avbestille sjølv – ta kontakt med butikken{r.kontakt_telefon ? ` (tlf. ${r.kontakt_telefon})` : ''}.</div>
