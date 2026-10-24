@@ -67,6 +67,10 @@ export function Utleige() {
   const returar = reservasjonar.filter((r) => r.status === 'utleigd' && dagAv(r.slutt) === t);
   const forseinka = reservasjonar.filter((r) => r.status === 'forseinka' || (r.status === 'utleigd' && new Date(r.slutt).getTime() < no));
   const sperra = einingar.filter((e) => e.status !== 'tilgjengeleg');
+  // Nøkkeltal til driftstavla.
+  const utleigdNo = reservasjonar.filter((r) => r.status === 'utleigd' || r.status === 'forseinka').length;
+  const einingarUt = new Set(reservasjonar.filter((r) => r.status === 'utleigd' || r.status === 'forseinka').map((r) => r.eining_id)).size;
+  const belegg = einingar.length ? Math.round((einingarUt / einingar.length) * 100) : 0;
 
   const sokLc = sok.trim().toLowerCase();
   const liste = reservasjonar.filter((r) => filter === 'alle' || (filter === 'ny' ? r.status === 'ny' : ['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka', 'kontroll'].includes(r.status)))
@@ -107,7 +111,16 @@ export function Utleige() {
             </div>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 14, alignItems: 'start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(128px, 1fr))', gap: 10 }}>
+              <Kpi tal={utleigdNo} label="Utleigd no" />
+              <Kpi tal={nye.length} label="Opne førespurnader" tone={nye.length ? 'amber' : undefined} onClick={() => { setFilter('ny'); setFane('reservasjonar'); }} />
+              <Kpi tal={utleveringar.length} label="Skal hentast i dag" />
+              <Kpi tal={returar.length} label="Skal leverast i dag" />
+              <Kpi tal={forseinka.length} label="Forseinka" tone={forseinka.length ? 'raud' : undefined} />
+              <Kpi tal={`${belegg}%`} label="Belegg no" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 14, alignItems: 'start' }}>
             <Seksjon tittel="Nye førespurnader" tal={nye.length} tom="Ingen nye førespurnader.">
               {nye.map((r) => {
                 const frist = new Date(r.created_at).getTime() + (data.innstillingar?.svarfrist_timar ?? 48) * 3600e3;
@@ -137,6 +150,7 @@ export function Utleige() {
                 );
               })}
             </Seksjon>
+            </div>
           </div>
         )
       )}
@@ -172,6 +186,17 @@ export function Utleige() {
 
       {opne && <ReservasjonModal data={data} res={opne === 'ny' ? null : opne} onClose={() => setOpne(null)} />}
     </div>
+  );
+}
+
+function Kpi({ tal, label, tone, onClick }: { tal: number | string; label: string; tone?: 'amber' | 'raud'; onClick?: () => void }) {
+  const farge = tone === 'raud' ? 'var(--danger)' : tone === 'amber' ? 'var(--pill-amber-fg)' : 'var(--text)';
+  return (
+    <button type="button" onClick={onClick} disabled={!onClick}
+      style={{ ...kortStil, padding: '13px 15px', display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-start', textAlign: 'left', cursor: onClick ? 'pointer' : 'default', fontFamily: 'inherit' }}>
+      <span style={{ fontSize: 26, fontWeight: 900, lineHeight: 1, color: farge }}>{tal}</span>
+      <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)' }}>{label}</span>
+    </button>
   );
 }
 
