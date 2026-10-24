@@ -41,19 +41,29 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
     setBilde(v.trim() === (existing?.lenke || '') ? (existing?.bilde ?? null) : null);
   };
 
-  // EKSPERIMENTELT: søk opp produktet – helst på mekk.no ut frå varenr,
+  // Finst det alt ei lenke, hentar vi berre biletet frå ho (og rører ikkje
+  // lenka). Elles søkjer vi opp produktet – helst på mekk.no ut frå varenr,
   // elles på nettet ut frå vare + leverandør.
-  const kanSoke = varenr.trim().length >= 2 || (vare.trim() !== '' && leverandor.trim() !== '');
-  const finnProdukt = async () => {
-    if (sokar || !kanSoke) return;
+  const harLenke = lenke.trim() !== '';
+  const kanHente = harLenke || varenr.trim().length >= 2 || (vare.trim() !== '' && leverandor.trim() !== '');
+  const hentProdukt = async () => {
+    if (sokar || !kanHente) return;
     setSokar(true); setSokMelding(null);
     try {
-      const { data, error } = await supabase.functions.invoke('finn-produkt', { body: { vare: vare.trim(), leverandor: leverandor.trim(), varenr: varenr.trim() } });
-      const r = data as { lenke?: string | null; bilde?: string | null; merknad?: string; kjelde?: string } | null;
-      if (error || !r) setSokMelding('Søket feila. Prøv igjen, eller lim inn lenka sjølv.');
-      else if (r.lenke) { setLenke(r.lenke); setBilde(r.bilde ?? null); setSokMelding(`Forslag henta${r.kjelde ? ' frå ' + r.kjelde : ''} – sjekk at det er rett produkt før du lagrar.`); }
-      else setSokMelding(r.merknad || 'Fann ingen treff.');
-    } catch { setSokMelding('Søket feila. Prøv igjen, eller lim inn lenka sjølv.'); }
+      if (harLenke) {
+        const { data, error } = await supabase.functions.invoke('lenke-bilete', { body: { url: lenke.trim() } });
+        const r = data as { bilde?: string | null } | null;
+        if (error) setSokMelding('Klarte ikkje hente bilete frå lenka.');
+        else if (r?.bilde) { setBilde(r.bilde); setSokMelding('Bilete henta frå lenka.'); }
+        else setSokMelding('Fann ikkje noko bilete på den sida.');
+      } else {
+        const { data, error } = await supabase.functions.invoke('finn-produkt', { body: { vare: vare.trim(), leverandor: leverandor.trim(), varenr: varenr.trim() } });
+        const r = data as { lenke?: string | null; bilde?: string | null; merknad?: string; kjelde?: string } | null;
+        if (error || !r) setSokMelding('Søket feila. Prøv igjen, eller lim inn lenka sjølv.');
+        else if (r.lenke) { setLenke(r.lenke); setBilde(r.bilde ?? null); setSokMelding(`Forslag henta${r.kjelde ? ' frå ' + r.kjelde : ''} – sjekk at det er rett produkt før du lagrar.`); }
+        else setSokMelding(r.merknad || 'Fann ingen treff.');
+      }
+    } catch { setSokMelding('Noko gjekk gale. Prøv igjen.'); }
     setSokar(false);
   };
 
@@ -115,14 +125,18 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
           <input value={varenr} onChange={(e) => setVarenr(e.target.value)} style={inputStyle} />
         </Field>
       </div>
-      {kanSoke && (
+      {kanHente && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <button type="button" onClick={finnProdukt} disabled={sokar}
+          <button type="button" onClick={hentProdukt} disabled={sokar}
             style={{ alignSelf: 'flex-start', padding: '8px 14px', border: '1px solid var(--border)', background: 'var(--surface-alt)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: sokar ? 'default' : 'pointer', fontFamily: 'inherit', opacity: sokar ? 0.6 : 1 }}>
-            {sokar ? 'Søkjer …' : 'Finn produktet (prøv)'}
+            {sokar ? (harLenke ? 'Hentar …' : 'Søkjer …') : (harLenke ? 'Hent bilete frå lenka' : 'Finn produktet (prøv)')}
           </button>
           {sokMelding && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.45 }}>{sokMelding}</div>}
-          <div style={{ fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.4 }}>Eksperimentelt: søkjer opp produktet på mekk.no ut frå varenr, elles på nettet ut frå vare + leverandør. Kontroller alltid at lenka er rett før du lagrar.</div>
+          <div style={{ fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.4 }}>
+            {harLenke
+              ? 'Hentar produktbiletet frå lenka du har lagt inn. Lenka blir ikkje endra.'
+              : 'Eksperimentelt: søkjer opp produktet på mekk.no ut frå varenr, elles på nettet ut frå vare + leverandør. Kontroller alltid at lenka er rett før du lagrar.'}
+          </div>
         </div>
       )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
