@@ -39,7 +39,8 @@ export function GodkjennModal({ avvik, tal, onGodkjenn, onClose }: {
           <button
             onClick={godkjenn}
             disabled={lagrar}
-            style={{ padding: '10px 18px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+            className="knapp-gronn"
+            style={{ padding: '10px 18px', fontSize: 14 }}
           >
             {lagrar ? 'Godkjenner…' : avvik.length > 0 ? 'Godkjenn likevel' : 'Godkjenn'}
           </button>

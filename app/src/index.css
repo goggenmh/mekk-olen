@@ -57,6 +57,10 @@
   --knapp-teal-kant: var(--mekk-teal);
   --knapp-teal-bg-hover: var(--brand-soft);
   --knapp-teal-kant-hover: var(--mekk-teal-700);
+  /* Grøn = godkjent/positivt (godkjenningar) */
+  --knapp-gronn-bg: #2f9e6f;
+  --knapp-gronn-fg: #ffffff;
+  --knapp-gronn-bg-hover: #268a60;
   /* Tekst på brand-/accent-fargar (knappar, merke) */
   --on-brand: #ffffff;
   /* Statusmerke og kategoriar */
@@ -142,6 +146,9 @@
   --knapp-teal-kant: rgba(93, 203, 204, 0.5);
   --knapp-teal-bg-hover: rgba(32, 201, 184, 0.14);
   --knapp-teal-kant-hover: #5dcbcc;
+  --knapp-gronn-bg: #2f9e6f;
+  --knapp-gronn-fg: #ffffff;
+  --knapp-gronn-bg-hover: #38b07d;
   /* Mørk tekst på den lyse turkise/gule fargen – kvit gav berre 2:1 */
   --on-brand: #04211e;
   /* Statusmerke: dempa bakgrunn, lys tekst */
@@ -286,6 +293,19 @@ button:active {
 }
 .knapp-teal:hover:not(:disabled) { background: var(--knapp-teal-bg-hover); border-color: var(--knapp-teal-kant-hover); color: var(--knapp-teal-kant-hover); }
 .knapp-teal:disabled { opacity: 0.45; cursor: default; }
+
+/* Grøn handlingsknapp: godkjent/positivt (Godkjenn) */
+.knapp-gronn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--r);
+  font-family: var(--font-sans); font-size: 12.5px; font-weight: 800; line-height: 1.2;
+  white-space: nowrap; cursor: pointer;
+  background: var(--knapp-gronn-bg); color: var(--knapp-gronn-fg);
+  border: 1.5px solid transparent;
+  transition: background 0.14s ease;
+}
+.knapp-gronn:hover:not(:disabled) { background: var(--knapp-gronn-bg-hover); }
+.knapp-gronn:disabled { opacity: 0.45; cursor: default; }
 
 /* PIN-tastar på innlogging */
 .pinkey:hover { background: var(--brand) !important; color: var(--on-brand) !important; border-color: var(--brand) !important; }

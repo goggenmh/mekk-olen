@@ -148,7 +148,7 @@ export function ReservasjonModal({ data, res, onClose }: { data: UtleigeData; re
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--pill-amber-bg)', border: '1px solid var(--pill-amber-fg)', borderRadius: 'var(--r)', padding: '11px 13px' }}>
               <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--pill-amber-fg)' }}>Kunden ber om forlenging til {tidKort(r.forleng_til)}</span>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button disabled={lagrar} onClick={() => utfor(() => data.godkjennForleng(r))} style={knapp(true)}>Godkjenn forlenging</button>
+                <button disabled={lagrar} onClick={() => utfor(() => data.godkjennForleng(r))} className="knapp-gronn">Godkjenn forlenging</button>
                 <button disabled={lagrar} onClick={() => utfor(() => data.avslaForleng(r))} style={knapp()}>Avslå</button>
               </div>
             </div>
@@ -157,7 +157,7 @@ export function ReservasjonModal({ data, res, onClose }: { data: UtleigeData; re
           {/* Handlingar etter status */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {r.status === 'ny' && <>
-              <button disabled={lagrar} onClick={() => status('stadfesta', 'Stadfesta – kunden får e-post')} style={knapp(true)}>Godkjenn</button>
+              <button disabled={lagrar} onClick={() => status('stadfesta', 'Stadfesta – kunden får e-post')} className="knapp-gronn">Godkjenn</button>
               <button disabled={lagrar} onClick={() => status('avslatt', 'Avslått')} style={knapp()}>Avslå</button>
             </>}
             {r.status === 'stadfesta' && <button disabled={lagrar} onClick={() => status('klar', 'Klar for henting')} style={knapp()}>Klar for henting</button>}
