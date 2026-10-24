@@ -35,6 +35,8 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
     return () => clearInterval(id);
   }, []);
   const klokke = now.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+  const helsing = now.getHours() < 10 ? 'God morgon' : now.getHours() < 18 ? 'God dag' : 'God kveld';
+  const fornamn = (user?.navn || '').split(' ')[0];
 
   const t = today();
   const weekDays = weekDates(mondayOf(t));
@@ -98,31 +100,37 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
 
   return (
     <div style={{ padding: isMobile ? '16px 16px 28px' : '22px 28px 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 17, fontWeight: 700, textTransform: 'capitalize' }}>{fullDatoTekst(t)}</div>
-        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>
-          <span style={{ fontFamily: "'Geist Mono Variable'" }}>{klokke}</span> · veke {isoWeek(t)}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ fontSize: isMobile ? 23 : 28, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.01em', lineHeight: 1.05 }}>{helsing}, {fornamn}</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4, textTransform: 'capitalize' }}>{fullDatoTekst(t)}</div>
         </div>
+        {!isMobile && (
+          <div style={{ textAlign: 'right', lineHeight: 1.1 }}>
+            <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 24, fontWeight: 600, letterSpacing: '-0.5px' }}>{klokke}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginTop: 2 }}>Veke {isoWeek(t)}</div>
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(330px, 1fr))', gap: 14, alignItems: 'start' }}>
-        {/* Neste vakt */}
-        <div style={cardStyle}>
-          <div style={labelStyle}>Neste vakt</div>
+        {/* Neste vakt – solid blikkfang, utan gradient */}
+        <div style={{ ...cardStyle, background: 'var(--mekk-navy)', border: 'none', color: '#ffffff', padding: '16px 18px' }}>
+          <div style={{ ...labelStyle, color: 'rgba(255,255,255,0.55)' }}>Neste vakt</div>
           {nesteVakt ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: "'Geist Mono Variable'", fontSize: 26, fontWeight: 700, letterSpacing: '-0.5px' }}>{nesteVakt.start}–{nesteVakt.slutt}</span>
-                <span style={{ fontSize: 13.5, color: 'var(--text-secondary)', fontWeight: 600 }}>{nesteVakt.date === t ? 'i dag' : datoKort(nesteVakt.date)}</span>
+                <span style={{ fontFamily: "'Geist Mono Variable'", fontSize: isMobile ? 32 : 36, fontWeight: 700, letterSpacing: '-1px', lineHeight: 1 }}>{nesteVakt.start}–{nesteVakt.slutt}</span>
+                <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{nesteVakt.date === t ? 'i dag' : datoKort(nesteVakt.date)}</span>
               </div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>
                 {nesteVakt.skift ? `${nesteVakt.skift}` : 'Vakt'}
                 {startOm && ` · ${startOm}`}
                 {nesteKollegaer.length > 0 && ` · saman med ${nesteKollegaer.join(', ')}`}
               </div>
             </div>
           ) : (
-            <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Ingen komande vakt denne veka.</div>
+            <div style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.65)' }}>Ingen komande vakt denne veka.</div>
           )}
         </div>
 
