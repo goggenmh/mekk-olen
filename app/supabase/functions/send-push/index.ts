@@ -81,11 +81,12 @@ async function godkjennarar(admin: SupabaseClient, butikkId: string): Promise<st
   return (aktive || []).filter((a) => a.leder || delegertSet.has(a.id)).map((a) => a.id);
 }
 
-// Opnar sida på veka/månaden hendinga gjeld (dato = ÅÅÅÅ-MM-DD).
-const vaktplan = (dato?: string | null) => `/?vis=vaktplan${dato ? `&dato=${dato}` : ''}`;
-const timeliste = (dato?: string | null) => `/?vis=timeliste${dato ? `&dato=${dato}` : ''}`;
+// Opnar den interne appen på veka/månaden hendinga gjeld (dato = ÅÅÅÅ-MM-DD).
+// Må peike på /intern: sjølve domenet («/») er kundesida for utleige.
+const vaktplan = (dato?: string | null) => `/intern?vis=vaktplan${dato ? `&dato=${dato}` : ''}`;
+const timeliste = (dato?: string | null) => `/intern?vis=timeliste${dato ? `&dato=${dato}` : ''}`;
 const tidlegast = (datoar: string[]) => [...datoar].sort()[0];
-const oppgaver = '/?vis=oppgaver';
+const oppgaver = '/intern?vis=oppgaver';
 
 /** Sender meldingane og ryddar bort abonnement som ikkje kan nåast lenger. */
 async function sendAlle(admin: SupabaseClient, noklar: { publicKey: string; privateKey: string }, meldingar: Melding[]) {
@@ -200,7 +201,7 @@ Deno.serve(async (req) => {
         .eq('id', String(body.ferie_id || '')).eq('butikk_id', meg.butikk_id).maybeSingle();
       const periode = f?.fra ? (f.til && f.til !== f.fra ? `${datoTekst(f.fra)}–${datoTekst(f.til)}` : datoTekst(f.fra)) : '';
       const kva = ({ Ferie: 'ferie', Fri: 'fri', Kurs: 'kurs', Sjukmeld: 'sjukmelding' } as Record<string, string>)[f?.type || ''] || 'fri';
-      const url = `/?vis=ferie${f?.fra ? `&dato=${f.fra}` : ''}`;
+      const url = `/intern?vis=ferie${f?.fra ? `&dato=${f.fra}` : ''}`;
       if (f && type === 'ferie_soknad' && f.status === 'ventar' && f.ansatt === meg.id) {
         meldingar.push({
           til: ikkjeMeg(await godkjennarar(admin, meg.butikk_id)),

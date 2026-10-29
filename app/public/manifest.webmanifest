@@ -3,7 +3,7 @@
   "short_name": "MEKK",
   "description": "Vaktplan, timeliste og oppgåver for MEKK Ølen.",
   "lang": "nn",
-  "start_url": "/",
+  "start_url": "/intern",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
