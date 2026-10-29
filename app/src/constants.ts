@@ -139,9 +139,10 @@ export const OPPGAVE_KAT: Record<string, { fg: string; bg: string }> = {
   Butikk: { fg: 'var(--pill-teal-fg)', bg: 'var(--pill-teal-bg)' },
   Lager: { fg: 'var(--pill-amber-fg)', bg: 'var(--pill-amber-bg)' },
   Kampanje: { fg: 'var(--pill-lilla-fg)', bg: 'var(--pill-lilla-bg)' },
+  Reklamasjon: { fg: 'var(--pill-raud-fg)', bg: 'var(--pill-raud-bg)' },
   Anna: { fg: 'var(--pill-gra-fg)', bg: 'var(--pill-gra-bg)' },
 };
-export const OPPGAVE_KATEGORIAR = ['Butikk', 'Lager', 'Kampanje', 'Anna'] as const;
+export const OPPGAVE_KATEGORIAR = ['Butikk', 'Lager', 'Kampanje', 'Reklamasjon', 'Anna'] as const;
 
 // Gjentaking for faste rutinar.
 export const GJENTAK: Record<string, { tekst: string }> = {

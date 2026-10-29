@@ -43,6 +43,17 @@ export const mineIDag = (tasks: Task[], uid: string | undefined, t: string) =>
 /** Ufordelte oppgåver som kven som helst kan ta ansvar for. */
 export const ledigeOppgaver = (tasks: Task[]) => tasks.filter((x) => !x.ferdig && x.ansatt === 'ufordelt');
 
+// ---- reklamasjonar ----
+// Ein reklamasjon er ei vanleg oppgåve med kategorien «Reklamasjon». Han
+// blir lagt på den som fører han inn, men dagleg leiar får òg varsel og
+// kan følgje saka opp.
+export const REKLAMASJON = 'Reklamasjon';
+export const erReklamasjon = (x: Task) => x.kategori === REKLAMASJON;
+/** Opne reklamasjonar – det dagleg leiar skal følgje opp. */
+export const opneReklamasjonar = (tasks: Task[]) => tasks.filter((x) => !x.ferdig && erReklamasjon(x)).sort(sorterOppgaver);
+/** Faste oppfølgingssteg for ein ny reklamasjon. */
+export const REKLAMASJON_STEG = ['Kontakta kunde', 'Sendt til leverandør', 'Løyst med kunde'];
+
 /** Kva status oppgåva har, i den rekkjefølgja det er viktigast å sjå. */
 export function oppgaveStatus(x: Task, t: string): { tekst: string; fg: string; bg: string } {
   if (x.ferdig) return { tekst: 'Fullført', fg: 'var(--pill-gronn-fg)', bg: 'var(--pill-gronn-bg)' };

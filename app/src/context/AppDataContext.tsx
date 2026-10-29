@@ -491,6 +491,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     else setTasks((prev) => [...prev, lagra]);
     varsleTildelt(lagra, forrige?.ansatt);
     if (lagra.blokkert && !forrige?.blokkert) varsle({ type: 'oppgave_blokkert', task_id: lagra.id });
+    // Ny reklamasjon: dagleg leiar skal få beskjed om saka.
+    if (!t.id && lagra.kategori === 'Reklamasjon') varsle({ type: 'reklamasjon_ny', task_id: lagra.id });
     if (melding) toast(melding);
   };
   const saveTask: AppData['saveTask'] = (t) => lagreTask(t, 'Oppgåve lagra');
