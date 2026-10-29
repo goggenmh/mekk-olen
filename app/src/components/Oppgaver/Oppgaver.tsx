@@ -3,10 +3,11 @@ import { useAppData } from '../../context/AppDataContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { useAuth } from '../../context/AuthContext';
 import { addDays, fullDatoTekst, mondayOf, today, ymd } from '../../lib/dates';
-import { FRISTGRUPPER, erForseinka, fristgruppe, ledigeOppgaver, sorterOppgaver } from '../../lib/oppgave';
+import { FRISTGRUPPER, erForseinka, erReklamasjon, fristgruppe, ledigeOppgaver, sorterOppgaver } from '../../lib/oppgave';
 import { tal } from '../../lib/tekst';
 import { useIsMobile } from '../../lib/useIsMobile';
 import { TaskModal } from './TaskModal';
+import { ReklamasjonModal } from './ReklamasjonModal';
 import { BlokkerModal } from './BlokkerModal';
 import { RutineModal } from './RutineModal';
 import { OppgaveKort } from './OppgaveKort';
@@ -14,7 +15,7 @@ import type { View } from '../../lib/view';
 import type { Task } from '../../types';
 
 type Fane = 'mine' | 'ledige' | 'alle' | 'fullforte';
-type Fokus = 'forseinka' | 'blokkert' | null;
+type Fokus = 'forseinka' | 'blokkert' | 'reklamasjon' | null;
 
 const fane = (aktiv: boolean): CSSProperties => ({
   padding: '8px 14px', borderRadius: 'var(--r)', border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 700,
@@ -35,6 +36,7 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
   const [taskTarget, setTaskTarget] = useState<{ existing?: Task; defaultAnsatt?: Task['ansatt'] } | null>(null);
   const [blokkerTarget, setBlokkerTarget] = useState<Task | null>(null);
   const [visRutinar, setVisRutinar] = useState(false);
+  const [visReklamasjon, setVisReklamasjon] = useState(false);
   const dragTaskId = useRef<string | null>(null);
 
   // Hurtig-registrering: skriv tittel, vel kven og frist, trykk Enter.
@@ -55,6 +57,7 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
   const ledige = ledigeOppgaver(tasks);
   const forseinka = opne.filter((x) => erForseinka(x, t));
   const blokkerte = opne.filter((x) => x.blokkert);
+  const reklamasjonar = opne.filter(erReklamasjon);
   const vekeSidan = addDays(t, -6);
   const fullforteVeke = tasks.filter((x) => x.ferdig && x.ferdigAt && ymd(new Date(x.ferdigAt)) >= vekeSidan);
   const mineIDag = mine.filter((x) => x.frist && x.frist <= t).length;
@@ -71,6 +74,7 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
   let synlege = valtFane === 'mine' ? mine : valtFane === 'ledige' ? ledige : valtFane === 'alle' ? opne : tasks.filter((x) => x.ferdig);
   if (fokus === 'forseinka') synlege = synlege.filter((x) => erForseinka(x, t));
   if (fokus === 'blokkert') synlege = synlege.filter((x) => x.blokkert);
+  if (fokus === 'reklamasjon') synlege = synlege.filter(erReklamasjon);
 
   const kort = (task: Task, kompakt = false) => (
     <OppgaveKort
@@ -107,6 +111,12 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
             ↻ Faste rutinar
           </button>
         )}
+        <button
+          onClick={() => setVisReklamasjon(true)}
+          style={{ padding: '9px 14px', background: 'var(--surface)', color: 'var(--pill-raud-fg)', border: '1px solid var(--pill-raud-fg)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+        >
+          + Ny reklamasjon
+        </button>
         <button
           onClick={() => setTaskTarget({ defaultAnsatt: valtFane === 'mine' ? user?.id : undefined })}
           style={{ padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
@@ -178,7 +188,16 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
             <button key={k} onClick={() => velFane(k)} aria-pressed={valtFane === k && !fokus} style={fane(valtFane === k && !fokus)}>{l}</button>
           ))}
         </div>
-        {fokus && (
+        {reklamasjonar.length > 0 && (
+          <button
+            onClick={() => velFokus('reklamasjon')}
+            aria-pressed={fokus === 'reklamasjon'}
+            style={{ ...fane(fokus === 'reklamasjon'), background: fokus === 'reklamasjon' ? 'var(--pill-raud-fg)' : 'var(--surface)', color: fokus === 'reklamasjon' ? '#fff' : 'var(--pill-raud-fg)', borderColor: 'var(--pill-raud-fg)' }}
+          >
+            Reklamasjonar ({reklamasjonar.length})
+          </button>
+        )}
+        {fokus && fokus !== 'reklamasjon' && (
           <button onClick={() => setFokus(null)} style={{ ...fane(true), background: 'var(--danger)' }}>
             {fokus === 'forseinka' ? 'Forseinka' : 'Blokkerte'} ✕
           </button>
@@ -244,6 +263,7 @@ export function Oppgaver({ setView }: { setView?: (v: View) => void }) {
       )}
       {blokkerTarget && <BlokkerModal task={blokkerTarget} onClose={() => setBlokkerTarget(null)} />}
       {visRutinar && <RutineModal onClose={() => setVisRutinar(false)} />}
+      {visReklamasjon && <ReklamasjonModal onClose={() => setVisReklamasjon(false)} />}
     </div>
   );
 }

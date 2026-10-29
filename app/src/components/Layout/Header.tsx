@@ -12,7 +12,7 @@ import { alder } from '../../lib/bestilling';
 import { ustadfesta } from '../../lib/dokument';
 import { ventandeFerie } from '../../lib/ferie';
 import { tal } from '../../lib/tekst';
-import { ledigeOppgaver, mineIDag } from '../../lib/oppgave';
+import { ledigeOppgaver, mineIDag, opneReklamasjonar } from '../../lib/oppgave';
 
 interface Varsel {
   key: string;
@@ -55,7 +55,10 @@ export function Header({ setView, isMobile = false, onMenu }: { setView: (v: Vie
     const gamle = orders.filter((o) => alder(o, t).gammal).length;
     const ulesne = ustadfesta(docs, stadfestingar, user?.id);
     const ferieSoknader = canApprove(user?.id) ? ventandeFerie(ferie) : 0;
+    // Dagleg leiar skal fanga opp reklamasjonar ein tilsett har ført inn.
+    const reklamasjonar = canApprove(user?.id) ? opneReklamasjonar(tasks) : [];
     return [
+      ...reklamasjonar.map((r) => ({ key: `reklam-${r.id}`, tekst: r.opprettaAv ? `${findAnsatt(r.opprettaAv).navn.split(' ')[0]} registrerte ein reklamasjon: ${r.tittel.replace(/^Reklamasjon:\s*/, '')}` : r.tittel, view: 'oppgaver' as View })),
       ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønskjer å bytte vakt ${s.dag}`, view: 'vaktplan' as View })),
       ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${tal(ventandeTimar, 'timeføring', 'timeføringar')} ventar på godkjenning`, view: 'timeliste' as View }] : []),
       ...ankomne.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View })),

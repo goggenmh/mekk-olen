@@ -12,7 +12,7 @@ import { alder } from '../../lib/bestilling';
 import { tal } from '../../lib/tekst';
 import { ustadfesta } from '../../lib/dokument';
 import { ventandeFerie } from '../../lib/ferie';
-import { erForseinka, fristTekst, ledigeOppgaver, mineIDag } from '../../lib/oppgave';
+import { erForseinka, fristTekst, ledigeOppgaver, mineIDag, opneReklamasjonar } from '../../lib/oppgave';
 import type { Task } from '../../types';
 
 const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '14px 16px' } as const;
@@ -54,7 +54,10 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const ulesneHms = ustadfesta(docs, stadfestingar, user?.id);
   const nyasteFerie = alleFerie.filter((f) => f.status === 'ventar' && f.createdAt).map((f) => f.createdAt!).sort().pop();
   const eldsteForseinka = tasks.filter((x) => !x.ferdig && x.frist && x.frist < t && (kanLageVakt || x.ansatt === user?.id)).map((x) => x.frist!).sort()[0];
+  // Reklamasjonar ein tilsett har ført inn – dagleg leiar skal følgje dei opp.
+  const reklamasjonar = kanLageVakt ? opneReklamasjonar(tasks) : [];
   const varslerUsortert: Varsel[] = [
+    ...reklamasjonar.map((r) => ({ key: `reklam-${r.id}`, tekst: r.tittel, view: 'oppgaver' as View, niva: 'hog' as const, alder: r.opprettaAv ? `Registrert av ${findAnsatt(r.opprettaAv).navn.split(' ')[0]}` : undefined })),
     ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønskjer å bytte vakt ${s.dag}`, view: 'vaktplan' as View, niva: 'middels' as const })),
     ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${tal(ventandeTimar, 'timeføring', 'timeføringar')} ventar på godkjenning`, view: 'timeliste' as View, niva: 'middels' as const }] : []),
     ...ankomneBestillingar.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View, niva: 'middels' as const })),

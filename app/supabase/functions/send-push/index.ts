@@ -14,6 +14,8 @@
 //   oppgave_tildelt – du har fått ansvar for ei oppgåve
 //   oppgave_blokkert – ein tilsett står fast på ei oppgåve og treng hjelp
 //                     (til godkjennarane og den som oppretta henne)
+//   reklamasjon_ny  – ein tilsett har ført inn ein reklamasjon
+//                     (til godkjennarane / dagleg leiar)
 //
 // Tryggleik: klienten seier berre KVA som skjedde (id-ar). Mottakarar og
 // tekst blir henta frå databasen her, avgrensa til butikken til den som
@@ -234,6 +236,17 @@ Deno.serve(async (req) => {
           til: ikkjeMeg([...(await godkjennarar(admin, meg.butikk_id)), o.oppretta_av || '']),
           title: 'Treng hjelp med oppgåve',
           body: `${meg.navn} står fast på «${o.tittel}»${o.blokkert_grunn ? `: ${o.blokkert_grunn}` : '.'}`,
+          url: oppgaver,
+        });
+      }
+    } else if (type === 'reklamasjon_ny') {
+      const { data: o } = await admin.from('tasks').select('tittel, ferdig')
+        .eq('id', String(body.task_id || '')).eq('butikk_id', meg.butikk_id).maybeSingle();
+      if (o && !o.ferdig) {
+        meldingar.push({
+          til: ikkjeMeg(await godkjennarar(admin, meg.butikk_id)),
+          title: 'Ny reklamasjon',
+          body: `${meg.navn} registrerte ein reklamasjon: ${o.tittel.replace(/^Reklamasjon:\s*/, '')}.`,
           url: oppgaver,
         });
       }
