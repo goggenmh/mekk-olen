@@ -48,7 +48,7 @@ export function UtleigeKundar({ data, onOpne }: { data: UtleigeData; onOpne: (r:
                   </button>
                 ))}
                 <textarea value={notat} onChange={(e) => setNotat(e.target.value)} rows={2} placeholder="Notat om kunden (internt)" style={{ padding: '9px 11px', border: '1px solid var(--border)', borderRadius: 'var(--r-input)', background: 'var(--surface)', color: 'var(--text)', fontSize: 13.5, resize: 'vertical' }} />
-                {notat !== k.notat && <button onClick={() => data.lagreKunde({ ...k, notat }).catch(() => {})} style={{ ...knapp(), alignSelf: 'flex-start' }}>Lagre notat</button>}
+                {notat !== k.notat && <button onClick={() => data.lagreKunde({ ...k, notat }).catch(() => {})} className="knapp-gronn" style={{ alignSelf: 'flex-start' }}>Lagre notat</button>}
               </div>
             )}
           </div>
