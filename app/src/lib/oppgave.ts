@@ -53,6 +53,11 @@ export const erReklamasjon = (x: Task) => x.kategori === REKLAMASJON;
 export const opneReklamasjonar = (tasks: Task[]) => tasks.filter((x) => !x.ferdig && erReklamasjon(x)).sort(sorterOppgaver);
 /** Faste oppfølgingssteg for ein ny reklamasjon. */
 export const REKLAMASJON_STEG = ['Kontakta kunde', 'Sendt til leverandør', 'Løyst med kunde'];
+/** Kundens telefonnummer på ein reklamasjon (henta frå «Telefon: …»-linja). */
+export const reklamasjonTelefon = (x: Task): string | null => {
+  const m = x.detalj.match(/^Telefon:\s*(.+)$/m);
+  return m ? m[1].trim() : null;
+};
 
 /** Kva status oppgåva har, i den rekkjefølgja det er viktigast å sjå. */
 export function oppgaveStatus(x: Task, t: string): { tekst: string; fg: string; bg: string } {

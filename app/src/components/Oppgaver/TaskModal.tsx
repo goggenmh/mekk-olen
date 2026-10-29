@@ -5,6 +5,7 @@ import { useAnsatte } from '../../context/AnsatteContext';
 import { useAuth } from '../../context/AuthContext';
 import { PRIORITET, OPPGAVE_KATEGORIAR, GJENTAK, type Prioritet } from '../../constants';
 import { addDays, datoKort, today, ymd } from '../../lib/dates';
+import { erReklamasjon, reklamasjonTelefon } from '../../lib/oppgave';
 import type { Task, SjekklistePunkt, TaskInput } from '../../types';
 
 const fristKnapp = (aktiv: boolean) => ({
@@ -95,6 +96,14 @@ export function TaskModal({ existing, defaultAnsatt, preset, onClose }: {
         <div style={{ fontSize: 12.5, color: 'var(--brand-strong)', background: 'var(--brand-soft)', borderRadius: 'var(--r)', padding: '8px 11px', fontWeight: 600 }}>
           Kopla til bestillinga til {bestilling.kunde} ({bestilling.vare})
         </div>
+      )}
+      {existing && erReklamasjon(existing) && reklamasjonTelefon(existing) && (
+        <a
+          href={`tel:${reklamasjonTelefon(existing)!.replace(/\s/g, '')}`}
+          style={{ display: 'inline-flex', alignSelf: 'flex-start', fontSize: 13, fontWeight: 700, color: 'var(--brand)', background: 'var(--brand-soft)', borderRadius: 'var(--r)', padding: '8px 12px', textDecoration: 'none' }}
+        >
+          Ring kunde: {reklamasjonTelefon(existing)}
+        </a>
       )}
       <Field label="Ansvarleg">
         <select value={ansatt} onChange={(e) => setAnsatt(e.target.value as Task['ansatt'])} style={inputStyle}>
