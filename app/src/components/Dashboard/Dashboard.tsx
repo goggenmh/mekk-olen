@@ -7,6 +7,7 @@ import { useIsMobile } from '../../lib/useIsMobile';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { TaskModal } from '../Oppgaver/TaskModal';
+import { ReklamasjonModal } from '../Oppgaver/ReklamasjonModal';
 import type { View } from '../../lib/view';
 import { alder } from '../../lib/bestilling';
 import { tal } from '../../lib/tekst';
@@ -21,6 +22,7 @@ const labelStyle = { fontSize: 11.5, fontWeight: 800, letterSpacing: '0.3px', te
 export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const { entries, shifts, swaps, tasks, orders, ferie: alleFerie, docs, stadfestingar, canApprove, completeTask, moveTask, utleige } = useAppData();
   const [opneTask, setOpneTask] = useState<Task | null>(null);
+  const [visReklamasjon, setVisReklamasjon] = useState(false);
   const ferie = alleFerie.filter((f) => f.status === 'godkjend');
   const { user } = useAuth();
   const kanLageVakt = canApprove(user?.id);
@@ -108,12 +110,20 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
           <div style={{ fontSize: isMobile ? 23 : 28, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.01em', lineHeight: 1.05 }}>{helsing}, {fornamn}</div>
           <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 4, textTransform: 'capitalize' }}>{fullDatoTekst(t)}</div>
         </div>
-        {!isMobile && (
-          <div style={{ textAlign: 'right', lineHeight: 1.1 }}>
-            <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 24, fontWeight: 600, letterSpacing: '-0.5px' }}>{klokke}</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginTop: 2 }}>Veke {isoWeek(t)}</div>
-          </div>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <button
+            onClick={() => setVisReklamasjon(true)}
+            style={{ padding: '9px 14px', background: 'var(--surface)', color: 'var(--pill-raud-fg)', border: '1px solid var(--pill-raud-fg)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            + Ny reklamasjon
+          </button>
+          {!isMobile && (
+            <div style={{ textAlign: 'right', lineHeight: 1.1 }}>
+              <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 24, fontWeight: 600, letterSpacing: '-0.5px' }}>{klokke}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginTop: 2 }}>Veke {isoWeek(t)}</div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(330px, 1fr))', gap: 14, alignItems: 'start' }}>
@@ -246,6 +256,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
       </div>
 
       {opneTask && <TaskModal existing={opneTask} onClose={() => setOpneTask(null)} />}
+      {visReklamasjon && <ReklamasjonModal onClose={() => setVisReklamasjon(false)} />}
     </div>
   );
 }
