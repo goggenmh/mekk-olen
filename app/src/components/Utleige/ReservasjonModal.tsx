@@ -130,7 +130,7 @@ export function ReservasjonModal({ data, res, onClose }: { data: UtleigeData; re
         <>
           <CancelButton onClick={onClose}>{r ? 'Lukk' : 'Avbryt'}</CancelButton>
           {endrar && (
-            <button onClick={lagre} disabled={!kanLagre || lagrar} style={{ padding: '10px 18px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontSize: 14, fontWeight: 900, cursor: 'pointer', opacity: kanLagre && !lagrar ? 1 : 0.5 }}>
+            <button onClick={lagre} disabled={!kanLagre || lagrar} className="knapp-gronn" style={{ padding: '10px 18px', fontSize: 14 }}>
               {lagrar ? 'Lagrar …' : r ? 'Lagre endring' : 'Lagre reservasjon'}
             </button>
           )}
@@ -167,7 +167,7 @@ export function ReservasjonModal({ data, res, onClose }: { data: UtleigeData; re
             </>}
             {['utleigd', 'forseinka'].includes(r.status) && <button onClick={() => setVisRetur(true)} style={knapp(true)}>Registrer retur</button>}
             {r.status === 'kontroll' && (
-              <button disabled={lagrar} onClick={() => utfor(async () => { await data.frigjer(r.eining_id); await data.settStatus(r, 'returnert', 'Kontrollert – eininga er tilgjengeleg igjen'); })} style={knapp(true)}>Ferdig kontrollert</button>
+              <button disabled={lagrar} onClick={() => utfor(async () => { await data.frigjer(r.eining_id); await data.settStatus(r, 'returnert', 'Kontrollert – eininga er tilgjengeleg igjen'); })} className="knapp-gronn">Ferdig kontrollert</button>
             )}
             {['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka'].includes(r.status) && !endrar && (
               <button onClick={() => setEndrar(true)} style={knapp()}>{['utleigd', 'forseinka'].includes(r.status) ? 'Forleng / endre' : 'Endre periode'}</button>
@@ -262,7 +262,7 @@ export function ReservasjonModal({ data, res, onClose }: { data: UtleigeData; re
       <Field label="Internt notat">
         <textarea value={notat} onChange={(e) => setNotat(e.target.value)} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Berre for dei tilsette" />
       </Field>
-      {r && notat !== r.internt_notat && <button disabled={lagrar} onClick={() => utfor(() => data.lagreNotat(r, notat))} style={{ ...knapp(), alignSelf: 'flex-start', marginTop: -6 }}>Lagre notat</button>}
+      {r && notat !== r.internt_notat && <button disabled={lagrar} onClick={() => utfor(() => data.lagreNotat(r, notat))} className="knapp-gronn" style={{ alignSelf: 'flex-start', marginTop: -6 }}>Lagre notat</button>}
     </Modal>
   );
 }
@@ -315,7 +315,7 @@ function Retur({ tilbehor, lagrar, onAvbryt, onLagre }: {
       <div style={{ display: 'flex', gap: 8 }}>
         <button disabled={lagrar || (skade && !skildring.trim())} onClick={() => onLagre({ tilbehor: manglar.length === 0, manglar, rein, skade, skildring: skildring.trim() },
           vedlikehald, [manglar.length ? `Manglar: ${manglar.join(', ')}` : '', skade ? `Skade: ${skildring.trim()}` : '', !rein ? 'Ikkje rein' : ''].filter(Boolean).join('. '), filer)}
-          style={knapp(true)}>{lagrar ? 'Lagrar …' : 'Registrer retur'}</button>
+          className="knapp-gronn">{lagrar ? 'Lagrar …' : 'Registrer retur'}</button>
         <button onClick={onAvbryt} style={knapp()}>Avbryt</button>
       </div>
     </div>

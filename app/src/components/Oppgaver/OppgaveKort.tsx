@@ -64,11 +64,11 @@ export function OppgaveKort({
   if (task.ferdig) {
     if (kanEndre) ekstra = <button onClick={() => reopenTask(task)} style={knapp(false)}>Angre</button>;
   } else if (task.ansatt === 'ufordelt') {
-    if (user) hovud = <button onClick={() => moveTask(task.id, user.id)} style={knapp(true)}>Ta ansvar</button>;
+    if (user) hovud = <button onClick={() => moveTask(task.id, user.id)} className="knapp-teal">Ta ansvar</button>;
   } else if (task.blokkert) {
     if (kanEndre) hovud = <button onClick={() => unblockTask(task)} style={knapp(false)}>Opphev blokkering</button>;
   } else if (kanEndre) {
-    hovud = <button onClick={() => completeTask(task)} style={knapp(true)}>✓ Fullfør</button>;
+    hovud = <button onClick={() => completeTask(task)} className="knapp-gronn">✓ Fullfør</button>;
     if (minOppgave) ekstra = <button onClick={onBlokker} style={knapp(false)}>Treng hjelp</button>;
   }
 
