@@ -4,7 +4,7 @@ import { useAnsatte } from '../../context/AnsatteContext';
 import { useAuth } from '../../context/AuthContext';
 import { OPPGAVE_KAT, PRIORITET, type Prioritet } from '../../constants';
 import { datoKort, today, ymd } from '../../lib/dates';
-import { erForseinka, fristTekst, oppgaveStatus } from '../../lib/oppgave';
+import { erForseinka, erReklamasjon, fristTekst, oppgaveStatus, reklamasjonTelefon } from '../../lib/oppgave';
 import { Avatar } from '../ui/Avatar';
 import type { Task } from '../../types';
 
@@ -129,6 +129,15 @@ export function OppgaveKort({
       {!kompakt && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
           <span style={{ fontSize: 10.5, fontWeight: 700, color: kat.fg, background: kat.bg, padding: '2px 8px', borderRadius: 'var(--r)' }}>{task.kategori}</span>
+          {erReklamasjon(task) && reklamasjonTelefon(task) && (
+            <a
+              href={`tel:${reklamasjonTelefon(task)!.replace(/\s/g, '')}`}
+              onClick={(e) => e.stopPropagation()}
+              style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)', background: 'var(--brand-soft)', borderRadius: 'var(--r)', padding: '2px 8px', textDecoration: 'none' }}
+            >
+              Ring {reklamasjonTelefon(task)}
+            </a>
+          )}
           {sjekkTotal > 0 && (
             <span style={{ fontSize: 11, fontWeight: 600, color: sjekkFerdig === sjekkTotal ? 'var(--brand-strong)' : 'var(--text-muted)' }}>{sjekkFerdig}/{sjekkTotal} punkt</span>
           )}

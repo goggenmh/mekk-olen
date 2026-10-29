@@ -45,10 +45,13 @@ export function ReklamasjonModal({ onClose }: { onClose: () => void }) {
     if (!kunde.trim()) { setFeil('Skriv inn kven kunden er.'); return; }
     if (!skildring.trim()) { setFeil('Skriv kort kva reklamasjonen gjeld.'); return; }
     setLagrar(true);
+    // Telefonen står på eiga linje («Telefon: …») slik at han kan hentast ut
+    // att og visast som ei ring-lenke på reklamasjonen (sjå reklamasjonTelefon).
     const detaljLinjer = [
       skildring.trim(),
       '',
-      `Kunde: ${kunde.trim()}${telefon.trim() ? ` · ${telefon.trim()}` : ''}`,
+      `Kunde: ${kunde.trim()}`,
+      telefon.trim() ? `Telefon: ${telefon.trim()}` : '',
       (vare.trim() || varenr.trim()) ? `Vare: ${[vare.trim(), varenr.trim() && `varenr ${varenr.trim()}`].filter(Boolean).join(' · ')}` : '',
     ].filter((l, i) => l !== '' || i === 1).join('\n');
     try {
