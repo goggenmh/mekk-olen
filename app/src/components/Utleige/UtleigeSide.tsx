@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from
 import { supabase } from '../../supabaseClient';
 import { kr, tilIso, feilTekst, type PrisSvar } from '../../lib/utleige';
 import { addDays, today, UKE_KORT, weekdayIdx, parseDate, MND } from '../../lib/dates';
+import { DEMO } from '../../lib/view';
 
 // Offentleg kundeside (/utleige): ingen innlogging. Snakkar berre med dei
 // offentlege funksjonane i databasen (utleige_katalog, utleige_ledigheit,
@@ -140,6 +141,12 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
           </>
         )}
       </main>
+      <footer style={{ borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '16px', display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-muted)' }}>
+          <span>© {new Date().getFullYear()} {butikk}</span>
+          {!DEMO && <a href="/intern" style={{ color: 'var(--text-secondary)', fontWeight: 700, textDecoration: 'none' }}>Tilsett – logg inn ›</a>}
+        </div>
+      </footer>
     </div>
   );
 }

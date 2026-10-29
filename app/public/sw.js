@@ -10,7 +10,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  let data = { title: 'MEKK Ølen', body: '', url: '/', tag: undefined };
+  let data = { title: 'MEKK Ølen', body: '', url: '/intern', tag: undefined };
   try {
     if (event.data) data = { ...data, ...event.data.json() };
   } catch {
@@ -21,7 +21,7 @@ self.addEventListener('push', (event) => {
       body: data.body,
       icon: '/assets/icon-192.png',
       badge: '/assets/icon-192.png',
-      data: { url: data.url || '/' },
+      data: { url: data.url || '/intern' },
       // Same tag (t.d. «timar-venter») erstattar det førre varselet i staden
       // for å hope seg opp; renotify gjer at telefonen likevel seier ifrå.
       ...(data.tag ? { tag: data.tag, renotify: true } : {}),
@@ -33,7 +33,7 @@ self.addEventListener('push', (event) => {
 // Er appen open frå før, hentar vi ho fram og ber ho byte side.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || '/';
+  const url = event.notification.data?.url || '/intern';
   const q = new URL(url, self.location.origin).searchParams;
   const vis = q.get('vis');
   const dato = q.get('dato');
