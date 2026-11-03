@@ -155,7 +155,8 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
           onDayClick={(date) => { setVpWeek(mondayOf(date)); setMode('uke'); }}
         />
       ) : (
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `repeat(${days.length},1fr)`, gap: 10 }}>
+      <div style={{ overflowX: 'auto' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `repeat(${days.length}, minmax(132px, 1fr))`, gap: 10 }}>
         {days.map((d) => {
           const dayShifts = shifts.filter((s) => s.date === d.date).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
           const erIDag = d.date === iDag;
@@ -208,7 +209,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                     title="Høgreklikk for val"
                     style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${farge}`, borderRadius: 'var(--r)', padding: '9px 11px', cursor: kanLageVakt ? 'grab' : kanOpne ? 'pointer' : 'default', boxShadow: 'var(--shadow-card)' }}
                   >
-                    <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 15.5, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.6px', fontVariantNumeric: 'tabular-nums' }}>{s.start}–{s.slutt}</div>
+                    <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 15.5, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.6px', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{s.start}–{s.slutt}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 6 }}>
                       <span style={{ width: 20, height: 20, borderRadius: 'var(--r-sm)', background: farge, color: tekstPaFarge(farge), fontSize: 9.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{a.init}</span>
                       <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.navn}</span>
@@ -281,6 +282,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
             </div>
           );
         })}
+      </div>
       </div>
       )}
 
