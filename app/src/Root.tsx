@@ -11,14 +11,13 @@ const Kundeside = lazy(() => import('./components/Utleige/Kundeside').then((m) =
 // Den offentlege kundesida blir rendra utan tilsett-providerane, så ei kundeøkt
 // ikkje blir logga ut av AuthContext (som tømmer økter utan ansatt-profil).
 //
-// Kundane møter kundesida på sjølve domenet («/») og på «/utleige»; tilsette
-// loggar inn på «/intern» (og dei andre interne adressene). Dette er berre for
-// at kundane ikkje skal lande på ansatt-innlogginga – sjølve tilgangen er
-// framleis låst av PIN + RLS, ikkje av kva adresse ein gjettar.
-// I demo opnar «/» framleis tilsett-appen, så demovisningar er uendra.
+// Kundesida (utleige) ligg berre på «/utleige» – ein kjem dit når ein trykkjer
+// lenka, ikkje berre ved å opne domenet. Sjølve domenet («/») og «/intern»
+// opnar den vanlege tilsett-appen. Tilgangen er uansett låst av PIN + RLS,
+// ikkje av kva adresse ein gjettar.
 export function Root() {
   const sti = lesSti();
-  if (sti.startsWith('/utleige') || (!DEMO && (sti === '/' || sti === ''))) {
+  if (sti.startsWith('/utleige')) {
     return <Suspense fallback={null}><Kundeside />{DEMO && <DemoMerke />}</Suspense>;
   }
   return (
