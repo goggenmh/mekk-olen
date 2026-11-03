@@ -6,7 +6,7 @@ import { Icon } from '../ui/Icon';
 
 // Lenka til det eigne lager-systemet (skanning + registrering: mottak, ut til
 // butikk, telling og vareimport). Denne sida er berre eit raskt oppslag.
-const SKANN_URL = 'https://lagerkontroll-mekk-olen-prosjekt.vercel.app/';
+const SKANN_URL = 'https://lagerkontroll-skann.vercel.app/';
 
 interface Plass { plass: string; tal: number }
 interface Treff { nr: string; namn: string; strekkode: string | null; eining: string | null; total: number; plassar: Plass[] }
