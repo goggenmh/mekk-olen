@@ -45,6 +45,20 @@ export function Lager() {
     return () => { avbroten = true; clearTimeout(t); };
   }, [q]);
 
+  // Opnar skanne-appen med éi innlogging: vi sender MEKK-økta vidare i adressa
+  // (#sso=…), så skanne-appen slepp eigen PIN. Vindauget blir opna med ein gong
+  // (så det ikkje blir blokkert), og adressa sett etter at økta er henta.
+  const opneSkanning = async () => {
+    const win = window.open('about:blank', '_blank');
+    let url = SKANN_URL;
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (token) url = `${SKANN_URL}#sso=${encodeURIComponent(token)}`;
+    } catch { /* fell tilbake til vanleg opning med PIN */ }
+    if (win) win.location.href = url; else window.location.href = url;
+  };
+
   return (
     <div style={{ padding: isMobile ? 16 : 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
@@ -52,14 +66,12 @@ export function Lager() {
           <div className="sidetittel">Lager</div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 3 }}>Søk opp ei vare og sjå kor mange som er på lager og kvar.</div>
         </div>
-        <a
-          href={SKANN_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ padding: '9px 14px', background: 'var(--surface)', color: 'var(--brand)', border: '1px solid var(--brand)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}
+        <button
+          onClick={opneSkanning}
+          style={{ padding: '9px 14px', background: 'var(--surface)', color: 'var(--brand)', border: '1px solid var(--brand)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
         >
           Opne lager-skanning ↗
-        </a>
+        </button>
       </div>
 
       <div style={{ position: 'relative', maxWidth: 520 }}>
