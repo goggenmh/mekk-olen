@@ -3,6 +3,41 @@ import { supabase } from '../../supabaseClient';
 import { kr, tilIso, feilTekst, type PrisSvar } from '../../lib/utleige';
 import { addDays, today, UKE_KORT, weekdayIdx, parseDate, MND } from '../../lib/dates';
 import { DEMO } from '../../lib/view';
+import { Icon } from '../ui/Icon';
+
+// Kontakt- og opningstider for MEKK Ølen (vist på kundesida).
+const KONTAKT = { telefon: '46 54 09 59', telefonLenke: '+4746540959', adresse: 'Dreganesvegen 34, 5580 Ølen' };
+// getDay(): 0 = søndag … 6 = laurdag. [opnar, stengjer] i heile timar, null = stengt.
+const OPNINGSTIDER: (readonly [number, number] | null)[] = [null, [9, 18], [9, 18], [9, 18], [9, 18], [9, 18], [9, 16]];
+
+function opningIDag(now: Date): { tekst: string; ope: boolean } {
+  const t = OPNINGSTIDER[now.getDay()];
+  if (!t) return { tekst: 'Stengt i dag', ope: false };
+  const m = now.getHours() * 60 + now.getMinutes();
+  if (m < t[0] * 60) return { tekst: `Opnar kl. ${t[0]}`, ope: false };
+  if (m >= t[1] * 60) return { tekst: 'Stengt no', ope: false };
+  return { tekst: `Ope i dag til kl. ${t[1]}`, ope: true };
+}
+
+function KontaktStripe() {
+  const info = opningIDag(new Date());
+  return (
+    <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '9px 16px', display: 'flex', flexWrap: 'wrap', gap: '5px 20px', alignItems: 'center', fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600 }}>
+        <a href={`tel:${KONTAKT.telefonLenke}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--brand)', textDecoration: 'none', fontWeight: 800 }}>
+          <Icon name="phone" size={15} /> {KONTAKT.telefon}
+        </a>
+        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(KONTAKT.adresse)}`} target="_blank" rel="noreferrer" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+          {KONTAKT.adresse}
+        </a>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', background: info.ope ? 'var(--stock-green)' : 'var(--text-faint2)' }} />
+          {info.tekst}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 // Offentleg kundeside (/utleige): ingen innlogging. Snakkar berre med dei
 // offentlege funksjonane i databasen (utleige_katalog, utleige_ledigheit,
@@ -86,6 +121,7 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
           {naviger && <button onClick={() => naviger('/utleige/mi-side')} style={{ background: 'none', border: '1px solid #ffffff55', color: '#fff', borderRadius: 'var(--r)', padding: '7px 12px', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mi side ›</button>}
         </div>
       </header>
+      <KontaktStripe />
 
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: '22px 16px 60px' }}>
         {feil && <Melding tone="feil">{feil}</Melding>}
@@ -144,9 +180,24 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
         )}
       </main>
       <footer style={{ borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '16px', display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-muted)' }}>
-          <span>© {new Date().getFullYear()} {butikk}</span>
-          {!DEMO && <a href="/intern" style={{ color: 'var(--text-secondary)', fontWeight: 700, textDecoration: 'none' }}>Tilsett – logg inn ›</a>}
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '22px 16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 18, fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+          <div>
+            <div style={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 12, letterSpacing: '0.4px', color: 'var(--kort-label)', marginBottom: 6 }}>Kontakt</div>
+            <div><a href={`tel:${KONTAKT.telefonLenke}`} style={{ color: 'var(--brand)', fontWeight: 800, textDecoration: 'none' }}>{KONTAKT.telefon}</a></div>
+            <div><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(KONTAKT.adresse)}`} target="_blank" rel="noreferrer" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>{KONTAKT.adresse}</a></div>
+          </div>
+          <div>
+            <div style={{ fontWeight: 900, textTransform: 'uppercase', fontSize: 12, letterSpacing: '0.4px', color: 'var(--kort-label)', marginBottom: 6 }}>Opningstider</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto auto', gap: '1px 12px', width: 'fit-content' }}>
+              <span>Måndag–fredag</span><span>09–18</span>
+              <span>Laurdag</span><span>09–16</span>
+              <span>Søndag</span><span>Stengt</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'space-between' }}>
+            <span>© {new Date().getFullYear()} {butikk}</span>
+            {!DEMO && <a href="/intern" style={{ color: 'var(--text-secondary)', fontWeight: 700, textDecoration: 'none' }}>Tilsett – logg inn ›</a>}
+          </div>
         </div>
       </footer>
     </div>
