@@ -99,7 +99,9 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
         ) : produkt && produkt.length > 0 && (
           <>
             <h1 style={{ fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.01em', margin: '0 0 6px' }}>Lei utstyret du treng</h1>
-            <p style={{ color: 'var(--text-muted)', margin: '0 0 20px', fontSize: 15 }}>Vel utstyr, sjekk ledige datoar og send ein førespurnad. Vi stadfestar så snart vi kan – du betaler når du hentar.</p>
+            <p style={{ color: 'var(--text-muted)', margin: '0 0 18px', fontSize: 15 }}>Vel utstyr, sjekk ledige datoar og send ein førespurnad. Vi stadfestar så snart vi kan – du betaler når du hentar.</p>
+            <SlikFungererDet />
+            <h2 style={{ fontSize: 15, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--kort-label)', margin: '0 0 12px' }}>Alt utstyr</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
               {produkt.map((p) => (
                 <div key={p.id} style={{ ...kort, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -115,7 +117,7 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
                       <span style={{ alignSelf: 'flex-start', fontSize: 11.5, fontWeight: 800, padding: '3px 9px', borderRadius: 999,
                         color: ledig[p.id].ledige > 0 ? 'var(--pill-gronn-fg)' : 'var(--pill-gra-fg)',
                         background: ledig[p.id].ledige > 0 ? 'var(--pill-gronn-bg)' : 'var(--pill-gra-bg)' }}>
-                        {ledig[p.id].ledige > 0 ? `${ledig[p.id].ledige} ledige no` : 'Fullt utleigd no'}
+                        {ledig[p.id].ledige > 0 ? `${ledig[p.id].ledige} ledig${ledig[p.id].ledige === 1 ? '' : 'e'} no` : 'Fullt utleigd no'}
                       </span>
                     )}
                     {p.beskriving && <div style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.beskriving}</div>}
@@ -126,8 +128,8 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
                       </div>
                     )}
                     <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                      <button onClick={() => { setValt(p); window.scrollTo(0, 0); }} style={{ ...cta, flex: 1 }}>Sjå ledigheit ‹</button>
-                      <button onClick={() => leggIKorg(p)} disabled={iKorg(p.id)} style={{ ...knappAlt, flex: 'none', opacity: iKorg(p.id) ? 0.6 : 1 }}>{iKorg(p.id) ? 'I korg ✓' : '+ Korg'}</button>
+                      <button onClick={() => { setValt(p); window.scrollTo(0, 0); }} style={{ ...cta, flex: 1, fontSize: 14, padding: '12px 10px', whiteSpace: 'nowrap' }}>Vel datoar ‹</button>
+                      <button onClick={() => leggIKorg(p)} disabled={iKorg(p.id)} style={{ ...knappAlt, flex: 'none', padding: '12px 12px', opacity: iKorg(p.id) ? 0.6 : 1 }}>{iKorg(p.id) ? 'I korg ✓' : '+ Korg'}</button>
                     </div>
                   </div>
                 </div>
@@ -147,6 +149,28 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
           {!DEMO && <a href="/intern" style={{ color: 'var(--text-secondary)', fontWeight: 700, textDecoration: 'none' }}>Tilsett – logg inn ›</a>}
         </div>
       </footer>
+    </div>
+  );
+}
+
+// Kort «slik fungerer det»-band: tre steg så nye kundar skjønar flyten med ein gong.
+function SlikFungererDet() {
+  const steg = [
+    { n: 1, tittel: 'Vel utstyr og datoar', tekst: 'Finn det du treng og sjekk kva som er ledig.' },
+    { n: 2, tittel: 'Send førespurnad', tekst: 'Legg inn namn og telefon – det er uforpliktande.' },
+    { n: 3, tittel: 'Hent og betal', tekst: 'Vi stadfestar, og du betaler når du hentar i butikken.' },
+  ];
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10, margin: '0 0 24px' }}>
+      {steg.map((s) => (
+        <div key={s.n} style={{ ...kort, padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <span style={{ flex: 'none', width: 30, height: 30, borderRadius: 999, background: 'var(--mekk-navy)', color: 'var(--mekk-lime)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 900 }}>{s.n}</span>
+          <div>
+            <div style={{ fontSize: 14.5, fontWeight: 800, letterSpacing: '-0.01em' }}>{s.tittel}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.4, marginTop: 2 }}>{s.tekst}</div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

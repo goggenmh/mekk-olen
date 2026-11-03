@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { supabase } from '../../supabaseClient';
 import { useIsMobile } from '../../lib/useIsMobile';
 import { DEMO } from '../../lib/view';
@@ -11,13 +11,29 @@ const SKANN_URL = 'https://lagerkontroll-app-mekk-olen-prosjekt.vercel.app/';
 interface Plass { plass: string; tal: number }
 interface Treff { nr: string; namn: string; strekkode: string | null; eining: string | null; total: number; plassar: Plass[] }
 
+const SISTE_NOKKEL = 'mekk-lager-siste-sok';
+
+function lesSiste(): string[] {
+  try { return JSON.parse(localStorage.getItem(SISTE_NOKKEL) || '[]'); } catch { return []; }
+}
+
 export function Lager() {
   const isMobile = useIsMobile();
   const [q, setQ] = useState('');
   const [treff, setTreff] = useState<Treff[] | null>(null);
   const [lastar, setLastar] = useState(false);
   const [feil, setFeil] = useState<string | null>(null);
-  const siste = useRef(0);
+  const [siste, setSiste] = useState<string[]>(lesSiste);
+  const sisteRef = useRef(0);
+
+  // Hugs søk som gav treff, så dei tilsette raskt kan ta eit oppslag om att.
+  const hugsSok = useCallback((s: string) => {
+    setSiste((prev) => {
+      const neste = [s, ...prev.filter((x) => x.toLowerCase() !== s.toLowerCase())].slice(0, 6);
+      try { localStorage.setItem(SISTE_NOKKEL, JSON.stringify(neste)); } catch { /* privat modus */ }
+      return neste;
+    });
+  }, []);
 
   // Søk med liten forseinking, så vi ikkje spør på kvar tast. All state-endring
   // skjer inne i tidsavbrotet (ikkje synkront i effekten).
@@ -25,25 +41,27 @@ export function Lager() {
     const s = q.trim();
     if (s.length < 2) return;
     let avbroten = false;
-    const id = ++siste.current;
+    const id = ++sisteRef.current;
     const t = setTimeout(async () => {
       setLastar(true);
       try {
         const { data, error } = await supabase.rpc('lager_sok', { p_q: s });
-        if (avbroten || id !== siste.current) return;
+        if (avbroten || id !== sisteRef.current) return;
         if (error) throw error;
-        setTreff((data ?? []) as Treff[]);
+        const rader = (data ?? []) as Treff[];
+        setTreff(rader);
         setFeil(null);
+        if (rader.length > 0) hugsSok(s);
       } catch {
-        if (avbroten || id !== siste.current) return;
+        if (avbroten || id !== sisteRef.current) return;
         setTreff([]);
         setFeil(DEMO ? 'Lageret er kopla til den ekte appen, ikkje demoen.' : 'Fekk ikkje kontakt med lageret. Prøv igjen.');
       } finally {
-        if (!avbroten && id === siste.current) setLastar(false);
+        if (!avbroten && id === sisteRef.current) setLastar(false);
       }
     }, 280);
     return () => { avbroten = true; clearTimeout(t); };
-  }, [q]);
+  }, [q, hugsSok]);
 
   // Opnar skanne-appen med éi innlogging: vi sender MEKK-økta vidare i adressa
   // (#sso=…), så skanne-appen slepp eigen PIN. Vindauget blir opna med ein gong
@@ -60,7 +78,7 @@ export function Lager() {
   };
 
   return (
-    <div style={{ padding: isMobile ? 16 : 30, display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ padding: isMobile ? 16 : 30, display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 820, width: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 200 }}>
           <div className="sidetittel">Lager</div>
@@ -74,7 +92,7 @@ export function Lager() {
         </button>
       </div>
 
-      <div style={{ position: 'relative', maxWidth: 520 }}>
+      <div style={{ position: 'relative' }}>
         <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-faint)', display: 'flex' }}><Icon name="search" size={18} /></span>
         <input
           value={q}
@@ -87,7 +105,25 @@ export function Lager() {
       </div>
 
       {q.trim().length < 2 ? (
-        <Melding>Skriv minst to teikn for å søkje. Treng du å registrere varer eller skanne, bruk lager-skanninga.</Melding>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {siste.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: '0.4px', textTransform: 'uppercase', color: 'var(--text-label)', marginBottom: 8 }}>Siste søk</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {siste.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setQ(s)}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 999, fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}
+                  >
+                    <Icon name="search" size={13} /> {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <Melding>Skriv minst to teikn for å søkje. Treng du å registrere varer eller skanne, bruk lager-skanninga.</Melding>
+        </div>
       ) : feil ? (
         <Melding>{feil}</Melding>
       ) : lastar && !treff ? (
