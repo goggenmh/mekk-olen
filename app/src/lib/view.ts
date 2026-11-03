@@ -10,6 +10,7 @@ export type View =
   | 'bestilling'
   | 'dokument'
   | 'utleige'
+  | 'lager'
   | 'rapporter'
   | 'innstillinger';
 
@@ -26,6 +27,7 @@ export const VIEWS: { key: View; label: string; ikon: string; sti: string; berre
   { key: 'dokument', label: 'Dokument', ikon: 'dokument', sti: '/dokument' },
   // Kundesida ligg på /utleige (utan innlogging); administrasjonen her.
   { key: 'utleige', label: 'Utleige', ikon: 'utleige', sti: '/admin/utleige' },
+  { key: 'lager', label: 'Lager', ikon: 'lager', sti: '/lager' },
   { key: 'rapporter', label: 'Rapportar', ikon: 'rapporter', sti: '/rapportar', berreLeiar: true },
   { key: 'innstillinger', label: 'Innstillingar', ikon: 'innstillinger', sti: '/innstillingar' },
 ];
@@ -34,7 +36,7 @@ export const VIEWS: { key: View; label: string; ikon: string; sti: string; berre
 export const NAV_GROUPS: { seksjon: string | null; punkt: View[] }[] = [
   { seksjon: null, punkt: ['dashbord'] },
   { seksjon: 'Drift', punkt: ['vaktplan', 'timeliste', 'oppgaver', 'ferie'] },
-  { seksjon: 'Butikk', punkt: ['bestilling', 'utleige', 'dokument'] },
+  { seksjon: 'Butikk', punkt: ['bestilling', 'utleige', 'lager', 'dokument'] },
   { seksjon: 'Analyse', punkt: ['rapporter', 'ansatte'] },
   { seksjon: null, punkt: ['innstillinger'] },
 ];
