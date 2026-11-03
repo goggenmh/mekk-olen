@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
@@ -42,6 +42,18 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
 
   const t = today();
   const weekDays = weekDates(mondayOf(t));
+
+  // Korta ligg i to balanserte spalter (CSS-kolonnar) på desktop, så eit kort
+  // kort (t.d. «Neste vakt») ikkje etterlèt eit tomt hol ved sida av eit høgt
+  // kort. På telefon er det éi spalte i prioritert rekkjefølgje.
+  const kortRad: CSSProperties = isMobile
+    ? { display: 'flex', flexDirection: 'column', gap: 14 }
+    : { columnCount: 2, columnGap: 14 };
+  const kort: CSSProperties = {
+    ...cardStyle,
+    breakInside: 'avoid',
+    marginBottom: isMobile ? 0 : 14,
+  };
 
   // ---- varslingssenter ----
   const pendingSwaps = swaps.filter((s) => s.status === 'pending');
@@ -126,9 +138,9 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(330px, 1fr))', gap: 14, alignItems: 'start' }}>
+      <div style={kortRad}>
         {/* Neste vakt – solid blikkfang, utan gradient */}
-        <div style={{ ...cardStyle, background: 'var(--mekk-navy)', border: 'none', color: '#ffffff', padding: '16px 18px' }}>
+        <div style={{ ...kort, background: 'var(--mekk-navy)', border: 'none', color: '#ffffff', padding: '16px 18px' }}>
           <div style={{ ...labelStyle, color: 'rgba(255,255,255,0.55)' }}>Neste vakt</div>
           {nesteVakt ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -148,7 +160,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
 
         {/* Varslingssenter */}
-        <div style={cardStyle}>
+        <div style={kort}>
           <div style={labelStyle}>Varslingssenter</div>
           {varsler.length === 0 ? (
             <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Ingenting treng handling akkurat no.</div>
@@ -160,7 +172,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
 
         {/* Oppgåver */}
-        <div style={cardStyle}>
+        <div style={kort}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
             <div style={{ ...labelStyle, marginBottom: 0 }}>Dine oppgåver i dag</div>
             <button onClick={() => setView('oppgaver')} style={lenkeKnapp}>Alle ‹</button>
@@ -204,7 +216,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
 
         {/* Timer denne veka */}
-        <div style={cardStyle}>
+        <div style={kort}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
             <div style={{ ...labelStyle, marginBottom: 0 }}>Timar denne veka</div>
             <span style={{ marginLeft: 'auto', fontFamily: "'Geist Mono Variable'", fontSize: 13.5, fontWeight: 700 }}>{fmt(totalTimarUke)} t</span>
@@ -225,7 +237,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         </div>
 
         {/* Tilsette */}
-        <div style={cardStyle}>
+        <div style={kort}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
             <div style={{ ...labelStyle, marginBottom: 0 }}>Tilsette</div>
             {kanLageVakt && <button onClick={() => setView('ansatte')} style={lenkeKnapp}>Alle ‹</button>}
