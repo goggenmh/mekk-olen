@@ -73,6 +73,12 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
   const [valt, setValt] = useState<KatalogProdukt | null>(null);
   // Ledige einingar i dag per produkt, til «X ledige»-merket på korta.
   const [ledig, setLedig] = useState<Record<string, { ledige: number; totalt: number }>>({});
+  // Dato-først: kunden vel ein periode øvst, og korta viser pris + ledige for
+  // nett den perioden (og dei ledige kjem fyrst).
+  const [fraDato, setFraDato] = useState(addDays(today(), 1));
+  const [tilDato, setTilDato] = useState(addDays(today(), 2));
+  const [periodePris, setPeriodePris] = useState<Record<string, PrisSvar | null>>({});
+  const gyldigPeriode = !!fraDato && !!tilDato && tilDato > fraDato;
   // Handlekorg: fleire varer i éi bestilling.
   const [korg, setKorg] = useState<KatalogProdukt[]>([]);
   const [visKorg, setVisKorg] = useState(false);
@@ -107,6 +113,30 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
     return () => { avbroten = true; };
   }, [produkt]);
 
+  // Sjekk pris + ledige for den valde perioden, for alle produkt samstundes.
+  useEffect(() => {
+    if (!produkt || produkt.length === 0 || !gyldigPeriode) return;
+    let avbroten = false;
+    Promise.all(produkt.map(async (p) => {
+      try {
+        const { data } = await supabase.rpc('utleige_sjekk', { p_produkt: p.id, p_start: tilIso(fraDato, p.hente_tid), p_slutt: tilIso(tilDato, p.retur_tid) });
+        return { id: p.id, pris: data as PrisSvar | null };
+      } catch {
+        return { id: p.id, pris: null as PrisSvar | null };
+      }
+    })).then((res) => {
+      if (avbroten) return;
+      const m: Record<string, PrisSvar | null> = {};
+      for (const r of res) m[r.id] = r.pris;
+      setPeriodePris(m);
+    });
+    return () => { avbroten = true; };
+  }, [produkt, fraDato, tilDato, gyldigPeriode]);
+
+  const prisFor = (id: string) => (gyldigPeriode ? periodePris[id] ?? null : null);
+  const ledigIPeriode = (id: string) => (prisFor(id)?.ledige ?? 0) > 0;
+  const harPeriodeData = gyldigPeriode && Object.keys(periodePris).length > 0;
+
   const butikk = produkt?.[0]?.butikk ?? 'MEKK';
 
   return (
@@ -129,7 +159,7 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
         {produkt && produkt.length === 0 && <Melding>Utleige er ikkje opna enno. Ta kontakt med butikken.</Melding>}
 
         {valt ? (
-          <Produktside p={valt} onTilbake={() => setValt(null)} />
+          <Produktside p={valt} onTilbake={() => setValt(null)} startFra={gyldigPeriode ? fraDato : undefined} startTil={gyldigPeriode ? tilDato : undefined} />
         ) : visKorg ? (
           <Handlekorg korg={korg} onFjern={fjernFraKorg} onTilbake={() => setVisKorg(false)} onFerdig={() => { setKorg([]); setVisKorg(false); }} />
         ) : produkt && produkt.length > 0 && (
@@ -137,9 +167,34 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
             <h1 style={{ fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.01em', margin: '0 0 6px' }}>Lei utstyret du treng</h1>
             <p style={{ color: 'var(--text-muted)', margin: '0 0 18px', fontSize: 15 }}>Vel utstyr, sjekk ledige datoar og send ein førespurnad. Vi stadfestar så snart vi kan – du betaler når du hentar.</p>
             <SlikFungererDet />
+
+            {/* Dato-først: vel periode, så viser korta pris + ledige for henne. */}
+            <div style={{ ...kort, padding: '14px 16px', margin: '0 0 20px', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
+              <div style={{ flex: 'none' }}>
+                <span style={label}>Når treng du det?</span>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Henting<br />
+                    <input type="date" min={today()} value={fraDato}
+                      onChange={(e) => { setFraDato(e.target.value); if (tilDato <= e.target.value) setTilDato(addDays(e.target.value, 1)); }}
+                      style={{ ...felt, width: 'auto', marginTop: 3 }} />
+                  </label>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Retur<br />
+                    <input type="date" min={addDays(fraDato, 1)} value={tilDato}
+                      onChange={(e) => setTilDato(e.target.value)}
+                      style={{ ...felt, width: 'auto', marginTop: 3 }} />
+                  </label>
+                </div>
+              </div>
+              <div style={{ fontSize: 12.5, color: 'var(--text-muted)', flex: 1, minWidth: 160 }}>
+                {gyldigPeriode
+                  ? (harPeriodeData ? 'Prisane under gjeld for perioden du valde. Ledige kjem fyrst.' : 'Sjekkar ledige og pris …')
+                  : 'Vel hente- og returdato for å sjå pris og kva som er ledig.'}
+              </div>
+            </div>
+
             <h2 style={{ fontSize: 15, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--kort-label)', margin: '0 0 12px' }}>Alt utstyr</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
-              {produkt.map((p) => (
+              {(harPeriodeData ? [...produkt].sort((a, b) => Number(ledigIPeriode(b.id)) - Number(ledigIPeriode(a.id))) : produkt).map((p) => (
                 <div key={p.id} style={{ ...kort, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ position: 'relative' }}>
                     <Bilete url={p.bilete_url} namn={p.namn} hogd={180} />
@@ -149,13 +204,26 @@ export function UtleigeSide({ naviger }: { naviger?: (sti: string) => void } = {
                   </div>
                   <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
                     <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.01em' }}>{p.namn}</div>
-                    {ledig[p.id] && ledig[p.id].totalt > 0 && (
+                    {gyldigPeriode ? (
+                      prisFor(p.id) ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 11.5, fontWeight: 800, padding: '3px 9px', borderRadius: 999,
+                            color: ledigIPeriode(p.id) ? 'var(--pill-gronn-fg)' : 'var(--pill-raud-fg)',
+                            background: ledigIPeriode(p.id) ? 'var(--pill-gronn-bg)' : 'var(--pill-raud-bg)' }}>
+                            {ledigIPeriode(p.id) ? 'Ledig i perioden' : 'Ikkje ledig'}
+                          </span>
+                          {ledigIPeriode(p.id) && <span style={{ fontSize: 13.5, fontWeight: 800 }}>{kr(prisFor(p.id)!.total)} <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>for perioden</span></span>}
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>Sjekkar …</span>
+                      )
+                    ) : ledig[p.id] && ledig[p.id].totalt > 0 ? (
                       <span style={{ alignSelf: 'flex-start', fontSize: 11.5, fontWeight: 800, padding: '3px 9px', borderRadius: 999,
                         color: ledig[p.id].ledige > 0 ? 'var(--pill-gronn-fg)' : 'var(--pill-gra-fg)',
                         background: ledig[p.id].ledige > 0 ? 'var(--pill-gronn-bg)' : 'var(--pill-gra-bg)' }}>
                         {ledig[p.id].ledige > 0 ? `${ledig[p.id].ledige} ledig${ledig[p.id].ledige === 1 ? '' : 'e'} no` : 'Fullt utleigd no'}
                       </span>
-                    )}
+                    ) : null}
                     {p.beskriving && <div style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.beskriving}</div>}
                     {p.helg_pris != null && <div style={{ fontSize: 13, fontWeight: 700 }}>Helg (fre–mån): {kr(p.helg_pris)}</div>}
                     {p.tilbehor.length > 0 && (
@@ -231,12 +299,12 @@ function Melding({ children, tone = 'info' }: { children: ReactNode; tone?: 'inf
   return <div style={{ padding: '12px 14px', borderRadius: 'var(--r)', background: s.bg, color: s.fg, fontSize: 14, fontWeight: 600, lineHeight: 1.45 }}>{children}</div>;
 }
 
-function Produktside({ p, onTilbake }: { p: KatalogProdukt; onTilbake: () => void }) {
+function Produktside({ p, onTilbake, startFra, startTil }: { p: KatalogProdukt; onTilbake: () => void; startFra?: string; startTil?: string }) {
   const t = today();
   const [dagar, setDagar] = useState<Dag[]>([]);
-  const [fraDato, setFraDato] = useState(addDays(t, 1));
+  const [fraDato, setFraDato] = useState(startFra || addDays(t, 1));
   const [fraTid, setFraTid] = useState(p.hente_tid);
-  const [tilDato, setTilDato] = useState(addDays(t, 2));
+  const [tilDato, setTilDato] = useState(startTil || addDays(t, 2));
   const [tilTid, setTilTid] = useState(p.retur_tid);
   // true = neste trykk i kalenderen set returdato (elles hentedato/ny periode).
   const [veljarSlutt, setVeljarSlutt] = useState(false);
