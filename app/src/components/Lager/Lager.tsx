@@ -3,6 +3,7 @@ import { supabase } from '../../supabaseClient';
 import { useIsMobile } from '../../lib/useIsMobile';
 import { DEMO } from '../../lib/view';
 import { Icon } from '../ui/Icon';
+import { OrderModal, type OrderPrefyll } from '../Bestillinger/OrderModal';
 
 // Lenka til det eigne lager-systemet (skanning + registrering: mottak, ut til
 // butikk, telling og vareimport). Denne sida er berre eit raskt oppslag.
@@ -24,6 +25,7 @@ export function Lager() {
   const [lastar, setLastar] = useState(false);
   const [feil, setFeil] = useState<string | null>(null);
   const [siste, setSiste] = useState<string[]>(lesSiste);
+  const [bestill, setBestill] = useState<OrderPrefyll | null>(null);
   const sisteRef = useRef(0);
 
   // Hugs søk som gav treff, så dei tilsette raskt kan ta eit oppslag om att.
@@ -155,10 +157,17 @@ export function Lager() {
               ) : (
                 <div style={{ fontSize: 12, color: 'var(--text-faint)' }}>Ikkje på nokon lagerplass no.</div>
               )}
+              <button
+                onClick={() => setBestill({ vare: v.namn, varenr: v.nr, beholdning: { total: v.total, eining: v.eining, plassar: v.plassar } })}
+                style={{ alignSelf: 'flex-start', marginTop: 2, padding: '7px 12px', background: 'var(--knapp-teal-bg)', color: 'var(--knapp-teal-fg)', border: '1.5px solid var(--knapp-teal-kant)', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Bestill til kunde ›
+              </button>
             </div>
           ))}
         </div>
       ) : null}
+      {bestill && <OrderModal prefyll={bestill} onClose={() => setBestill(null)} />}
     </div>
   );
 }

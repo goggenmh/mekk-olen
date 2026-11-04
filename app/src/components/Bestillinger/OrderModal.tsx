@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
 import { supabase } from '../../supabaseClient';
 import { useAppData } from '../../context/AppDataContext';
@@ -8,7 +8,15 @@ import { today, fmtPris } from '../../lib/dates';
 import type { Order } from '../../types';
 import { storeOrd, storFyrste } from '../../lib/tekst';
 
-export function OrderModal({ existing, onClose }: { existing?: Order; onClose: () => void }) {
+// Eit treff frå lager-søket (same form som lager_sok gjev).
+interface LagerPlass { plass: string; tal: number }
+interface LagerTreff { nr: string; namn: string; strekkode: string | null; eining: string | null; total: number; plassar: LagerPlass[] }
+interface Beholdning { total: number; eining: string | null; plassar: LagerPlass[] }
+
+// `prefyll` lèt t.d. lager-sida opne «Ny bestilling» ferdig utfylt frå ei vare.
+export interface OrderPrefyll { vare?: string; varenr?: string; leverandor?: string; beholdning?: Beholdning }
+
+export function OrderModal({ existing, prefyll, onClose }: { existing?: Order; prefyll?: OrderPrefyll; onClose: () => void }) {
   const { saveOrder, deleteOrder } = useAppData();
   const { findAnsatt } = useAnsatte();
   const funnen = existing?.registrertAv ? findAnsatt(existing.registrertAv) : null;
@@ -16,9 +24,18 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
 
   const [kunde, setKunde] = useState(existing?.kunde || '');
   const [telefon, setTelefon] = useState(existing?.telefon || '');
-  const [vare, setVare] = useState(existing?.vare || '');
-  const [leverandor, setLeverandor] = useState(existing?.leverandor || '');
-  const [varenr, setVarenr] = useState(existing?.varenr || '');
+  const [vare, setVare] = useState(existing?.vare || prefyll?.vare || '');
+  const [leverandor, setLeverandor] = useState(existing?.leverandor || prefyll?.leverandor || '');
+  const [varenr, setVarenr] = useState(existing?.varenr || prefyll?.varenr || '');
+
+  // Lagersøk på «Vare»-feltet: fyller namn + varenr frå varelista og viser kor
+  // mange som er på lager. Vi hoppar over fyrste søk når feltet alt har innhald
+  // (redigering eller prefyll), så lista ikkje sprett opp med ein gong.
+  const [lagerTreff, setLagerTreff] = useState<LagerTreff[]>([]);
+  const [visListe, setVisListe] = useState(false);
+  const [beholdning, setBeholdning] = useState<Beholdning | null>(prefyll?.beholdning ?? null);
+  const hoppOverSok = useRef((existing?.vare || prefyll?.vare || '').trim().length >= 2);
+  const sokSeq = useRef(0);
   const [lenke, setLenke] = useState(existing?.lenke || '');
   const [dato, setDato] = useState(existing?.dato || today());
   const [antal, setAntal] = useState(existing?.antal ?? 1);
@@ -67,6 +84,40 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
     setSokar(false);
   };
 
+  // Søk i varelista når du skriv i «Vare». Treff blir viste i ei lita liste.
+  useEffect(() => {
+    if (hoppOverSok.current) { hoppOverSok.current = false; return; }
+    const s = vare.trim();
+    const id = ++sokSeq.current;
+    // All state-endring skjer inne i tidsavbrotet (ikkje synkront i effekten).
+    const t = setTimeout(async () => {
+      if (s.length < 2) { if (id === sokSeq.current) { setLagerTreff([]); setVisListe(false); } return; }
+      try {
+        const { data, error } = await supabase.rpc('lager_sok', { p_q: s });
+        if (id !== sokSeq.current) return;
+        if (error) { setLagerTreff([]); setVisListe(false); return; }
+        const rader = ((data ?? []) as LagerTreff[]).slice(0, 6);
+        setLagerTreff(rader);
+        setVisListe(rader.length > 0);
+      } catch { /* lageret er ikkje tilgjengeleg (t.d. i demo) – feltet er vanleg tekst */ }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [vare]);
+
+  const velLagervare = (v: LagerTreff) => {
+    hoppOverSok.current = true;
+    setVare(v.namn);
+    setVarenr(v.nr);
+    setBeholdning({ total: v.total, eining: v.eining, plassar: v.plassar });
+    setVisListe(false);
+    setLagerTreff([]);
+  };
+
+  const endreVare = (v: string) => {
+    setVare(v);
+    setBeholdning(null); // beholdninga høyrer til ei vald vare – nullstill ved manuell skriving
+  };
+
   const save = async () => {
     if (!kunde.trim()) { setFeil(true); return; }
     if (prisFeil) return;
@@ -108,8 +159,42 @@ export function OrderModal({ existing, onClose }: { existing?: Order; onClose: (
         <input value={notat} onChange={(e) => setNotat(e.target.value)} onBlur={() => setNotat(storFyrste)} autoCapitalize="sentences" placeholder="T.d. «liten fyr med lue», ønskjer å bli ringt" style={inputStyle} />
       </Field>
       <Field label="Vare">
-        <input value={vare} onChange={(e) => setVare(e.target.value)} onBlur={() => setVare(storFyrste)} autoCapitalize="sentences" style={inputStyle} />
+        <div style={{ position: 'relative' }}>
+          <input
+            value={vare}
+            onChange={(e) => endreVare(e.target.value)}
+            onFocus={() => { if (lagerTreff.length > 0) setVisListe(true); }}
+            onBlur={() => { setVare(storFyrste); setTimeout(() => setVisListe(false), 150); }}
+            autoCapitalize="sentences" autoComplete="off" placeholder="Skriv namn eller varenr – søkjer i varelista" style={inputStyle}
+          />
+          {visListe && lagerTreff.length > 0 && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, marginTop: 4, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', boxShadow: '0 12px 30px rgba(0,0,0,0.18)', overflow: 'hidden', maxHeight: 260, overflowY: 'auto' }}>
+              {lagerTreff.map((v) => (
+                <button
+                  key={v.nr} type="button"
+                  onMouseDown={(e) => { e.preventDefault(); velLagervare(v); }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'baseline', gap: 8, padding: '9px 12px', border: 'none', borderBottom: '1px solid var(--divider)', background: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', color: 'var(--text)' }}
+                >
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.namn}</span>
+                  <span style={{ flex: 'none', fontSize: 11.5, color: 'var(--text-faint)' }}>{v.nr}</span>
+                  <span style={{ flex: 'none', fontSize: 11.5, fontWeight: 700, color: v.total > 0 ? 'var(--pill-gronn-fg)' : 'var(--text-faint)' }}>{v.total > 0 ? `${v.total} på lager` : 'tomt'}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </Field>
+      {beholdning && (
+        <div style={{ marginTop: -4, fontSize: 12.5, lineHeight: 1.45, padding: '8px 11px', borderRadius: 'var(--r)', background: beholdning.total > 0 ? 'var(--pill-amber-bg)' : 'var(--surface-alt)', color: beholdning.total > 0 ? 'var(--pill-amber-fg)' : 'var(--text-muted)' }}>
+          {beholdning.total > 0 ? (
+            <>
+              <b>{beholdning.total}{beholdning.eining ? ` ${beholdning.eining}` : ''} på lager</b>
+              {beholdning.plassar.length > 0 && ` (${beholdning.plassar.map((p) => `${p.plass}: ${p.tal}`).join(', ')})`}
+              {' – sjekk om du treng å bestille.'}
+            </>
+          ) : 'Ikkje på lager no.'}
+        </div>
+      )}
       <Field label="Lenke til produkt">
         <input value={lenke} autoCapitalize="off" onChange={(e) => endreLenke(e.target.value)} placeholder="https://…" style={inputStyle} />
       </Field>
