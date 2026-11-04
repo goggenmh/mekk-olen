@@ -7,6 +7,7 @@ import { useIsMobile } from '../../lib/useIsMobile';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { TaskModal } from '../Oppgaver/TaskModal';
+import { Beskjedtavle } from './Beskjedtavle';
 import { ReklamasjonModal } from '../Oppgaver/ReklamasjonModal';
 import type { View } from '../../lib/view';
 import { alder } from '../../lib/bestilling';
@@ -214,6 +215,9 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
             ))}
           </div>
         </div>
+
+        {/* Beskjedtavle – delt vaktoverlevering */}
+        <Beskjedtavle style={kort} />
 
         {/* Timer denne veka */}
         <div style={kort}>
