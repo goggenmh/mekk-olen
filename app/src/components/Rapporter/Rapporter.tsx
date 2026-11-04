@@ -85,18 +85,21 @@ export function Rapporter() {
   const aktiveBestillingar = orders.filter((o) => o.status !== 'henta').length;
   const gamleBestillingar = orders.filter((o) => alder(o).gammal).length;
 
-  const kort = [
-    { label: 'Planlagde timar', verdi: fmt(sum('planlagt')), farge: 'var(--pill-teal-fg)' },
-    { label: 'Registrerte timar', verdi: fmt(sum('registrert')), farge: 'var(--brand-strong)' },
-    { label: 'Godkjende timar', verdi: fmt(sum('godkjent')), farge: 'var(--pill-gronn-fg)' },
-    { label: 'Overtid', verdi: fmt(sum('overtid')), farge: 'var(--pill-raud-fg)' },
-    { label: 'Brutto løn (godkjent)', verdi: fmtKr(totalKrAlle), farge: 'var(--pill-gronn-fg)' },
-    { label: 'Forskotstrekk (anslag)', verdi: fmtKr(totalTrekk), farge: 'var(--pill-raud-fg)' },
-    { label: 'Netto utbetalt (anslag)', verdi: fmtKr(totalKrAlle - totalTrekk), farge: 'var(--brand-strong)' },
-    { label: 'Feriepengar opptent', verdi: fmtKr(totalFerie), farge: 'var(--pill-teal-fg)' },
-    { label: 'Ventar godkjenning', verdi: String(totalVentar), farge: 'var(--pill-amber-fg)' },
-    { label: 'Fullførte oppgåver', verdi: String(fullforteOppgaver), farge: 'var(--pill-lilla-fg)' },
-    { label: 'Aktive bestillingar', verdi: `${aktiveBestillingar}${gamleBestillingar ? ` (${gamleBestillingar} lenge)` : ''}`, farge: 'var(--accent)' },
+  // Nøkkeltala er nøytrale (svart tal) som standard – farge ber meining, ikkje
+  // pynt. Raudt/amber dukkar berre opp når verdien faktisk treng merksemd
+  // (overtid, timar som ventar godkjenning, bestillingar som har stått lenge).
+  const kort: { label: string; verdi: string; farge?: string }[] = [
+    { label: 'Planlagde timar', verdi: fmt(sum('planlagt')) },
+    { label: 'Registrerte timar', verdi: fmt(sum('registrert')) },
+    { label: 'Godkjende timar', verdi: fmt(sum('godkjent')) },
+    { label: 'Overtid', verdi: fmt(sum('overtid')), farge: sum('overtid') > 0 ? 'var(--pill-raud-fg)' : undefined },
+    { label: 'Brutto løn (godkjent)', verdi: fmtKr(totalKrAlle) },
+    { label: 'Forskotstrekk (anslag)', verdi: fmtKr(totalTrekk) },
+    { label: 'Netto utbetalt (anslag)', verdi: fmtKr(totalKrAlle - totalTrekk) },
+    { label: 'Feriepengar opptent', verdi: fmtKr(totalFerie) },
+    { label: 'Ventar godkjenning', verdi: String(totalVentar), farge: totalVentar > 0 ? 'var(--pill-amber-fg)' : undefined },
+    { label: 'Fullførte oppgåver', verdi: String(fullforteOppgaver) },
+    { label: 'Aktive bestillingar', verdi: `${aktiveBestillingar}${gamleBestillingar ? ` (${gamleBestillingar} lenge)` : ''}`, farge: gamleBestillingar > 0 ? 'var(--accent)' : undefined },
   ];
 
   const eksporter = () => {
@@ -143,7 +146,7 @@ export function Rapporter() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 14 }}>
         {kort.map((k) => (
           <div key={k.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '17px 19px', boxShadow: 'var(--shadow-card)' }}>
-            <div style={{ fontSize: 24, fontWeight: 800, color: k.farge, fontFamily: "'Geist Mono Variable'", letterSpacing: '-0.5px' }}>{k.verdi}</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: k.farge || 'var(--text)', fontFamily: "'Geist Mono Variable'", letterSpacing: '-0.5px', whiteSpace: 'nowrap' }}>{k.verdi}</div>
             <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', marginTop: 4 }}>{k.label}</div>
           </div>
         ))}

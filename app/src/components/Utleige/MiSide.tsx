@@ -4,6 +4,7 @@ import { DEMO } from '../../lib/view';
 import { lastNedUtleigeKontraktPdf } from '../../lib/utleigeKontraktPdf';
 import { RES_STATUS, kr, nr, tidKort, feilTekst, type ResStatus,
   type UtleigeReservasjon, type UtleigeProdukt, type UtleigeEining, type UtleigeKunde, type UtleigeInnstillingar } from '../../lib/utleige';
+import { KontaktStripe } from './UtleigeSide';
 
 // «Mi side» for utleigekundar: innlogging med eingongskode på e-post (Supabase
 // Auth), og oversikt over eigne reservasjonar. Ligg på /utleige/mi-side, utanfor
@@ -109,6 +110,7 @@ export function MiSide({ naviger }: { naviger: (sti: string) => void }) {
           {innlogga && <button onClick={loggUt} style={{ background: 'none', border: '1px solid #ffffff55', color: '#fff', borderRadius: 'var(--r)', padding: '7px 12px', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>Logg ut</button>}
         </div>
       </header>
+      <KontaktStripe />
 
       <main style={{ maxWidth: 900, margin: '0 auto', padding: '22px 16px 60px' }}>
         <button onClick={() => naviger('/utleige')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 14, color: 'var(--text)', padding: 0, marginBottom: 16 }}>

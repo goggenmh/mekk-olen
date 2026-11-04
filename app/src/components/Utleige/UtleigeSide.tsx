@@ -19,7 +19,7 @@ function opningIDag(now: Date): { tekst: string; ope: boolean } {
   return { tekst: `Ope i dag til kl. ${t[1]}`, ope: true };
 }
 
-function KontaktStripe() {
+export function KontaktStripe() {
   const info = opningIDag(new Date());
   return (
     <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
