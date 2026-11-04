@@ -32,6 +32,8 @@ function osloNo() {
 const tilMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
 
 interface Vakt { id: string; ansatt: string; date: string; start: string; slutt: string }
+interface OrdreRad { id: string; kunde: string; status: string; dato: string; varsla: string | null; butikk_id: string | null; registrert_av: string | null }
+interface Tilsett { id: string; leder: boolean; aktiv: boolean; butikk_id: string | null }
 interface Melding { til: string; title: string; body: string; url: string; tag: string; vakter: string[]; type: 'morgon' | 'snart' }
 
 /** Merk vaktene som sende; gir tilbake dei som ikkje alt var merka (vinn kappløp). */
@@ -43,6 +45,21 @@ async function krev(admin: SupabaseClient, ids: string[], type: string): Promise
   return new Set((data || []).map((r) => r.shift_id));
 }
 
+/** Som krev(), men for bestillingar: éi purring per bestilling per dag. */
+async function krevOrdre(admin: SupabaseClient, ids: string[], dag: string): Promise<Set<string>> {
+  const { data, error } = await admin.from('bestilling_purring')
+    .upsert(ids.map((order_id) => ({ order_id, dag })), { onConflict: 'order_id,dag', ignoreDuplicates: true })
+    .select('order_id');
+  if (error) throw error;
+  return new Set((data || []).map((r) => r.order_id));
+}
+
+// Kor mange dagar ei bestilling kan stå i kvar status før ho treng blikk
+// (same grenser som appen, sjå src/lib/bestilling.ts).
+const BEST_GRENSE: Record<string, number> = { ny: 7, tinga: 14, komen: 10 };
+const BEST_STATUS_TEKST: Record<string, string> = { ny: 'enno ikkje bestilt', tinga: 'enno ikkje komen', komen: 'enno ikkje henta' };
+const talDagar = (fra: string, til: string) => Math.round((Date.parse(til) - Date.parse(fra)) / 86400000);
+
 Deno.serve(async () => {
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
     auth: { persistSession: false },
@@ -52,7 +69,7 @@ Deno.serve(async () => {
     const no = osloNo();
     const [{ data: vakter }, { data: tilsette }, { data: ferie }] = await Promise.all([
       admin.from('shifts').select('id, ansatt, date, start, slutt').eq('date', no.dato),
-      admin.from('ansatte').select('id, leder, aktiv'),
+      admin.from('ansatte').select('id, leder, aktiv, butikk_id'),
       admin.from('ferie').select('ansatt').eq('status', 'godkjend').lte('fra', no.dato).gte('til', no.dato),
     ]);
     const mottakar = new Set((tilsette || []).filter((a) => a.aktiv && !a.leder).map((a) => a.id));
@@ -90,18 +107,53 @@ Deno.serve(async () => {
         });
       }
     }
-    if (meldingar.length === 0) return json({ ok: true, sendt: 0 });
+    // Gamle bestillingar: push til leiarar i butikken (+ den som la inn) når ei
+    // bestilling har stått over aldersgrensa. Dedup per bestilling per dag, så
+    // det kjem éi purring, ikkje ei kvar 5. minutt. Heile blokka er innkapsla,
+    // så ein feil her ALDRI kan stoppe vakt-påminningane.
+    const ordreMeldingar: { til: string; title: string; body: string; url: string; tag: string }[] = [];
+    let ordreFeil: string | null = null;
+    try {
+      const { data: ordrar } = await admin.from('orders')
+        .select('id, kunde, status, dato, varsla, butikk_id, registrert_av')
+        .in('status', ['ny', 'tinga', 'komen']);
+      const gamle = ((ordrar || []) as OrdreRad[]).filter((o) => {
+        const grense = BEST_GRENSE[o.status];
+        const fra = o.status === 'komen' && o.varsla ? o.varsla : o.dato;
+        if (!grense || !fra || fra > no.dato) return false;
+        return (talDagar(fra, no.dato) - 1) >= grense;
+      });
+      if (gamle.length) {
+        const nyeOrdrar = await krevOrdre(admin, gamle.map((o) => o.id), no.dato);
+        const alleTilsette = (tilsette || []) as Tilsett[];
+        for (const o of gamle.filter((o) => nyeOrdrar.has(o.id))) {
+          const fra = o.status === 'komen' && o.varsla ? o.varsla : o.dato;
+          const dagar = talDagar(fra, no.dato) - 1;
+          const mottakarar = new Set<string>();
+          for (const a of alleTilsette) if (a.aktiv && a.leder && a.butikk_id === o.butikk_id) mottakarar.add(a.id);
+          if (o.registrert_av) mottakarar.add(o.registrert_av);
+          for (const til of mottakarar) {
+            ordreMeldingar.push({
+              til, url: '/?vis=bestilling', tag: `bestilling-${o.id}`,
+              title: 'Bestilling har stått lenge',
+              body: `${o.kunde}: ${dagar} dagar, ${BEST_STATUS_TEKST[o.status] || o.status}.`,
+            });
+          }
+        }
+      }
+    } catch (e) {
+      ordreFeil = e instanceof Error ? e.message : (typeof e === 'object' && e ? JSON.stringify(e) : String(e));
+    }
 
-    const { data: n } = await admin.from('push_noklar').select('public_key, private_key').eq('id', 1).maybeSingle();
-    if (!n) return json({ ok: true, sendt: 0, merknad: 'Ingen VAPID-nøklar enno.' });
-    webpush.setVapidDetails('https://mekk-olen.vercel.app', n.public_key, n.private_key);
+    if (meldingar.length === 0 && ordreMeldingar.length === 0) return json({ ok: true, sendt: 0, ordreFeil });
+
+    const { data: nk } = await admin.from('push_noklar').select('public_key, private_key').eq('id', 1).maybeSingle();
+    if (!nk) return json({ ok: true, sendt: 0, merknad: 'Ingen VAPID-nøklar enno.', ordreFeil });
+    webpush.setVapidDetails('https://mekk-olen.vercel.app', nk.public_key, nk.private_key);
 
     let sendt = 0;
-    for (const m of meldingar) {
-      const nye = await krev(admin, m.vakter, m.type);
-      if (nye.size === 0) continue;
-      const { data: abonnement } = await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').eq('ansatt', m.til);
-      const payload = JSON.stringify({ title: m.title, body: m.body, url: m.url, tag: m.tag });
+    const sendTil = async (til: string, payload: string) => {
+      const { data: abonnement } = await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').eq('ansatt', til);
       await Promise.all((abonnement || []).map(async (a) => {
         try {
           await webpush.sendNotification({ endpoint: a.endpoint, keys: { p256dh: a.p256dh, auth: a.auth } }, payload);
@@ -113,8 +165,18 @@ Deno.serve(async () => {
           }
         }
       }));
+    };
+
+    for (const m of meldingar) {
+      const nye = await krev(admin, m.vakter, m.type);
+      if (nye.size === 0) continue;
+      await sendTil(m.til, JSON.stringify({ title: m.title, body: m.body, url: m.url, tag: m.tag }));
     }
-    return json({ ok: true, sendt });
+    // Bestillings-purringane er alt deduppa over, så dei blir berre sende.
+    for (const m of ordreMeldingar) {
+      await sendTil(m.til, JSON.stringify({ title: m.title, body: m.body, url: m.url, tag: m.tag }));
+    }
+    return json({ ok: true, sendt, ordreFeil });
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : 'Ukjend feil.' }, 500);
   }
