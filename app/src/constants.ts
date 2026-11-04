@@ -99,14 +99,18 @@ export const FERIE_STYL: Record<string, { fg: string; bg: string; kant: string; 
   Sjukmeld: { fg: 'var(--pill-raud-fg)', bg: 'var(--pill-raud-bg)', kant: 'rgba(192,57,43,0.35)', ikon: 'alert' },
 };
 
+// Den normale framdrifta. «avbestilt» er ein terminal status utanfor flyten –
+// ei bestilling som ikkje blir noko av, så ein slepp å slette (og mistar
+// historikk). Han blir sett manuelt i bestillings-skjemaet, ikkje via «neste».
 export const ORDER_FLOW = ['ny', 'tinga', 'komen', 'henta'] as const;
-export type OrderStatus = (typeof ORDER_FLOW)[number];
+export type OrderStatus = (typeof ORDER_FLOW)[number] | 'avbestilt';
 
 export const ORDER_STATUS: Record<OrderStatus, { tekst: string; fg: string; bg: string; neste: string }> = {
   ny: { tekst: 'Ny', fg: 'var(--pill-gra-fg)', bg: 'var(--pill-gra-bg)', neste: 'Marker bestilt' },
   tinga: { tekst: 'Bestilt', fg: 'var(--pill-amber-fg)', bg: 'var(--pill-amber-bg)', neste: 'Komen i butikk' },
   komen: { tekst: 'Komen', fg: 'var(--pill-teal-fg)', bg: 'var(--pill-teal-bg)', neste: 'Marker henta' },
   henta: { tekst: 'Henta', fg: 'var(--pill-gronn-fg)', bg: 'var(--pill-gronn-bg)', neste: '' },
+  avbestilt: { tekst: 'Avbestilt', fg: 'var(--pill-raud-fg)', bg: 'var(--pill-raud-bg)', neste: '' },
 };
 
 export const DOC_KAT: Record<string, { fg: string; bg: string; ikon: string }> = {

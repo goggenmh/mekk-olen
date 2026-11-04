@@ -242,6 +242,7 @@ export function OrderModal({ existing, prefyll, onClose }: { existing?: Order; p
       <Field label="Status">
         <select value={status} onChange={(e) => setStatus(e.target.value)} style={inputStyle}>
           {ORDER_FLOW.map((s) => <option key={s} value={s}>{ORDER_STATUS[s].tekst}</option>)}
+          <option value="avbestilt">{ORDER_STATUS.avbestilt.tekst}</option>
         </select>
       </Field>
     </Modal>

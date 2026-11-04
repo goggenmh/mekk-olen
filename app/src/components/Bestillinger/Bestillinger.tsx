@@ -17,6 +17,7 @@ const FILTERS: { key: string; label: string }[] = [
   { key: 'tinga', label: ORDER_STATUS.tinga.tekst },
   { key: 'komen', label: ORDER_STATUS.komen.tekst },
   { key: 'henta', label: ORDER_STATUS.henta.tekst },
+  { key: 'avbestilt', label: ORDER_STATUS.avbestilt.tekst },
 ];
 
 export function Bestillinger() {
@@ -86,7 +87,7 @@ export function Bestillinger() {
   const gamleTal = orders.filter((o) => alder(o).gammal).length;
 
   const filtered = orders
-    .filter((o) => (filter === 'aktive' ? o.status !== 'henta' : filter === 'gamle' ? alder(o).gammal : o.status === filter))
+    .filter((o) => (filter === 'aktive' ? (o.status !== 'henta' && o.status !== 'avbestilt') : filter === 'gamle' ? alder(o).gammal : o.status === filter))
     .filter(treff)
     .slice()
     .sort((a, b) => {
@@ -158,7 +159,7 @@ export function Bestillinger() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {filtered.map((o) => {
             const s = ORDER_STATUS[o.status as keyof typeof ORDER_STATUS];
-            const kanFram = o.status !== ORDER_FLOW[ORDER_FLOW.length - 1];
+            const kanFram = o.status !== 'henta' && o.status !== 'avbestilt';
             const kanVarsle = o.status === 'komen';
             const nesteIdx = ORDER_FLOW.indexOf(o.status as typeof ORDER_FLOW[number]) + 1;
             return (
@@ -229,7 +230,7 @@ export function Bestillinger() {
           <tbody>
             {filtered.map((o) => {
               const s = ORDER_STATUS[o.status as keyof typeof ORDER_STATUS];
-              const kanFram = o.status !== ORDER_FLOW[ORDER_FLOW.length - 1];
+              const kanFram = o.status !== 'henta' && o.status !== 'avbestilt';
               const kanVarsle = o.status === 'komen';
               const nesteIdx = ORDER_FLOW.indexOf(o.status as typeof ORDER_FLOW[number]) + 1;
               return (
