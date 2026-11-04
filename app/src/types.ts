@@ -23,6 +23,20 @@ export interface Shift {
   skift: string;
 }
 
+/** Ei ledig vakt på vaktbørsen (ingen fast ansatt enno). `tekenAv` = den som
+ *  har sagt «eg tek henne» og ventar på godkjenning frå leiar. */
+export interface LedigVakt {
+  id: string;
+  date: string;
+  start: string;
+  slutt: string;
+  skift: string;
+  grunn: string | null;
+  opprettaAv: EmployeeId;
+  tekenAv: EmployeeId | null;
+  created_at: string;
+}
+
 export type SwapStatus = 'pending' | 'godkjent' | 'avvist';
 
 export interface ShiftSwap {

@@ -172,6 +172,9 @@ export function lagTestdata(): Record<string, Rad[]> {
     ansatte,
     butikkar: [{ id: B, namn: 'MEKK Ølen', farge: '#11788a', aktiv: true, created_at: '2026-01-01' }],
     shifts, standardveke, time_entries, shift_swaps, ferie, utilgjengeleg, tasks, orders, docs, doc_stadfesting, meldinger,
+    ledige_vakter: [
+      { id: id('ledig'), butikk_id: B, date: addDays(t, 3), start: '09:00', slutt: '15:00', skift: 'Formiddag', grunn: 'Kari på kurs', oppretta_av: 'kari', teken_av: null, created_at: t },
+    ],
     utleige_produkt, utleige_eining, utleige_kunde, utleige_reservasjon, utleige_sperre, utleige_innstillingar,
     oppgave_rutinar: [
       { id: id('rutine'), tittel: 'Opning av butikken', detalj: 'Gjer butikken klar før dørene opnar.', kategori: 'Butikk', prioritet: 'høg', ansvar: 'opnar', dagar: [1, 2, 3, 4, 5, 6], manadsdag: null, aktiv: true, sjekkliste: [{ tekst: 'Slå av alarmen og lås opp', ferdig: false }, { tekst: 'Lys, kasse og kortterminal på', ferdig: false }, { tekst: 'Tel opp vekselkassa', ferdig: false }] },
