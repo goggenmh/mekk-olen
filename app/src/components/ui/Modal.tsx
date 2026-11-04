@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 
 export function Modal({
   onClose,
@@ -17,6 +17,32 @@ export function Modal({
   children: ReactNode;
   footer: ReactNode;
 }) {
+  // Tilgjengelegheit: Escape lukkar, fokus blir fanga i dialogen (Tab syklar),
+  // og fokus går tilbake til det som opna modalen når han lukkar. Respekterer
+  // autoFocus-felt (flyttar ikkje fokus viss noko inne alt har det).
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = dialogRef.current;
+    if (!el) return;
+    const forrigeFokus = document.activeElement as HTMLElement | null;
+    const fokuserbare = () => Array.from(
+      el.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+    ).filter((x) => x.offsetParent !== null);
+    if (!el.contains(document.activeElement)) (fokuserbare()[0] || el).focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if (e.key !== 'Tab') return;
+      const f = fokuserbare();
+      if (f.length === 0) { e.preventDefault(); el.focus(); return; }
+      const fyrst = f[0];
+      const sist = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === fyrst) { e.preventDefault(); sist.focus(); }
+      else if (!e.shiftKey && document.activeElement === sist) { e.preventDefault(); fyrst.focus(); }
+    };
+    el.addEventListener('keydown', onKey);
+    return () => { el.removeEventListener('keydown', onKey); forrigeFokus?.focus?.(); };
+  }, [onClose]);
+
   return (
     <div
       onClick={onClose}
@@ -27,8 +53,13 @@ export function Modal({
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title || subtitle || 'Dialog'}
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        style={{ background: 'var(--surface)', borderRadius: 'var(--r)', width: '100%', maxWidth, maxHeight: 'calc(100vh - 48px)', boxShadow: '0 24px 60px rgba(0,0,0,0.3)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        style={{ background: 'var(--surface)', borderRadius: 'var(--r)', width: '100%', maxWidth, maxHeight: 'calc(100vh - 48px)', boxShadow: '0 24px 60px rgba(0,0,0,0.3)', overflow: 'hidden', display: 'flex', flexDirection: 'column', outline: 'none' }}
       >
         <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--divider)' }}>
           {leftHeader ? (
@@ -40,7 +71,9 @@ export function Modal({
             </div>
           )}
           <button
+            type="button"
             onClick={onClose}
+            aria-label="Lukk"
             style={{ marginLeft: 'auto', width: 30, height: 30, border: 'none', background: 'var(--bg)', borderRadius: 'var(--r)', cursor: 'pointer', fontSize: 16, color: 'var(--text-secondary)' }}
           >
             ✕
