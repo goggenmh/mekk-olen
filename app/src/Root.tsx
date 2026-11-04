@@ -7,6 +7,7 @@ import { DEMO, lesSti } from './lib/view';
 import { DemoMerke } from './demo/DemoMerke';
 
 const Kundeside = lazy(() => import('./components/Utleige/Kundeside').then((m) => ({ default: m.Kundeside })));
+const SporBestilling = lazy(() => import('./components/Bestillinger/SporBestilling').then((m) => ({ default: m.SporBestilling })));
 
 // Den offentlege kundesida blir rendra utan tilsett-providerane, så ei kundeøkt
 // ikkje blir logga ut av AuthContext (som tømmer økter utan ansatt-profil).
@@ -19,6 +20,10 @@ export function Root() {
   const sti = lesSti();
   if (sti.startsWith('/utleige')) {
     return <Suspense fallback={null}><Kundeside />{DEMO && <DemoMerke />}</Suspense>;
+  }
+  // Offentleg sporing av bestilling (lenkje i SMS til kunden) – utan innlogging.
+  if (sti.startsWith('/spor')) {
+    return <Suspense fallback={null}><SporBestilling />{DEMO && <DemoMerke />}</Suspense>;
   }
   return (
     <AnsatteProvider>

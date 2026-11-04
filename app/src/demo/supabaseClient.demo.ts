@@ -358,6 +358,12 @@ const rpc = async (namn: string, args: Rad = {}): Promise<{ data: unknown; error
         id: x.id, sats: x.sats, skattetype: x.skattetype ?? null, skatteprosent: x.skatteprosent ?? null, frikortgrense: x.frikortgrense ?? null,
         feriepengesats: x.feriepengesats ?? 10.2, tidlegare_ar: x.tidlegare_ar ?? null, tidlegare_mekk: x.tidlegare_mekk ?? 0, tidlegare_andre: x.tidlegare_andre ?? 0,
       })) : []);
+    case 'bestilling_status': {
+      const o = tabell('orders').find((x) => x.id === args.p_id);
+      if (!o) return ok([]);
+      const b = tabell('butikkar').find((x) => x.id === o.butikk_id);
+      return ok([{ vare: o.vare, status: o.status, dato: o.dato, butikk: b?.namn ?? 'MEKK Ølen' }]);
+    }
     default:
       return ok(null);
   }
