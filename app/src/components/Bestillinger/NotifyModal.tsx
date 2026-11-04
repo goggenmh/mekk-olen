@@ -10,7 +10,10 @@ export function NotifyModal({ order, onClose }: { order: Order; onClose: () => v
   const [copied, setCopied] = useState(false);
   const tlf = reinTelefon(order.telefon || '');
 
-  const tekst = `Hei ${order.kunde}! Varen din "${order.vare}"${order.antal > 1 ? ` (${order.antal} stk)` : ''} er no komen i butikk og klar for henting hos MEKK Ølen. Opningstider: man–fre 09–18, laurdag 09–16. Helsing MEKK Ølen, tlf 53 76 50 00.`;
+  // Sporingslenkje kunden kan følgje (status utan innlogging). Origin er sjølve
+  // domenet appen køyrer på.
+  const sporLenkje = `${window.location.origin}/spor/${order.id}`;
+  const tekst = `Hei ${order.kunde}! Varen din "${order.vare}"${order.antal > 1 ? ` (${order.antal} stk)` : ''} er no komen i butikk og klar for henting hos MEKK Ølen. Følg bestillinga: ${sporLenkje} · Opningstider: man–fre 09–18, laurdag 09–16. Helsing MEKK Ølen, tlf 53 76 50 00.`;
 
   const copy = async () => {
     await navigator.clipboard.writeText(tekst);
