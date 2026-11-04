@@ -10,6 +10,7 @@ import { SwapModal } from './SwapModal';
 import { FerieModal } from './FerieModal';
 import { UnavailableModal } from './UnavailableModal';
 import { StandardvekeModal } from './StandardvekeModal';
+import { LedigVaktModal } from './LedigVaktModal';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { useIsMobile } from '../../lib/useIsMobile';
@@ -41,7 +42,7 @@ function udekt(open: string, vakter: Shift[]): [string, string][] {
 
 /** startDato: opne på veka til denne datoen (t.d. frå eit push-varsel). */
 export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
-  const { shifts, swaps, ferie: alleFerie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, kopierVeke, saveShift, deleteShift, saveFerie } = useAppData();
+  const { shifts, swaps, ferie: alleFerie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, kopierVeke, saveShift, deleteShift, saveFerie, ledigeVakter, taLedigVakt, angreTaLedigVakt, godkjennLedigVakt, slettLedigVakt } = useAppData();
   const { user } = useAuth();
   const { findAnsatt, ansatte } = useAnsatte();
   const isMobile = useIsMobile();
@@ -65,6 +66,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
   // Ein raud dag opnar heile perioden han høyrer til.
   const periodeFor = (u: Unavailable) => raudePeriodar(unavailable.filter((x) => x.ansatt === u.ansatt)).find((p) => p.dagar.some((x) => x.id === u.id))?.dagar ?? [u];
   const [standardOpen, setStandardOpen] = useState(false);
+  const [ledigOpen, setLedigOpen] = useState(false);
   const dragShiftId = useRef<string | null>(null);
 
   const days = DAGER_VAKTPLAN.map((d, i) => ({ ...d, date: addDays(vpWeek, i) }));
@@ -313,6 +315,54 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
         </div>
       )}
 
+      {/* Vaktbørs: ledige vakter nokon kan ta */}
+      {(kanLageVakt || ledigeVakter.length > 0) && (
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '16px 18px', boxShadow: 'var(--shadow-card)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: ledigeVakter.length ? 12 : 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px' }}>Ledige vakter</div>
+            {kanLageVakt && <button onClick={() => setLedigOpen(true)} style={{ ...btnGhost, marginLeft: 'auto' }}>+ Legg ut ledig vakt</button>}
+          </div>
+          {ledigeVakter.length === 0 ? (
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen ledige vakter no. Legg ut ei vakt nokon kan ta.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[...ledigeVakter].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.start < b.start ? -1 : 1)).map((v) => {
+                const d = parseDate(v.date);
+                const datoTekst = `${['søn', 'mån', 'tys', 'ons', 'tor', 'fre', 'lau'][d.getDay()]} ${d.getDate()}. ${MND[d.getMonth()]}`;
+                const tekar = v.tekenAv ? findAnsatt(v.tekenAv) : null;
+                const egTok = v.tekenAv === user?.id;
+                return (
+                  <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--r)' }}>
+                    <div style={{ flex: 1, minWidth: 180 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 700, textTransform: 'capitalize' }}>{datoTekst} · {v.start}–{v.slutt}{v.skift ? ` · ${v.skift}` : ''}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{v.grunn || 'Ledig vakt'}{tekar ? ` · ${tekar.navn} har sagt ja` : ''}</div>
+                    </div>
+                    {!v.tekenAv ? (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {user && <button onClick={() => taLedigVakt(v.id, user.id)} className="knapp-teal">Eg tek henne</button>}
+                        {kanLageVakt && <button onClick={() => slettLedigVakt(v.id)} style={{ ...btnGhost, color: 'var(--danger)' }}>Fjern</button>}
+                      </div>
+                    ) : kanLageVakt ? (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => angreTaLedigVakt(v.id)} style={{ ...btnGhost, color: 'var(--danger)' }}>Avslå</button>
+                        <button onClick={() => godkjennLedigVakt(v.id)} className="knapp-gronn">Godkjenn</button>
+                      </div>
+                    ) : egTok ? (
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Ventar på godkjenning</span>
+                        <button onClick={() => angreTaLedigVakt(v.id)} style={btnGhost}>Angre</button>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Teken av {tekar?.navn.split(' ')[0]}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '16px 18px', boxShadow: 'var(--shadow-card)' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
           <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px' }}>Ferie &amp; fri</div>
@@ -416,6 +466,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
       {ferieTarget && <FerieModal existing={ferieTarget === 'new' ? undefined : ferieTarget} onClose={() => setFerieTarget(null)} />}
       {utilTarget && user && <UnavailableModal ansatt={user.id} dato={utilTarget.dato} existing={utilTarget.existing} onClose={() => setUtilTarget(null)} />}
       {standardOpen && <StandardvekeModal onClose={() => setStandardOpen(false)} />}
+      {ledigOpen && <LedigVaktModal onClose={() => setLedigOpen(false)} />}
       {meny && (() => {
         const s = meny.shift;
         const a = findAnsatt(s.ansatt);

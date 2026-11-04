@@ -6,7 +6,7 @@ import { parseDate, ymd, today, addDays, DAG_IDX, skiftFraTid } from '../lib/dat
 import { toast } from '../lib/toast';
 import { storeOrd, storFyrste } from '../lib/tekst';
 import { useAnsatte } from './AnsatteContext';
-import type { Doc, Ferie, Melding, Order, Permission, Rutine, Shift, ShiftSwap, Stadfesting, Task, TaskInput, TimeEntry, Unavailable, StandardvekeEntry } from '../types';
+import type { Doc, Ferie, LedigVakt, Melding, Order, Permission, Rutine, Shift, ShiftSwap, Stadfesting, Task, TaskInput, TimeEntry, Unavailable, StandardvekeEntry } from '../types';
 
 // Neste forfallsdato for ei gjentakande oppgåve.
 const nesteFrist = (frist: string | null, gjentak: string): string | null => {
@@ -53,6 +53,14 @@ interface AppData {
   saveShift: (shift: Omit<Shift, 'id'> & { id?: string }) => Promise<void>;
   deleteShift: (id: string) => Promise<void>;
   moveShiftDate: (id: string, date: string) => Promise<void>;
+
+  // Vaktbørs (ledige vakter).
+  ledigeVakter: LedigVakt[];
+  leggUtLedigVakt: (v: { date: string; start: string; slutt: string; skift: string; grunn: string | null; opprettaAv: EmployeeId }) => Promise<void>;
+  taLedigVakt: (id: string, ansatt: EmployeeId) => Promise<void>;
+  angreTaLedigVakt: (id: string) => Promise<void>;
+  godkjennLedigVakt: (id: string) => Promise<void>;
+  slettLedigVakt: (id: string) => Promise<void>;
   standardveke: StandardvekeEntry[];
   saveStandardveke: (entries: Omit<StandardvekeEntry, 'id'>[]) => Promise<void>;
   applyStandardveke: (weekStart: string) => Promise<void>;
@@ -113,6 +121,7 @@ const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kateg
 const mapStadfesting = (r: any): Stadfesting => ({ id: r.id, docId: r.doc_id, ansatt: r.ansatt, stadfestaAt: r.stadfesta_at });
 const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne: r.kan_godkjenne });
 const mapMelding = (r: any): Melding => ({ id: r.id, fra: r.fra, til: r.til, tekst: r.tekst, created_at: r.created_at });
+const mapLedigVakt = (r: any): LedigVakt => ({ id: r.id, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift || '', grunn: r.grunn ?? null, opprettaAv: r.oppretta_av, tekenAv: r.teken_av ?? null, created_at: r.created_at });
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const { isLeder } = useAnsatte();
@@ -130,6 +139,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [stadfestingar, setStadfestingar] = useState<Stadfesting[]>([]);
+  const [ledigeVakter, setLedigeVakter] = useState<LedigVakt[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [meldinger, setMeldinger] = useState<Melding[]>([]);
 
@@ -149,7 +159,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       // gjer det same, så timane kjem med sjølv om ingen leiar opnar appen.
       await supabase.rpc('for_leiartimar');
     }
-    const [e, s, sw, f, t, o, d, p, m, u, sv, st, ru, ul] = await Promise.all([
+    const [e, s, sw, f, t, o, d, p, m, u, sv, st, ru, ul, lv] = await Promise.all([
       supabase.from('time_entries').select('*'),
       supabase.from('shifts').select('*'),
       supabase.from('shift_swaps').select('*'),
@@ -164,6 +174,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       supabase.from('doc_stadfesting').select('*'),
       supabase.from('oppgave_rutinar').select('*').order('created_at'),
       supabase.from('utleige_reservasjon').select('status, start, slutt').in('status', ['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka']),
+      supabase.from('ledige_vakter').select('*'),
     ]);
     const firstError = [e, s, sw, f, t, o, d, p, m, u, sv].find((r) => r.error)?.error;
     if (firstError) {
@@ -187,6 +198,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setRutinar(ru.error ? [] : (ru.data || []).map(mapRutine));
       // Kjem med utleige.sql.
       setUtleige(ul.error ? [] : (ul.data || []));
+      // Kjem med ledige-vakter.sql; manglar tabellen, blir lista tom.
+      setLedigeVakter(lv.error ? [] : (lv.data || []).map(mapLedigVakt));
     }
     if (!stille) setLoading(false);
   }, []);
@@ -204,7 +217,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       timer = setTimeout(() => hent(true), 400);
     };
     const kanal = supabase.channel('appdata-live');
-    for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting', 'oppgave_rutinar', 'utleige_reservasjon']) {
+    for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting', 'oppgave_rutinar', 'utleige_reservasjon', 'ledige_vakter']) {
       kanal.on('postgres_changes', { event: '*', schema: 'public', table }, planlegg);
     }
     // Mobilen set appen på pause i bakgrunnen, og då går endringar tapt.
@@ -292,6 +305,47 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const { data, error: err } = await supabase.from('shifts').update({ date }).eq('id', id).select().single();
     if (err) throw err;
     setShifts((prev) => prev.map((x) => (x.id === id ? mapShift(data) : x)));
+  };
+
+  // ---- vaktbørs (ledige vakter) ----
+  const leggUtLedigVakt: AppData['leggUtLedigVakt'] = async (v) => {
+    const { data, error: err } = await supabase.from('ledige_vakter').insert({
+      date: v.date, start: v.start, slutt: v.slutt, skift: v.skift, grunn: v.grunn, oppretta_av: v.opprettaAv,
+    }).select().single();
+    if (err) throw err;
+    setLedigeVakter((prev) => [...prev, mapLedigVakt(data)]);
+    toast('Ledig vakt lagd ut');
+  };
+  const taLedigVakt: AppData['taLedigVakt'] = async (id, ansatt) => {
+    const { data, error: err } = await supabase.from('ledige_vakter').update({ teken_av: ansatt }).eq('id', id).select().single();
+    if (err) throw err;
+    setLedigeVakter((prev) => prev.map((x) => (x.id === id ? mapLedigVakt(data) : x)));
+    toast('Du har sagt ja til vakta – ventar på godkjenning');
+  };
+  const angreTaLedigVakt: AppData['angreTaLedigVakt'] = async (id) => {
+    const { data, error: err } = await supabase.from('ledige_vakter').update({ teken_av: null }).eq('id', id).select().single();
+    if (err) throw err;
+    setLedigeVakter((prev) => prev.map((x) => (x.id === id ? mapLedigVakt(data) : x)));
+  };
+  const godkjennLedigVakt: AppData['godkjennLedigVakt'] = async (id) => {
+    const lv = ledigeVakter.find((x) => x.id === id);
+    if (!lv || !lv.tekenAv) return;
+    // Lag ei vanleg vakt for den som tok henne, og fjern ho frå børsen.
+    const { data, error: err } = await supabase.from('shifts').insert({
+      ansatt: lv.tekenAv, date: lv.date, start: lv.start, slutt: lv.slutt, skift: lv.skift || 'Vakt',
+    }).select().single();
+    if (err) throw err;
+    const { error: delErr } = await supabase.from('ledige_vakter').delete().eq('id', id);
+    if (delErr) throw delErr;
+    setShifts((prev) => [...prev, mapShift(data)]);
+    setLedigeVakter((prev) => prev.filter((x) => x.id !== id));
+    varsle({ type: 'ny_vakt', shift_ids: [data.id] });
+    toast('Vakta er tildelt');
+  };
+  const slettLedigVakt: AppData['slettLedigVakt'] = async (id) => {
+    const { error: err } = await supabase.from('ledige_vakter').delete().eq('id', id);
+    if (err) throw err;
+    setLedigeVakter((prev) => prev.filter((x) => x.id !== id));
   };
   // ---- standardveke (mal) ----
   const saveStandardveke: AppData['saveStandardveke'] = async (entries) => {
@@ -684,6 +738,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       sendMelding, deleteMelding,
       saveEntry, deleteEntry, approveEmployeeEntries,
       saveShift, deleteShift, moveShiftDate, saveStandardveke, applyStandardveke, kopierVeke,
+      ledigeVakter, leggUtLedigVakt, taLedigVakt, angreTaLedigVakt, godkjennLedigVakt, slettLedigVakt,
       createSwap, approveSwap, declineSwap,
       saveFerie, deleteFerie, behandleFerie, saveUnavailable, removeUnavailable, saveUnavailablePeriode, removeUnavailableMange,
       saveTask, deleteTask, moveTask, completeTask, reopenTask, blockTask, unblockTask,
@@ -692,7 +747,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveDoc, deleteDoc, uploadDocFile, docFileUrl,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, error, entries, shifts, swaps, ferie, tasks, rutinar, utleige, orders, docs, stadfestingar, permissions, meldinger, unavailable, standardveke, canApprove]
+    [loading, error, entries, shifts, swaps, ferie, tasks, rutinar, utleige, orders, docs, stadfestingar, permissions, meldinger, unavailable, standardveke, ledigeVakter, canApprove]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

@@ -21,7 +21,7 @@ const cardStyle = { background: 'var(--surface)', border: '1px solid var(--borde
 const labelStyle = { fontSize: 11.5, fontWeight: 800, letterSpacing: '0.3px', textTransform: 'uppercase', color: 'var(--text-label)', marginBottom: 10 } as const;
 
 export function Dashboard({ setView }: { setView: (v: View) => void }) {
-  const { entries, shifts, swaps, tasks, orders, ferie: alleFerie, docs, stadfestingar, canApprove, completeTask, moveTask, utleige } = useAppData();
+  const { entries, shifts, swaps, tasks, orders, ferie: alleFerie, docs, stadfestingar, canApprove, completeTask, moveTask, utleige, ledigeVakter } = useAppData();
   const [opneTask, setOpneTask] = useState<Task | null>(null);
   const [visReklamasjon, setVisReklamasjon] = useState(false);
   const ferie = alleFerie.filter((f) => f.status === 'godkjend');
@@ -71,9 +71,14 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
   const eldsteForseinka = tasks.filter((x) => !x.ferdig && x.frist && x.frist < t && (kanLageVakt || x.ansatt === user?.id)).map((x) => x.frist!).sort()[0];
   // Reklamasjonar ein tilsett har ført inn – dagleg leiar skal følgje dei opp.
   const reklamasjonar = kanLageVakt ? opneReklamasjonar(tasks) : [];
+  // Vaktbørs: ledige vakter å ta (alle), og dei som ventar på godkjenning (leiar).
+  const ledigeAaTa = ledigeVakter.filter((v) => !v.tekenAv).length;
+  const ledigeTilGodkjenning = kanLageVakt ? ledigeVakter.filter((v) => v.tekenAv).length : 0;
   const varslerUsortert: Varsel[] = [
     ...reklamasjonar.map((r) => ({ key: `reklam-${r.id}`, tekst: r.tittel, view: 'oppgaver' as View, niva: 'hog' as const, alder: r.opprettaAv ? `Registrert av ${findAnsatt(r.opprettaAv).navn.split(' ')[0]}` : undefined })),
     ...pendingSwaps.map((s) => ({ key: `swap-${s.id}`, tekst: `${findAnsatt(s.fra).navn} ønskjer å bytte vakt ${s.dag}`, view: 'vaktplan' as View, niva: 'middels' as const })),
+    ...(ledigeTilGodkjenning > 0 ? [{ key: 'ledig-godkjenn', tekst: `${tal(ledigeTilGodkjenning, 'ledig vakt', 'ledige vakter')} ventar på at du godkjenner`, view: 'vaktplan' as View, niva: 'hog' as const }] : []),
+    ...(ledigeAaTa > 0 ? [{ key: 'ledig-ta', tekst: `${tal(ledigeAaTa, 'ledig vakt', 'ledige vakter')} du kan ta`, view: 'vaktplan' as View, niva: 'middels' as const }] : []),
     ...(ventandeTimar > 0 ? [{ key: 'timar', tekst: `${tal(ventandeTimar, 'timeføring', 'timeføringar')} ventar på godkjenning`, view: 'timeliste' as View, niva: 'middels' as const }] : []),
     ...ankomneBestillingar.map((o) => ({ key: `order-${o.id}`, tekst: `Bestilling til ${o.kunde} har kome`, view: 'bestilling' as View, niva: 'middels' as const })),
     ...(gamleBestillingar > 0 ? [{ key: 'gamle', tekst: `${tal(gamleBestillingar, 'bestilling', 'bestillingar')} har stått lenge`, view: 'bestilling' as View, niva: 'hog' as const }] : []),
