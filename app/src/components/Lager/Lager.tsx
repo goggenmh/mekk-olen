@@ -133,6 +133,12 @@ export function Lager() {
       ) : treff && treff.length === 0 ? (
         <Melding>Ingen treff på «{q.trim()}».</Melding>
       ) : treff && treff.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {treff.every((v) => v.total === 0) && (
+          <div style={{ fontSize: 13, lineHeight: 1.5, padding: '12px 14px', borderRadius: 'var(--r)', background: 'var(--pill-amber-bg)', color: 'var(--pill-amber-fg)' }}>
+            <b>Vara finst i registeret, men ingen beholdning er registrert enno.</b> Beholdninga og lagerplassen kjem frå lager-skanninga – registrer eit varemottak der (knappen «Opne lager-skanning» øvst), så ser de kor mange de har og kvar.
+          </div>
+        )}
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: 12, alignItems: 'start' }}>
           {treff.map((v) => (
             <div key={v.nr} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -165,6 +171,7 @@ export function Lager() {
               </button>
             </div>
           ))}
+        </div>
         </div>
       ) : null}
       {bestill && <OrderModal prefyll={bestill} onClose={() => setBestill(null)} />}
