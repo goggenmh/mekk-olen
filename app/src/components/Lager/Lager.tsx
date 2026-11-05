@@ -4,6 +4,7 @@ import { useIsMobile } from '../../lib/useIsMobile';
 import { DEMO } from '../../lib/view';
 import { Icon } from '../ui/Icon';
 import { OrderModal, type OrderPrefyll } from '../Bestillinger/OrderModal';
+import { KomIGang } from './KomIGang';
 
 // Lenka til det eigne lager-systemet (skanning + registrering: mottak, ut til
 // butikk, telling og vareimport). Denne sida er berre eit raskt oppslag.
@@ -93,6 +94,8 @@ export function Lager() {
           Opne lager-skanning ↗
         </button>
       </div>
+
+      <KomIGang onOpneSkanning={opneSkanning} />
 
       <div style={{ position: 'relative' }}>
         <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-faint)', display: 'flex' }}><Icon name="search" size={18} /></span>
