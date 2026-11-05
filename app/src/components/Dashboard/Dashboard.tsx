@@ -8,6 +8,7 @@ import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { TaskModal } from '../Oppgaver/TaskModal';
 import { Beskjedtavle } from './Beskjedtavle';
+import { Driftspuls } from './Driftspuls';
 import { ReklamasjonModal } from '../Oppgaver/ReklamasjonModal';
 import type { View } from '../../lib/view';
 import { alder } from '../../lib/bestilling';
@@ -223,6 +224,9 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
 
         {/* Beskjedtavle – delt vaktoverlevering */}
         <Beskjedtavle style={kort} />
+
+        {/* Driftspuls – framoverskodande bemanningsrisiko (berre leiar) */}
+        {kanLageVakt && <Driftspuls style={kort} setView={setView} />}
 
         {/* Timer denne veka */}
         <div style={kort}>
