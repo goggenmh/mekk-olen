@@ -66,10 +66,10 @@ export function Rapporter() {
     const planlagt = shifts.filter((s) => s.ansatt === a.id && innenPeriode(s.date)).reduce((acc, s) => acc + vaktTimar(s), 0);
     const ventar = mine.filter((e) => e.status === 'venter').length;
     const kr = a.lonn === 'time' ? godkjent * a.sats : null;
-    // Framoverskodande lønskost: kva vaktplanen for perioden kjem til å koste,
-    // før timane er førte og godkjende. Berre timelønte – fastløn er same kostnad
-    // uansett vaktplan, og appen fører ikkje fastløn i kroner.
-    const planlagtKr = a.lonn === 'time' ? planlagt * a.sats : null;
+    // Framoverskodande lønskost for perioden. Timelønte: planlagde timar ×
+    // timesats. Fastløn: månadslønna (sats) fordelt på perioden – same kostnad
+    // uansett vaktplan. Veke = månadslønn × 12/52.
+    const planlagtKr = a.lonn === 'time' ? planlagt * a.sats : (periode === 'manad' ? a.sats : (a.sats * 12) / 52);
     // Avvik: berre dagar som er passerte, og tid frå start til slutt (vaktplanen har ikkje pause).
     const planHittil = shifts.filter((s) => s.ansatt === a.id && innenPeriode(s.date) && s.date <= t).reduce((acc, s) => acc + vaktTimar(s), 0);
     const bruttoHittil = mine.filter((e) => e.date <= t).reduce((acc, e) => acc + timar(e) + (e.pause || 0) / 60, 0);
@@ -81,7 +81,9 @@ export function Rapporter() {
 
   const sum = (k: 'planlagt' | 'registrert' | 'godkjent' | 'overtid') => rader.reduce((acc, r) => acc + r[k], 0);
   const totalKrAlle = rader.reduce((acc, r) => acc + (r.kr || 0), 0);
-  const totalPlanlagtKr = rader.reduce((acc, r) => acc + (r.planlagtKr || 0), 0);
+  const planlagtKrTime = rader.filter((r) => r.a.lonn === 'time').reduce((acc, r) => acc + (r.planlagtKr || 0), 0);
+  const planlagtKrFast = rader.filter((r) => r.a.lonn === 'fast').reduce((acc, r) => acc + (r.planlagtKr || 0), 0);
+  const totalPlanlagtKr = planlagtKrTime + planlagtKrFast;
 
   // Omsetning for perioden skriv leiaren inn sjølv (appen har ikkje kasse-/
   // salstal). Blir lagra lokalt på eininga, per periode – ingen endring i
@@ -138,13 +140,15 @@ export function Rapporter() {
       [`Rapport for ${periodeTekst}`, `Generert ${generert}`],
       [],
       ['Tilsett', 'Planlagt (t)', 'Planlagd lønskost (kr)', 'Registrert (t)', 'Godkjent (t)', 'Overtid (t)', 'Fråværsdagar', 'Ventar godkjenning', 'Brutto (kr)', 'Forskotstrekk (kr)', 'Netto (kr)', 'Feriepengar opptent (kr)', 'Skatt'],
-      ...rader.map((r) => [r.a.navn, fmt(r.planlagt), r.planlagtKr !== null ? Math.round(r.planlagtKr) : 'Fastløn', fmt(r.registrert), fmt(r.godkjent), fmt(r.overtid), r.fravaer, r.ventar, r.kr !== null ? Math.round(r.kr) : 'Fastløn', r.skatt ? r.skatt.trekk : '', r.skatt ? Math.round(r.skatt.netto) : '', r.ferie ? Math.round(r.ferie.periode) : '', r.skatt ? r.skatt.forklaring : '']),
+      ...rader.map((r) => [r.a.navn, fmt(r.planlagt), Math.round(r.planlagtKr || 0), fmt(r.registrert), fmt(r.godkjent), fmt(r.overtid), r.fravaer, r.ventar, r.kr !== null ? Math.round(r.kr) : 'Fastløn', r.skatt ? r.skatt.trekk : '', r.skatt ? Math.round(r.skatt.netto) : '', r.ferie ? Math.round(r.ferie.periode) : '', r.skatt ? r.skatt.forklaring : '']),
       [],
-      ['Planlagd lønskost (timelønte, sum)', Math.round(totalPlanlagtKr)],
+      ['Planlagd lønskost – timelønte (sum)', Math.round(planlagtKrTime)],
+      ['Planlagd lønskost – fastløn (sum)', Math.round(planlagtKrFast)],
+      ['Planlagd lønskost – totalt', Math.round(totalPlanlagtKr)],
       ['Omsetning (innskriven)', omsTal || ''],
       ['Lønskost-%', lonsProsent !== null ? `${lonsProsent.toFixed(1).replace('.', ',')} %` : ''],
       [],
-      ['Planlagd lønskost = planlagde timar × timesats for timelønte (fastløn kjem i tillegg). Løn er rekna av godkjende timar. Overtid = timar over 37,5 per veke. Forskotstrekket er eit anslag – lønssystemet/a-meldinga er fasit. Feriepengar er opptent i perioden og blir utbetalt neste år.'],
+      ['Planlagd lønskost = planlagde timar × timesats (timelønte) + månadslønn fordelt på perioden (fastløn). Løn er rekna av godkjende timar. Overtid = timar over 37,5 per veke. Forskotstrekket er eit anslag – lønssystemet/a-meldinga er fasit. Feriepengar er opptent i perioden og blir utbetalt neste år.'],
     ]);
   };
 
@@ -197,6 +201,9 @@ export function Rapporter() {
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 5 }}>Planlagd lønskost</div>
             <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px' }}>{fmtKr(totalPlanlagtKr)}</div>
+            {planlagtKrFast > 0 && (
+              <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 3 }}>Timelønte {fmtKr(planlagtKrTime)} · fastløn {fmtKr(planlagtKrFast)}</div>
+            )}
           </div>
           <div>
             <label htmlFor="oms-inn" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 5 }}>Omsetning {periodeTekst}</label>
@@ -221,7 +228,7 @@ export function Rapporter() {
           </div>
         </div>
         <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-          Planlagd lønskost er vaktplanen for timelønte (planlagde timar × timesats) – fastløn kjem i tillegg. Omsetninga blir lagra lokalt på denne eininga, ikkje i systemet. Butikkar ligg typisk rundt 10–20 % lønskost; prosenten er berre rettleiande.
+          Planlagd lønskost = timelønte (planlagde timar × timesats) + fastløn (månadslønn fordelt på perioden). Fastløn er same kostnad uansett vaktplan. Omsetninga blir lagra lokalt på denne eininga, ikkje i systemet. Butikkar ligg typisk rundt 10–20 % lønskost; prosenten er berre rettleiande.
         </div>
       </div>
 
