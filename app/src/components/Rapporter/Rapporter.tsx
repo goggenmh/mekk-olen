@@ -66,17 +66,46 @@ export function Rapporter() {
     const planlagt = shifts.filter((s) => s.ansatt === a.id && innenPeriode(s.date)).reduce((acc, s) => acc + vaktTimar(s), 0);
     const ventar = mine.filter((e) => e.status === 'venter').length;
     const kr = a.lonn === 'time' ? godkjent * a.sats : null;
+    // Framoverskodande lønskost: kva vaktplanen for perioden kjem til å koste,
+    // før timane er førte og godkjende. Berre timelønte – fastløn er same kostnad
+    // uansett vaktplan, og appen fører ikkje fastløn i kroner.
+    const planlagtKr = a.lonn === 'time' ? planlagt * a.sats : null;
     // Avvik: berre dagar som er passerte, og tid frå start til slutt (vaktplanen har ikkje pause).
     const planHittil = shifts.filter((s) => s.ansatt === a.id && innenPeriode(s.date) && s.date <= t).reduce((acc, s) => acc + vaktTimar(s), 0);
     const bruttoHittil = mine.filter((e) => e.date <= t).reduce((acc, e) => acc + timar(e) + (e.pause || 0) / 60, 0);
     const avvik = planHittil > 0 && Math.abs(bruttoHittil - planHittil) >= 1;
     const skatt: Trekk | null = a.lonn === 'time' ? trekkForPeriode(a, entries, periodeFra, periodeTil) : null;
     const ferie = feriepengar(a, entries, periodeFra, periodeTil);
-    return { a, planlagt, registrert, godkjent, ventar, overtid: overtid(a.id), fravaer: fravaerDagar(a.id), kr, avvik, skatt, ferie };
+    return { a, planlagt, registrert, godkjent, ventar, overtid: overtid(a.id), fravaer: fravaerDagar(a.id), kr, planlagtKr, avvik, skatt, ferie };
   });
 
   const sum = (k: 'planlagt' | 'registrert' | 'godkjent' | 'overtid') => rader.reduce((acc, r) => acc + r[k], 0);
   const totalKrAlle = rader.reduce((acc, r) => acc + (r.kr || 0), 0);
+  const totalPlanlagtKr = rader.reduce((acc, r) => acc + (r.planlagtKr || 0), 0);
+
+  // Omsetning for perioden skriv leiaren inn sjølv (appen har ikkje kasse-/
+  // salstal). Blir lagra lokalt på eininga, per periode – ingen endring i
+  // databasen. Lønskost-% = planlagd lønskost / omsetning.
+  const omsKey = periode === 'uke' ? `veke-${vekeDatoar[0]}` : t.slice(0, 7);
+  const [omsetningar, setOmsetningar] = useState<Record<string, string>>(() => {
+    try { return JSON.parse(localStorage.getItem('mekk-omsetning') || '{}'); } catch { return {}; }
+  });
+  const omsetning = omsetningar[omsKey] ?? '';
+  const settOmsetning = (v: string) => {
+    setOmsetningar((prev) => {
+      const neste = { ...prev, [omsKey]: v };
+      try { localStorage.setItem('mekk-omsetning', JSON.stringify(neste)); } catch { /* privat modus */ }
+      return neste;
+    });
+  };
+  const omsTal = Number(omsetning.replace(/[\s.]/g, '').replace(',', '.')) || 0;
+  const lonsProsent = omsTal > 0 ? (totalPlanlagtKr / omsTal) * 100 : null;
+  // Rettleiande fargar – ikkje ein fasit, berre eit peik. Butikkar ligg typisk
+  // rundt 10–20 % lønskost; over det er verdt eit blikk.
+  const lonsFarge = lonsProsent === null ? 'var(--text)'
+    : lonsProsent <= 20 ? 'var(--pill-gronn-fg)'
+    : lonsProsent <= 30 ? 'var(--pill-amber-fg)'
+    : 'var(--pill-raud-fg)';
   const totalTrekk = rader.reduce((acc, r) => acc + (r.skatt?.trekk || 0), 0);
   const totalFerie = rader.reduce((acc, r) => acc + (r.ferie?.periode || 0), 0);
   const manglarKort = rader.filter((r) => r.skatt?.manglarKort && r.skatt.brutto > 0).map((r) => r.a.navn);
@@ -93,6 +122,7 @@ export function Rapporter() {
     { label: 'Registrerte timar', verdi: fmt(sum('registrert')) },
     { label: 'Godkjende timar', verdi: fmt(sum('godkjent')) },
     { label: 'Overtid', verdi: fmt(sum('overtid')), farge: sum('overtid') > 0 ? 'var(--pill-raud-fg)' : undefined },
+    { label: 'Planlagd lønskost', verdi: fmtKr(totalPlanlagtKr) },
     { label: 'Brutto løn (godkjent)', verdi: fmtKr(totalKrAlle) },
     { label: 'Forskotstrekk (anslag)', verdi: fmtKr(totalTrekk) },
     { label: 'Netto utbetalt (anslag)', verdi: fmtKr(totalKrAlle - totalTrekk) },
@@ -107,10 +137,14 @@ export function Rapporter() {
     lastNedCsv(`mekk-olen-rapport-${periode === 'uke' ? `veke-${vekeDatoar[0]}` : t.slice(0, 7)}.csv`, [
       [`Rapport for ${periodeTekst}`, `Generert ${generert}`],
       [],
-      ['Tilsett', 'Planlagt (t)', 'Registrert (t)', 'Godkjent (t)', 'Overtid (t)', 'Fråværsdagar', 'Ventar godkjenning', 'Brutto (kr)', 'Forskotstrekk (kr)', 'Netto (kr)', 'Feriepengar opptent (kr)', 'Skatt'],
-      ...rader.map((r) => [r.a.navn, fmt(r.planlagt), fmt(r.registrert), fmt(r.godkjent), fmt(r.overtid), r.fravaer, r.ventar, r.kr !== null ? Math.round(r.kr) : 'Fastløn', r.skatt ? r.skatt.trekk : '', r.skatt ? Math.round(r.skatt.netto) : '', r.ferie ? Math.round(r.ferie.periode) : '', r.skatt ? r.skatt.forklaring : '']),
+      ['Tilsett', 'Planlagt (t)', 'Planlagd lønskost (kr)', 'Registrert (t)', 'Godkjent (t)', 'Overtid (t)', 'Fråværsdagar', 'Ventar godkjenning', 'Brutto (kr)', 'Forskotstrekk (kr)', 'Netto (kr)', 'Feriepengar opptent (kr)', 'Skatt'],
+      ...rader.map((r) => [r.a.navn, fmt(r.planlagt), r.planlagtKr !== null ? Math.round(r.planlagtKr) : 'Fastløn', fmt(r.registrert), fmt(r.godkjent), fmt(r.overtid), r.fravaer, r.ventar, r.kr !== null ? Math.round(r.kr) : 'Fastløn', r.skatt ? r.skatt.trekk : '', r.skatt ? Math.round(r.skatt.netto) : '', r.ferie ? Math.round(r.ferie.periode) : '', r.skatt ? r.skatt.forklaring : '']),
       [],
-      ['Løn er rekna av godkjende timar. Overtid = timar over 37,5 per veke. Forskotstrekket er eit anslag – lønssystemet/a-meldinga er fasit. Feriepengar er opptent i perioden og blir utbetalt neste år.'],
+      ['Planlagd lønskost (timelønte, sum)', Math.round(totalPlanlagtKr)],
+      ['Omsetning (innskriven)', omsTal || ''],
+      ['Lønskost-%', lonsProsent !== null ? `${lonsProsent.toFixed(1).replace('.', ',')} %` : ''],
+      [],
+      ['Planlagd lønskost = planlagde timar × timesats for timelønte (fastløn kjem i tillegg). Løn er rekna av godkjende timar. Overtid = timar over 37,5 per veke. Forskotstrekket er eit anslag – lønssystemet/a-meldinga er fasit. Feriepengar er opptent i perioden og blir utbetalt neste år.'],
     ]);
   };
 
@@ -150,6 +184,45 @@ export function Rapporter() {
             <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', marginTop: 4 }}>{k.label}</div>
           </div>
         ))}
+      </div>
+
+      {/* Lønskost mot omsetning – kva vaktplanen kjem til å koste, sett opp mot
+          kva butikken omset for. Omsetninga skriv leiaren inn sjølv. */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '18px 20px', boxShadow: 'var(--shadow-card)', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.01em' }}>Lønskost mot omsetning</div>
+          <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>Kva vaktplanen for {periodeTekst} kjem til å koste, sett opp mot omsetninga. Skriv inn forventa eller faktisk omsetning.</div>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'flex-end' }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 5 }}>Planlagd lønskost</div>
+            <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px' }}>{fmtKr(totalPlanlagtKr)}</div>
+          </div>
+          <div>
+            <label htmlFor="oms-inn" style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 5 }}>Omsetning {periodeTekst}</label>
+            <div style={{ position: 'relative', width: 170 }}>
+              <input
+                id="oms-inn"
+                inputMode="numeric"
+                value={omsetning}
+                onChange={(e) => settOmsetning(e.target.value)}
+                placeholder="0"
+                aria-label={`Omsetning ${periodeTekst} i kroner`}
+                style={{ width: '100%', padding: '10px 32px 10px 13px', border: '1px solid var(--border)', background: 'var(--surface-alt)', borderRadius: 'var(--r)', fontFamily: "'Geist Mono Variable'", fontSize: 18, fontWeight: 700, color: 'var(--text)', textAlign: 'right' }}
+              />
+              <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text-faint)', fontWeight: 600 }}>kr</span>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 5 }}>Lønskost-%</div>
+            <div style={{ fontFamily: "'Geist Mono Variable'", fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', color: lonsFarge }}>
+              {lonsProsent === null ? '–' : `${lonsProsent.toFixed(1).replace('.', ',')} %`}
+            </div>
+          </div>
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+          Planlagd lønskost er vaktplanen for timelønte (planlagde timar × timesats) – fastløn kjem i tillegg. Omsetninga blir lagra lokalt på denne eininga, ikkje i systemet. Butikkar ligg typisk rundt 10–20 % lønskost; prosenten er berre rettleiande.
+        </div>
       </div>
 
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'auto', boxShadow: 'var(--shadow-card)' }}>
