@@ -160,18 +160,20 @@ function App() {
               <div style={{ padding: 40, textAlign: 'center', color: 'var(--danger)' }}>Kunne ikkje laste data: {error}</div>
             ) : (
               <Suspense fallback={<DashboardSkeleton />}>
-                {synlegView === 'dashbord' && <><VarselTips setView={go} /><Dashboard setView={go} /></>}
-                {synlegView === 'ansatte' && <Ansatte />}
-                {synlegView === 'timeliste' && <Timeliste key={visDato ?? 'i-dag'} startDato={visDato} />}
-                {synlegView === 'vaktplan' && <Vaktplan key={visDato ?? 'i-dag'} startDato={visDato} />}
-                {synlegView === 'ferie' && <FerieSide />}
-                {synlegView === 'oppgaver' && <Oppgaver setView={go} />}
-                {synlegView === 'bestilling' && <Bestillinger />}
-                {synlegView === 'dokument' && <Dokument />}
-                {synlegView === 'utleige' && <Utleige />}
-                {synlegView === 'lager' && <Lager />}
-                {synlegView === 'rapporter' && <Rapporter />}
-                {synlegView === 'innstillinger' && <Innstillinger setView={go} />}
+                <div key={synlegView} className="view-inn">
+                  {synlegView === 'dashbord' && <><VarselTips setView={go} /><Dashboard setView={go} /></>}
+                  {synlegView === 'ansatte' && <Ansatte />}
+                  {synlegView === 'timeliste' && <Timeliste key={visDato ?? 'i-dag'} startDato={visDato} />}
+                  {synlegView === 'vaktplan' && <Vaktplan key={visDato ?? 'i-dag'} startDato={visDato} />}
+                  {synlegView === 'ferie' && <FerieSide />}
+                  {synlegView === 'oppgaver' && <Oppgaver setView={go} />}
+                  {synlegView === 'bestilling' && <Bestillinger />}
+                  {synlegView === 'dokument' && <Dokument />}
+                  {synlegView === 'utleige' && <Utleige />}
+                  {synlegView === 'lager' && <Lager />}
+                  {synlegView === 'rapporter' && <Rapporter />}
+                  {synlegView === 'innstillinger' && <Innstillinger setView={go} />}
+                </div>
               </Suspense>
             )}
           </div>
