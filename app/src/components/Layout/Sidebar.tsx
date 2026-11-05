@@ -5,6 +5,7 @@ import { useAnsatte } from '../../context/AnsatteContext';
 import { weekDates, mondayOf, today } from '../../lib/dates';
 import { mineIDag } from '../../lib/oppgave';
 import { VIEWS, NAV_GROUPS, harTilgang, type View } from '../../lib/view';
+import { prefetchView } from '../../lib/prefetch';
 import { Icon } from '../ui/Icon';
 
 const META = Object.fromEntries(VIEWS.map((v) => [v.key, v])) as Record<View, typeof VIEWS[number]>;
@@ -98,6 +99,8 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
               <button
                 key={key}
                 onClick={() => setView(key)}
+                onMouseEnter={() => prefetchView(key)}
+                onFocus={() => prefetchView(key)}
                 title={smal ? v.label : undefined}
                 aria-label={badge ? `${v.label} (${badge.n})` : v.label}
                 aria-current={active ? 'page' : undefined}

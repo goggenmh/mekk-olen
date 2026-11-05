@@ -252,6 +252,16 @@ button:active {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Mjuk inntoning når ein byter visning – kjennest smoothare enn eit hardt byte. */
+@keyframes viewInn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.view-inn { animation: viewInn 0.17s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .view-inn { animation: none; }
+}
+
 /* Skjelett-lasting */
 @keyframes skeletonPulse {
   0%, 100% { opacity: 1; }
