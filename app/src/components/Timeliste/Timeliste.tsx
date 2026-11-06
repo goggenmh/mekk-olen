@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react';
-import { useAppData } from '../../context/AppDataContext';
-import { useAuth } from '../../context/AuthContext';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAppData } from '../../context/appData';
+import { useAuth } from '../../context/auth';
+import { useAnsatte } from '../../context/ansatte';
 import {
   weekDates, mondayOf, today, isoWeek, addDays, shiftMonth, MND,
   fmt, fmtKr, timar, UKE_KORT, parseDate, weekdayIdx,

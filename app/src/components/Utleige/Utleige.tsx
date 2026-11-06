@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { kortStil, kortLabel } from './stil';
 import { StatusMerke } from './StatusMerke';
-import { useAuth } from '../../context/AuthContext';
-import { useAppData } from '../../context/AppDataContext';
+import { useAuth } from '../../context/auth';
+import { useAppData } from '../../context/appData';
 import { useIsMobile } from '../../lib/useIsMobile';
 import { today } from '../../lib/dates';
 import { EINING_STATUS, einingStatusNo, kr, nr, tidKort, type UtleigeReservasjon } from '../../lib/utleige';

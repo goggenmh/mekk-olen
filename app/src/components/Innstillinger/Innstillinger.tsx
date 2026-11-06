@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAuth } from '../../context/auth';
+import { useTheme } from '../../context/theme';
+import { useAnsatte } from '../../context/ansatte';
 import { Avatar } from '../ui/Avatar';
 import type { View } from '../../lib/view';
 import { hentAbonnement, pushStotta, skruAvVarsel, skruPaVarsel, trengHeimeskjerm } from '../../lib/push';

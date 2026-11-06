@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
-import { useAppData } from '../../context/AppDataContext';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { Modal, Field, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
+import { inputStyle } from '../ui/modalStyles';
+import { useAppData } from '../../context/appData';
+import { useAnsatte } from '../../context/ansatte';
 import { PRIORITET, OPPGAVE_KATEGORIAR, type Prioritet } from '../../constants';
 import { ANSVAR_SPESIELL, RUTINE_MALAR, VEKEDAGAR, rutineTekst } from '../../lib/oppgave';
 import type { Rutine } from '../../types';

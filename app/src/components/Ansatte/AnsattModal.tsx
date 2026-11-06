@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Modal, Field, inputStyle, monoInputStyle, CancelButton, SaveButton } from '../ui/Modal';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { Modal, Field, CancelButton, SaveButton } from '../ui/Modal';
+import { inputStyle, monoInputStyle } from '../ui/modalStyles';
+import { useAnsatte } from '../../context/ansatte';
 import type { Employee } from '../../constants';
 import { FERIEPENGESATSAR, STANDARD_FERIEPENGESATS } from '../../lib/skatt';
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useAnsatte } from '../../context/AnsatteContext';
-import { useAppData } from '../../context/AppDataContext';
+import { useAnsatte } from '../../context/ansatte';
+import { useAppData } from '../../context/appData';
 import { weekDates, mondayOf, today, timar, fmt, UKE_KORT, weekdayIdx } from '../../lib/dates';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';

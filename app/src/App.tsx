@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { useAuth } from './context/AuthContext';
-import { useAppData } from './context/AppDataContext';
+import { useAuth } from './context/auth';
+import { useAppData } from './context/appData';
 import { LoginScreen } from './components/Login/LoginScreen';
 import { Velkomst } from './components/Login/Velkomst';
 import { Header } from './components/Layout/Header';
@@ -24,6 +24,7 @@ import { Toaster } from './components/ui/Toaster';
 import { VIEWS, DEMO, harTilgang, lesSti, skrivSti, stiFor, viewFraSti, type View } from './lib/view';
 import { BottomNav } from './components/Layout/BottomNav';
 import { VarselTips } from './components/Layout/VarselTips';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const gyldigVis = (v: unknown): View | null =>
   typeof v === 'string' && VIEWS.some((x) => x.key === v) ? (v as View) : null;
@@ -170,6 +171,7 @@ function App() {
             ) : error ? (
               <div style={{ padding: 40, textAlign: 'center', color: 'var(--danger)' }}>Kunne ikkje laste data: {error}</div>
             ) : (
+              <ErrorBoundary key={synlegView}>
               <Suspense fallback={<DashboardSkeleton />}>
                 <div key={synlegView} className="view-inn">
                   {synlegView === 'dashbord' && <><VarselTips setView={go} /><Dashboard setView={go} opneDato={(dato) => byttSide('vaktplan', dato)} /></>}
@@ -186,6 +188,7 @@ function App() {
                   {synlegView === 'innstillinger' && <Innstillinger setView={go} />}
                 </div>
               </Suspense>
+              </ErrorBoundary>
             )}
           </div>
         </main>

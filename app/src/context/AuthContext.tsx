@@ -1,24 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase, pinToPassword } from '../supabaseClient';
 import type { Employee } from '../constants';
-import { useAnsatte, mapAnsatt } from './AnsatteContext';
-
-interface AuthState {
-  loading: boolean;
-  user: Employee | null;
-  /** The employee currently selected on the "who are you" screen, before PIN entry. */
-  pick: Employee | null;
-  pin: string;
-  feil: string | null;
-  pickUser: (id: string) => void;
-  back: () => void;
-  pressDigit: (d: string) => void;
-  backspace: () => void;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthState | null>(null);
+import { useAnsatte, mapAnsatt } from './ansatte';
+import { AuthContext, type AuthState } from './auth';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   // Innlogginga byggjer på loginAnsatte (økt-uavhengig liste med alle
@@ -177,8 +162,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
-}

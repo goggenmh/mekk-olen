@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Modal, Field, monoInputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
-import { useAppData } from '../../context/AppDataContext';
-import { useAnsatte } from '../../context/AnsatteContext';
-import { useAuth } from '../../context/AuthContext';
+import { Modal, Field, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
+import { monoInputStyle } from '../ui/modalStyles';
+import { useAppData } from '../../context/appData';
+import { useAnsatte } from '../../context/ansatte';
+import { useAuth } from '../../context/auth';
 import { dur, fmt, mins } from '../../lib/dates';
 import { erAvvik, planTimar } from '../../lib/avvik';
 import type { TimeEntry } from '../../types';

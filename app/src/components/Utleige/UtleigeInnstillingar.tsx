@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Field, inputStyle } from '../ui/Modal';
+import { Field } from '../ui/Modal';
+import { inputStyle } from '../ui/modalStyles';
 import type { UtleigeInnstillingar } from '../../lib/utleige';
 import type { UtleigeData } from './useUtleige';
 import { kortStil, knapp } from './stil';

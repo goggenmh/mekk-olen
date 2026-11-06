@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Modal, Field, inputStyle, CancelButton, SaveButton } from '../ui/Modal';
-import { useAppData } from '../../context/AppDataContext';
-import { useAuth } from '../../context/AuthContext';
+import { Modal, Field, CancelButton, SaveButton } from '../ui/Modal';
+import { inputStyle } from '../ui/modalStyles';
+import { useAppData } from '../../context/appData';
+import { useAuth } from '../../context/auth';
 import { today } from '../../lib/dates';
 
 const SKIFT = ['Formiddag', 'Kveld', 'Heildag', 'Laurdag'];

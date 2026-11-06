@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Modal, CancelButton } from '../ui/Modal';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAnsatte } from '../../context/ansatte';
 import { fmt, fullDatoTekst } from '../../lib/dates';
 import { Avatar } from '../ui/Avatar';
 import type { Avvik } from '../../lib/avvik';

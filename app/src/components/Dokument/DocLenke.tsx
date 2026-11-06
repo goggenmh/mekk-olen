@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { useAppData } from '../../context/AppDataContext';
+import { useAppData } from '../../context/appData';
 import { safeHref } from '../../lib/url';
 
 /**

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Modal, Field, monoInputStyle, CancelButton, SaveButton } from '../ui/Modal';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { Modal, Field, CancelButton, SaveButton } from '../ui/Modal';
+import { monoInputStyle } from '../ui/modalStyles';
+import { useAnsatte } from '../../context/ansatte';
 import type { Employee } from '../../constants';
 
 export function ResetPinModal({ ansatt, onClose }: { ansatt: Employee; onClose: () => void }) {

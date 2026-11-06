@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import { Modal, CancelButton, SaveButton } from '../ui/Modal';
-import { useAppData } from '../../context/AppDataContext';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAppData } from '../../context/appData';
+import { useAnsatte } from '../../context/ansatte';
 import { skiftFraTid } from '../../lib/dates';
 import { SKIFT_FARGE } from '../../constants';
 

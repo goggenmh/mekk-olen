@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useAppData } from '../../context/AppDataContext';
-import { useAuth } from '../../context/AuthContext';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAppData } from '../../context/appData';
+import { useAuth } from '../../context/auth';
+import { useAnsatte } from '../../context/ansatte';
 import type { EmployeeId } from '../../constants';
-import { inputStyle } from '../ui/Modal';
+import { inputStyle } from '../ui/modalStyles';
 import { Avatar } from '../ui/Avatar';
 
 export function AdminPanel({ onClose }: { onClose: () => void }) {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
-import { useAppData } from '../../context/AppDataContext';
+import { Modal, Field, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
+import { inputStyle } from '../ui/modalStyles';
+import { useAppData } from '../../context/appData';
 import { DOC_KATEGORIER } from '../../constants';
 import { today } from '../../lib/dates';
 import { DocLenke } from './DocLenke';

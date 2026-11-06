@@ -1,12 +1,12 @@
 import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
-import { useAppData } from '../../context/AppDataContext';
+import { useAppData } from '../../context/appData';
 import { ORDER_FLOW, ORDER_STATUS } from '../../constants';
 import { datoKort, MND, fmtPris } from '../../lib/dates';
 import { OrderModal } from './OrderModal';
 import { NotifyModal } from './NotifyModal';
 import { TaskModal } from '../Oppgaver/TaskModal';
 import { useIsMobile } from '../../lib/useIsMobile';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAnsatte } from '../../context/ansatte';
 import { Avatar } from '../ui/Avatar';
 import type { Order, Task } from '../../types';
 import { alder, ALDER_TEKST, reinTelefon } from '../../lib/bestilling';

@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { useAppData } from '../../context/AppDataContext';
+import { useAppData } from '../../context/appData';
 import { DOC_KAT, DOC_KATEGORIER } from '../../constants';
 import { Icon } from '../ui/Icon';
 import { datoKort } from '../../lib/dates';
 import { DocLenke } from './DocLenke';
 import { DocModal } from './DocModal';
 import type { Doc } from '../../types';
-import { useAuth } from '../../context/AuthContext';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAuth } from '../../context/auth';
+import { useAnsatte } from '../../context/ansatte';
 import { erLeiar } from '../../lib/view';
 import { krevStadfesting } from '../../lib/dokument';
 

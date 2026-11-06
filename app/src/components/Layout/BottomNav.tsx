@@ -1,4 +1,4 @@
-import { useAppData } from '../../context/AppDataContext';
+import { useAppData } from '../../context/appData';
 import { alder } from '../../lib/bestilling';
 import type { View } from '../../lib/view';
 import { Icon } from '../ui/Icon';

@@ -1,5 +1,5 @@
 import { useMemo, type CSSProperties } from 'react';
-import { useAppData } from '../../context/AppDataContext';
+import { useAppData } from '../../context/appData';
 import { komandeRisiko } from '../../lib/drift';
 import { parseDate, MND } from '../../lib/dates';
 import type { View } from '../../lib/view';

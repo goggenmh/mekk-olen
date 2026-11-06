@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAuth } from '../../context/auth';
+import { useAnsatte } from '../../context/ansatte';
 import { pad, fullDatoTekst, today, weekdayIdx, mins } from '../../lib/dates';
 import { DAGER_VAKTPLAN, type Employee } from '../../constants';
 import { tekstPaFarge } from '../../lib/farge';
