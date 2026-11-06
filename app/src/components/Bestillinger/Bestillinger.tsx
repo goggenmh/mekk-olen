@@ -100,6 +100,10 @@ export function Bestillinger() {
       return a.dato < b.dato ? -1 : 1;
     });
 
+  // Forventa varekost for dei synlege bestillingane (når pris er fylt inn).
+  const prisSum = filtered.reduce((s, o) => s + (o.pris != null ? o.pris * o.antal : 0), 0);
+  const harPris = filtered.some((o) => o.pris != null);
+
   // Merke for bestillingar som har stått for lenge i same status.
   const AlderMerke = ({ o }: { o: Order }) => {
     const a = alder(o);
@@ -154,6 +158,12 @@ export function Bestillinger() {
           </button>
         ))}
       </div>
+
+      {harPris && (
+        <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
+          Forventa varekost (synlege): <b style={{ color: 'var(--text)', fontFamily: "'Geist Mono Variable'" }}>{fmtPris(prisSum)}</b>
+        </div>
+      )}
 
       {filter !== 'henta' && isMobile && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

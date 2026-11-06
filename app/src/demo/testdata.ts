@@ -93,12 +93,12 @@ export function lagTestdata(): Record<string, Rad[]> {
     id: id('ordre'), kunde, telefon, vare, leverandor, varenr: '', lenke: null, dato: addDays(t, -dagarSidan), antal: 1, status, varsla: null, notat: '', registrert_av: 'kari', created_at: addDays(t, -dagarSidan), ...ekstra,
   });
   const orders: Rad[] = [
-    ordre('Per Hansen', '911 22 333', 'Kjedesag 40 cm sverd', 'Stihl', 12, 'ny', { notat: 'Vil ha beskjed før me bestiller', lenke: 'https://www.stihl.no', varenr: 'MS 261 C-M' }),
+    ordre('Per Hansen', '911 22 333', 'Kjedesag 40 cm sverd', 'Stihl', 12, 'ny', { notat: 'Vil ha beskjed før me bestiller', lenke: 'https://www.stihl.no', varenr: 'MS 261 C-M', pris: 4890 }),
     ordre('Liv Solberg', '922 33 444', 'Varmepumpefilter', 'Mitsubishi', 2, 'ny'),
-    ordre('Arne Moe', '933 44 555', 'Batteri 18V 5Ah', 'Ryobi', 5, 'tinga', { registrert_av: 'ola', antal: 2 }),
-    ordre('Bygg & Bad AS', '944 55 666', 'Pipeinnfesting 110 mm', 'Biltema', 20, 'tinga'),
-    ordre('Tone Bakke', '955 66 777', 'Snøfresar-reim', 'MTD', 8, 'komen', { varsla: addDays(t, -1), registrert_av: 'ingrid' }),
-    ordre('Knut Aas', '966 77 888', 'Hagesaks', 'Fiskars', 16, 'komen', { varsla: addDays(t, -12) }),
+    ordre('Arne Moe', '933 44 555', 'Batteri 18V 5Ah', 'Ryobi', 5, 'tinga', { registrert_av: 'ola', antal: 2, pris: 790 }),
+    ordre('Bygg & Bad AS', '944 55 666', 'Pipeinnfesting 110 mm', 'Biltema', 20, 'tinga', { pris: 149 }),
+    ordre('Tone Bakke', '955 66 777', 'Snøfresar-reim', 'MTD', 8, 'komen', { varsla: addDays(t, -1), registrert_av: 'ingrid', pris: 349 }),
+    ordre('Knut Aas', '966 77 888', 'Hagesaks', 'Fiskars', 16, 'komen', { varsla: addDays(t, -12), pris: 299 }),
     ordre('Mari Fjeld', '977 88 999', 'Trimmartråd 2,4 mm', 'Ryobi', 3, 'komen'),
     ordre('Eirik Nes', '988 99 000', 'Kompressor 24 l', 'Einhell', 40, 'henta'),
   ];
