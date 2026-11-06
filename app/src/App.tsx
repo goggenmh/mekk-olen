@@ -65,18 +65,29 @@ function App() {
   const [visDato, setVisDato] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
+  // I demoen skriv vi adressa i #-delen; det utløyser ein `hashchange` som elles
+  // ville nullstilt visDato rett etter ei dato-navigering (t.d. frå dashbordet
+  // til ein bestemt dag). Denne vakta hoppar over vår eigen programmatiske
+  // navigering éin gong, så datoen overlever. (I produksjon brukar vi pushState,
+  // som ikkje utløyser popstate, så vakta blir aldri sett der.)
+  const programmatiskNav = useRef(false);
   const byttSide = (v: View, dato: string | null) => {
+    const nySti = stiFor(v);
+    if (DEMO && nySti !== lesSti()) programmatiskNav.current = true;
     setView(v);
     setVisDato(dato);
     setMenuOpen(false);
-    skrivSti(stiFor(v));
+    skrivSti(nySti);
   };
   const go = (v: View) => byttSide(v, null);
   const gaaTil = (m: Mal) => byttSide(m.vis, m.dato);
 
   // Tilbake/fram i nettlesaren.
   useEffect(() => {
-    const vedPop = () => { setView(viewFraSti(lesSti())); setVisDato(null); setMenuOpen(false); };
+    const vedPop = () => {
+      if (programmatiskNav.current) { programmatiskNav.current = false; return; }
+      setView(viewFraSti(lesSti())); setVisDato(null); setMenuOpen(false);
+    };
     const hending = DEMO ? 'hashchange' : 'popstate';
     window.addEventListener(hending, vedPop);
     return () => window.removeEventListener(hending, vedPop);
@@ -161,7 +172,7 @@ function App() {
             ) : (
               <Suspense fallback={<DashboardSkeleton />}>
                 <div key={synlegView} className="view-inn">
-                  {synlegView === 'dashbord' && <><VarselTips setView={go} /><Dashboard setView={go} /></>}
+                  {synlegView === 'dashbord' && <><VarselTips setView={go} /><Dashboard setView={go} opneDato={(dato) => byttSide('vaktplan', dato)} /></>}
                   {synlegView === 'ansatte' && <Ansatte />}
                   {synlegView === 'timeliste' && <Timeliste key={visDato ?? 'i-dag'} startDato={visDato} />}
                   {synlegView === 'vaktplan' && <Vaktplan key={visDato ?? 'i-dag'} startDato={visDato} />}

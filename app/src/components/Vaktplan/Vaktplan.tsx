@@ -3,7 +3,7 @@ import { useAppData } from '../../context/AppDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAnsatte } from '../../context/AnsatteContext';
 import { DAGER_VAKTPLAN, FERIE_STYL } from '../../constants';
-import { addDays, mondayOf, today, isoWeek, isoAar, parseDate, weekdayIdx, shiftMonth, MND, UKE_KORT, datoIntervall, talDagar, skiftFraTid, fmt } from '../../lib/dates';
+import { addDays, mondayOf, today, isoWeek, isoAar, parseDate, weekdayIdx, shiftMonth, MND, UKE_KORT, datoIntervall, talDagar, skiftFraTid, fmt, fmtKr } from '../../lib/dates';
 import { helligdagFor, halvdagFor } from '../../lib/helligdagar';
 import { ShiftModal } from './ShiftModal';
 import { SwapModal } from './SwapModal';
@@ -161,6 +161,11 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `repeat(${days.length}, minmax(132px, 1fr))`, gap: 10 }}>
         {days.map((d) => {
           const dayShifts = shifts.filter((s) => s.date === d.date).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
+          // Planlagd lønskost for dagen (berre timelønte; fastløn er fast). Berre
+          // leiarar/godkjennarar ser kroner – timesats er privat.
+          const dagKr = maaGodkjenne
+            ? dayShifts.reduce((sum, x) => { const a = findAnsatt(x.ansatt); return sum + (a.lonn === 'time' ? ((tilMin(x.slutt) - tilMin(x.start)) / 60) * (a.sats || 0) : 0); }, 0)
+            : 0;
           const erIDag = d.date === iDag;
           const dagUtil = unavailable.filter((u) => u.dato === d.date);
           const egUtil = !!user && dagUtil.some((u) => u.ansatt === user.id);
@@ -192,7 +197,10 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
                     <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 1 }}>Ope {d.open}</div>
                   )}
                   {dayShifts.length > 0 && (
-                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-label)', marginTop: 2 }}>{fmt(dayShifts.reduce((s, x) => s + (tilMin(x.slutt) - tilMin(x.start)) / 60, 0))} t planlagt</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-label)', marginTop: 2 }}>
+                      {fmt(dayShifts.reduce((s, x) => s + (tilMin(x.slutt) - tilMin(x.start)) / 60, 0))} t planlagt
+                      {dagKr > 0 && <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}> · {fmtKr(dagKr)}</span>}
+                    </div>
                   )}
                 </div>
                 {erIDag && <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--on-brand)', background: 'var(--brand)', borderRadius: 999, padding: '2px 8px' }}>I dag</span>}
