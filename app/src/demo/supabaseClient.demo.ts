@@ -364,6 +364,40 @@ const rpc = async (namn: string, args: Rad = {}): Promise<{ data: unknown; error
       const b = tabell('butikkar').find((x) => x.id === o.butikk_id);
       return ok([{ vare: o.vare, status: o.status, dato: o.dato, butikk: b?.namn ?? 'MEKK Ølen' }]);
     }
+    // Atomiske veke-operasjonar (sjå veke-operasjonar.sql). I demoen jobbar vi
+    // rett på minne-tabellane, men held same inn/ut som serveren.
+    case 'fyll_standardveke': {
+      const but = a?.butikk_id ?? 'demo-butikk';
+      const dagar = [0, 1, 2, 3, 4, 5].map((i) => addDays(String(args.p_veke), i));
+      const arr = tabell('shifts');
+      const behald = arr.filter((x) => !dagar.includes(String(x.date)));
+      arr.length = 0; arr.push(...behald);
+      const nye = ((args.p_rader as Rad[]) || [])
+        .filter((r) => dagar.includes(String(r.date)))
+        .map((r) => utfyll('shifts', { ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift, butikk_id: but }));
+      arr.push(...nye);
+      return ok(nye);
+    }
+    case 'kopier_veke': {
+      const but = a?.butikk_id ?? 'demo-butikk';
+      const fraD = [0, 1, 2, 3, 4, 5].map((i) => addDays(String(args.p_fra), i));
+      const tilD = [0, 1, 2, 3, 4, 5].map((i) => addDays(String(args.p_til), i));
+      const arr = tabell('shifts');
+      const kjelde = arr.filter((x) => fraD.includes(String(x.date)));
+      const behald = arr.filter((x) => !tilD.includes(String(x.date)));
+      arr.length = 0; arr.push(...behald);
+      const nye = kjelde.map((s) => utfyll('shifts', { ansatt: s.ansatt, date: tilD[fraD.indexOf(String(s.date))], start: s.start, slutt: s.slutt, skift: s.skift, butikk_id: but }));
+      arr.push(...nye);
+      return ok(nye);
+    }
+    case 'lagre_standardveke': {
+      const but = a?.butikk_id ?? 'demo-butikk';
+      const arr = tabell('standardveke');
+      arr.length = 0;
+      const nye = ((args.p_rader as Rad[]) || []).map((r) => utfyll('standardveke', { ansatt: r.ansatt, dag: r.dag, start: r.start, slutt: r.slutt, butikk_id: but }));
+      arr.push(...nye);
+      return ok(nye);
+    }
     default:
       return ok(null);
   }
