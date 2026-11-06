@@ -348,55 +348,39 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setLedigeVakter((prev) => prev.filter((x) => x.id !== id));
   };
   // ---- standardveke (mal) ----
+  // Veke-operasjonane under erstattar ei heil veke (slett + sett inn). Det skjer
+  // no i éin transaksjon på serveren (veke-operasjonar.sql), så ei veke aldri
+  // blir ståande halvvegs sletta om noko feilar undervegs.
   const saveStandardveke: AppData['saveStandardveke'] = async (entries) => {
-    // Erstattar heile malen.
-    const { error: delErr } = await supabase.from('standardveke').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    if (delErr) throw delErr;
-    if (entries.length === 0) {
-      setStandardveke([]);
-    } else {
-      const { data, error: err } = await supabase.from('standardveke').insert(entries).select();
-      if (err) throw err;
-      setStandardveke((data || []).map(mapStandard));
-    }
+    const { data, error: err } = await supabase.rpc('lagre_standardveke', { p_rader: entries });
+    if (err) throw err;
+    setStandardveke((data || []).map(mapStandard));
     toast('Standardveke lagra');
   };
 
   const applyStandardveke: AppData['applyStandardveke'] = async (weekStart) => {
-    // Overskriv: slett alle vakter den veka (man–lau), fyll inn på nytt frå malen.
+    // Klienten reknar ut skift-etiketten (same kjelde som elles); serveren gjer
+    // slett + innsett atomisk.
     const dates = [0, 1, 2, 3, 4, 5].map((i) => addDays(weekStart, i));
-    const { error: delErr } = await supabase.from('shifts').delete().in('date', dates);
-    if (delErr) throw delErr;
-    const nye = standardveke.map((e) => {
+    const rader = standardveke.map((e) => {
       const date = addDays(weekStart, DAG_IDX[e.dag] ?? 0);
       return { ansatt: e.ansatt, date, start: e.start, slutt: e.slutt, skift: skiftFraTid(e.start, e.slutt, date) };
     });
-    let innsette: Shift[] = [];
-    if (nye.length > 0) {
-      const { data, error: err } = await supabase.from('shifts').insert(nye).select();
-      if (err) throw err;
-      innsette = (data || []).map(mapShift);
-      varsle({ type: 'ny_vakt', shift_ids: innsette.map((x) => x.id) });
-    }
+    const { data, error: err } = await supabase.rpc('fyll_standardveke', { p_veke: weekStart, p_rader: rader });
+    if (err) throw err;
+    const innsette: Shift[] = (data || []).map(mapShift);
+    if (innsette.length > 0) varsle({ type: 'ny_vakt', shift_ids: innsette.map((x) => x.id) });
     setShifts((prev) => [...prev.filter((x) => !dates.includes(x.date)), ...innsette]);
     toast('Veka fylt frå standardveke');
   };
 
-  // Kopier alle vaktene frå éi veke til ei anna (erstattar vaktene der).
+  // Kopier alle vaktene frå éi veke til ei anna (erstattar vaktene der, atomisk).
   const kopierVeke: AppData['kopierVeke'] = async (fraMandag, tilMandag) => {
-    const fraDatoar = [0, 1, 2, 3, 4, 5].map((i) => addDays(fraMandag, i));
     const tilDatoar = [0, 1, 2, 3, 4, 5].map((i) => addDays(tilMandag, i));
-    const kjelde = shifts.filter((s) => fraDatoar.includes(s.date));
-    const { error: delErr } = await supabase.from('shifts').delete().in('date', tilDatoar);
-    if (delErr) throw delErr;
-    let innsette: Shift[] = [];
-    if (kjelde.length > 0) {
-      const nye = kjelde.map((s) => ({ ansatt: s.ansatt, date: tilDatoar[fraDatoar.indexOf(s.date)], start: s.start, slutt: s.slutt, skift: s.skift }));
-      const { data, error: err } = await supabase.from('shifts').insert(nye).select();
-      if (err) throw err;
-      innsette = (data || []).map(mapShift);
-      varsle({ type: 'ny_vakt', shift_ids: innsette.map((x) => x.id) });
-    }
+    const { data, error: err } = await supabase.rpc('kopier_veke', { p_fra: fraMandag, p_til: tilMandag });
+    if (err) throw err;
+    const innsette: Shift[] = (data || []).map(mapShift);
+    if (innsette.length > 0) varsle({ type: 'ny_vakt', shift_ids: innsette.map((x) => x.id) });
     setShifts((prev) => [...prev.filter((x) => !tilDatoar.includes(x.date)), ...innsette]);
     toast(`Kopierte ${innsette.length} vakter`);
   };
