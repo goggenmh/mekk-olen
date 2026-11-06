@@ -12,11 +12,12 @@ export type View =
   | 'utleige'
   | 'lager'
   | 'rapporter'
-  | 'innstillinger';
+  | 'innstillinger'
+  | 'utviklar';
 
 /** `sti` = adressa i nettlesaren, så tilbake-knappen og oppdatering verkar.
- *  `berreLeiar` = sida viser løn/tilgangsstyring og er berre for leiarar. */
-export const VIEWS: { key: View; label: string; ikon: string; sti: string; berreLeiar?: boolean }[] = [
+ *  `berreLeiar` = berre leiarar. `berreKonsern` = berre konsern-admin (eigar). */
+export const VIEWS: { key: View; label: string; ikon: string; sti: string; berreLeiar?: boolean; berreKonsern?: boolean }[] = [
   { key: 'dashbord', label: 'Oversikt', ikon: 'dashbord', sti: '/intern' },
   { key: 'ansatte', label: 'Tilsette', ikon: 'ansatte', sti: '/tilsette', berreLeiar: true },
   { key: 'vaktplan', label: 'Vaktplan', ikon: 'vaktplan', sti: '/vaktplan' },
@@ -30,6 +31,8 @@ export const VIEWS: { key: View; label: string; ikon: string; sti: string; berre
   { key: 'lager', label: 'Lager', ikon: 'lager', sti: '/lager' },
   { key: 'rapporter', label: 'Rapportar', ikon: 'rapporter', sti: '/rapportar', berreLeiar: true },
   { key: 'innstillinger', label: 'Innstillingar', ikon: 'innstillinger', sti: '/innstillingar' },
+  // Eigar-/utviklar-side: kryss-butikk styring. Berre konsern-admin.
+  { key: 'utviklar', label: 'Utviklar', ikon: 'innstillinger', sti: '/utviklar', berreKonsern: true },
 ];
 
 // Gruppering av menyen i sidemenyen. `seksjon: null` = ingen overskrift.
@@ -38,6 +41,7 @@ export const NAV_GROUPS: { seksjon: string | null; punkt: View[] }[] = [
   { seksjon: 'Drift', punkt: ['vaktplan', 'timeliste', 'oppgaver', 'ferie'] },
   { seksjon: 'Butikk', punkt: ['bestilling', 'utleige', 'lager', 'dokument'] },
   { seksjon: 'Analyse', punkt: ['rapporter', 'ansatte'] },
+  { seksjon: 'Eigar', punkt: ['utviklar'] },
   { seksjon: null, punkt: ['innstillinger'] },
 ];
 
@@ -45,8 +49,15 @@ export const NAV_GROUPS: { seksjon: string | null; punkt: View[] }[] = [
 export const erLeiar = (u: Pick<Employee, 'leder' | 'konsern_admin'> | null | undefined) =>
   !!u && (u.leder || !!u.konsern_admin);
 
-export const harTilgang = (v: View, u: Pick<Employee, 'leder' | 'konsern_admin'> | null | undefined) =>
-  !VIEWS.find((x) => x.key === v)?.berreLeiar || erLeiar(u);
+/** Konsern-admin (eigar) ser utviklar-sida og kryss-butikk styring. */
+export const erKonsern = (u: Pick<Employee, 'konsern_admin'> | null | undefined) => !!u?.konsern_admin;
+
+export const harTilgang = (v: View, u: Pick<Employee, 'leder' | 'konsern_admin'> | null | undefined) => {
+  const meta = VIEWS.find((x) => x.key === v);
+  if (meta?.berreKonsern) return erKonsern(u);
+  if (meta?.berreLeiar) return erLeiar(u);
+  return true;
+};
 
 export const stiFor = (v: View) => VIEWS.find((x) => x.key === v)?.sti ?? '/intern';
 

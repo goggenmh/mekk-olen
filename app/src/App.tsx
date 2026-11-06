@@ -18,6 +18,7 @@ const Lager = lazy(() => import('./components/Lager/Lager').then((m) => ({ defau
 const Dokument = lazy(() => import('./components/Dokument/Dokument').then((m) => ({ default: m.Dokument })));
 const Rapporter = lazy(() => import('./components/Rapporter/Rapporter').then((m) => ({ default: m.Rapporter })));
 const Innstillinger = lazy(() => import('./components/Innstillinger/Innstillinger').then((m) => ({ default: m.Innstillinger })));
+const Utviklar = lazy(() => import('./components/Utviklar/Utviklar').then((m) => ({ default: m.Utviklar })));
 import { useIsMobile } from './lib/useIsMobile';
 import { useIdleLogout } from './lib/useIdleLogout';
 import { Toaster } from './components/ui/Toaster';
@@ -187,6 +188,7 @@ function App() {
                   {synlegView === 'lager' && <Lager />}
                   {synlegView === 'rapporter' && <Rapporter />}
                   {synlegView === 'innstillinger' && <Innstillinger setView={go} />}
+                  {synlegView === 'utviklar' && <Utviklar />}
                 </div>
               </Suspense>
               </ErrorBoundary>

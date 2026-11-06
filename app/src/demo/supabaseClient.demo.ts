@@ -401,6 +401,33 @@ const rpc = async (namn: string, args: Rad = {}): Promise<{ data: unknown; error
       arr.push(...nye);
       return ok(nye);
     }
+    // Utviklar-/eigar-sida (admin_*). I demoen jobbar vi rett på minne-tabellane.
+    case 'admin_oversikt': {
+      const b = tabell('butikkar'); const an = tabell('ansatte');
+      return ok([{
+        butikkar: b.length, butikkar_aktive: b.filter((x) => x.aktiv).length,
+        tilsette: an.length, tilsette_aktive: an.filter((x) => x.aktiv).length,
+        leiarar: an.filter((x) => x.leder && x.aktiv).length,
+      }]);
+    }
+    case 'admin_tilsette': {
+      const b = tabell('butikkar');
+      return ok(tabell('ansatte').map((x) => ({
+        id: x.id, navn: x.navn, rolle: x.rolle, butikk_id: x.butikk_id ?? null,
+        butikk: b.find((y) => y.id === x.butikk_id)?.namn ?? null,
+        leder: !!x.leder, konsern_admin: !!x.konsern_admin, aktiv: !!x.aktiv,
+      })));
+    }
+    case 'admin_sett_rolle': {
+      const x = tabell('ansatte').find((y) => y.id === args.p_id);
+      if (x) { if (args.p_leder != null) x.leder = args.p_leder; if (args.p_konsern != null) x.konsern_admin = args.p_konsern; }
+      return ok(null);
+    }
+    case 'admin_flytt_butikk': {
+      const x = tabell('ansatte').find((y) => y.id === args.p_id);
+      if (x) x.butikk_id = args.p_butikk ?? null;
+      return ok(null);
+    }
     default:
       return ok(null);
   }
