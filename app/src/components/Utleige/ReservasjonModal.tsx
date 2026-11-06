@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { UtleigeKunde } from '../../lib/utleige';
-import { Modal, Field, inputStyle, CancelButton } from '../ui/Modal';
-import { useAnsatte } from '../../context/AnsatteContext';
-import { useAuth } from '../../context/AuthContext';
+import { Modal, Field, CancelButton } from '../ui/Modal';
+import { inputStyle } from '../ui/modalStyles';
+import { useAnsatte } from '../../context/ansatte';
+import { useAuth } from '../../context/auth';
 import { addDays, today } from '../../lib/dates';
 import { reinTelefon } from '../../lib/bestilling';
 import { AKTIVE, RES_STATUS, kr, nr, tidKort, tilIso, fraIso, feilTekst, type PrisSvar, type UtleigeReservasjon, type ResStatus } from '../../lib/utleige';

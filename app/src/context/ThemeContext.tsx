@@ -1,13 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { ThemeContext } from './theme';
 
 const STORAGE_KEY = 'mekk-olen-theme';
-
-interface ThemeState {
-  dark: boolean;
-  toggle: () => void;
-}
-
-const ThemeContext = createContext<ThemeState | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [dark, setDark] = useState(() => localStorage.getItem(STORAGE_KEY) === 'dark');
@@ -22,10 +16,4 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       {children}
     </ThemeContext.Provider>
   );
-}
-
-export function useTheme() {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
-  return ctx;
 }

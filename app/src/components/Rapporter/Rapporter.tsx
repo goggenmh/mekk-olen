@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useAppData } from '../../context/AppDataContext';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAppData } from '../../context/appData';
+import { useAnsatte } from '../../context/ansatte';
 import { weekDates, mondayOf, today, timar, fmt, fmtKr, addDays, talDagar, MND, parseDate } from '../../lib/dates';
 import { alder } from '../../lib/bestilling';
 import { feriepengar, trekkForPeriode, type Trekk } from '../../lib/skatt';

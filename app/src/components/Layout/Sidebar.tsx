@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useAppData } from '../../context/AppDataContext';
-import { useAuth } from '../../context/AuthContext';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAppData } from '../../context/appData';
+import { useAuth } from '../../context/auth';
+import { useAnsatte } from '../../context/ansatte';
 import { weekDates, mondayOf, today } from '../../lib/dates';
 import { mineIDag } from '../../lib/oppgave';
 import { VIEWS, NAV_GROUPS, harTilgang, type View } from '../../lib/view';

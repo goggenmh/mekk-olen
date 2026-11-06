@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Modal, Field, inputStyle, monoInputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
-import { useAppData } from '../../context/AppDataContext';
-import { useAnsatte } from '../../context/AnsatteContext';
-import { useAuth } from '../../context/AuthContext';
+import { Modal, Field, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
+import { inputStyle, monoInputStyle } from '../ui/modalStyles';
+import { useAppData } from '../../context/appData';
+import { useAnsatte } from '../../context/ansatte';
+import { useAuth } from '../../context/auth';
 import { SKIFT_FARGE } from '../../constants';
 import { dur, fmt, mins, skiftFraTid } from '../../lib/dates';
 import type { Shift } from '../../types';

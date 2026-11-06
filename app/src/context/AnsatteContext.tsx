@@ -1,43 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase, pinToPassword } from '../supabaseClient';
 import { toast } from '../lib/toast';
 import { type Employee, type EmployeeId, type Butikk } from '../constants';
+import { AnsatteContext, PRIVATE_FELT, mapAnsatt, type AnsatteState } from './ansatte';
 
 const TOMT_ANSATT: Employee = { id: '', navn: '', rolle: '', lonn: 'time', sats: 0, farge: '#999', init: '?', email: '', telefon: '', leder: false, aktiv: false };
-
-interface AnsatteState {
-  loading: boolean;
-  ansatte: Employee[];
-  alleAnsatte: Employee[];
-  /** Alle aktive tilsette på tvers av butikkar – trygg, økt-uavhengig
-   *  kjelde til innloggings-skjermen (namn/initial/e-post, ikkje løn). */
-  loginAnsatte: Employee[];
-  butikkar: Butikk[];
-  finnButikk: (id?: string | null) => Butikk | undefined;
-  findAnsatt: (id: EmployeeId | null | undefined) => Employee;
-  isLeder: (id: EmployeeId | null | undefined) => boolean;
-  refreshAnsatte: () => Promise<void>;
-  createAnsatt: (input: { navn: string; rolle: string; lonn: 'fast' | 'time'; sats: number; farge: string; init: string; telefon: string; leder: boolean; pin: string; email?: string; butikk_id?: string; konsern_admin?: boolean }) => Promise<string>;
-  updateAnsatt: (id: EmployeeId, patch: Partial<Pick<Employee, 'navn' | 'rolle' | 'lonn' | 'farge' | 'init' | 'telefon' | 'leder' | 'feriedagar' | PrivatFelt>>) => Promise<void>;
-  setAktiv: (id: EmployeeId, aktiv: boolean) => Promise<void>;
-  resetPin: (id: EmployeeId, pin: string) => Promise<void>;
-  updateEmail: (id: EmployeeId, email: string) => Promise<void>;
-}
-
-const AnsatteContext = createContext<AnsatteState | null>(null);
-
-export const mapAnsatt = (r: any): Employee => ({
-  id: r.id, navn: r.navn, rolle: r.rolle, lonn: r.lonn, sats: r.sats, farge: r.farge, init: r.init,
-  email: r.email, telefon: r.telefon || '', leder: r.leder, aktiv: r.aktiv,
-  butikk_id: r.butikk_id ?? undefined, konsern_admin: r.konsern_admin ?? false,
-  skattetype: r.skattetype ?? null, skatteprosent: r.skatteprosent ?? null, frikortgrense: r.frikortgrense ?? null, feriedagar: r.feriedagar ?? 25,
-  feriepengesats: r.feriepengesats ?? null, tidlegare_ar: r.tidlegare_ar ?? null,
-  tidlegare_mekk: r.tidlegare_mekk ?? null, tidlegare_andre: r.tidlegare_andre ?? null,
-});
-
-/** Private lønsfelt: berre leiarar (via lonsdata()) og den tilsette sjølv (via min_profil()). */
-const PRIVATE_FELT = ['sats', 'skattetype', 'skatteprosent', 'frikortgrense', 'feriepengesats', 'tidlegare_ar', 'tidlegare_mekk', 'tidlegare_andre'] as const;
-type PrivatFelt = typeof PRIVATE_FELT[number];
 // Alle kolonnar utanom timesatsen (sats), som berre leiarar får lese.
 const KOLONNER = 'id, navn, rolle, lonn, farge, init, email, telefon, leder, aktiv, created_at, butikk_id, konsern_admin, feriedagar';
 const mapButikk = (r: any): Butikk => ({ id: r.id, namn: r.namn, farge: r.farge || '#11788a', aktiv: r.aktiv });
@@ -157,10 +124,4 @@ export function AnsatteProvider({ children }: { children: ReactNode }) {
   );
 
   return <AnsatteContext.Provider value={value}>{children}</AnsatteContext.Provider>;
-}
-
-export function useAnsatte() {
-  const ctx = useContext(AnsatteContext);
-  if (!ctx) throw new Error('useAnsatte must be used within AnsatteProvider');
-  return ctx;
 }

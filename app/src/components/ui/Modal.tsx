@@ -97,13 +97,6 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   );
 }
 
-export const inputStyle = {
-  padding: '9px 11px', border: '1px solid var(--border)', borderRadius: 'var(--r-input)', background: 'var(--surface)',
-  fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--text)', width: '100%',
-} as const;
-
-export const monoInputStyle = { ...inputStyle, fontFamily: "'Geist Mono Variable'" } as const;
-
 export function CancelButton({ onClick, children = 'Avbryt' }: { onClick: () => void; children?: ReactNode }) {
   return (
     <button onClick={onClick} style={{ marginLeft: 'auto', padding: '10px 16px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>

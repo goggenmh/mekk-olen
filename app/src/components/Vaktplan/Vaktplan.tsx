@@ -1,7 +1,7 @@
 import { useRef, useState, type CSSProperties } from 'react';
-import { useAppData } from '../../context/AppDataContext';
-import { useAuth } from '../../context/AuthContext';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAppData } from '../../context/appData';
+import { useAuth } from '../../context/auth';
+import { useAnsatte } from '../../context/ansatte';
 import { DAGER_VAKTPLAN, FERIE_STYL } from '../../constants';
 import { addDays, mondayOf, today, isoWeek, isoAar, parseDate, weekdayIdx, shiftMonth, MND, UKE_KORT, datoIntervall, talDagar, skiftFraTid, fmt, fmtKr } from '../../lib/dates';
 import { helligdagFor, halvdagFor } from '../../lib/helligdagar';

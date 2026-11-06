@@ -1,7 +1,7 @@
 import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { useAppData } from '../../context/AppDataContext';
-import { useAnsatte } from '../../context/AnsatteContext';
-import { useAuth } from '../../context/AuthContext';
+import { useAppData } from '../../context/appData';
+import { useAnsatte } from '../../context/ansatte';
+import { useAuth } from '../../context/auth';
 import { addDays, fullDatoTekst, mondayOf, today, ymd } from '../../lib/dates';
 import { FRISTGRUPPER, erForseinka, erReklamasjon, fristgruppe, ledigeOppgaver, sorterOppgaver } from '../../lib/oppgave';
 import { tal } from '../../lib/tekst';

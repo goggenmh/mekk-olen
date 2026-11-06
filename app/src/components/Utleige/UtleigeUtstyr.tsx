@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
+import { Modal, Field, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
+import { inputStyle } from '../ui/modalStyles';
 import { today, addDays } from '../../lib/dates';
 import { EINING_STATUS, SPERRE_GRUNN, einingStatusNo, kr, tidKort, tilIso, type EiningStatus, type SperreGrunn, type UtleigeEining, type UtleigeProdukt } from '../../lib/utleige';
 import type { UtleigeData } from './useUtleige';

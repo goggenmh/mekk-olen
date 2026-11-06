@@ -1,4 +1,4 @@
-import { useAppData } from '../../context/AppDataContext';
+import { useAppData } from '../../context/appData';
 import { weekDates, mondayOf, today, timar, fmt, fmtKr, UKE_KORT, weekdayIdx, datoKort, parseDate } from '../../lib/dates';
 import { FERIE_TYPE, SKIFT_FARGE } from '../../constants';
 import { Avatar } from '../ui/Avatar';

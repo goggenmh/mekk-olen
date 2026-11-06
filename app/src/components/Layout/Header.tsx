@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
-import { useAnsatte } from '../../context/AnsatteContext';
-import { useAppData } from '../../context/AppDataContext';
+import { useAuth } from '../../context/auth';
+import { useTheme } from '../../context/theme';
+import { useAnsatte } from '../../context/ansatte';
+import { useAppData } from '../../context/appData';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
 import { AdminPanel } from '../Admin/AdminPanel';

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
+import { Modal, Field, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
+import { inputStyle } from '../ui/modalStyles';
 import { supabase } from '../../supabaseClient';
-import { useAppData } from '../../context/AppDataContext';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAppData } from '../../context/appData';
+import { useAnsatte } from '../../context/ansatte';
 import { ORDER_FLOW, ORDER_STATUS } from '../../constants';
 import { today, fmtPris } from '../../lib/dates';
 import type { Order } from '../../types';

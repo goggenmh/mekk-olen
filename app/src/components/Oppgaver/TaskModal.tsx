@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Modal, Field, inputStyle, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
-import { useAppData } from '../../context/AppDataContext';
-import { useAnsatte } from '../../context/AnsatteContext';
-import { useAuth } from '../../context/AuthContext';
+import { Modal, Field, CancelButton, SaveButton, DeleteButton } from '../ui/Modal';
+import { inputStyle } from '../ui/modalStyles';
+import { useAppData } from '../../context/appData';
+import { useAnsatte } from '../../context/ansatte';
+import { useAuth } from '../../context/auth';
 import { PRIORITET, OPPGAVE_KATEGORIAR, GJENTAK, type Prioritet } from '../../constants';
 import { addDays, datoKort, today, ymd } from '../../lib/dates';
 import { erReklamasjon, reklamasjonTelefon } from '../../lib/oppgave';

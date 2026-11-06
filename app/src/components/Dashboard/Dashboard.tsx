@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { useAppData } from '../../context/AppDataContext';
-import { useAuth } from '../../context/AuthContext';
-import { useAnsatte } from '../../context/AnsatteContext';
+import { useAppData } from '../../context/appData';
+import { useAuth } from '../../context/auth';
+import { useAnsatte } from '../../context/ansatte';
 import { weekDates, mondayOf, today, fullDatoTekst, fmt, timar, datoKort, isoWeek } from '../../lib/dates';
 import { useIsMobile } from '../../lib/useIsMobile';
 import { Avatar } from '../ui/Avatar';

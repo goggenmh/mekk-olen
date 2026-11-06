@@ -1,4 +1,4 @@
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/auth';
 import type { Employee } from '../constants';
 import type { TimeEntry } from '../types';
 import { feriepengar, trekkForPeriode, type Feriepengar, type Trekk } from './skatt';

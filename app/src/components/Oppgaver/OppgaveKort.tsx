@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { useAppData } from '../../context/AppDataContext';
-import { useAnsatte } from '../../context/AnsatteContext';
-import { useAuth } from '../../context/AuthContext';
+import { useAppData } from '../../context/appData';
+import { useAnsatte } from '../../context/ansatte';
+import { useAuth } from '../../context/auth';
 import { OPPGAVE_KAT, PRIORITET, type Prioritet } from '../../constants';
 import { datoKort, today, ymd } from '../../lib/dates';
 import { erForseinka, erReklamasjon, fristTekst, oppgaveStatus, reklamasjonTelefon } from '../../lib/oppgave';
