@@ -113,6 +113,7 @@ export function lagTestdata(): Record<string, Rad[]> {
   const doc_stadfesting: Rad[] = [{ id: id('stf'), doc_id: docs[0].id, ansatt: 'kari', stadfesta_at: addDays(t, -10) }];
 
   const meldinger: Rad[] = [
+    { id: id('meld'), fra: 'ola', til: null, tekst: 'Kaffimaskina på pauserommet er tom for bønner – nokon som kan ta med?', created_at: new Date(Date.now() - 3600000).toISOString() },
     { id: id('meld'), fra: 'kari', til: null, tekst: 'Hugs varetelling laurdag etter stenging. Pizza på huset!', created_at: new Date().toISOString() },
   ];
 

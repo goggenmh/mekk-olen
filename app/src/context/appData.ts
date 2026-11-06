@@ -32,6 +32,11 @@ export interface AppData {
 
   sendMelding: (fra: EmployeeId, til: EmployeeId | null, tekst: string) => Promise<void>;
   deleteMelding: (id: string) => Promise<void>;
+  /** Kvitteringar på beskjedtavle-beskjedar: kven har motteke kva. */
+  meldingarMottatt: { meldingId: string; ansatt: EmployeeId }[];
+  kvitterMelding: (meldingId: string, ansatt: EmployeeId) => Promise<void>;
+  /** Sann berre når ack-tabellen finst (elles er den blokkerande kvitteringa i dvale). */
+  kvitteringKlar: boolean;
 
   saveEntry: (entry: Omit<TimeEntry, 'id'> & { id?: string }) => Promise<void>;
   deleteEntry: (id: string) => Promise<void>;
