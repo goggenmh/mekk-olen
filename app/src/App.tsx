@@ -28,6 +28,7 @@ import { BottomNav } from './components/Layout/BottomNav';
 import { VarselTips } from './components/Layout/VarselTips';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { BeskjedKvittering } from './components/Dashboard/BeskjedKvittering';
+import { brukTema } from './lib/brand';
 
 const gyldigVis = (v: unknown): View | null =>
   typeof v === 'string' && VIEWS.some((x) => x.key === v) ? (v as View) : null;
@@ -104,6 +105,11 @@ function App() {
   useEffect(() => {
     if (user && synlegView !== view) skrivSti(stiFor(synlegView), true);
   }, [user, view, synlegView]);
+
+  // Personalisering: bruk butikken sitt merkevare-tema når ein er innlogga.
+  useEffect(() => {
+    brukTema(user && minButikk?.tema ? minButikk.tema : null);
+  }, [user, minButikk?.tema]);
 
   // Automatisk utlogging etter 5 minutt utan aktivitet.
   useIdleLogout(!!user, logout, 5);

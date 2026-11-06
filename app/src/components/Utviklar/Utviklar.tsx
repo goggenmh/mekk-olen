@@ -2,12 +2,14 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { supabase } from '../../supabaseClient';
 import { toast } from '../../lib/toast';
 import { MODULAR } from '../../lib/view';
+import { erLys } from '../../lib/brand';
 
 // Eigar-/utviklar-side: kryss-butikk styring. Berre konsern-admin (gated i App +
 // i databasen via admin_*-funksjonane). Steg 1: oversikt, butikkar og
 // tilgangsstyring. (Modular per butikk + globale innstillingar kjem seinare.)
 interface Oversikt { butikkar: number; butikkar_aktive: number; tilsette: number; tilsette_aktive: number; leiarar: number }
-interface Butikk { id: string; namn: string; farge: string | null; aktiv: boolean; moduler: string[] | null }
+interface Butikk { id: string; namn: string; farge: string | null; aktiv: boolean; moduler: string[] | null; tema: { navy?: string; lime?: string } | null }
+const STD_TEMA = { navy: '#0a2335', lime: '#c4e212' };
 interface AdminTilsett { id: string; navn: string; rolle: string; butikk_id: string | null; butikk: string | null; leder: boolean; konsern_admin: boolean; aktiv: boolean }
 interface Innsikt { butikk_id: string; butikk: string; aktiv: boolean; tilsette: number; bestillingar: number; utleige: number }
 
@@ -21,11 +23,13 @@ export function Utviklar() {
   const [feil, setFeil] = useState<string | null>(null);
   const [lastar, setLastar] = useState(true);
   const [nyButikk, setNyButikk] = useState('');
+  const [temaButikk, setTemaButikk] = useState('');
+  const [utkast, setUtkast] = useState<{ navy: string; lime: string }>(STD_TEMA);
 
   const last = async () => {
     const [o, b, t, i] = await Promise.all([
       supabase.rpc('admin_oversikt'),
-      supabase.from('butikkar').select('id, namn, farge, aktiv, moduler').order('namn'),
+      supabase.from('butikkar').select('id, namn, farge, aktiv, moduler, tema').order('namn'),
       supabase.rpc('admin_tilsette'),
       supabase.rpc('admin_butikk_innsikt'),
     ]);
@@ -84,6 +88,24 @@ export function Utviklar() {
     const { error } = await supabase.from('butikkar').update({ farge }).eq('id', bu.id);
     if (error) { toast(`Kunne ikkje endre farge: ${error.message}`); return; }
     void last();
+  };
+  // Personalisering: vel butikk å tema-styre, og hent utkastet frå tema-et.
+  const velTemaButikk = (id: string) => {
+    setTemaButikk(id);
+    const bu = butikkar.find((b) => b.id === id);
+    setUtkast({ navy: bu?.tema?.navy || STD_TEMA.navy, lime: bu?.tema?.lime || STD_TEMA.lime });
+  };
+  const lagreTema = async () => {
+    if (!temaButikk) return;
+    const { error } = await supabase.from('butikkar').update({ tema: utkast }).eq('id', temaButikk);
+    if (error) { toast(`Kunne ikkje lagre: ${error.message}`); return; }
+    toast('Personalisering lagra'); void last();
+  };
+  const tilbakestillTema = async () => {
+    if (!temaButikk) return;
+    const { error } = await supabase.from('butikkar').update({ tema: null }).eq('id', temaButikk);
+    if (error) { toast(error.message); return; }
+    setUtkast(STD_TEMA); toast('Tilbakestilt til standard'); void last();
   };
 
   const statar: { tal: number; lab: string }[] = oversikt ? [
@@ -211,8 +233,63 @@ export function Utviklar() {
             </div>
           </div>
 
+          {/* Personalisering (live førehandsvising) */}
+          <div style={{ ...kort, padding: '18px 20px' }}>
+            <div style={{ fontSize: 15, fontWeight: 800 }}>Personalisering</div>
+            <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 14 }}>
+              Gi kvar butikk si eiga merkevare – farge på toppstripe og knappar. Førehandsvisinga under oppdaterer seg medan du vel. (Vel ein mørk farge til toppstripa, så teksten er lesbar.)
+            </div>
+            <select
+              value={temaButikk}
+              onChange={(e) => velTemaButikk(e.target.value)}
+              style={{ padding: '8px 11px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 13.5, color: 'var(--text)', minWidth: 220, marginBottom: 14 }}
+            >
+              <option value="">Vel butikk å personalisere …</option>
+              {butikkar.map((bu) => <option key={bu.id} value={bu.id}>{bu.namn}</option>)}
+            </select>
+            {temaButikk && (() => {
+              const bu = butikkar.find((b) => b.id === temaButikk);
+              const knappTekst = erLys(utkast.lime) ? '#1a1a1a' : '#ffffff';
+              const navnLys = erLys(utkast.navy) ? '#1a1a1a' : '#ffffff';
+              return (
+                <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, fontWeight: 600 }}>
+                      <input type="color" value={utkast.navy} onChange={(e) => setUtkast((u) => ({ ...u, navy: e.target.value }))} style={{ width: 34, height: 34, padding: 0, border: '1px solid var(--border)', borderRadius: 'var(--r)', cursor: 'pointer' }} />
+                      Toppstripe-farge
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, fontWeight: 600 }}>
+                      <input type="color" value={utkast.lime} onChange={(e) => setUtkast((u) => ({ ...u, lime: e.target.value }))} style={{ width: 34, height: 34, padding: 0, border: '1px solid var(--border)', borderRadius: 'var(--r)', cursor: 'pointer' }} />
+                      Knappe-/aksentfarge
+                    </label>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                      <button onClick={lagreTema} style={{ padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Lagre for {bu?.namn}</button>
+                      <button onClick={tilbakestillTema} style={{ padding: '9px 14px', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Tilbakestill</button>
+                    </div>
+                  </div>
+                  {/* Live førehandsvising */}
+                  <div style={{ flex: 1, minWidth: 280, maxWidth: 380 }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 6 }}>Førehandsvising</div>
+                    <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--r)', overflow: 'hidden', boxShadow: 'var(--shadow-card)' }}>
+                      <div style={{ background: utkast.navy, color: navnLys, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 9 }}>
+                        <span style={{ width: 24, height: 24, borderRadius: 6, background: utkast.lime, flex: 'none' }} />
+                        <span style={{ fontWeight: 800, fontSize: 13.5, letterSpacing: '0.3px' }}>{(bu?.namn || 'MEKK').toUpperCase()}</span>
+                        <span style={{ marginLeft: 'auto', opacity: 0.7, fontSize: 16 }}>⌕ ◑ ⚙</span>
+                      </div>
+                      <div style={{ padding: '16px 14px', background: 'var(--surface)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div style={{ height: 8, width: '55%', borderRadius: 4, background: 'var(--surface-alt)' }} />
+                        <div style={{ height: 8, width: '38%', borderRadius: 4, background: 'var(--surface-alt)' }} />
+                        <button style={{ alignSelf: 'flex-start', background: utkast.lime, color: knappTekst, border: 'none', borderRadius: 'var(--r)', padding: '9px 16px', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.02em', cursor: 'default' }}>+ Ny bestilling</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
           <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>
-            Modular per butikk styrer kva sider butikken har (kjernesider som oversikt er alltid på, og du som eigar ser alltid alt).
+            Modular per butikk styrer kva sider butikken har (kjernesider som oversikt er alltid på, og du som eigar ser alltid alt). Personaliseringa gjeld butikken sine eigne tilsette; du som eigar ser alltid ditt eige tema.
           </div>
         </>
       )}
