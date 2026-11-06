@@ -279,7 +279,8 @@ button:active {
 
 /* Demo-merket: nede i hjørnet på PC, oppe på telefon (der er botnmenyen) */
 .demo-merke { bottom: 14px; }
-@media (max-width: 859px) { .demo-merke { bottom: auto; top: 64px; } }
+/* På mobil ligg merket over botn-navigasjonen, ikkje oppå sideinnhaldet. */
+@media (max-width: 859px) { .demo-merke { top: auto; bottom: calc(72px + env(safe-area-inset-bottom)); } }
 
 /* Kollapsbar sidemeny: skjul tekst når smal */
 .rail-collapsed .rail-label { display: none; }
