@@ -40,6 +40,13 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
   const lonsTilgang = useLonsTilgang();
   const isMobile = useIsMobile();
   const maaGodkjenne = canApprove(user?.id);
+  // Vannrett (matrise: dagar som kolonnar) eller loddrett (eitt kort per tilsett).
+  const [retning, setRetning] = useState<'vannrett' | 'loddrett'>(() => {
+    try { const v = localStorage.getItem('mekk-timeliste-retning'); if (v === 'vannrett' || v === 'loddrett') return v; } catch { /* privat modus */ }
+    return isMobile ? 'loddrett' : 'vannrett';
+  });
+  const velRetning = (r: 'vannrett' | 'loddrett') => { setRetning(r); try { localStorage.setItem('mekk-timeliste-retning', r); } catch { /* ignore */ } };
+  const loddrett = retning === 'loddrett';
   const [mode, setMode] = useState<'uke' | 'manad'>('uke');
   const [weekStart, setWeekStart] = useState(mondayOf(startDato ?? today()));
   const [monthAnchor, setMonthAnchor] = useState((startDato ?? today()).slice(0, 7));
@@ -148,6 +155,21 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
             </button>
           ))}
         </div>
+        {mode === 'uke' && (
+          <div className="no-print" style={{ display: 'flex', gap: 4 }} role="group" aria-label="Retning på timelista">
+            {(['vannrett', 'loddrett'] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => velRetning(r)}
+                aria-pressed={retning === r}
+                title={r === 'vannrett' ? 'Tabell: dagar som kolonnar' : 'Eitt kort per tilsett'}
+                style={{ padding: '7px 11px', borderRadius: 'var(--r)', border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: retning === r ? 'var(--brand-strong)' : 'var(--surface)', color: retning === r ? 'var(--on-brand)' : 'var(--text-secondary)' }}
+              >
+                {r === 'vannrett' ? '▦ Vannrett' : '▤ Loddrett'}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="no-print" style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           {erLeiar(user) && <button onClick={exportLonn} disabled={lagarLonsfil} title={`Lønsgrunnlag for ${MND[Number(monthAnchor.split('-')[1]) - 1]} som Excel-fil`} style={btnGhost}>{lagarLonsfil ? 'Lagar…' : 'Lønsfil (Excel)'}</button>}
           {maaGodkjenne && ventandeVeke > 0 && mode === 'uke' && (
@@ -170,7 +192,7 @@ export function Timeliste({ startDato }: { startDato?: string | null } = {}) {
 
       {mode === 'uke' ? (
         <>
-          {isMobile ? (
+          {loddrett ? (
             <WeekCards
               dates={dates}
               entries={entries}

@@ -52,6 +52,8 @@ export interface AppData {
   saveStandardveke: (entries: Omit<StandardvekeEntry, 'id'>[]) => Promise<void>;
   applyStandardveke: (weekStart: string) => Promise<void>;
   kopierVeke: (fraMandag: string, tilMandag: string) => Promise<void>;
+  /** Slett alle vaktene i veka (man–lau). */
+  slettVeke: (mandag: string) => Promise<void>;
 
   createSwap: (swap: Omit<ShiftSwap, 'id' | 'status'>) => Promise<void>;
   approveSwap: (id: string) => Promise<void>;
