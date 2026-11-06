@@ -42,10 +42,12 @@ const mapPermission = (r: Row<'permissions'>): Permission => ({ ansatt: r.ansatt
 const mapMelding = (r: Row<'meldinger'>): Melding => ({ id: r.id, fra: r.fra, til: r.til, tekst: r.tekst, created_at: r.created_at });
 const mapLedigVakt = (r: Row<'ledige_vakter'>): LedigVakt => ({ id: r.id, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift || '', grunn: r.grunn ?? null, opprettaAv: r.oppretta_av, tekenAv: r.teken_av ?? null, created_at: r.created_at });
 
+const mapMottatt = (r: { melding_id: string; ansatt: string }) => ({ meldingId: r.melding_id, ansatt: r.ansatt });
+
 // Alle tabellane vi speglar lokalt. Dei «påkravde» må lastast for at appen skal
 // fungere; dei andre kjem med seinare migrasjonar og degraderer til tom liste
 // om dei manglar.
-const ALLE_TABELLAR = ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'permissions', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting', 'oppgave_rutinar', 'utleige_reservasjon', 'ledige_vakter'] as const;
+const ALLE_TABELLAR = ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'permissions', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting', 'oppgave_rutinar', 'utleige_reservasjon', 'ledige_vakter', 'meldingar_mottatt'] as const;
 const PAAKRAVD = new Set<string>(['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'permissions', 'meldinger', 'utilgjengeleg', 'standardveke']);
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
@@ -67,6 +69,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [ledigeVakter, setLedigeVakter] = useState<LedigVakt[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [meldinger, setMeldinger] = useState<Melding[]>([]);
+  const [meldingarMottatt, setMeldingarMottatt] = useState<AppData['meldingarMottatt']>([]);
+  // Den blokkerande kvitteringa er berre aktiv når ack-tabellen faktisk finst –
+  // elles ville beskjedar som ikkje kan kvitterast låst brukaren inne.
+  const [kvitteringKlar, setKvitteringKlar] = useState(false);
 
   // Vindauge for dei raskast-veksande tabellane (timar + vakter veks dagleg per
   // tilsett): vi lastar frå starten av i fjor, ikkje heile historikken. Det
@@ -106,6 +112,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       case 'oppgave_rutinar': setRutinar(d.map(mapRutine)); break;
       case 'utleige_reservasjon': setUtleige(data as AppData['utleige']); break;
       case 'ledige_vakter': setLedigeVakter(d.map(mapLedigVakt)); break;
+      case 'meldingar_mottatt': setMeldingarMottatt(d.map(mapMottatt)); break;
     }
   }, []);
 
@@ -134,6 +141,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (!stille) setError((feil as { message: string }).message);
     } else {
       ALLE_TABELLAR.forEach((t, i) => settTabell(t, res[i].error ? [] : (res[i].data || [])));
+      setKvitteringKlar(!res[ALLE_TABELLAR.indexOf('meldingar_mottatt')]?.error);
     }
     if (!stille) setLoading(false);
   }, [spørjing, settTabell]);
@@ -142,6 +150,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const hentEin = useCallback(async (table: string) => {
     const { data, error: err } = await spørjing(table);
     if (!err) settTabell(table, data || []);
+    if (table === 'meldingar_mottatt') setKvitteringKlar(!err);
   }, [spørjing, settTabell]);
 
   // Første henting skjer frå App når brukaren er logga inn.
@@ -167,7 +176,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     };
     const planleggAlt = () => planlegg();
     const kanal = supabase.channel('appdata-live');
-    for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting', 'oppgave_rutinar', 'utleige_reservasjon', 'ledige_vakter']) {
+    for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting', 'oppgave_rutinar', 'utleige_reservasjon', 'ledige_vakter', 'meldingar_mottatt']) {
       kanal.on('postgres_changes', { event: '*', schema: 'public', table }, () => planlegg(table));
     }
     // Mobilen set appen på pause i bakgrunnen, og då går endringar tapt.
@@ -667,12 +676,18 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     if (err) throw err;
     setMeldinger((prev) => prev.filter((x) => x.id !== id));
   };
+  // Kvitter på ein beskjed («Mottatt»). butikk_id blir sett av databasen.
+  const kvitterMelding: AppData['kvitterMelding'] = async (meldingId, ansatt) => {
+    const { error: err } = await supabase.from('meldingar_mottatt').insert({ melding_id: meldingId, ansatt });
+    if (err) throw err;
+    setMeldingarMottatt((prev) => (prev.some((x) => x.meldingId === meldingId && x.ansatt === ansatt) ? prev : [...prev, { meldingId, ansatt }]));
+  };
 
   const value = useMemo<AppData>(
     () => ({
       loading, error, entries, shifts, swaps, ferie, tasks, orders, docs, stadfestingar, stadfestDoc, permissions, meldinger, unavailable, standardveke, refreshAll,
       canApprove, setKanGodkjenne,
-      sendMelding, deleteMelding,
+      sendMelding, deleteMelding, meldingarMottatt, kvitterMelding, kvitteringKlar,
       saveEntry, deleteEntry, approveEmployeeEntries,
       saveShift, deleteShift, moveShiftDate, saveStandardveke, applyStandardveke, kopierVeke, slettVeke,
       ledigeVakter, leggUtLedigVakt, taLedigVakt, angreTaLedigVakt, godkjennLedigVakt, slettLedigVakt,
@@ -684,7 +699,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       saveDoc, deleteDoc, uploadDocFile, docFileUrl,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, error, entries, shifts, swaps, ferie, tasks, rutinar, utleige, orders, docs, stadfestingar, permissions, meldinger, unavailable, standardveke, ledigeVakter, canApprove]
+    [loading, error, entries, shifts, swaps, ferie, tasks, rutinar, utleige, orders, docs, stadfestingar, permissions, meldinger, meldingarMottatt, kvitteringKlar, unavailable, standardveke, ledigeVakter, canApprove]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

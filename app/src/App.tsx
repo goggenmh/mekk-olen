@@ -25,6 +25,7 @@ import { VIEWS, DEMO, harTilgang, lesSti, skrivSti, stiFor, viewFraSti, type Vie
 import { BottomNav } from './components/Layout/BottomNav';
 import { VarselTips } from './components/Layout/VarselTips';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { BeskjedKvittering } from './components/Dashboard/BeskjedKvittering';
 
 const gyldigVis = (v: unknown): View | null =>
   typeof v === 'string' && VIEWS.some((x) => x.key === v) ? (v as View) : null;
@@ -195,6 +196,7 @@ function App() {
       </div>
       {isMobile && <BottomNav view={synlegView} setView={go} onMeir={() => setMenuOpen(true)} />}
       <Toaster />
+      <BeskjedKvittering />
       {velkomen && <Velkomst namn={velkomen} />}
     </div>
   );
