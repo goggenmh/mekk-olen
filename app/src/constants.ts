@@ -42,6 +42,8 @@ export interface Butikk {
   namn: string;
   farge: string;
   aktiv: boolean;
+  /** Sider butikken har slått på. null/undefined = alle (standard). */
+  moduler?: string[] | null;
 }
 
 // Seed data for the dynamic `ansatte` table (see supabase/schema.sql) and a

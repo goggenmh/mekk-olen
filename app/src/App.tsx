@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useAuth } from './context/auth';
 import { useAppData } from './context/appData';
+import { useAnsatte } from './context/ansatte';
 import { LoginScreen } from './components/Login/LoginScreen';
 import { Velkomst } from './components/Login/Velkomst';
 import { Header } from './components/Layout/Header';
@@ -22,7 +23,7 @@ const Utviklar = lazy(() => import('./components/Utviklar/Utviklar').then((m) =>
 import { useIsMobile } from './lib/useIsMobile';
 import { useIdleLogout } from './lib/useIdleLogout';
 import { Toaster } from './components/ui/Toaster';
-import { VIEWS, DEMO, harTilgang, lesSti, skrivSti, stiFor, viewFraSti, type View } from './lib/view';
+import { VIEWS, DEMO, harTilgang, modulAktiv, lesSti, skrivSti, stiFor, viewFraSti, type View } from './lib/view';
 import { BottomNav } from './components/Layout/BottomNav';
 import { VarselTips } from './components/Layout/VarselTips';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -61,6 +62,7 @@ function DashboardSkeleton() {
 function App() {
   const { loading: authLoading, user, logout } = useAuth();
   const { loading: dataLoading, error, refreshAll } = useAppData();
+  const { finnButikk } = useAnsatte();
   // Sida følgjer adressa (/vaktplan, /bestillingar …), så tilbake-knappen,
   // bokmerke og oppdatering av sida tek deg til same stad.
   const [view, setView] = useState<View>(() => viewFraSti(lesSti()));
@@ -96,8 +98,9 @@ function App() {
     return () => window.removeEventListener(hending, vedPop);
   }, []);
 
-  // Sider berre for leiarar: send andre til oversikta.
-  const synlegView: View = harTilgang(view, user) ? view : 'dashbord';
+  // Sider berre for leiarar, og modular butikken har slått på: send andre til oversikta.
+  const minButikk = finnButikk(user?.butikk_id);
+  const synlegView: View = (harTilgang(view, user) && modulAktiv(view, minButikk, user)) ? view : 'dashbord';
   useEffect(() => {
     if (user && synlegView !== view) skrivSti(stiFor(synlegView), true);
   }, [user, view, synlegView]);

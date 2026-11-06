@@ -4,7 +4,7 @@ import { useAuth } from '../../context/auth';
 import { useAnsatte } from '../../context/ansatte';
 import { weekDates, mondayOf, today } from '../../lib/dates';
 import { mineIDag } from '../../lib/oppgave';
-import { VIEWS, NAV_GROUPS, harTilgang, type View } from '../../lib/view';
+import { VIEWS, NAV_GROUPS, harTilgang, modulAktiv, type View } from '../../lib/view';
 import { prefetchView } from '../../lib/prefetch';
 import { Icon } from '../ui/Icon';
 
@@ -24,12 +24,13 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   const { entries, swaps, tasks, orders, ferie, canApprove, utleige } = useAppData();
   const { user } = useAuth();
   const { finnButikk } = useAnsatte();
-  const merke = finnButikk(user?.butikk_id)?.namn?.toUpperCase() || 'MEKK ØLEN';
+  const minButikk = finnButikk(user?.butikk_id);
+  const merke = minButikk?.namn?.toUpperCase() || 'MEKK ØLEN';
   const harButikk = !!user?.butikk_id;
   // Butikk-spesifikke sider berre for dei som høyrer til ein butikk, og
   // løn/tilsett-styring berre for leiarar.
   const synlegeGrupper = NAV_GROUPS
-    .map((g) => ({ ...g, punkt: g.punkt.filter((k) => (k === 'innstillinger' || k === 'utviklar' || harButikk) && harTilgang(k, user)) }))
+    .map((g) => ({ ...g, punkt: g.punkt.filter((k) => (k === 'innstillinger' || k === 'utviklar' || harButikk) && harTilgang(k, user) && modulAktiv(k, minButikk, user)) }))
     .filter((g) => g.punkt.length > 0);
   const [collapsed, setCollapsed] = useState(readCollapsed);
 

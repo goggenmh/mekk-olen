@@ -59,6 +59,35 @@ export const harTilgang = (v: View, u: Pick<Employee, 'leder' | 'konsern_admin'>
   return true;
 };
 
+/** Modular som kan slåast av/på per butikk. Kjernesider (oversikt, innstillingar,
+ *  utviklar) er alltid på. */
+export const MODULAR: { key: View; label: string }[] = [
+  { key: 'vaktplan', label: 'Vaktplan' },
+  { key: 'timeliste', label: 'Timelister' },
+  { key: 'oppgaver', label: 'Oppgåver' },
+  { key: 'ferie', label: 'Ferie & fri' },
+  { key: 'bestilling', label: 'Bestillingar' },
+  { key: 'utleige', label: 'Utleige' },
+  { key: 'lager', label: 'Lager' },
+  { key: 'dokument', label: 'Dokument' },
+  { key: 'rapporter', label: 'Rapportar' },
+  { key: 'ansatte', label: 'Tilsette' },
+];
+const MODUL_KEYS = new Set<View>(MODULAR.map((m) => m.key));
+
+/** Er modulen (sida) slått på for denne butikken? Kjernesider er alltid på, og
+ *  konsern-admin (eigar) ser alltid alt. null-liste = alle modular på. */
+export const modulAktiv = (
+  v: View,
+  butikk: { moduler?: string[] | null } | null | undefined,
+  u: Pick<Employee, 'konsern_admin'> | null | undefined,
+) => {
+  if (!MODUL_KEYS.has(v)) return true;
+  if (erKonsern(u)) return true;
+  const m = butikk?.moduler;
+  return !m || m.includes(v);
+};
+
 export const stiFor = (v: View) => VIEWS.find((x) => x.key === v)?.sti ?? '/intern';
 
 /** Demo-fila (npm run build:demo) blir opna som ei lokal fil, der adressa ikkje
