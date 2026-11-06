@@ -335,6 +335,16 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     toast(`Kopierte ${innsette.length} vakter`);
   };
 
+  // Slett alle vaktene i veka (man–lau). Ein enkelt DELETE er atomisk i seg
+  // sjølv; RLS avgrensar til eigen butikk.
+  const slettVeke: AppData['slettVeke'] = async (mandag) => {
+    const dates = [0, 1, 2, 3, 4, 5].map((i) => addDays(mandag, i));
+    const { error: err } = await supabase.from('shifts').delete().in('date', dates);
+    if (err) throw err;
+    setShifts((prev) => prev.filter((x) => !dates.includes(x.date)));
+    toast('Veka er tømt');
+  };
+
   // ---- swaps ----
   const createSwap: AppData['createSwap'] = async (swap) => {
     const { data, error: err } = await supabase.from('shift_swaps').insert({
@@ -664,7 +674,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       canApprove, setKanGodkjenne,
       sendMelding, deleteMelding,
       saveEntry, deleteEntry, approveEmployeeEntries,
-      saveShift, deleteShift, moveShiftDate, saveStandardveke, applyStandardveke, kopierVeke,
+      saveShift, deleteShift, moveShiftDate, saveStandardveke, applyStandardveke, kopierVeke, slettVeke,
       ledigeVakter, leggUtLedigVakt, taLedigVakt, angreTaLedigVakt, godkjennLedigVakt, slettLedigVakt,
       createSwap, approveSwap, declineSwap,
       saveFerie, deleteFerie, behandleFerie, saveUnavailable, removeUnavailable, saveUnavailablePeriode, removeUnavailableMange,

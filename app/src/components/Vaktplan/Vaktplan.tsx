@@ -42,10 +42,18 @@ function udekt(open: string, vakter: Shift[]): [string, string][] {
 
 /** startDato: opne på veka til denne datoen (t.d. frå eit push-varsel). */
 export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
-  const { shifts, swaps, ferie: alleFerie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, kopierVeke, saveShift, deleteShift, saveFerie, ledigeVakter, taLedigVakt, angreTaLedigVakt, godkjennLedigVakt, slettLedigVakt } = useAppData();
+  const { shifts, swaps, ferie: alleFerie, moveShiftDate, approveSwap, declineSwap, canApprove, unavailable, standardveke, saveStandardveke, applyStandardveke, kopierVeke, slettVeke, saveShift, deleteShift, saveFerie, ledigeVakter, taLedigVakt, angreTaLedigVakt, godkjennLedigVakt, slettLedigVakt } = useAppData();
   const { user } = useAuth();
   const { findAnsatt, ansatte } = useAnsatte();
   const isMobile = useIsMobile();
+  // Vannrett (dagar som kolonnar) eller loddrett (dagar stabla). Val blir hugsa;
+  // standard loddrett på mobil, vannrett på større skjerm.
+  const [retning, setRetning] = useState<'vannrett' | 'loddrett'>(() => {
+    try { const v = localStorage.getItem('mekk-vaktplan-retning'); if (v === 'vannrett' || v === 'loddrett') return v; } catch { /* privat modus */ }
+    return isMobile ? 'loddrett' : 'vannrett';
+  });
+  const velRetning = (r: 'vannrett' | 'loddrett') => { setRetning(r); try { localStorage.setItem('mekk-vaktplan-retning', r); } catch { /* ignore */ } };
+  const loddrett = retning === 'loddrett';
   const maaGodkjenne = canApprove(user?.id);
   // Kan berre redigere eigen ferie / standardveka / vakter – med mindre ein har delegeringsansvar.
   const kanStyreFerie = canApprove(user?.id);
@@ -130,6 +138,21 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
             </button>
           ))}
         </div>
+        {mode === 'uke' && (
+          <div style={{ display: 'flex', gap: 4 }} role="group" aria-label="Retning på vaktplanen">
+            {(['vannrett', 'loddrett'] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => velRetning(r)}
+                aria-pressed={retning === r}
+                title={r === 'vannrett' ? 'Dagar ved sida av kvarandre' : 'Dagar under kvarandre'}
+                style={{ padding: '7px 11px', borderRadius: 'var(--r)', border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: retning === r ? 'var(--brand-strong)' : 'var(--surface)', color: retning === r ? 'var(--on-brand)' : 'var(--text-secondary)' }}
+              >
+                {r === 'vannrett' ? '▦ Vannrett' : '▤ Loddrett'}
+              </button>
+            ))}
+          </div>
+        )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={prevPeriod} style={navBtn} aria-label={mode === 'uke' ? 'Førre veke' : 'Førre månad'}>‹</button>
         <PeriodeVeljar mode={mode} veke={vpWeek} manad={monthAnchor} onVeke={setVpWeek} onManad={setMonthAnchor}>
@@ -144,6 +167,13 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
             <button onClick={lagreSomStandard} style={btnGhost} title="Lagre vaktene i denne veka som standardveke">Lagre denne veka</button>
             <button onClick={kopierForreVeke} style={btnGhost} title="Kopier alle vaktene frå førre veke">⧉ Kopier førre veke</button>
             <button onClick={fyllVeke} style={{ ...btnGhost, color: 'var(--brand-strong)', borderColor: 'var(--brand)' }}>↻ Fyll frå standardveke</button>
+            <button
+              onClick={() => { if (window.confirm('Slette ALLE vaktene i denne veka? Dette kan ikkje angrast.')) slettVeke(vpWeek); }}
+              style={{ ...btnGhost, color: 'var(--danger)', borderColor: 'var(--danger-border)' }}
+              title="Fjern alle vaktene i denne veka"
+            >
+              🗑 Slett veke
+            </button>
           </div>
         )}
       </div>
@@ -158,7 +188,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
         />
       ) : (
       <div style={{ overflowX: 'auto' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `repeat(${days.length}, minmax(132px, 1fr))`, gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: loddrett ? '1fr' : `repeat(${days.length}, minmax(132px, 1fr))`, gap: 10 }}>
         {days.map((d) => {
           const dayShifts = shifts.filter((s) => s.date === d.date).slice().sort((a, b) => (a.start < b.start ? -1 : 1));
           // Planlagd lønskost for dagen (berre timelønte; fastløn er fast). Berre
@@ -182,7 +212,7 @@ export function Vaktplan({ startDato }: { startDato?: string | null } = {}) {
               style={{
                 background: erIDag ? 'var(--brand-soft)' : raudTint ? 'var(--dag-raud-bg)' : halvdag ? 'var(--dag-amber-bg)' : 'var(--surface)',
                 border: erIDag ? '2px solid var(--brand)' : raudTint ? '1px solid var(--dag-raud-border)' : halvdag ? '1px solid var(--dag-amber-border)' : '1px solid var(--border)',
-                borderRadius: 'var(--r)', padding: erIDag ? 9 : 10, minHeight: isMobile ? 'auto' : 220, display: 'flex', flexDirection: 'column', gap: 7,
+                borderRadius: 'var(--r)', padding: erIDag ? 9 : 10, minHeight: loddrett ? 'auto' : 220, display: 'flex', flexDirection: 'column', gap: 7,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, paddingBottom: 7, borderBottom: '1px solid var(--divider)' }}>
