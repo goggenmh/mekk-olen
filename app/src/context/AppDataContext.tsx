@@ -7,6 +7,11 @@ import { toast } from '../lib/toast';
 import { storeOrd, storFyrste } from '../lib/tekst';
 import { useAnsatte } from './AnsatteContext';
 import type { Doc, Ferie, LedigVakt, Melding, Order, Permission, Rutine, Shift, ShiftSwap, Stadfesting, Task, TaskInput, TimeEntry, Unavailable, StandardvekeEntry } from '../types';
+import type { Database } from '../lib/database.types';
+
+// Ei rad slik databasen gir ho (autogenererte typar). Mapparane under gjer om
+// snake_case-radene til dei camelCase-formene appen brukar.
+type Row<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
 
 // Neste forfallsdato for ei gjentakande oppgåve.
 const nesteFrist = (frist: string | null, gjentak: string): string | null => {
@@ -102,26 +107,24 @@ interface AppData {
 
 const AppDataContext = createContext<AppData | null>(null);
 
-const mapEntry = (r: any): TimeEntry => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, pause: r.pause, status: r.status, auto: !!r.auto });
-const mapShift = (r: any): Shift => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift });
-const mapSwap = (r: any): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.fra, til: r.til, dag: r.dag, tid: r.tid, status: r.status });
-const mapFerie = (r: any): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst ?? '', fra: r.fra ?? null, til: r.til ?? null, status: r.status ?? 'godkjend', svar: r.svar ?? '', behandlaAv: r.behandla_av ?? null, createdAt: r.created_at ?? null });
-const mapUnavail = (r: any): Unavailable => ({ id: r.id, ansatt: r.ansatt, dato: r.dato, grunn: r.grunn ?? null });
-const mapStandard = (r: any): StandardvekeEntry => ({ id: r.id, ansatt: r.ansatt, dag: r.dag, start: r.start, slutt: r.slutt });
-const mapTask = (r: any): Task => ({
-  id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [],
+const mapEntry = (r: Row<'time_entries'>): TimeEntry => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, pause: r.pause, status: r.status as TimeEntry['status'], auto: !!r.auto });
+const mapShift = (r: Row<'shifts'>): Shift => ({ id: r.id, ansatt: r.ansatt, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift });
+const mapSwap = (r: Row<'shift_swaps'>): ShiftSwap => ({ id: r.id, shiftId: r.shift_id, fra: r.fra, til: r.til, dag: r.dag, tid: r.tid, status: r.status as ShiftSwap['status'] });
+const mapFerie = (r: Row<'ferie'>): Ferie => ({ id: r.id, ansatt: r.ansatt, type: r.type, tekst: r.tekst ?? '', fra: r.fra ?? null, til: r.til ?? null, status: (r.status ?? 'godkjend') as Ferie['status'], svar: r.svar ?? '', behandlaAv: r.behandla_av ?? null, createdAt: r.created_at ?? null });
+const mapUnavail = (r: Row<'utilgjengeleg'>): Unavailable => ({ id: r.id, ansatt: r.ansatt, dato: r.dato, grunn: r.grunn ?? null });
+const mapStandard = (r: Row<'standardveke'>): StandardvekeEntry => ({ id: r.id, ansatt: r.ansatt, dag: r.dag, start: r.start, slutt: r.slutt });
+const mapTask = (r: Row<'tasks'>): Task => ({
+  id: r.id, tittel: r.tittel, detalj: r.detalj, prioritet: r.prioritet, ansatt: r.ansatt, ferdig: r.ferdig, frist: r.frist ?? null, kategori: r.kategori ?? 'Anna', gjentak: r.gjentak ?? 'ingen', sjekkliste: (Array.isArray(r.sjekkliste) ? r.sjekkliste : []) as unknown as Task['sjekkliste'],
   blokkert: !!r.blokkert, blokkertGrunn: r.blokkert_grunn ?? '', opprettaAv: r.oppretta_av ?? null, opprettaAt: r.oppretta_at ?? null,
   ferdigAv: r.ferdig_av ?? null, ferdigAt: r.ferdig_at ?? null, orderId: r.order_id ?? null, rutineId: r.rutine_id ?? null,
 });
-const mapRutine = (r: any): Rutine => ({ id: r.id, tittel: r.tittel, detalj: r.detalj ?? '', kategori: r.kategori ?? 'Butikk', prioritet: r.prioritet ?? 'medium', ansvar: r.ansvar ?? 'ufordelt', dagar: Array.isArray(r.dagar) ? r.dagar : [], manadsdag: r.manadsdag ?? null, sjekkliste: Array.isArray(r.sjekkliste) ? r.sjekkliste : [], aktiv: r.aktiv !== false });
-// Kolonnene frå oppgaver-v2.sql. Manglar dei, lagrar vi utan (sjå lagreTask).
-const NYE_TASK_FELT = /blokkert|order_id/;
-const mapOrder = (r: any): Order => ({ id: r.id, kunde: storeOrd(r.kunde || ''), telefon: r.telefon, vare: storFyrste(r.vare || ''), leverandor: storFyrste(r.leverandor || ''), varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla, notat: r.notat ?? '', pris: r.pris != null ? Number(r.pris) : null, registrertAv: r.registrert_av ?? null, bilde: r.bilde ?? null });
-const mapDoc = (r: any): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
-const mapStadfesting = (r: any): Stadfesting => ({ id: r.id, docId: r.doc_id, ansatt: r.ansatt, stadfestaAt: r.stadfesta_at });
-const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne: r.kan_godkjenne });
-const mapMelding = (r: any): Melding => ({ id: r.id, fra: r.fra, til: r.til, tekst: r.tekst, created_at: r.created_at });
-const mapLedigVakt = (r: any): LedigVakt => ({ id: r.id, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift || '', grunn: r.grunn ?? null, opprettaAv: r.oppretta_av, tekenAv: r.teken_av ?? null, created_at: r.created_at });
+const mapRutine = (r: Row<'oppgave_rutinar'>): Rutine => ({ id: r.id, tittel: r.tittel, detalj: r.detalj ?? '', kategori: r.kategori ?? 'Butikk', prioritet: r.prioritet ?? 'medium', ansvar: r.ansvar ?? 'ufordelt', dagar: Array.isArray(r.dagar) ? r.dagar : [], manadsdag: r.manadsdag ?? null, sjekkliste: (Array.isArray(r.sjekkliste) ? r.sjekkliste : []) as unknown as Rutine['sjekkliste'], aktiv: r.aktiv !== false });
+const mapOrder = (r: Row<'orders'>): Order => ({ id: r.id, kunde: storeOrd(r.kunde || ''), telefon: r.telefon, vare: storFyrste(r.vare || ''), leverandor: storFyrste(r.leverandor || ''), varenr: r.varenr, lenke: r.lenke ?? null, dato: r.dato, antal: r.antal, status: r.status, varsla: r.varsla, notat: r.notat ?? '', pris: r.pris != null ? Number(r.pris) : null, registrertAv: r.registrert_av ?? null, bilde: r.bilde ?? null });
+const mapDoc = (r: Row<'docs'>): Doc => ({ id: r.id, tittel: r.tittel, kategori: r.kategori, notat: r.notat, dato: r.dato, fil_url: r.fil_url, fil_namn: r.fil_namn });
+const mapStadfesting = (r: Row<'doc_stadfesting'>): Stadfesting => ({ id: r.id, docId: r.doc_id, ansatt: r.ansatt, stadfestaAt: r.stadfesta_at });
+const mapPermission = (r: Row<'permissions'>): Permission => ({ ansatt: r.ansatt, kan_godkjenne: r.kan_godkjenne });
+const mapMelding = (r: Row<'meldinger'>): Melding => ({ id: r.id, fra: r.fra, til: r.til, tekst: r.tekst, created_at: r.created_at });
+const mapLedigVakt = (r: Row<'ledige_vakter'>): LedigVakt => ({ id: r.id, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift || '', grunn: r.grunn ?? null, opprettaAv: r.oppretta_av, tekenAv: r.teken_av ?? null, created_at: r.created_at });
 
 // Alle tabellane vi speglar lokalt. Dei «påkravde» må lastast for at appen skal
 // fungere; dei andre kjem med seinare migrasjonar og degraderer til tom liste
@@ -551,8 +554,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const lagre = (rad: Record<string, unknown>) => (t.id
       ? supabase.from('tasks').update(rad).eq('id', t.id).select().single()
       : supabase.from('tasks').insert(rad).select().single());
-    let { data, error: err } = await lagre({ ...felt, ...nye });
-    if (err && NYE_TASK_FELT.test(err.message)) ({ data, error: err } = await lagre(felt));
+    const { data, error: err } = await lagre({ ...felt, ...nye });
     if (err) throw err;
     const lagra = mapTask(data);
     const forrige = t.id ? tasks.find((x) => x.id === t.id) : undefined;
@@ -639,16 +641,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       // Biletet kjem frå skjemaet (manuelt/søk); er det tomt, hentar vi under.
       bilde: o.bilde ?? null,
     };
-    // notat-kolonna kjem med bestilling-notat.sql. Finst ho ikkje enno, lagrar
-    // vi resten så bestillinga ikkje går tapt.
-    const lagre = async (medNotat: boolean) => {
-      const rad = medNotat ? { ...felt, notat: o.notat ?? '' } : felt;
-      return o.id
-        ? supabase.from('orders').update(rad).eq('id', o.id).select().single()
-        : supabase.from('orders').insert(rad).select().single();
-    };
-    let { data, error: err } = await lagre(true);
-    if (err && /notat/.test(err.message)) ({ data, error: err } = await lagre(false));
+    const rad = { ...felt, notat: o.notat ?? '' };
+    const { data, error: err } = o.id
+      ? await supabase.from('orders').update(rad).eq('id', o.id).select().single()
+      : await supabase.from('orders').insert(rad).select().single();
     if (err) throw err;
     if (o.id) setOrders((prev) => prev.map((x) => (x.id === o.id ? mapOrder(data) : x)));
     else setOrders((prev) => [mapOrder(data), ...prev]);
