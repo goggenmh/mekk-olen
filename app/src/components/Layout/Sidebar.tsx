@@ -29,7 +29,7 @@ export function Sidebar({ view, setView, isMobile = false, open = false, onClose
   // Butikk-spesifikke sider berre for dei som høyrer til ein butikk, og
   // løn/tilsett-styring berre for leiarar.
   const synlegeGrupper = NAV_GROUPS
-    .map((g) => ({ ...g, punkt: g.punkt.filter((k) => (k === 'innstillinger' || harButikk) && harTilgang(k, user)) }))
+    .map((g) => ({ ...g, punkt: g.punkt.filter((k) => (k === 'innstillinger' || k === 'utviklar' || harButikk) && harTilgang(k, user)) }))
     .filter((g) => g.punkt.length > 0);
   const [collapsed, setCollapsed] = useState(readCollapsed);
 

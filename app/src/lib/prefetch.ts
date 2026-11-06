@@ -17,6 +17,7 @@ const PREFETCH: Partial<Record<View, () => Promise<unknown>>> = {
   dokument: () => import('../components/Dokument/Dokument'),
   rapporter: () => import('../components/Rapporter/Rapporter'),
   innstillinger: () => import('../components/Innstillinger/Innstillinger'),
+  utviklar: () => import('../components/Utviklar/Utviklar'),
 };
 
 // Vi hentar kvar chunk berre éin gong; held styr på kva som alt er starta.

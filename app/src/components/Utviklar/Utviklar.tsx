@@ -1,0 +1,154 @@
+import { useEffect, useState, type CSSProperties } from 'react';
+import { supabase } from '../../supabaseClient';
+import { toast } from '../../lib/toast';
+
+// Eigar-/utviklar-side: kryss-butikk styring. Berre konsern-admin (gated i App +
+// i databasen via admin_*-funksjonane). Steg 1: oversikt, butikkar og
+// tilgangsstyring. (Modular per butikk + globale innstillingar kjem seinare.)
+interface Oversikt { butikkar: number; butikkar_aktive: number; tilsette: number; tilsette_aktive: number; leiarar: number }
+interface Butikk { id: string; namn: string; farge: string | null; aktiv: boolean }
+interface AdminTilsett { id: string; navn: string; rolle: string; butikk_id: string | null; butikk: string | null; leder: boolean; konsern_admin: boolean; aktiv: boolean }
+
+const kort: CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', boxShadow: 'var(--shadow-card)' };
+
+export function Utviklar() {
+  const [oversikt, setOversikt] = useState<Oversikt | null>(null);
+  const [butikkar, setButikkar] = useState<Butikk[]>([]);
+  const [tilsette, setTilsette] = useState<AdminTilsett[]>([]);
+  const [feil, setFeil] = useState<string | null>(null);
+  const [lastar, setLastar] = useState(true);
+  const [nyButikk, setNyButikk] = useState('');
+
+  const last = async () => {
+    const [o, b, t] = await Promise.all([
+      supabase.rpc('admin_oversikt'),
+      supabase.from('butikkar').select('id, namn, farge, aktiv').order('namn'),
+      supabase.rpc('admin_tilsette'),
+    ]);
+    const err = o.error || b.error || t.error;
+    if (err) { setFeil(err.message); setLastar(false); return; }
+    setOversikt(((o.data as Oversikt[]) ?? [])[0] ?? null);
+    setButikkar((b.data ?? []) as Butikk[]);
+    setTilsette((t.data ?? []) as AdminTilsett[]);
+    setFeil(null);
+    setLastar(false);
+  };
+  useEffect(() => { void last(); }, []);
+
+  const opprettButikk = async () => {
+    const namn = nyButikk.trim();
+    if (!namn) return;
+    const { error } = await supabase.from('butikkar').insert({ namn });
+    if (error) { toast(`Kunne ikkje opprette butikk: ${error.message}`); return; }
+    setNyButikk(''); toast('Butikk oppretta'); void last();
+  };
+  const toggleAktiv = async (bu: Butikk) => {
+    const { error } = await supabase.from('butikkar').update({ aktiv: !bu.aktiv }).eq('id', bu.id);
+    if (error) { toast(`Kunne ikkje endre: ${error.message}`); return; }
+    void last();
+  };
+  const settRolle = async (a: AdminTilsett, leder: boolean, konsern: boolean) => {
+    const { error } = await supabase.rpc('admin_sett_rolle', { p_id: a.id, p_leder: leder, p_konsern: konsern });
+    if (error) { toast(error.message); return; }
+    void last();
+  };
+  const flytt = async (a: AdminTilsett, butikkId: string) => {
+    const { error } = await supabase.rpc('admin_flytt_butikk', { p_id: a.id, p_butikk: butikkId || null });
+    if (error) { toast(error.message); return; }
+    toast('Flytta'); void last();
+  };
+
+  const statar: { tal: number; lab: string }[] = oversikt ? [
+    { tal: oversikt.butikkar, lab: 'Butikkar' },
+    { tal: oversikt.butikkar_aktive, lab: 'Aktive butikkar' },
+    { tal: oversikt.tilsette_aktive, lab: 'Aktive tilsette' },
+    { tal: oversikt.leiarar, lab: 'Leiarar' },
+  ] : [];
+
+  return (
+    <div className="side" style={{ display: 'flex', flexDirection: 'column', gap: 22, maxWidth: 1000 }}>
+      <div>
+        <h1 className="sidetittel">Utviklar</h1>
+        <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Eigarstyring på tvers av butikkar. Berre du (konsern-admin) ser denne sida.</div>
+      </div>
+
+      {lastar ? (
+        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Lastar…</div>
+      ) : feil ? (
+        <div style={{ ...kort, padding: '14px 16px', color: 'var(--danger)', fontSize: 13.5 }}>Kunne ikkje laste: {feil}</div>
+      ) : (
+        <>
+          {/* Oversikt */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 14 }}>
+            {statar.map((s) => (
+              <div key={s.lab} style={{ ...kort, padding: '16px 18px' }}>
+                <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Geist Mono Variable'", letterSpacing: '-0.5px' }}>{s.tal}</div>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', marginTop: 3 }}>{s.lab}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Butikkar */}
+          <div style={{ ...kort, padding: '18px 20px' }}>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>Butikkar</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+              {butikkar.map((bu) => (
+                <div key={bu.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--r)' }}>
+                  <span style={{ width: 12, height: 12, borderRadius: '50%', background: bu.farge || 'var(--brand)', flex: 'none' }} />
+                  <span style={{ flex: 1, fontSize: 14, fontWeight: 600 }}>{bu.namn}</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: bu.aktiv ? 'var(--pill-gronn-fg)' : 'var(--text-faint)' }}>{bu.aktiv ? 'Aktiv' : 'Inaktiv'}</span>
+                  <button onClick={() => toggleAktiv(bu)} style={{ padding: '6px 11px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                    {bu.aktiv ? 'Deaktiver' : 'Aktiver'}
+                  </button>
+                </div>
+              ))}
+              {butikkar.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen butikkar enno.</div>}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                value={nyButikk}
+                onChange={(e) => setNyButikk(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') opprettButikk(); }}
+                placeholder="Namn på ny butikk, t.d. «MEKK Haugesund»"
+                style={{ flex: 1, minWidth: 0, padding: '9px 12px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 13.5, color: 'var(--text)' }}
+              />
+              <button onClick={opprettButikk} disabled={!nyButikk.trim()} style={{ flex: 'none', padding: '9px 16px', background: 'var(--cta)', color: 'var(--on-cta)', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: nyButikk.trim() ? 1 : 0.5 }}>
+                + Ny butikk
+              </button>
+            </div>
+          </div>
+
+          {/* Tilgangsstyring */}
+          <div style={{ ...kort, padding: '18px 20px', overflow: 'auto' }}>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Tilgangsstyring</div>
+            <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 14 }}>Set rolle og butikk for kvar tilsett, på tvers av butikkar.</div>
+            <div style={{ minWidth: 640 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.4fr 0.7fr 0.9fr 0.6fr', gap: 10, padding: '0 6px 8px', fontSize: 11, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.4px', borderBottom: '1px solid var(--divider)' }}>
+                <span>Tilsett</span><span>Butikk</span><span>Leiar</span><span>Konsern-admin</span><span>Aktiv</span>
+              </div>
+              {tilsette.map((a) => (
+                <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.4fr 0.7fr 0.9fr 0.6fr', gap: 10, alignItems: 'center', padding: '10px 6px', borderBottom: '1px solid var(--divider)', fontSize: 13.5, opacity: a.aktiv ? 1 : 0.55 }}>
+                  <span style={{ fontWeight: 600 }}>{a.navn}<div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>{a.rolle}</div></span>
+                  <select value={a.butikk_id ?? ''} onChange={(e) => flytt(a, e.target.value)} style={{ padding: '6px 8px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text)' }}>
+                    <option value="">(ingen butikk)</option>
+                    {butikkar.map((bu) => <option key={bu.id} value={bu.id}>{bu.namn}</option>)}
+                  </select>
+                  <input type="checkbox" checked={a.leder} onChange={(e) => settRolle(a, e.target.checked, a.konsern_admin)} style={{ width: 18, height: 18, cursor: 'pointer' }} aria-label={`Leiar: ${a.navn}`} />
+                  <input type="checkbox" checked={a.konsern_admin} onChange={(e) => settRolle(a, a.leder, e.target.checked)} style={{ width: 18, height: 18, cursor: 'pointer' }} aria-label={`Konsern-admin: ${a.navn}`} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: a.aktiv ? 'var(--pill-gronn-fg)' : 'var(--text-faint)' }}>{a.aktiv ? 'Ja' : 'Nei'}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 12 }}>
+              Oppretting og deaktivering av tilsette gjer du under <b>Tilsette</b> (per butikk). Her styrer du roller og butikk-tilhøyr på tvers.
+            </div>
+          </div>
+
+          <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>
+            Kjem seinare: modular per butikk (slå av/på sider), globale innstillingar og djupare innsikt på tvers.
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
