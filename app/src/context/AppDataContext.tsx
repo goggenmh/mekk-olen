@@ -123,6 +123,12 @@ const mapPermission = (r: any): Permission => ({ ansatt: r.ansatt, kan_godkjenne
 const mapMelding = (r: any): Melding => ({ id: r.id, fra: r.fra, til: r.til, tekst: r.tekst, created_at: r.created_at });
 const mapLedigVakt = (r: any): LedigVakt => ({ id: r.id, date: r.date, start: r.start, slutt: r.slutt, skift: r.skift || '', grunn: r.grunn ?? null, opprettaAv: r.oppretta_av, tekenAv: r.teken_av ?? null, created_at: r.created_at });
 
+// Alle tabellane vi speglar lokalt. Dei «påkravde» må lastast for at appen skal
+// fungere; dei andre kjem med seinare migrasjonar og degraderer til tom liste
+// om dei manglar.
+const ALLE_TABELLAR = ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'permissions', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting', 'oppgave_rutinar', 'utleige_reservasjon', 'ledige_vakter'] as const;
+const PAAKRAVD = new Set<string>(['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'permissions', 'meldinger', 'utilgjengeleg', 'standardveke']);
+
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const { isLeder } = useAnsatte();
   const [loading, setLoading] = useState(true);
@@ -143,6 +149,47 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [meldinger, setMeldinger] = useState<Melding[]>([]);
 
+  // Vindauge for dei raskast-veksande tabellane (timar + vakter veks dagleg per
+  // tilsett): vi lastar frå starten av i fjor, ikkje heile historikken. Det
+  // dekkjer alt appen viser til vanleg – inneverande år (all løn/ferie-rekning)
+  // og i fjor – medan lastinga held seg rask same kor lenge appen har vore i
+  // bruk. Meldingar eldre enn 90 dagar er heller ikkje interessante.
+  const spørjing = useCallback((table: string) => {
+    const vindauge = `${new Date().getFullYear() - 1}-01-01`;
+    switch (table) {
+      case 'time_entries': return supabase.from('time_entries').select('*').gte('date', vindauge);
+      case 'shifts': return supabase.from('shifts').select('*').gte('date', vindauge);
+      case 'meldinger': return supabase.from('meldinger').select('*').gte('created_at', new Date(Date.now() - 90 * 86400000).toISOString()).order('created_at', { ascending: false });
+      case 'orders': return supabase.from('orders').select('*').order('created_at', { ascending: false });
+      case 'docs': return supabase.from('docs').select('*').order('dato', { ascending: false });
+      case 'oppgave_rutinar': return supabase.from('oppgave_rutinar').select('*').order('created_at');
+      case 'utleige_reservasjon': return supabase.from('utleige_reservasjon').select('status, start, slutt').in('status', ['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka']);
+      default: return supabase.from(table).select('*');
+    }
+  }, []);
+
+  // Legg ei ferdig henta tabell inn i rett state-liste.
+  const settTabell = useCallback((table: string, data: unknown[]) => {
+    const d = data as never[];
+    switch (table) {
+      case 'time_entries': setEntries(d.map(mapEntry)); break;
+      case 'shifts': setShifts(d.map(mapShift)); break;
+      case 'shift_swaps': setSwaps(d.map(mapSwap)); break;
+      case 'ferie': setFerie(d.map(mapFerie)); break;
+      case 'tasks': setTasks(d.map(mapTask)); break;
+      case 'orders': setOrders(d.map(mapOrder)); break;
+      case 'docs': setDocs(d.map(mapDoc)); break;
+      case 'permissions': setPermissions(d.map(mapPermission)); break;
+      case 'meldinger': setMeldinger(d.map(mapMelding)); break;
+      case 'utilgjengeleg': setUnavailable(d.map(mapUnavail)); break;
+      case 'standardveke': setStandardveke(d.map(mapStandard)); break;
+      case 'doc_stadfesting': setStadfestingar(d.map(mapStadfesting)); break;
+      case 'oppgave_rutinar': setRutinar(d.map(mapRutine)); break;
+      case 'utleige_reservasjon': setUtleige(data as AppData['utleige']); break;
+      case 'ledige_vakter': setLedigeVakter(d.map(mapLedigVakt)); break;
+    }
+  }, []);
+
   // `stille` = oppdater i bakgrunnen utan lasteskjerm (brukt av live-oppdatering).
   const hent = useCallback(async (stille: boolean) => {
     // Utan innlogging avviser databasen alt (401) – ikkje spør i det heile.
@@ -159,66 +206,50 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       // gjer det same, så timane kjem med sjølv om ingen leiar opnar appen.
       await supabase.rpc('for_leiartimar');
     }
-    const [e, s, sw, f, t, o, d, p, m, u, sv, st, ru, ul, lv] = await Promise.all([
-      supabase.from('time_entries').select('*'),
-      supabase.from('shifts').select('*'),
-      supabase.from('shift_swaps').select('*'),
-      supabase.from('ferie').select('*'),
-      supabase.from('tasks').select('*'),
-      supabase.from('orders').select('*').order('created_at', { ascending: false }),
-      supabase.from('docs').select('*').order('dato', { ascending: false }),
-      supabase.from('permissions').select('*'),
-      supabase.from('meldinger').select('*').order('created_at', { ascending: false }),
-      supabase.from('utilgjengeleg').select('*'),
-      supabase.from('standardveke').select('*'),
-      supabase.from('doc_stadfesting').select('*'),
-      supabase.from('oppgave_rutinar').select('*').order('created_at'),
-      supabase.from('utleige_reservasjon').select('status, start, slutt').in('status', ['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka']),
-      supabase.from('ledige_vakter').select('*'),
-    ]);
-    const firstError = [e, s, sw, f, t, o, d, p, m, u, sv].find((r) => r.error)?.error;
-    if (firstError) {
-      if (!stille) setError(firstError.message);
+    const res = await Promise.all(ALLE_TABELLAR.map((t) => spørjing(t)));
+    // Berre feil i ein påkravd tabell stoppar lastinga; dei valfrie (som kan
+    // mangle om ein migrasjon ikkje er køyrd) degraderer til tom liste.
+    let feil: { message: string } | null = null;
+    ALLE_TABELLAR.forEach((t, i) => { if (!feil && PAAKRAVD.has(t) && res[i].error) feil = res[i].error; });
+    if (feil) {
+      if (!stille) setError((feil as { message: string }).message);
     } else {
-      setEntries((e.data || []).map(mapEntry));
-      setShifts((s.data || []).map(mapShift));
-      setSwaps((sw.data || []).map(mapSwap));
-      // Ferie og fri blir tekne vare på (historikk i Ferie & fri-modulen).
-      setFerie((f.data || []).map(mapFerie));
-      setTasks((t.data || []).map(mapTask));
-      setOrders((o.data || []).map(mapOrder));
-      setDocs((d.data || []).map(mapDoc));
-      setPermissions((p.data || []).map(mapPermission));
-      setMeldinger((m.data || []).map(mapMelding));
-      setUnavailable((u.data || []).map(mapUnavail));
-      setStandardveke((sv.data || []).map(mapStandard));
-      // Tabellen kjem med dokument-stadfesting.sql; manglar han, blir lista tom.
-      setStadfestingar(st.error ? [] : (st.data || []).map(mapStadfesting));
-      // Kjem med oppgaver-v2.sql.
-      setRutinar(ru.error ? [] : (ru.data || []).map(mapRutine));
-      // Kjem med utleige.sql.
-      setUtleige(ul.error ? [] : (ul.data || []));
-      // Kjem med ledige-vakter.sql; manglar tabellen, blir lista tom.
-      setLedigeVakter(lv.error ? [] : (lv.data || []).map(mapLedigVakt));
+      ALLE_TABELLAR.forEach((t, i) => settTabell(t, res[i].error ? [] : (res[i].data || [])));
     }
     if (!stille) setLoading(false);
-  }, []);
+  }, [spørjing, settTabell]);
+
+  // Målretta oppdatering av éi einskild tabell (live-endringar).
+  const hentEin = useCallback(async (table: string) => {
+    const { data, error: err } = await spørjing(table);
+    if (!err) settTabell(table, data || []);
+  }, [spørjing, settTabell]);
 
   // Første henting skjer frå App når brukaren er logga inn.
   const refreshAll = useCallback(() => hent(false), [hent]);
 
-  // Live-oppdatering: når nokon endrar vakter, timar, oppgåver o.l., hentar
-  // vi stille på nytt, så alle ser same bilete utan å laste sida. RLS gjeld
-  // òg her, så kvar brukar får berre varsel om sin eigen butikk.
+  // Live-oppdatering: når nokon endrar vakter, timar, oppgåver o.l., hentar vi
+  // berre den tabellen som endra seg på nytt (ikkje alt), så alle ser same
+  // bilete utan å laste sida. RLS gjeld òg her, så kvar brukar får berre varsel
+  // om sin eigen butikk.
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const planlegg = () => {
+    const endra = new Set<string>();
+    const planlegg = (table?: string) => {
+      if (table) endra.add(table);
       clearTimeout(timer);
-      timer = setTimeout(() => hent(true), 400);
+      timer = setTimeout(() => {
+        const tabellar = [...endra];
+        endra.clear();
+        // Ingen bestemt tabell (reconnect/synleg/online) → full oppfrisking.
+        if (tabellar.length === 0) hent(true);
+        else tabellar.forEach((t) => hentEin(t));
+      }, 400);
     };
+    const planleggAlt = () => planlegg();
     const kanal = supabase.channel('appdata-live');
     for (const table of ['time_entries', 'shifts', 'shift_swaps', 'ferie', 'tasks', 'orders', 'docs', 'meldinger', 'utilgjengeleg', 'standardveke', 'doc_stadfesting', 'oppgave_rutinar', 'utleige_reservasjon', 'ledige_vakter']) {
-      kanal.on('postgres_changes', { event: '*', schema: 'public', table }, planlegg);
+      kanal.on('postgres_changes', { event: '*', schema: 'public', table }, () => planlegg(table));
     }
     // Mobilen set appen på pause i bakgrunnen, og då går endringar tapt.
     // Hent på nytt når sambandet blir kopla til igjen, når appen kjem fram
@@ -227,18 +258,18 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     kanal.subscribe((status) => {
       if (status !== 'SUBSCRIBED') return;
       if (forsteGong) { forsteGong = false; return; }
-      planlegg();
+      planleggAlt();
     });
-    const vedSynleg = () => { if (document.visibilityState === 'visible') planlegg(); };
+    const vedSynleg = () => { if (document.visibilityState === 'visible') planleggAlt(); };
     document.addEventListener('visibilitychange', vedSynleg);
-    window.addEventListener('online', planlegg);
+    window.addEventListener('online', planleggAlt);
     return () => {
       clearTimeout(timer);
       document.removeEventListener('visibilitychange', vedSynleg);
-      window.removeEventListener('online', planlegg);
+      window.removeEventListener('online', planleggAlt);
       supabase.removeChannel(kanal);
     };
-  }, [hent]);
+  }, [hent, hentEin]);
 
   // ---- time entries ----
   const saveEntry: AppData['saveEntry'] = async (entry) => {
