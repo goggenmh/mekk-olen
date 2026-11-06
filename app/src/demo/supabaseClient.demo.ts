@@ -428,6 +428,15 @@ const rpc = async (namn: string, args: Rad = {}): Promise<{ data: unknown; error
       if (x) x.butikk_id = args.p_butikk ?? null;
       return ok(null);
     }
+    case 'admin_butikk_innsikt': {
+      const AKTIVE = ['ny', 'stadfesta', 'klar', 'utleigd', 'forseinka'];
+      return ok(tabell('butikkar').map((b) => ({
+        butikk_id: b.id, butikk: b.namn, aktiv: !!b.aktiv,
+        tilsette: tabell('ansatte').filter((a) => a.butikk_id === b.id && a.aktiv).length,
+        bestillingar: tabell('orders').filter((o) => o.butikk_id === b.id && o.status !== 'henta').length,
+        utleige: tabell('utleige_reservasjon').filter((r) => r.butikk_id === b.id && AKTIVE.includes(String(r.status))).length,
+      })));
+    }
     default:
       return ok(null);
   }

@@ -9,6 +9,7 @@ import { MODULAR } from '../../lib/view';
 interface Oversikt { butikkar: number; butikkar_aktive: number; tilsette: number; tilsette_aktive: number; leiarar: number }
 interface Butikk { id: string; namn: string; farge: string | null; aktiv: boolean; moduler: string[] | null }
 interface AdminTilsett { id: string; navn: string; rolle: string; butikk_id: string | null; butikk: string | null; leder: boolean; konsern_admin: boolean; aktiv: boolean }
+interface Innsikt { butikk_id: string; butikk: string; aktiv: boolean; tilsette: number; bestillingar: number; utleige: number }
 
 const kort: CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', boxShadow: 'var(--shadow-card)' };
 
@@ -16,21 +17,24 @@ export function Utviklar() {
   const [oversikt, setOversikt] = useState<Oversikt | null>(null);
   const [butikkar, setButikkar] = useState<Butikk[]>([]);
   const [tilsette, setTilsette] = useState<AdminTilsett[]>([]);
+  const [innsikt, setInnsikt] = useState<Innsikt[]>([]);
   const [feil, setFeil] = useState<string | null>(null);
   const [lastar, setLastar] = useState(true);
   const [nyButikk, setNyButikk] = useState('');
 
   const last = async () => {
-    const [o, b, t] = await Promise.all([
+    const [o, b, t, i] = await Promise.all([
       supabase.rpc('admin_oversikt'),
       supabase.from('butikkar').select('id, namn, farge, aktiv, moduler').order('namn'),
       supabase.rpc('admin_tilsette'),
+      supabase.rpc('admin_butikk_innsikt'),
     ]);
-    const err = o.error || b.error || t.error;
+    const err = o.error || b.error || t.error || i.error;
     if (err) { setFeil(err.message); setLastar(false); return; }
     setOversikt(((o.data as Oversikt[]) ?? [])[0] ?? null);
     setButikkar((b.data ?? []) as Butikk[]);
     setTilsette((t.data ?? []) as AdminTilsett[]);
+    setInnsikt((i.data ?? []) as Innsikt[]);
     setFeil(null);
     setLastar(false);
   };
@@ -76,6 +80,11 @@ export function Utviklar() {
     toast('Namn endra'); void last();
   };
   const tilsetteI = (buId: string) => tilsette.filter((a) => a.butikk_id === buId && a.aktiv).length;
+  const settFarge = async (bu: Butikk, farge: string) => {
+    const { error } = await supabase.from('butikkar').update({ farge }).eq('id', bu.id);
+    if (error) { toast(`Kunne ikkje endre farge: ${error.message}`); return; }
+    void last();
+  };
 
   const statar: { tal: number; lab: string }[] = oversikt ? [
     { tal: oversikt.butikkar, lab: 'Butikkar' },
@@ -114,7 +123,7 @@ export function Utviklar() {
               {butikkar.map((bu) => (
                 <div key={bu.id} style={{ padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 'var(--r)', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <span style={{ width: 12, height: 12, borderRadius: '50%', background: bu.farge || 'var(--brand)', flex: 'none' }} />
+                    <input type="color" value={bu.farge || '#11788a'} onChange={(e) => settFarge(bu, e.target.value)} title="Butikk-farge" aria-label={`Farge for ${bu.namn}`} style={{ width: 24, height: 24, padding: 0, border: '1px solid var(--border)', borderRadius: '50%', background: 'none', cursor: 'pointer', flex: 'none' }} />
                     <span style={{ fontSize: 14.5, fontWeight: 700 }}>{bu.namn}</span>
                     <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{tilsetteI(bu.id)} tilsette</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: bu.aktiv ? 'var(--pill-gronn-fg)' : 'var(--text-faint)' }}>{bu.aktiv ? '● Aktiv' : '○ Inaktiv'}</span>
@@ -183,8 +192,27 @@ export function Utviklar() {
             </div>
           </div>
 
+          {/* Innsikt på tvers */}
+          <div style={{ ...kort, padding: '18px 20px', overflow: 'auto' }}>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Innsikt på tvers</div>
+            <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 14 }}>Nøkkeltal per butikk, side om side.</div>
+            <div style={{ minWidth: 520 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 0.9fr 1fr 1fr', gap: 10, padding: '0 6px 8px', fontSize: 11, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.4px', borderBottom: '1px solid var(--divider)' }}>
+                <span>Butikk</span><span>Tilsette</span><span>Aktive bestillingar</span><span>Aktiv utleige</span>
+              </div>
+              {innsikt.map((r) => (
+                <div key={r.butikk_id} style={{ display: 'grid', gridTemplateColumns: '1.6fr 0.9fr 1fr 1fr', gap: 10, alignItems: 'center', padding: '11px 6px', borderBottom: '1px solid var(--divider)', fontSize: 13.5, opacity: r.aktiv ? 1 : 0.55 }}>
+                  <span style={{ fontWeight: 600 }}>{r.butikk}{!r.aktiv && <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 400 }}> · inaktiv</span>}</span>
+                  <span style={{ fontFamily: "'Geist Mono Variable'", fontWeight: 700 }}>{r.tilsette}</span>
+                  <span style={{ fontFamily: "'Geist Mono Variable'", fontWeight: 700 }}>{r.bestillingar}</span>
+                  <span style={{ fontFamily: "'Geist Mono Variable'", fontWeight: 700 }}>{r.utleige}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>
-            Modular per butikk styrer kva sider butikken har (kjernesider som oversikt er alltid på, og du som eigar ser alltid alt). Kjem seinare: globale innstillingar og djupare innsikt på tvers.
+            Modular per butikk styrer kva sider butikken har (kjernesider som oversikt er alltid på, og du som eigar ser alltid alt).
           </div>
         </>
       )}
