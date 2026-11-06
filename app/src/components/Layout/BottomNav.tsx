@@ -1,6 +1,8 @@
 import { useAppData } from '../../context/appData';
+import { useAuth } from '../../context/auth';
+import { useAnsatte } from '../../context/ansatte';
 import { alder } from '../../lib/bestilling';
-import type { View } from '../../lib/view';
+import { modulAktiv, type View } from '../../lib/view';
 import { Icon } from '../ui/Icon';
 
 // Fast meny nedst på mobil med det dei tilsette brukar mest. Resten ligg
@@ -14,11 +16,16 @@ const PUNKT: { key: View; label: string; ikon: string }[] = [
 
 export function BottomNav({ view, setView, onMeir }: { view: View; setView: (v: View) => void; onMeir: () => void }) {
   const { orders, swaps } = useAppData();
+  const { user } = useAuth();
+  const { finnButikk } = useAnsatte();
+  const minButikk = finnButikk(user?.butikk_id);
+  // Berre modular butikken har slått på.
+  const punkt = PUNKT.filter((p) => modulAktiv(p.key, minButikk, user));
   const merke: Partial<Record<View, number>> = {
     vaktplan: swaps.filter((s) => s.status === 'pending').length,
     bestilling: orders.filter((o) => (o.status === 'komen' && !o.varsla) || alder(o).gammal).length,
   };
-  const iMeir = !PUNKT.some((p) => p.key === view);
+  const iMeir = !punkt.some((p) => p.key === view);
 
   const knapp = (key: string, label: string, ikon: string, aktiv: boolean, onClick: () => void, n = 0) => (
     <button
@@ -52,7 +59,7 @@ export function BottomNav({ view, setView, onMeir }: { view: View; setView: (v: 
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      {PUNKT.map((p) => knapp(p.key, p.label, p.ikon, view === p.key, () => setView(p.key), merke[p.key] ?? 0))}
+      {punkt.map((p) => knapp(p.key, p.label, p.ikon, view === p.key, () => setView(p.key), merke[p.key] ?? 0))}
       {knapp('meir', 'Meir', 'menu', iMeir, onMeir)}
     </nav>
   );

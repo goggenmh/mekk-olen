@@ -1,12 +1,13 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { supabase } from '../../supabaseClient';
 import { toast } from '../../lib/toast';
+import { MODULAR } from '../../lib/view';
 
 // Eigar-/utviklar-side: kryss-butikk styring. Berre konsern-admin (gated i App +
 // i databasen via admin_*-funksjonane). Steg 1: oversikt, butikkar og
 // tilgangsstyring. (Modular per butikk + globale innstillingar kjem seinare.)
 interface Oversikt { butikkar: number; butikkar_aktive: number; tilsette: number; tilsette_aktive: number; leiarar: number }
-interface Butikk { id: string; namn: string; farge: string | null; aktiv: boolean }
+interface Butikk { id: string; namn: string; farge: string | null; aktiv: boolean; moduler: string[] | null }
 interface AdminTilsett { id: string; navn: string; rolle: string; butikk_id: string | null; butikk: string | null; leder: boolean; konsern_admin: boolean; aktiv: boolean }
 
 const kort: CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', boxShadow: 'var(--shadow-card)' };
@@ -22,7 +23,7 @@ export function Utviklar() {
   const last = async () => {
     const [o, b, t] = await Promise.all([
       supabase.rpc('admin_oversikt'),
-      supabase.from('butikkar').select('id, namn, farge, aktiv').order('namn'),
+      supabase.from('butikkar').select('id, namn, farge, aktiv, moduler').order('namn'),
       supabase.rpc('admin_tilsette'),
     ]);
     const err = o.error || b.error || t.error;
@@ -57,6 +58,24 @@ export function Utviklar() {
     if (error) { toast(error.message); return; }
     toast('Flytta'); void last();
   };
+  // null-liste = alle modular på. Slår vi av éin, skriv vi ned heile lista.
+  const modulPa = (bu: Butikk, key: string) => !bu.moduler || bu.moduler.includes(key);
+  const settModul = async (bu: Butikk, key: string, paa: boolean) => {
+    const alle = MODULAR.map((m) => m.key as string);
+    const naa = bu.moduler ?? alle;
+    const neste = paa ? [...new Set([...naa, key])] : naa.filter((k) => k !== key);
+    const { error } = await supabase.from('butikkar').update({ moduler: neste }).eq('id', bu.id);
+    if (error) { toast(`Kunne ikkje lagre: ${error.message}`); return; }
+    void last();
+  };
+  const endreNamn = async (bu: Butikk) => {
+    const namn = window.prompt('Nytt namn på butikken:', bu.namn)?.trim();
+    if (!namn || namn === bu.namn) return;
+    const { error } = await supabase.from('butikkar').update({ namn }).eq('id', bu.id);
+    if (error) { toast(`Kunne ikkje endre: ${error.message}`); return; }
+    toast('Namn endra'); void last();
+  };
+  const tilsetteI = (buId: string) => tilsette.filter((a) => a.butikk_id === buId && a.aktiv).length;
 
   const statar: { tal: number; lab: string }[] = oversikt ? [
     { tal: oversikt.butikkar, lab: 'Butikkar' },
@@ -91,15 +110,35 @@ export function Utviklar() {
           {/* Butikkar */}
           <div style={{ ...kort, padding: '18px 20px' }}>
             <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>Butikkar</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 14 }}>
               {butikkar.map((bu) => (
-                <div key={bu.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--r)' }}>
-                  <span style={{ width: 12, height: 12, borderRadius: '50%', background: bu.farge || 'var(--brand)', flex: 'none' }} />
-                  <span style={{ flex: 1, fontSize: 14, fontWeight: 600 }}>{bu.namn}</span>
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: bu.aktiv ? 'var(--pill-gronn-fg)' : 'var(--text-faint)' }}>{bu.aktiv ? 'Aktiv' : 'Inaktiv'}</span>
-                  <button onClick={() => toggleAktiv(bu)} style={{ padding: '6px 11px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text-secondary)' }}>
-                    {bu.aktiv ? 'Deaktiver' : 'Aktiver'}
-                  </button>
+                <div key={bu.id} style={{ padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 'var(--r)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <span style={{ width: 12, height: 12, borderRadius: '50%', background: bu.farge || 'var(--brand)', flex: 'none' }} />
+                    <span style={{ fontSize: 14.5, fontWeight: 700 }}>{bu.namn}</span>
+                    <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{tilsetteI(bu.id)} tilsette</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: bu.aktiv ? 'var(--pill-gronn-fg)' : 'var(--text-faint)' }}>{bu.aktiv ? '● Aktiv' : '○ Inaktiv'}</span>
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+                      <button onClick={() => endreNamn(bu)} title="Endre namn" style={{ padding: '6px 10px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text-secondary)' }}>✏ Namn</button>
+                      <button onClick={() => toggleAktiv(bu)} style={{ padding: '6px 10px', border: '1px solid var(--border)', background: 'var(--surface)', borderRadius: 'var(--r)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                        {bu.aktiv ? 'Deaktiver' : 'Aktiver'}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-label)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 6 }}>Modular (sider butikken har)</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                      {MODULAR.map((m) => {
+                        const paa = modulPa(bu, m.key);
+                        return (
+                          <label key={m.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 999, border: '1px solid var(--border)', cursor: 'pointer', fontSize: 12.5, fontWeight: 600, background: paa ? 'var(--pill-teal-bg)' : 'var(--surface)', color: paa ? 'var(--pill-teal-fg)' : 'var(--text-muted)' }}>
+                            <input type="checkbox" checked={paa} onChange={(e) => settModul(bu, m.key, e.target.checked)} style={{ width: 15, height: 15, cursor: 'pointer' }} />
+                            {m.label}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               ))}
               {butikkar.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ingen butikkar enno.</div>}
@@ -145,7 +184,7 @@ export function Utviklar() {
           </div>
 
           <div style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>
-            Kjem seinare: modular per butikk (slå av/på sider), globale innstillingar og djupare innsikt på tvers.
+            Modular per butikk styrer kva sider butikken har (kjernesider som oversikt er alltid på, og du som eigar ser alltid alt). Kjem seinare: globale innstillingar og djupare innsikt på tvers.
           </div>
         </>
       )}

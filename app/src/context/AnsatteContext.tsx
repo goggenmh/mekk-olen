@@ -7,7 +7,7 @@ import { AnsatteContext, PRIVATE_FELT, mapAnsatt, type AnsatteState } from './an
 const TOMT_ANSATT: Employee = { id: '', navn: '', rolle: '', lonn: 'time', sats: 0, farge: '#999', init: '?', email: '', telefon: '', leder: false, aktiv: false };
 // Alle kolonnar utanom timesatsen (sats), som berre leiarar får lese.
 const KOLONNER = 'id, navn, rolle, lonn, farge, init, email, telefon, leder, aktiv, created_at, butikk_id, konsern_admin, feriedagar';
-const mapButikk = (r: any): Butikk => ({ id: r.id, namn: r.namn, farge: r.farge || '#11788a', aktiv: r.aktiv });
+const mapButikk = (r: any): Butikk => ({ id: r.id, namn: r.namn, farge: r.farge || '#11788a', aktiv: r.aktiv, moduler: Array.isArray(r.moduler) ? r.moduler : null });
 
 export function AnsatteProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
