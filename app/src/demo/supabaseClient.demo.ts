@@ -95,6 +95,9 @@ class Sporjing implements PromiseLike<{ data: unknown; error: unknown }> {
   eq(k: string, v: unknown) { this.filter.push((r) => r[k] === v); return this; }
   neq(k: string, v: unknown) { this.filter.push((r) => r[k] !== v); return this; }
   in(k: string, v: unknown[]) { this.filter.push((r) => v.includes(r[k])); return this; }
+  // ISO-datoar/-tidspunkt kan samanliknast som tekst (leksikografisk).
+  gte(k: string, v: unknown) { this.filter.push((r) => String(r[k]) >= String(v)); return this; }
+  lte(k: string, v: unknown) { this.filter.push((r) => String(r[k]) <= String(v)); return this; }
   order(kol: string, o?: { ascending?: boolean }) { this.sortering = { kol, opp: o?.ascending !== false }; return this; }
   limit(n: number) { this.grense = n; return this; }
   single() { this.berreEin = true; return this; }
