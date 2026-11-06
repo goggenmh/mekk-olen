@@ -4,6 +4,7 @@ import { inputStyle } from '../ui/modalStyles';
 import { useAppData } from '../../context/appData';
 import { useAuth } from '../../context/auth';
 import { today } from '../../lib/dates';
+import { toast } from '../../lib/toast';
 
 const SKIFT = ['Formiddag', 'Kveld', 'Heildag', 'Laurdag'];
 
@@ -27,7 +28,11 @@ export function LedigVaktModal({ forhand, onClose }: { forhand?: { date?: string
     try {
       await leggUtLedigVakt({ date, start, slutt, skift, grunn: grunn.trim() || null, opprettaAv: user.id });
       onClose();
-    } catch { setLagrar(false); }
+    } catch (e) {
+      // Ikkje svelg feilen stille – då ser det ut som «ingenting skjer».
+      toast(e instanceof Error ? `Kunne ikkje leggje ut vakta: ${e.message}` : 'Kunne ikkje leggje ut vakta. Prøv igjen.');
+      setLagrar(false);
+    }
   };
 
   return (
