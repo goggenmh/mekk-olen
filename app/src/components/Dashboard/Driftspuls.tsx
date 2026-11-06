@@ -15,7 +15,7 @@ function datoTekst(d: string): string {
 // Framoverskodande driftspuls for leiar: bemanningsglipar + ferie-kollisjonar
 // dei neste to vekene. Reaktive varsel ligg i varslingssenteret; dette er det
 // som skal planleggjast FØR det blir eit problem.
-export function Driftspuls({ style, setView }: { style?: CSSProperties; setView: (v: View) => void }) {
+export function Driftspuls({ style, setView, opneDato }: { style?: CSSProperties; setView: (v: View) => void; opneDato?: (dato: string) => void }) {
   const { shifts, ferie } = useAppData();
   const risiko = useMemo(() => komandeRisiko(shifts, ferie), [shifts, ferie]);
 
@@ -38,7 +38,7 @@ export function Driftspuls({ style, setView }: { style?: CSSProperties; setView:
             return (
               <button
                 key={r.dato}
-                onClick={() => setView('vaktplan')}
+                onClick={() => (opneDato ? opneDato(r.dato) : setView('vaktplan'))}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', padding: '8px 10px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--text)', width: '100%' }}
               >
                 <span style={{ flex: 'none', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.3px', padding: '3px 8px', borderRadius: 999, color: ube ? 'var(--pill-raud-fg)' : 'var(--pill-amber-fg)', background: ube ? 'var(--pill-raud-bg)' : 'var(--pill-amber-bg)' }}>

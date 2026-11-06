@@ -21,7 +21,7 @@ import type { Task } from '../../types';
 const cardStyle = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '14px 16px' } as const;
 const labelStyle = { fontSize: 11.5, fontWeight: 800, letterSpacing: '0.3px', textTransform: 'uppercase', color: 'var(--text-label)', marginBottom: 10 } as const;
 
-export function Dashboard({ setView }: { setView: (v: View) => void }) {
+export function Dashboard({ setView, opneDato }: { setView: (v: View) => void; opneDato?: (dato: string) => void }) {
   const { entries, shifts, swaps, tasks, orders, ferie: alleFerie, docs, stadfestingar, canApprove, completeTask, moveTask, utleige, ledigeVakter } = useAppData();
   const [opneTask, setOpneTask] = useState<Task | null>(null);
   const [visReklamasjon, setVisReklamasjon] = useState(false);
@@ -226,7 +226,7 @@ export function Dashboard({ setView }: { setView: (v: View) => void }) {
         <Beskjedtavle style={kort} />
 
         {/* Driftspuls – framoverskodande bemanningsrisiko (berre leiar) */}
-        {kanLageVakt && <Driftspuls style={kort} setView={setView} />}
+        {kanLageVakt && <Driftspuls style={kort} setView={setView} opneDato={opneDato} />}
 
         {/* Timer denne veka */}
         <div style={kort}>
